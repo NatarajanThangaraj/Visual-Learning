@@ -1,0 +1,16 @@
+.catalystrc
+.DS_Store
+
+# Node / Vite (source deps + intermediate build output)
+node_modules/
+client-src/node_modules/
+client-src/dist/
+client-src/.vite/
+
+# NOTE: client/ is intentionally NOT ignored — Catalyst's Git-connected
+# hosting deploys the built files in client/, so they are committed.
+
+# Editor
+.vscode/
+.idea/
+*.iml
