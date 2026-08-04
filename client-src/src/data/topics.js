@@ -20,6 +20,19 @@ export const CATEGORY_ORDER = ['Java', 'Python', 'Others'];
 
 export const topics = [
   {
+    // Standalone, self-contained HTML page hosted verbatim under public/.
+    // `external: true` makes its card a plain link to the static file instead
+    // of an in-app React route — see TopicCard.jsx and App.jsx.
+    path: '/java/riya-job-hunt/',
+    external: true,
+    title: "Riya's Job Hunt",
+    description: 'An interactive 13-scene story deck for learning Java String methods — read the story, guess the method, then flip.',
+    category: 'Java',
+    tags: ['Java', 'Strings'],
+    dateAdded: '2026-08-04',
+    thumbnail: null,
+  },
+  {
     path: '/java/hello-java',
     title: 'Hello, Java',
     description: 'The starter Java assignment — a minimal program that prints a greeting.',
