@@ -23,7 +23,7 @@ export const topics = [
     // Standalone, self-contained HTML page hosted verbatim under public/.
     // `external: true` makes its card a plain link to the static file instead
     // of an in-app React route — see TopicCard.jsx and App.jsx.
-    path: '/java/riya-job-hunt/',
+    path: '/java/riya-job-hunt/index.html',
     external: true,
     title: "Riya's Job Hunt",
     description: 'An interactive 13-scene story deck for learning Java String methods — read the story, guess the method, then flip.',
