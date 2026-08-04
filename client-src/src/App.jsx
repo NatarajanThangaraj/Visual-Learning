@@ -9,7 +9,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      {topics.map(t => (
+      {topics.filter(t => !t.external).map(t => (
         <Route key={t.path} path={t.path} element={<t.Component />} />
       ))}
       <Route path="*" element={<NotFoundPage />} />

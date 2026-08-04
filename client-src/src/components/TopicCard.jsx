@@ -13,11 +13,16 @@ function formatDate(iso) {
 }
 
 export default function TopicCard({ topic }) {
-  const { path, title, description, category, tags = [], dateAdded, thumbnail } = topic;
+  const { path, title, description, category, tags = [], dateAdded, thumbnail, external } = topic;
   const thumb = thumbnail || THUMBS[category] || defaultThumb;
 
+  // External topics are standalone static pages (not in-app React routes), so
+  // they use a plain anchor that triggers a real navigation to the file.
+  const CardTag = external ? 'a' : Link;
+  const linkProps = external ? { href: path } : { to: path };
+
   return (
-    <Link className="card" to={path}>
+    <CardTag className="card" {...linkProps}>
       <div className="thumb">
         <span className="cat-badge" data-cat={category}>{category}</span>
         <img src={thumb} alt="" loading="lazy" />
@@ -35,6 +40,6 @@ export default function TopicCard({ topic }) {
           <span className="open">Open →</span>
         </div>
       </div>
-    </Link>
+    </CardTag>
   );
 }
