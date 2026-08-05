@@ -1,19 +1,13 @@
 /* Single source of truth for the catalog.
  *
- * Each entry becomes BOTH a card on the home page and a route in the app.
- * To add an assignment:
- *   1. Create a page component under src/pages/topics/<category>/<Name>.jsx
- *      (the quickest start is to reuse <TopicPageLayout>).
- *   2. Import it here and add one entry to the `topics` array below.
- * The card, the route, and the category/tag filters all update automatically.
+ * Each entry becomes a card on the home page (and, for in-app React pages, a
+ * route in the app). To add an assignment as a standalone static page:
+ *   1. Drop its self-contained folder under public/<category>/<slug>/index.html.
+ *   2. Add one entry below with `external: true` and a `path` ending in
+ *      /index.html. Optionally point `thumbnail` at a preview image in the same
+ *      folder so the card shows the project's real home page.
+ * The card and the category/tag filters update automatically.
  */
-
-import HelloJava from '../pages/topics/java/HelloJava';
-import CollectionsDemo from '../pages/topics/java/CollectionsDemo';
-import FizzBuzz from '../pages/topics/python/FizzBuzz';
-import ListComprehensions from '../pages/topics/python/ListComprehensions';
-import CssCardGallery from '../pages/topics/others/CssCardGallery';
-import RegexTester from '../pages/topics/others/RegexTester';
 
 // Controls the order the category pills appear in.
 export const CATEGORY_ORDER = ['Java', 'Python', 'Others'];
@@ -33,63 +27,43 @@ export const topics = [
     thumbnail: null,
   },
   {
-    path: '/java/hello-java',
-    title: 'Hello, Java',
-    description: 'The starter Java assignment — a minimal program that prints a greeting.',
+    path: '/java/fraud-detective/index.html',
+    external: true,
+    title: 'Bank Fraud Detective',
+    description: 'Play the fraud analyst: dissect a suspicious transaction with Java String methods, expose every red flag, then approve or reject.',
     category: 'Java',
-    tags: ['Java', 'Basics'],
-    dateAdded: '2026-08-03',
-    thumbnail: null,
-    Component: HelloJava,
+    tags: ['Java', 'Strings'],
+    dateAdded: '2026-08-05',
+    thumbnail: '/java/fraud-detective/thumb.png',
   },
   {
-    path: '/java/collections-demo',
-    title: 'Collections Demo',
-    description: 'Explore Lists, Sets and Maps from the Java Collections Framework.',
+    path: '/java/lifecare-hospital/index.html',
+    external: true,
+    title: 'LifeCare Hospital',
+    description: 'A 10-department hospital adventure where each real-world problem teaches one Java String method — from registration to the dashboard.',
     category: 'Java',
-    tags: ['Java', 'Collections'],
-    dateAdded: '2026-07-28',
-    thumbnail: null,
-    Component: CollectionsDemo,
+    tags: ['Java', 'Strings'],
+    dateAdded: '2026-08-05',
+    thumbnail: '/java/lifecare-hospital/thumb.png',
   },
   {
-    path: '/python/fizzbuzz',
-    title: 'FizzBuzz',
-    description: 'The classic FizzBuzz — practise loops and the modulo operator.',
-    category: 'Python',
-    tags: ['Python', 'Logic'],
-    dateAdded: '2026-08-01',
-    thumbnail: null,
-    Component: FizzBuzz,
+    path: '/java/monster-battle/index.html',
+    external: true,
+    title: 'Monster Battle Academy',
+    description: 'Design a monster battle game step by step — learn how objects model real things by deciding what every monster needs.',
+    category: 'Java',
+    tags: ['Java', 'Objects'],
+    dateAdded: '2026-08-05',
+    thumbnail: '/java/monster-battle/thumb.png',
   },
   {
-    path: '/python/list-comprehensions',
-    title: 'List Comprehensions',
-    description: 'Build and filter lists in a single expressive line.',
-    category: 'Python',
-    tags: ['Python', 'Basics'],
-    dateAdded: '2026-07-25',
-    thumbnail: null,
-    Component: ListComprehensions,
-  },
-  {
-    path: '/others/css-card-gallery',
-    title: 'CSS Card Gallery',
-    description: 'A responsive card layout built with CSS grid and flexbox.',
-    category: 'Others',
-    tags: ['HTML', 'CSS'],
-    dateAdded: '2026-07-30',
-    thumbnail: null,
-    Component: CssCardGallery,
-  },
-  {
-    path: '/others/regex-tester',
-    title: 'Regex Tester',
-    description: 'A small tool to test regular expressions against sample text.',
-    category: 'Others',
-    tags: ['JS', 'Tools'],
-    dateAdded: '2026-07-20',
-    thumbnail: null,
-    Component: RegexTester,
+    path: '/java/smart-data-guardian/index.html',
+    external: true,
+    title: 'Smart Data Guardian',
+    description: 'Build a 7-day mobile data checker by doing — variables, conditionals, loops and a running total, one stage at a time.',
+    category: 'Java',
+    tags: ['Java', 'Logic'],
+    dateAdded: '2026-08-05',
+    thumbnail: '/java/smart-data-guardian/thumb.png',
   },
 ];

@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeCare Hospital – Java String Adventure</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --white: #FFFFFF;
+    --bg: #F0F6FF;
+    --blue-50: #EBF4FF;
+    --blue-100: #C3DFFE;
+    --blue-200: #93C5FD;
+    --blue-400: #3B82F6;
+    --blue-500: #2563EB;
+    --blue-600: #1D4ED8;
+    --green-50: #ECFDF5;
+    --green-100: #D1FAE5;
+    --green-400: #34D399;
+    --green-500: #10B981;
+    --green-600: #059669;
+    --teal: #0EA5E9;
+    --slate-100: #F1F5F9;
+    --slate-200: #E2E8F0;
+    --slate-300: #CBD5E1;
+    --slate-400: #94A3B8;
+    --slate-500: #64748B;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1E293B;
+    --slate-900: #0F172A;
+    --amber-400: #FBBF24;
+    --amber-500: #F59E0B;
+    --red-400: #F87171;
+    --red-500: #EF4444;
+    --purple-400: #A78BFA;
+    --purple-500: #8B5CF6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--slate-800);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── TOP NAV ── */
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--slate-200);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--blue-600);
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--blue-500), var(--teal));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+  }
+  .logo span { color: var(--slate-500); font-weight: 400; font-size: 13px; margin-left: 4px; }
+  .score-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--blue-50);
+    border: 1px solid var(--blue-100);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--blue-600);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main-layout {
+    display: flex;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 240px;
+    background: var(--white);
+    border-right: 1px solid var(--slate-200);
+    padding: 20px 0;
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .sidebar-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--slate-400);
+    padding: 0 20px 10px;
+  }
+  .dept-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    transition: background .15s;
+    border-left: 3px solid transparent;
+  }
+  .dept-item.active {
+    background: var(--blue-50);
+    border-left-color: var(--blue-500);
+  }
+  .dept-item.completed {
+    opacity: .7;
+  }
+  .dept-item.locked {
+    opacity: .35;
+    cursor: default;
+  }
+  .dept-icon {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .dept-icon.done { background: var(--green-100); }
+  .dept-icon.active-icon { background: var(--blue-100); }
+  .dept-icon.pending { background: var(--slate-100); }
+  .dept-name { font-size: 12.5px; font-weight: 500; color: var(--slate-700); line-height: 1.3; }
+  .dept-method {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--green-600);
+    font-weight: 600;
+    margin-top: 1px;
+  }
+  .check-icon { color: var(--green-500); font-size: 12px; margin-left: auto; }
+
+  /* ── CONTENT AREA ── */
+  .content {
+    flex: 1;
+    padding: 32px;
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ── DEPARTMENT HEADER ── */
+  .dept-header {
+    background: linear-gradient(135deg, var(--blue-500) 0%, var(--teal) 100%);
+    border-radius: 16px;
+    padding: 24px 28px;
+    color: white;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(37,99,235,.25);
+  }
+  .dept-header-left h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .dept-header-left p { font-size: 13px; opacity: .85; }
+  .dept-header-right {
+    font-size: 42px;
+    opacity: .9;
+  }
+  .step-indicator {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--slate-300);
+    transition: all .3s;
+  }
+  .step-dot.active { background: var(--blue-500); width: 20px; border-radius: 4px; }
+  .step-dot.done { background: var(--green-500); }
+
+  /* ── CHAT BUBBLES ── */
+  .chat-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .bubble-wrap {
+    display: flex;
+    gap: 12px;
+    animation: slideIn .35s ease;
+  }
+  .bubble-wrap.right { flex-direction: row-reverse; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  }
+  .avatar.staff { background: linear-gradient(135deg, #3B82F6, #0EA5E9); }
+  .avatar.student { background: linear-gradient(135deg, #10B981, #059669); }
+  .bubble {
+    max-width: 78%;
+    padding: 13px 16px;
+    border-radius: 16px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    position: relative;
+  }
+  .bubble.staff {
+    background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-top-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  }
+  .bubble.student {
+    background: linear-gradient(135deg, var(--blue-500), var(--blue-600));
+    color: white;
+    border-top-right-radius: 4px;
+  }
+  .bubble.hint {
+    background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+    border: 1px solid var(--amber-400);
+    font-size: 13.5px;
+  }
+  .bubble.success {
+    background: linear-gradient(135deg, var(--green-50), var(--green-100));
+    border: 1px solid var(--green-400);
+  }
+  .bubble.code-reveal {
+    background: var(--slate-800);
+    color: #E2E8F0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    border: none;
+    max-width: 100%;
+  }
+  .speaker-name {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 5px;
+  }
+  .bubble.staff .speaker-name { color: var(--blue-500); }
+  .bubble.student .speaker-name { color: rgba(255,255,255,.7); }
+  .bubble.hint .speaker-name { color: var(--amber-500); }
+  .bubble.success .speaker-name { color: var(--green-600); }
+
+  /* ── DATA ANIMATION ── */
+  .transform-box {
+    background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin: 8px 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,.05);
+  }
+  .transform-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--slate-400);
+    margin-bottom: 10px;
+  }
+  .transform-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .data-pill {
+    background: var(--slate-800);
+    color: #93C5FD;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    white-space: pre;
+  }
+  .data-pill.before { border: 2px solid var(--red-400); }
+  .data-pill.after {
+    border: 2px solid var(--green-400);
+    color: #86EFAC;
+    animation: glow .6s ease;
+  }
+  @keyframes glow {
+    0% { box-shadow: 0 0 0 0 rgba(52,211,153,.5); }
+    50% { box-shadow: 0 0 0 8px rgba(52,211,153,0); }
+  }
+  .arrow-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .arrow-text {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--blue-500);
+    white-space: nowrap;
+  }
+  .method-tag {
+    background: var(--blue-500);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: var(--slate-900);
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #CBD5E1;
+    margin: 8px 0;
+    overflow-x: auto;
+    animation: slideIn .4s ease;
+  }
+  .code-keyword { color: #93C5FD; }
+  .code-string { color: #86EFAC; }
+  .code-method { color: #FCD34D; }
+  .code-comment { color: #64748B; font-style: italic; }
+  .code-type { color: #F9A8D4; }
+  .code-output { color: #A78BFA; }
+
+  /* ── CHOICE BUTTONS ── */
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .choice-btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+    border: 2px solid var(--blue-200);
+    background: var(--blue-50);
+    color: var(--blue-700, #1D4ED8);
+    font-family: 'Inter', sans-serif;
+  }
+  .choice-btn:hover {
+    background: var(--blue-500);
+    color: white;
+    border-color: var(--blue-500);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37,99,235,.2);
+  }
+  .choice-btn.selected {
+    background: var(--blue-500);
+    color: white;
+    border-color: var(--blue-500);
+  }
+
+  /* ── TEXT INPUT ── */
+  .input-area {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .text-input {
+    flex: 1;
+    padding: 11px 16px;
+    border: 2px solid var(--slate-200);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color .2s;
+    background: var(--white);
+  }
+  .text-input:focus { border-color: var(--blue-400); }
+  .send-btn {
+    padding: 11px 20px;
+    background: var(--blue-500);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .send-btn:hover { background: var(--blue-600); transform: translateY(-1px); }
+
+  /* ── NEXT BUTTON ── */
+  .next-btn {
+    padding: 13px 28px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-600));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 4px 14px rgba(16,185,129,.3);
+    animation: slideIn .5s ease;
+  }
+  .next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,.35); }
+
+  /* ── COMPLETE BADGE ── */
+  .method-complete {
+    background: linear-gradient(135deg, var(--green-50), var(--green-100));
+    border: 2px solid var(--green-400);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    animation: slideIn .4s ease;
+  }
+  .method-badge {
+    background: var(--green-500);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .method-badge-text h3 { font-size: 14px; font-weight: 600; color: var(--green-700, #047857); }
+  .method-badge-text p { font-size: 12.5px; color: var(--green-600); margin-top: 2px; }
+
+  /* ── DASHBOARD ── */
+  .dashboard {
+    padding: 8px;
+  }
+  .dashboard-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .dashboard-header h1 { font-size: 28px; font-weight: 800; color: var(--slate-800); margin-bottom: 8px; }
+  .dashboard-header p { color: var(--slate-500); font-size: 15px; }
+  .dept-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .dept-card {
+    background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 18px 20px;
+    transition: all .2s;
+    cursor: pointer;
+  }
+  .dept-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); transform: translateY(-2px); }
+  .dept-card.done-card { border-color: var(--green-400); background: var(--green-50); }
+  .dept-card .card-icon { font-size: 28px; margin-bottom: 10px; }
+  .dept-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .dept-card .card-method {
+    display: inline-block;
+    background: var(--slate-800);
+    color: var(--green-400);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    margin-top: 6px;
+  }
+  .dept-card .card-status { font-size: 12px; color: var(--slate-400); margin-top: 6px; }
+  .dept-card.done-card .card-status { color: var(--green-600); }
+  .final-score {
+    background: linear-gradient(135deg, var(--blue-500), var(--teal));
+    color: white;
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 30px rgba(37,99,235,.25);
+  }
+  .final-score h2 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+  .score-num { font-size: 60px; font-weight: 800; line-height: 1; margin: 12px 0; }
+  .score-label { font-size: 14px; opacity: .85; }
+
+  /* ── WELCOME SCREEN ── */
+  .welcome {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 0;
+    text-align: center;
+  }
+  .welcome-icon { font-size: 64px; margin-bottom: 16px; }
+  .welcome h1 { font-size: 32px; font-weight: 800; color: var(--slate-800); margin-bottom: 12px; line-height: 1.2; }
+  .welcome h1 span { color: var(--blue-500); }
+  .welcome p { font-size: 16px; color: var(--slate-500); line-height: 1.7; margin-bottom: 28px; }
+  .welcome-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 32px;
+    text-align: left;
+  }
+  .welcome-card {
+    background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .welcome-card .wc-icon { font-size: 22px; margin-bottom: 8px; }
+  .welcome-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .welcome-card p { font-size: 12px; color: var(--slate-500); }
+  .start-btn {
+    padding: 15px 36px;
+    background: linear-gradient(135deg, var(--blue-500), var(--teal));
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 6px 24px rgba(37,99,235,.3);
+  }
+  .start-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(37,99,235,.35); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .content { padding: 16px; }
+    .welcome-cards { grid-template-columns: 1fr; }
+    .bubble { max-width: 90%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🏥</div>
+    LifeCare Hospital
+    <span>Java String Adventure</span>
+  </div>
+  <div class="score-badge">⭐ <span id="scoreDisplay">0</span> pts</div>
+</div>
+
+<div class="main-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="content" id="mainContent"></main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA: All 10 Departments
+// ═══════════════════════════════════════════════════════════════
+const departments = [
+  {
+    id: 0, icon: "🪪", name: "Registration Counter", method: "trim()",
+    tagline: "Cleaning Patient Names on Entry",
+    scenario: {
+      before: '"   Rahul Kumar   "',
+      after: '"Rahul Kumar"',
+      methodCall: 'name.trim()',
+      javaExample: `String name = "   Rahul Kumar   ";
+String cleaned = name.<span class="code-method">trim</span>();
+<span class="code-comment">// cleaned = "Rahul Kumar"</span>`,
+    },
+    steps: [
+      {
+        type: "scene",
+        text: `Good morning, Junior Engineer! Welcome to <strong>LifeCare Hospital</strong>. You've just joined our software team. 🎉<br><br>Your first task: the <strong>Registration Counter</strong>. Patients type their name when they check in at our kiosk.`,
+        character: "👩‍⚕️ Nurse Priya"
+      },
+      {
+        type: "scene",
+        text: `A patient just typed their name: <code>"   Rahul Kumar   "</code><br><br>Should we save this directly to the hospital database?`,
+        character: "👩‍⚕️ Nurse Priya",
+        question: true,
+        choices: ["Yes, save as-is", "No, something seems wrong"],
+        correct: 1,
+        wrongResponse: `Hmm, think about this: if another patient types <code>"Rahul Kumar"</code> (no spaces), the system would treat them as two different people. Could that cause a problem? 🤔`,
+        wrongChoices: ["Oh no, duplicate records!", "I still think it's fine"]
+      },
+      {
+        type: "scene",
+        text: `Exactly! Those extra spaces at the start and end could cause <strong>duplicate records</strong>. "Rahul Kumar" and "&nbsp;&nbsp;&nbsp;Rahul Kumar&nbsp;&nbsp;&nbsp;" would be treated as different patients. Medical history could be split across records — that's dangerous! 🚨<br><br>Before saving, our software must remove those extra spaces. What would you call this operation?`,
+        character: "👩‍⚕️ Nurse Priya",
+        question: true,
+        inputPrompt: "What should the software do with the spaces?",
+        hint: "Think about cleaning up a string — removing extra space from both ends..."
+      },
+      {
+        type: "reveal",
+        text: `Perfect thinking! Java gives us exactly this: <strong>trim()</strong> — it strips all leading and trailing whitespace from a string. The hospital database now only sees clean, consistent patient names.`,
+        character: "💡 Java Mentor"
+      }
+    ]
+  },
+  {
+    id: 1, icon: "📧", name: "Email Registration", method: "toLowerCase()",
+    tagline: "Standardizing Patient Email Addresses",
+    scenario: {
+      before: '"Rahul.Kumar@GMAIL.COM"',
+      after: '"rahul.kumar@gmail.com"',
+      methodCall: 'email.toLowerCase()',
+      javaExample: `String email = "Rahul.Kumar@GMAIL.COM";
+String std = email.<span class="code-method">toLowerCase</span>();
+<span class="code-comment">// std = "rahul.kumar@gmail.com"</span>`,
+    },
+    steps: [
+      {
+        type: "scene",
+        text: `Great job at the counter! Now the Registration team needs your help again. Patients are registering their emails — but look at these two entries from our database:<br><br>• <code>Rahul.Kumar@GMAIL.COM</code><br>• <code>rahul.kumar@gmail.com</code><br><br>Are these the same person?`,
+        character: "👨‍💼 Dr. Admin",
+        question: true,
+        choices: ["Yes, same person", "No, different people"],
+        correct: 0,
+        wrongResponse: `Look carefully at the characters — only the case differs. Email addresses are case-insensitive. GMAIL.COM and gmail.com refer to the same domain. So these are definitely the same person — but our database disagrees! Why is that a problem?`,
+        wrongChoices: ["Oh! Case-insensitive means same person", "I'm still not sure"]
+      },
+      {
+        type: "scene",
+        text: `Right! They're the same email. But our system is sending them <strong>two appointment reminders</strong> and charging them twice for the portal fee. 😱<br><br>How should we fix this? Think about standardizing the format before saving.`,
+        character: "👨‍💼 Dr. Admin",
+        question: true,
+        inputPrompt: "How should we store all email addresses?",
+        hint: "All emails should be stored in the same case — which case is standard?"
+      },
+      {
+        type: "reveal",
+        text: `Exactly! Java's <strong>toLowerCase()</strong> converts every character to lowercase. Always apply this before storing or comparing emails. It's a universal standard in hospital information systems.`,
+        character: "💡 Java Mentor"
+      }
+    ]
+  },
+  {
+    id: 2, icon: "🚨", name: "Emergency Room", method: "toUpperCase()",
+    tagline: "Alert Formatting for Critical Cases",
+    scenario: {
+      before: '"critical patient in room 4"',
+      after: '"CRITICAL PATIENT IN ROOM 4"',
+      methodCall: 'alert.toUpperCase()',
+      javaExample: `String alert = "critical patient in room 4";
+String display = alert.<span class="code-method">toUpperCase</span>();
+<span class="code-comment">// display = "CRITICAL PATIENT IN ROOM 4"</span>`,
+    },
+    steps: [
+      {
+        type: "scene",
+        text: `🚨 <strong>Emergency Room alert!</strong> The ER system sends auto-generated alerts when a patient's vitals drop. Here's a sample alert message sent to nurses' screens:<br><br><code>"critical patient in room 4"</code><br><br>Nurses are complaining they're missing alerts. Do you see the problem?`,
+        character: "🚑 ER Doctor",
+        question: true,
+        choices: ["The message is too long", "The text doesn't stand out visually", "Wrong room number"],
+        correct: 1,
+        wrongResponse: `Think about it from a nurse's perspective — when they glance at a screen full of text, would lowercase "critical patient" catch their eye immediately?`,
+        wrongChoices: ["No, lowercase blends in with normal text!", "Maybe it needs color?"]
+      },
+      {
+        type: "scene",
+        text: `Exactly! In emergency systems, <strong>critical alerts must be in UPPERCASE</strong> so they stand out at a glance. A nurse scanning 10 messages needs to spot the critical one in milliseconds. How do we transform the text?`,
+        character: "🚑 ER Doctor",
+        question: true,
+        inputPrompt: "What transformation should we apply to the alert text?",
+        hint: "The opposite of toLowerCase... making all characters capital letters..."
+      },
+      {
+        type: "reveal",
+        text: `Yes! <strong>toUpperCase()</strong> transforms the entire string to capital letters. Every hospital emergency system in the world uses this for critical alerts. It's the difference between a nurse noticing an alert or scrolling past it.`,
+        character: "💡 Java Mentor"
+      }
+    ]
+  },
+  {
+    id: 3, icon: "🔍", name: "Patient Search", method: "contains()",
+    tagline: "Searching Patient Records by Keyword",
+    scenario: {
+      before: '"Patient has known penicillin allergy"',
+      after: 'contains("allergy") → true',
+      methodCall: 'record.contains("allergy")',
+      javaExample: `String record = "Patient has known penicillin allergy";
+<span class="code-type">boolean</span> found = record.<span class="code-method">contains</span>(<span class="code-string">"allergy"</span>);
+<span class="code-comment">// found = true</span>
+<span class="code-comment">// → Show allergy warning ⚠️</span>`,
+    },
+    steps: [
+      {
+        type: "scene",
+        text: `The pharmacy is in trouble. Before dispensing any medication, the system should check if a patient's notes contain allergy warnings. A doctor's note might say:<br><br><code>"Patient has known penicillin allergy, prescribed amoxicillin alternative"</code><br><br>A pharmacist wants to flag all records that mention the word "allergy". How should the software decide whether to show a warning?`,
+        character: "💊 Pharmacist Ravi",
+        question: true,
+        choices: ["Read the whole note manually", "Check if the word 'allergy' exists in the text", "Only check the first sentence"],
+        correct: 1,
+        wrongResponse: `Manual reading doesn't scale — a hospital has thousands of records. The software needs to automatically detect if a specific word appears anywhere in the text. Can you think of what operation that is?`,
+        wrongChoices: ["Search for a substring!", "I think checking manually is fine"]
+      },
+      {
+        type: "scene",
+        text: `Correct! We need to check whether a piece of text <strong>contains a specific word</strong>. What should this operation return — the position, a yes/no, or the word itself?`,
+        character: "💊 Pharmacist Ravi",
+        question: true,
+        choices: ["The position of the word", "A true/false answer", "The matched word"],
+        correct: 1,
+        wrongResponse: `For a warning system, we just need to know: does it exist or not? A yes/no (true/false) is sufficient to trigger the warning dialog.`,
+        wrongChoices: ["Right, just true or false!", "Actually, position makes more sense"]
+      },
+      {
+        type: "reveal",
+        text: `Spot on! Java's <strong>contains()</strong> returns <code>true</code> if the substring exists anywhere in the string, <code>false</code> otherwise. Every medical record system uses this to detect keywords like "allergy", "diabetic", "pregnant" before actions.`,
+        character: "💡 Java Mentor"
+      }
+    ]
+  },
+  {
+    id: 4, icon: "📋", name: "Medical Records", method: "replace()",
+    tagline: "Updating Outdated Department Names",
+    scenario: {
+      before: '"Referred to Cardio Unit A"',
+      after: '"Referred to Heart Care Center"',
+      methodCall: 'record.replace("Cardio Unit A", "Heart Care Center")',
+      javaExample: `String record = "Referred to Cardio Unit A";
+String updated = record.<span class="code-method">replace</span>(
+  <span class="code-string">"Cardio Unit A"</span>, 
+  <span class="code-string">"Heart Care Center"</span>
+);
+<span class="code-comment">// "Referred to Heart Care Center"</span>`,
+    },
+    steps: [
+      {
+        type: "scene",
+        text: `The hospital just rebranded its departments! "Cardio Unit A" is now called "Heart Care Center". There are <strong>14,000 patient records</strong> that still reference the old name.<br><br>The Medical Records Manager says: "We need to update every single record." But there's no time to edit each one manually. What should the software do?`,
+        character: "📁 Records Manager",
+        question: true,
+        choices: ["Delete all old records", "Find the old text and swap it with the new text", "Create new records from scratch"],
+        correct: 1,
+        wrongResponse: `Deleting would lose patient history — never do that! And creating from scratch would take weeks. The answer is simpler: find the old name wherever it appears and substitute the new one. What programming concept is that?`,
+        wrongChoices: ["It's a find-and-replace operation!", "Can we just leave the old names?"]
+      },
+      {
+        type: "scene",
+        text: `Exactly — find-and-replace! Given a string, we want to substitute one substring with another. In one second, all 14,000 records get updated. What would you call this Java method?`,
+        character: "📁 Records Manager",
+        question: true,
+        inputPrompt: "Name the Java String method that swaps one text for another:",
+        hint: "The method name literally describes the operation: you're replacing old text with new text..."
+      },
+      {
+        type: "reveal",
+        text: `You got it — <strong>replace()</strong>! It finds every occurrence of the old substring and substitutes the new one. One line of Java updates thousands of records instantly. This is one of the most-used methods in any healthcare data system.`,
+        character: "💡 Java Mentor"
+      }
+    ]
+  },
+  {
+    id: 5, icon: "🧪", name: "Laboratory Reports", method: "split()",
+    tagline: "Parsing Lab Test Results from CSV Data",
+    scenario: {
+      before: '"Hemoglobin,Blood Pressure,Glucose,Platelets"',
+      after: '["Hemoglobin", "Blood Pressure", "Glucose", "Platelets"]',
+      methodCall: 'tests.split(",")',
+      javaExample: `String tests = "Hemoglobin,Blood Pressure,Glucose,Platelets";
+<span class="code-type">String[]</span> list = tests.<span class="code-method">split</span>(<span class="code-string">","</span>);
+<span class="code-comment">// list[0] = "Hemoglobin"</span>
+<span class="code-comment">// list[1] = "Blood Pressure"</span>
+<span class="code-comment">// list[2] = "Glucose" ...</span>`,
+    },
+    steps: [
+      {
+        type: "scene",
+        text: `The Lab sends test results to us as a single comma-separated string — that's how their external system exports data:<br><br><code>"Hemoglobin,Blood Pressure,Glucose,Platelets"</code><br><br>Our interface needs to display each test as a <strong>separate item in a list</strong>. How do we get from one long string to individual test names?`,
+        character: "🔬 Lab Technician",
+        question: true,
+        choices: ["Read character by character", "Break the string apart at each comma", "Store the whole string as one item"],
+        correct: 1,
+        wrongResponse: `Character-by-character would be very complex! Notice the commas — they're the natural dividers between test names. The software should use commas as the boundary points to break the string. Does Java have an operation that divides a string at a character?`,
+        wrongChoices: ["Split by the delimiter!", "I'd loop through characters"]
+      },
+      {
+        type: "scene",
+        text: `Right! We need to <strong>divide a string by a separator character</strong> and get an array back. What would you name this operation?`,
+        character: "🔬 Lab Technician",
+        question: true,
+        inputPrompt: "What should we call this operation?",
+        hint: "Think about splitting something into pieces — like splitting a bill, or splitting a team..."
+      },
+      {
+        type: "reveal",
+        text: `Perfect! <strong>split()</strong> takes a delimiter (like a comma) and returns an array of substrings. This is essential for parsing any CSV or pipe-delimited data — which is how 90% of medical equipment exports data to hospital software.`,
+        character: "💡 Java Mentor"
+      }
+    ]
+  },
+  {
+    id: 6, icon: "💊", name: "Pharmacy", method: "startsWith()",
+    tagline: "Categorizing Drug Codes by Prefix",
+    scenario: {
+      before: '"ANT-2047-B"',
+      after: 'startsWith("ANT") → Antibiotic 🟡',
+      methodCall: 'code.startsWith("ANT")',
+      javaExample: `String code = "ANT-2047-B";
+<span class="code-type">boolean</span> isAntibiotic = code.<span class="code-method">startsWith</span>(<span class="code-string">"ANT"</span>);
+<span class="code-comment">// true → Show antibiotic warning</span>
+<span class="code-comment">// SED = Sedative, ANA = Anesthetic</span>`,
+    },
+    steps: [
+      {
+        type: "scene",
+        text: `The pharmacy stocks thousands of drugs. Every drug code has a meaningful prefix:<br>• <code>ANT-</code> = Antibiotics<br>• <code>SED-</code> = Sedatives<br>• <code>ANA-</code> = Anesthetics<br><br>A drug arrives: <code>"ANT-2047-B"</code>. The system needs to automatically classify it and show the right warning label. How should it identify the category?`,
+        character: "💊 Pharmacist Ravi",
+        question: true,
+        choices: ["Check the middle of the code", "Check the beginning of the code", "Check the end of the code"],
+        correct: 1,
+        wrongResponse: `The prefix is always at the beginning of the code — ANT, SED, ANA. We need to check specifically the start of the string, not anywhere in it. Contains would match "ANT" even in the middle of a word!`,
+        wrongChoices: ["Yes! Check only the beginning — the prefix!", "I think 'contains' would work fine"]
+      },
+      {
+        type: "scene",
+        text: `Exactly — we need to check only the <strong>beginning</strong> of the drug code. Why not use <code>contains()</code>? Because "PLANT-52X" also contains "ANT" — but it's not an antibiotic! We need to be more specific. What would you call a method that checks the beginning of a string?`,
+        character: "💊 Pharmacist Ravi",
+        question: true,
+        inputPrompt: "Name the method that checks how a string begins:",
+        hint: "The string starts with something — there's a Java method named exactly for this..."
+      },
+      {
+        type: "reveal",
+        text: `Yes! <strong>startsWith()</strong> returns true only if the string begins with the given prefix. There's also <code>endsWith()</code> for suffixes. Pharmaceutical coding systems globally rely on prefix-based classification — Java makes this trivial.`,
+        character: "💡 Java Mentor"
+      }
+    ]
+  },
+  {
+    id: 7, icon: "✅", name: "Patient Verification", method: "equals()",
+    tagline: "Verifying Patient ID for Secure Access",
+    scenario: {
+      before: '"LC-20240812" vs "LC-20240812"',
+      after: 'equals() → true → Access Granted ✅',
+      methodCall: 'entered.equals(stored)',
+      javaExample: `String stored  = "LC-20240812";
+String entered = "LC-20240812";
+<span class="code-type">boolean</span> match = entered.<span class="code-method">equals</span>(stored);
+<span class="code-comment">// true → Patient portal access granted</span>
+<span class="code-comment">// ⚠️ Never use == for String comparison!</span>`,
+    },
+    steps: [
+      {
+        type: "scene",
+        text: `Security check! A patient wants to access their records via the portal. They enter their Patient ID: <code>LC-20240812</code>. Our database has their registered ID: <code>LC-20240812</code>.<br><br>A junior developer wrote: <code>if (entered == stored)</code>. The test team found that this <strong>sometimes fails even when the IDs are identical</strong>. Why?`,
+        character: "🔐 Security Officer",
+        question: true,
+        choices: ["The patient typed it wrong", "== compares memory locations, not values", "The database is slow"],
+        correct: 1,
+        wrongResponse: `In Java, <code>==</code> checks if two variables point to the same object in memory — not whether their text content is identical. Two different String objects can have the same letters but <code>==</code> returns false. We need a way to compare the actual content.`,
+        wrongChoices: ["Ah, we need to compare the actual content!", "I still think == should work"]
+      },
+      {
+        type: "scene",
+        text: `Exactly! <code>==</code> compares memory addresses — dangerous for security systems. We need to compare the <strong>actual text content</strong> of two strings. What method should we use?`,
+        character: "🔐 Security Officer",
+        question: true,
+        inputPrompt: "What Java String method compares content character by character?",
+        hint: "The method checks if two strings are exactly equal in content — the method name is literally the adjective 'equal' + 's'..."
+      },
+      {
+        type: "reveal",
+        text: `Spot on! <strong>equals()</strong> compares the actual character content of two strings. Using <code>==</code> on Strings is one of the most common bugs in Java hospital systems — and it can lock patients out of their own records. Always use <code>equals()</code> for string comparison.`,
+        character: "💡 Java Mentor"
+      }
+    ]
+  },
+  {
+    id: 8, icon: "📺", name: "Emergency Display", method: "substring()",
+    tagline: "Extracting Patient ID from Full Reference",
+    scenario: {
+      before: '"LC-20240812-ER-CRITICAL"',
+      after: '"LC-20240812"',
+      methodCall: 'ref.substring(0, 12)',
+      javaExample: `String ref = "LC-20240812-ER-CRITICAL";
+String id  = ref.<span class="code-method">substring</span>(<span class="code-string">0</span>, <span class="code-string">12</span>);
+<span class="code-comment">// id = "LC-20240812"</span>
+<span class="code-comment">// Characters 0 through 11 extracted</span>`,
+    },
+    steps: [
+      {
+        type: "scene",
+        text: `The ER display board shows patient reference numbers like:<br><code>"LC-20240812-ER-CRITICAL"</code><br><br>But the queue display only has space to show the Patient ID part: <code>LC-20240812</code> (the first 12 characters). How should the software extract just that portion?`,
+        character: "🚑 ER Doctor",
+        question: true,
+        choices: ["Remove the text after the ID manually", "Extract a specific portion of the string by index", "Shorten the whole string randomly"],
+        correct: 1,
+        wrongResponse: `Manual removal would mean writing different code for every format. We need a general tool: given start and end positions (indices), extract the characters in between. This is called a substring operation.`,
+        wrongChoices: ["Yes! Extract by index positions!", "Can we just display the full string in smaller font?"]
+      },
+      {
+        type: "scene",
+        text: `Right — we want characters from position 0 up to (but not including) position 12. That's a <strong>substring</strong>. Java is 0-indexed — the first character is at index 0. Can you guess the method name?`,
+        character: "🚑 ER Doctor",
+        question: true,
+        inputPrompt: "What is the Java method that extracts part of a string?",
+        hint: "The word 'sub' means a part of something. A sub-string is a part of a string..."
+      },
+      {
+        type: "reveal",
+        text: `Correct! <strong>substring(start, end)</strong> extracts characters from index <code>start</code> up to (not including) index <code>end</code>. If you omit the end, it goes to the end of the string. Essential for parsing structured codes in every medical system.`,
+        character: "💡 Java Mentor"
+      }
+    ]
+  },
+  {
+    id: 9, icon: "📊", name: "Hospital Dashboard", method: "length()",
+    tagline: "Validating Input Fields Before Submission",
+    scenario: {
+      before: '"LC2024"',
+      after: 'length() → 6 → ⚠️ Too short! (need 12)',
+      methodCall: 'id.length()',
+      javaExample: `String id = "LC2024";
+<span class="code-type">int</span> len = id.<span class="code-method">length</span>();
+<span class="code-comment">// len = 6</span>
+<span class="code-comment">// Expected 12 → Show validation error</span>`,
+    },
+    steps: [
+      {
+        type: "scene",
+        text: `Final module! The Hospital Dashboard lets administrators enter Patient IDs to pull up reports. A valid Patient ID is always <strong>exactly 12 characters</strong> (like <code>LC-20240812</code>).<br><br>A user typed: <code>LC2024</code> — clearly too short. Before calling the database, how should the software validate this input?`,
+        character: "📊 Dashboard Admin",
+        question: true,
+        choices: ["Send it to database and let DB return error", "Count the characters and check against the requirement", "Visually guess if it looks right"],
+        correct: 1,
+        wrongResponse: `Database round-trips for validation are expensive and slow. Client-side validation should catch this first — just count the characters. If it's not 12, reject it before making any network call.`,
+        wrongChoices: ["Yes! Count characters first, locally!", "Can we just warn the user without counting?"]
+      },
+      {
+        type: "scene",
+        text: `Exactly — before calling any service, just count how many characters are in the string. What would you call this measurement?`,
+        character: "📊 Dashboard Admin",
+        question: true,
+        inputPrompt: "What property of a string tells you how many characters it has?",
+        hint: "Think about measuring how long something is — the length of a string..."
+      },
+      {
+        type: "reveal",
+        text: `Perfect! <strong>length()</strong> returns the number of characters in a string as an integer. It's the simplest — and most-used — validation tool in any form-based system. Used everywhere: phone number validation, PIN verification, medical code formatting.`,
+        character: "💡 Java Mentor"
+      }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let state = {
+  screen: 'welcome',   // 'welcome' | 'game' | 'dashboard'
+  currentDept: 0,
+  currentStep: 0,
+  completedDepts: [],
+  score: 0,
+  chatHistory: [],     // [{role, text, type}]
+  awaitingInput: null, // 'choices' | 'text' | null
+  wrongAttempts: 0,
+  subStep: 0,          // for multi-part wrong handling
+  deptPhase: 'dialogue', // 'dialogue' | 'animation' | 'code' | 'done'
+  hintsUsed: 0,
+};
+
+function save() {
+  try { localStorage.setItem('lch_state', JSON.stringify(state)); } catch(e){}
+}
+function load() {
+  try {
+    const s = localStorage.getItem('lch_state');
+    if (s) state = JSON.parse(s);
+  } catch(e){}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════════════════
+function render() {
+  document.getElementById('scoreDisplay').textContent = state.score;
+  renderSidebar();
+  if (state.screen === 'welcome') renderWelcome();
+  else if (state.screen === 'game') renderGame();
+  else if (state.screen === 'dashboard') renderDashboard();
+}
+
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  let html = `<div class="sidebar-title">Departments</div>`;
+  departments.forEach((dept, i) => {
+    const done = state.completedDepts.includes(i);
+    const active = state.screen === 'game' && state.currentDept === i;
+    const locked = i > (state.completedDepts.length);
+    const cls = done ? 'completed' : active ? 'active' : locked ? 'locked' : '';
+    const iconCls = done ? 'done' : active ? 'active-icon' : 'pending';
+    html += `
+      <div class="dept-item ${cls}" onclick="${locked ? '' : `goToDept(${i})`}">
+        <div class="dept-icon ${iconCls}">${dept.icon}</div>
+        <div>
+          <div class="dept-name">${dept.name}</div>
+          ${done ? `<div class="dept-method">${dept.method}</div>` : ''}
+        </div>
+        ${done ? '<span class="check-icon">✓</span>' : ''}
+      </div>`;
+  });
+  html += `<div style="padding: 16px 20px; margin-top: 8px; border-top: 1px solid var(--slate-100);">
+    <div class="dept-item" onclick="renderDashboard(); state.screen='dashboard'; renderSidebar();">
+      <div class="dept-icon pending">📊</div>
+      <div class="dept-name">View Dashboard</div>
+    </div>
+  </div>`;
+  sidebar.innerHTML = html;
+}
+
+function goToDept(i) {
+  if (i > state.completedDepts.length && !state.completedDepts.includes(i)) return;
+  state.currentDept = i;
+  state.currentStep = 0;
+  state.chatHistory = [];
+  state.awaitingInput = null;
+  state.wrongAttempts = 0;
+  state.subStep = 0;
+  state.deptPhase = 'dialogue';
+  state.screen = 'game';
+  renderGame();
+  save();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WELCOME SCREEN
+// ═══════════════════════════════════════════════════════════════
+function renderWelcome() {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="welcome">
+      <div class="welcome-icon">🏥</div>
+      <h1>Welcome to <span>LifeCare Hospital</span></h1>
+      <p>You've just joined as a Junior Software Engineer. The hospital's digital systems need you — help build the software that keeps patients safe, while learning every Java String method along the way.</p>
+      <div class="welcome-cards">
+        <div class="welcome-card">
+          <div class="wc-icon">💬</div>
+          <h4>Real Problems First</h4>
+          <p>Every lesson starts with a hospital situation — code comes after you understand why.</p>
+        </div>
+        <div class="welcome-card">
+          <div class="wc-icon">🏥</div>
+          <h4>10 Departments</h4>
+          <p>From Registration to the Dashboard — each department teaches one Java String method.</p>
+        </div>
+        <div class="welcome-card">
+          <div class="wc-icon">⭐</div>
+          <h4>Score Points</h4>
+          <p>Earn points for correct answers. Fewer hints = more points per department.</p>
+        </div>
+      </div>
+      <button class="start-btn" onclick="startGame()">Start Your First Shift →</button>
+    </div>`;
+}
+
+function startGame() {
+  state.screen = 'game';
+  state.currentDept = 0;
+  state.currentStep = 0;
+  state.chatHistory = [];
+  state.awaitingInput = null;
+  state.deptPhase = 'dialogue';
+  renderGame();
+  save();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GAME SCREEN
+// ═══════════════════════════════════════════════════════════════
+function renderGame() {
+  const dept = departments[state.currentDept];
+  const totalSteps = dept.steps.length + 2; // +animation +code
+  const progress = state.deptPhase === 'done' ? totalSteps : state.currentStep + 1;
+
+  let dotsHtml = '';
+  for (let i = 0; i < totalSteps; i++) {
+    const cls = i < progress - 1 ? 'done' : i === progress - 1 ? 'active' : '';
+    dotsHtml += `<div class="step-dot ${cls}"></div>`;
+  }
+
+  let chatHtml = '';
+  state.chatHistory.forEach(msg => {
+    chatHtml += renderBubble(msg);
+  });
+
+  let inputHtml = '';
+  if (state.awaitingInput === 'choices' && state.pendingChoices) {
+    state.pendingChoices.forEach((c, i) => {
+      inputHtml += `<button class="choice-btn" onclick="handleChoice(${i})">${c}</button>`;
+    });
+    inputHtml = `<div class="choices">${inputHtml}</div>`;
+  } else if (state.awaitingInput === 'text') {
+    inputHtml = `<div class="input-area">
+      <input class="text-input" id="textInput" placeholder="${state.pendingPrompt || 'Type your answer...'}" 
+        onkeydown="if(event.key==='Enter')submitText()">
+      <button class="send-btn" onclick="submitText()">Send →</button>
+    </div>`;
+  } else if (state.awaitingInput === 'hint') {
+    inputHtml = `<div class="choices">
+      <button class="choice-btn" onclick="useHint()">💡 Give me a hint</button>
+      <button class="choice-btn" onclick="showInput()">I think I know it!</button>
+    </div>`;
+  }
+
+  let nextHtml = '';
+  if (state.deptPhase === 'done') {
+    const isLast = state.currentDept === departments.length - 1;
+    nextHtml = `<button class="next-btn" onclick="${isLast ? 'renderDashboard()' : 'nextDept()'}">
+      ${isLast ? '🎉 View Final Dashboard' : `Next: ${departments[state.currentDept + 1]?.name} →`}
+    </button>`;
+  }
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="dept-header">
+      <div class="dept-header-left">
+        <h1>${dept.icon} ${dept.name}</h1>
+        <p>${dept.tagline}</p>
+      </div>
+      <div class="dept-header-right">${dept.icon}</div>
+    </div>
+    <div class="step-indicator">${dotsHtml}</div>
+    <div class="chat-area" id="chatArea">${chatHtml}</div>
+    <div id="inputArea">${inputHtml}</div>
+    <div id="nextArea" style="margin-top:16px">${nextHtml}</div>`;
+
+  // Auto-scroll
+  setTimeout(() => {
+    const ca = document.getElementById('chatArea');
+    if (ca) ca.scrollTop = ca.scrollHeight;
+    const ti = document.getElementById('textInput');
+    if (ti) ti.focus();
+  }, 100);
+
+  // If no chat yet, start the dialogue
+  if (state.chatHistory.length === 0 && state.deptPhase === 'dialogue') {
+    setTimeout(() => advanceDialogue(), 300);
+  }
+}
+
+function renderBubble(msg) {
+  if (msg.type === 'transform') return renderTransform();
+  if (msg.type === 'code') return renderCode();
+
+  const isRight = msg.role === 'student';
+  const avatarClass = isRight ? 'student' : 'staff';
+  const avatar = isRight ? '👤' : msg.avatar || '👩‍⚕️';
+  const bubbleClass = msg.bubbleClass || (isRight ? 'student' : 'staff');
+
+  return `<div class="bubble-wrap ${isRight ? 'right' : ''}">
+    <div class="avatar ${avatarClass}">${avatar}</div>
+    <div class="bubble ${bubbleClass}">
+      ${msg.speaker ? `<div class="speaker-name">${msg.speaker}</div>` : ''}
+      ${msg.text}
+    </div>
+  </div>`;
+}
+
+function renderTransform() {
+  const dept = departments[state.currentDept];
+  const s = dept.scenario;
+  return `<div class="transform-box">
+    <div class="transform-label">🔄 Data Transformation</div>
+    <div class="transform-row">
+      <div>
+        <div style="font-size:11px;color:var(--red-500);font-weight:600;margin-bottom:4px">BEFORE</div>
+        <div class="data-pill before">${s.before}</div>
+      </div>
+      <div class="arrow-label">
+        <div class="arrow-text">Hospital Software</div>
+        <div style="font-size:22px">↓</div>
+        <div class="method-tag">${s.methodCall}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--green-500);font-weight:600;margin-bottom:4px">AFTER</div>
+        <div class="data-pill after">${s.after}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCode() {
+  const dept = departments[state.currentDept];
+  return `<div style="width:100%">
+    <div class="method-complete">
+      <div class="method-badge">.${dept.method}</div>
+      <div class="method-badge-text">
+        <h3>String.${dept.method} unlocked!</h3>
+        <p>${dept.tagline}</p>
+      </div>
+    </div>
+    <div class="code-block" style="margin-top:12px">
+      <div style="color:var(--slate-400);font-size:11px;margin-bottom:8px">// Java Example — ${dept.name}</div>
+      ${dept.scenario.javaExample}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DIALOGUE ENGINE
+// ═══════════════════════════════════════════════════════════════
+function advanceDialogue() {
+  const dept = departments[state.currentDept];
+  const step = dept.steps[state.currentStep];
+  if (!step) {
+    showTransformAnimation();
+    return;
+  }
+
+  // Push staff message
+  state.chatHistory.push({
+    role: 'staff',
+    avatar: step.character ? step.character.split(' ')[0] : '👩‍⚕️',
+    speaker: step.character,
+    text: step.text,
+    bubbleClass: 'staff'
+  });
+
+  if (step.question) {
+    if (step.choices) {
+      state.awaitingInput = 'choices';
+      state.pendingChoices = step.choices;
+      state.pendingStep = state.currentStep;
+    } else if (step.inputPrompt) {
+      state.awaitingInput = 'hint';
+      state.pendingPrompt = step.inputPrompt;
+      state.pendingHint = step.hint;
+    }
+  } else {
+    state.currentStep++;
+    setTimeout(() => {
+      updateChat();
+      setTimeout(() => advanceDialogue(), 600);
+    }, 400);
+  }
+
+  updateChat();
+}
+
+function handleChoice(i) {
+  const dept = departments[state.currentDept];
+  const step = dept.steps[state.pendingStep];
+  const isCorrect = i === step.correct;
+
+  // Student bubble
+  state.chatHistory.push({
+    role: 'student',
+    text: step.choices[i],
+    bubbleClass: 'student',
+    speaker: 'You'
+  });
+
+  state.awaitingInput = null;
+  state.pendingChoices = null;
+
+  if (isCorrect) {
+    state.score += Math.max(10 - state.wrongAttempts * 3, 3);
+    state.wrongAttempts = 0;
+    state.currentStep++;
+    updateChat();
+    setTimeout(() => advanceDialogue(), 700);
+  } else {
+    state.wrongAttempts++;
+    // Push hint
+    state.chatHistory.push({
+      role: 'staff',
+      avatar: '💭',
+      speaker: step.character,
+      text: step.wrongResponse,
+      bubbleClass: 'hint'
+    });
+    // Show follow-up choices
+    state.awaitingInput = 'choices';
+    state.pendingChoices = step.wrongChoices || step.choices;
+    state.pendingStep = state.pendingStep; // same step, different choices
+    if (step.wrongChoices) {
+      // replace correct with index 0
+      dept.steps[state.pendingStep] = {...step, choices: step.wrongChoices, correct: 0, wrongChoices: null, wrongResponse: null};
+    }
+    updateChat();
+  }
+}
+
+function useHint() {
+  const step = departments[state.currentDept].steps[state.currentStep];
+  state.score = Math.max(0, state.score - 1);
+  state.hintsUsed++;
+  state.chatHistory.push({
+    role: 'staff',
+    avatar: '💡',
+    speaker: '💡 Hint',
+    text: state.pendingHint || step?.hint || 'Think about what operation makes sense here...',
+    bubbleClass: 'hint'
+  });
+  state.awaitingInput = 'text';
+  updateChat();
+}
+
+function showInput() {
+  state.awaitingInput = 'text';
+  updateChat();
+}
+
+function submitText() {
+  const input = document.getElementById('textInput');
+  if (!input || !input.value.trim()) return;
+  const val = input.value.trim();
+
+  state.chatHistory.push({
+    role: 'student',
+    text: val,
+    bubbleClass: 'student',
+    speaker: 'You'
+  });
+
+  const dept = departments[state.currentDept];
+  const method = dept.method.replace('()', '').toLowerCase();
+  const answer = val.toLowerCase().replace(/[^a-z]/g, '');
+
+  const isRight = answer.includes(method) ||
+    answer.includes('trim') && method === 'trim' ||
+    answer.includes('tolower') && method === 'tolowercase' ||
+    answer.includes('lower') && method === 'tolowercase' ||
+    answer.includes('upper') && method === 'touppercase' ||
+    answer.includes('toupper') && method === 'touppercase' ||
+    answer.includes('contain') && method === 'contains' ||
+    answer.includes('replac') && method === 'replace' ||
+    answer.includes('split') && method === 'split' ||
+    answer.includes('start') && method === 'startswith' ||
+    answer.includes('equal') && method === 'equals' ||
+    answer.includes('substr') && method === 'substring' ||
+    answer.includes('length') && method === 'length' ||
+    answer.includes('len') && method === 'length' ||
+    answer.includes('count') && method === 'length' ||
+    answer.includes('size') && method === 'length' ||
+    answer.includes('clean') && method === 'trim' ||
+    answer.includes('remov') && method === 'trim';
+
+  state.awaitingInput = null;
+
+  if (isRight) {
+    state.score += Math.max(15 - state.wrongAttempts * 3, 5);
+    state.wrongAttempts = 0;
+    state.currentStep++;
+    updateChat();
+    setTimeout(() => advanceDialogue(), 500);
+  } else {
+    state.wrongAttempts++;
+    state.chatHistory.push({
+      role: 'staff',
+      avatar: '💭',
+      speaker: '🤔 Keep thinking',
+      text: `Close! Think about the exact Java method name. ${state.pendingHint || 'What single word describes this operation?'}`,
+      bubbleClass: 'hint'
+    });
+    state.awaitingInput = 'text';
+    updateChat();
+  }
+}
+
+function showTransformAnimation() {
+  state.deptPhase = 'animation';
+  state.chatHistory.push({ type: 'transform' });
+  updateChat();
+  setTimeout(() => showCodeReveal(), 1200);
+}
+
+function showCodeReveal() {
+  state.deptPhase = 'code';
+  state.chatHistory.push({ type: 'code' });
+
+  const dept = departments[state.currentDept];
+  state.chatHistory.push({
+    role: 'staff',
+    avatar: '✅',
+    speaker: '✅ Module Complete',
+    text: `<strong>${dept.name}</strong> module complete! You've learned how <code>${dept.method}</code> solves a real hospital problem. Moving to the next department will unlock when you're ready.`,
+    bubbleClass: 'success'
+  });
+
+  // Mark complete
+  if (!state.completedDepts.includes(state.currentDept)) {
+    state.completedDepts.push(state.currentDept);
+    state.score += 20;
+  }
+  state.deptPhase = 'done';
+  updateChat();
+  save();
+}
+
+function nextDept() {
+  const next = state.currentDept + 1;
+  if (next < departments.length) {
+    goToDept(next);
+  } else {
+    renderDashboard();
+  }
+}
+
+function updateChat() {
+  renderGame();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDashboard() {
+  state.screen = 'dashboard';
+  const total = departments.length;
+  const done = state.completedDepts.length;
+  const pct = Math.round((done / total) * 100);
+
+  let cardsHtml = departments.map(dept => {
+    const isDone = state.completedDepts.includes(dept.id);
+    return `<div class="dept-card ${isDone ? 'done-card' : ''}" onclick="goToDept(${dept.id})">
+      <div class="card-icon">${dept.icon}</div>
+      <h3>${dept.name}</h3>
+      <div>${isDone ? `<span class="card-method">.${dept.method}</span>` : '<span style="font-size:12px;color:var(--slate-400)">Not started</span>'}</div>
+      <div class="card-status">${isDone ? '✅ Completed' : dept.tagline}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="dashboard">
+      ${done === total ? `
+      <div class="final-score">
+        <h2>🎉 LifeCare Hospital Software Complete!</h2>
+        <div class="score-num">${state.score}</div>
+        <div class="score-label">Total Points • ${done}/${total} Departments • Junior Engineer Badge Earned</div>
+      </div>` : `
+      <div class="dashboard-header">
+        <h1>Hospital Dashboard</h1>
+        <p>${done} of ${total} departments complete • ${pct}% through your training</p>
+        <div style="background:var(--slate-200);border-radius:8px;height:8px;margin-top:16px;overflow:hidden">
+          <div style="background:linear-gradient(90deg,var(--blue-500),var(--teal));height:100%;width:${pct}%;border-radius:8px;transition:width .8s ease"></div>
+        </div>
+      </div>`}
+      <div class="dept-cards">${cardsHtml}</div>
+      ${done > 0 ? `<div style="margin-top:24px;text-align:center">
+        <button class="next-btn" style="margin:0 auto" onclick="continueGame()">
+          ${done === total ? '🔄 Review Departments' : `Continue Training →`}
+        </button>
+      </div>` : ''}
+    </div>`;
+
+  renderSidebar();
+}
+
+function continueGame() {
+  // Go to next incomplete department
+  for (let i = 0; i < departments.length; i++) {
+    if (!state.completedDepts.includes(i)) {
+      goToDept(i);
+      return;
+    }
+  }
+  goToDept(0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+load();
+render();
+</script>
+</body>
+</html>
