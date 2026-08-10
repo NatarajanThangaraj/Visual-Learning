@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Code Jumble — Biology Coding Lab</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0F2F5;--surface:#FFFFFF;--surface2:#F8FAFC;--surface3:#F1F5F9;
+  --border:#E2E8F0;--border2:#CBD5E1;
+  --text:#1E293B;--text2:#475569;--text3:#94A3B8;
+  --blue:#185FA5;--bluebg:#E6F1FB;--bluebd:#B5D4F4;
+  --green:#2D6A11;--greenbg:#EAF3DE;--greenbd:#C0DD97;
+  --amber:#7A4A08;--amberbg:#FAEEDA;--amberbd:#FAC775;
+  --red:#9B2B2B;--redbg:#FCEBEB;--redbd:#F7C1C1;
+  --purple:#4A42A8;--purplebg:#EEEDFE;--purplebd:#CECBF6;
+  --teal:#0C6349;--tealbg:#E1F5EE;--tealbd:#9FE1CB;
+  --coral:#8B3418;--coralbg:#FAECE7;--coralbd:#F5C4B3;
+  --pink:#8A2F4E;--pinkbg:#FBEAF0;--pinkbd:#F4C0D1;
+  --r:10px;--mono:'Courier New',monospace;
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.app-header{background:linear-gradient(135deg,#1a3a6b 0%,#185FA5 100%);padding:16px 24px;display:flex;align-items:center;gap:14px}
+.logo{width:42px;height:42px;background:rgba(255,255,255,.18);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.app-header h1{font-size:19px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.app-header p{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px}
+.hdr-stats{margin-left:auto;display:flex;gap:8px}
+.sc{background:rgba(255,255,255,.15);border-radius:8px;padding:5px 14px;text-align:center;min-width:60px}
+.sc .v{font-size:18px;font-weight:700;color:#fff}
+.sc .l{font-size:9px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.05em}
+
+.main{display:grid;grid-template-columns:252px 1fr;min-height:calc(100vh - 74px)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:14px 10px;overflow-y:auto;max-height:calc(100vh - 74px);position:sticky;top:0}
+.slbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:7px;padding-left:6px}
+.cgroup{margin-bottom:14px}
+.chead{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:7px;font-size:11px;font-weight:700;margin-bottom:3px}
+.qi{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:7px;cursor:pointer;font-size:11px;color:var(--text2);transition:.12s;border:1px solid transparent;line-height:1.3}
+.qi:hover{background:var(--bg)}
+.qi.active{background:var(--bluebg);border-color:var(--bluebd);color:var(--blue)}
+.qi.done{color:var(--green)}
+.qi.done .qtick{display:block}
+.qn{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.qtick{display:none;font-size:12px;color:var(--green);margin-left:auto}
+
+.content{padding:18px 20px;overflow-y:auto;max-height:calc(100vh - 74px)}
+
+.pbar-wrap{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.pbar{height:100%;background:var(--blue);border-radius:3px;transition:.4s}
+
+.navrow{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap}
+.navinfo .title{font-size:15px;font-weight:700;color:var(--text)}
+.navinfo .sub{font-size:11px;color:var(--text3);margin-top:3px}
+.navbtns{display:flex;gap:6px;flex-shrink:0}
+
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:.12s;white-space:nowrap}
+.btn:hover{background:var(--surface3)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:#0C447C}
+.btn-hint{background:var(--amberbg);color:var(--amber);border-color:var(--amberbd)}
+.btn-eye{background:var(--purplebg);color:var(--purple);border-color:var(--purplebd)}
+.btn-reset{background:var(--surface3);color:var(--text2);border-color:var(--border2)}
+
+/* INFO CARD */
+.icard{border-radius:var(--r);padding:13px 15px;margin-bottom:14px;border:1px solid}
+.icard-top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.icard-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.icard-title{font-size:14px;font-weight:700}
+.icard-concept{font-size:10px;margin-top:2px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.icard-desc{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:9px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:10px;padding:2px 8px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text2)}
+
+/* IO SECTION */
+.io-section{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.io-box{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.io-head{padding:7px 12px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:6px;background:var(--surface3)}
+.io-body{padding:10px 12px;font-size:12px;line-height:1.7;color:var(--text2)}
+.io-body code{font-family:var(--mono);font-size:11px;background:var(--surface3);padding:1px 5px;border-radius:4px;color:var(--blue)}
+.io-row{display:flex;gap:8px;margin-bottom:4px;align-items:flex-start}
+.io-row:last-child{margin-bottom:0}
+.io-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.expected-out{font-family:var(--mono);font-size:11px;background:#0F172A;color:#4ADE80;padding:8px 10px;border-radius:6px;line-height:1.8;margin-top:6px}
+
+/* GAME AREA */
+.game-area{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.panel{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.panel-head{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--surface3)}
+.panel-body{padding:6px}
+
+/* LINE BLOCKS — NO GAP BETWEEN */
+.line-block{
+  display:flex;align-items:flex-start;gap:6px;
+  background:var(--surface3);border:1px solid var(--border);
+  border-radius:0;
+  padding:5px 9px;
+  font-size:11.5px;font-family:var(--mono);
+  cursor:pointer;line-height:1.55;color:var(--text);
+  user-select:none;transition:.1s;
+  margin:0;
+}
+.line-block:first-child{border-radius:6px 6px 0 0}
+.line-block:last-child{border-radius:0 0 6px 6px}
+.line-block:only-child{border-radius:6px}
+/* merge borders */
+.line-block+.line-block{border-top:none}
+.line-block:hover{background:#E8EEF6;border-color:var(--border2);z-index:1;position:relative}
+.line-block.dragging{opacity:.35}
+.line-block.drophover{background:var(--bluebg);border-color:var(--blue);z-index:2;position:relative}
+.line-block.ans{border-left:3px solid var(--blue);background:#FAFCFF}
+.line-block.ans:first-child{border-radius:6px 6px 0 0}
+.line-block.ans:last-child{border-radius:0 0 6px 6px}
+.line-block.ans:only-child{border-radius:6px}
+.line-block.ok{border-left:3px solid var(--green);background:var(--greenbg)}
+.line-block.err{border-left:3px solid var(--red);background:var(--redbg)}
+.ln{font-size:9px;color:var(--text3);min-width:14px;flex-shrink:0;margin-top:2px;text-align:right}
+.lcode{flex:1;white-space:pre;overflow:hidden}
+
+/* drop zones between lines */
+.dz{height:4px;background:transparent;border-radius:2px;transition:.1s;margin:0}
+.dz.active{height:16px;background:var(--bluebg);border:1px dashed var(--blue);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--blue)}
+
+.empty-hint{padding:24px 12px;text-align:center;font-size:11px;color:var(--text3);border:1.5px dashed var(--border);border-radius:8px;margin:4px}
+
+/* ACTIONS */
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+
+/* HINT BOX */
+.hintbox{background:var(--amberbg);border:1px solid var(--amberbd);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--amber);line-height:1.65;margin-bottom:12px;display:none}
+.hintbox strong{font-weight:700}
+
+/* FEEDBACK */
+.fb{border-radius:8px;padding:10px 13px;font-size:12px;line-height:1.6;margin-bottom:12px;border:1px solid;display:none}
+.fb.ok{background:var(--greenbg);border-color:var(--greenbd);color:var(--green)}
+.fb.err{background:var(--redbg);border-color:var(--redbd);color:var(--red)}
+.fb.warn{background:var(--amberbg);border-color:var(--amberbd);color:var(--amber)}
+.fb.info{background:var(--bluebg);border-color:var(--bluebd);color:var(--blue)}
+
+/* OUTPUT */
+.out-panel{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
+.out-head{padding:8px 13px;border-bottom:1px solid #1e3a5f;background:#0F172A;display:flex;align-items:center;gap:7px}
+.out-head span{font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em}
+.out-badge{margin-left:auto;font-size:10px;padding:2px 9px;border-radius:10px;font-weight:600}
+.out-body{padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.9;background:#0F172A;min-height:56px}
+.ol{color:#4ADE80}
+.oe{color:#F87171}
+.op{color:#334155;font-size:11px}
+
+/* EXPLANATION */
+.expbox{background:var(--surface);border-radius:var(--r);border:1px solid var(--purplebd);overflow:hidden;display:none}
+.expbox.show{display:block}
+.exp-head{padding:10px 14px;background:var(--purplebg);border-bottom:1px solid var(--purplebd);display:flex;align-items:center;gap:8px}
+.exp-head span{font-size:12px;font-weight:700;color:var(--purple)}
+.exp-body{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.exp-sec{margin-bottom:0}
+.exp-sec.full{grid-column:1/-1}
+.explbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.exptxt{font-size:12px;color:var(--text2);line-height:1.7}
+.esteps{display:flex;flex-direction:column;gap:5px}
+.estep{display:flex;gap:9px;align-items:flex-start}
+.snum{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:2px;background:var(--purplebg);color:var(--purple)}
+.stxt{font-size:12px;color:var(--text2);line-height:1.65;flex:1}
+.stxt strong{color:var(--text);font-weight:600}
+.ttbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:4px}
+.ttbl th{background:var(--surface3);padding:5px 8px;border:1px solid var(--border);font-weight:700;color:var(--text2);text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.ttbl td{padding:5px 8px;border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px}
+.ttbl tr:nth-child(even) td{background:var(--surface3)}
+.try-box{background:var(--greenbg);border:1px solid var(--greenbd);border-radius:7px;padding:9px 12px;font-size:12px;color:var(--teal);grid-column:1/-1;line-height:1.6}
+.try-box strong{font-weight:700}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:#1E293B;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;display:none;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.toast.show{display:flex}
+
+@media(max-width:680px){
+  .main{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .game-area{grid-template-columns:1fr}
+  .io-section{grid-template-columns:1fr}
+  .exp-body{grid-template-columns:1fr}
+  .hdr-stats .sc:last-child{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="logo">🧬</div>
+  <div>
+    <h1>Python Code Jumble</h1>
+    <p>Arrange the lines • See the output • Understand the logic</p>
+  </div>
+  <div class="hdr-stats">
+    <div class="sc"><div class="v" id="hsc">0</div><div class="l">Score</div></div>
+    <div class="sc"><div class="v" id="hsv">0</div><div class="l">Solved</div></div>
+    <div class="sc"><div class="v">20</div><div class="l">Total</div></div>
+  </div>
+</div>
+
+<div class="main">
+<div class="sidebar" id="sb"></div>
+<div class="content" id="ct"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   QUESTION BANK — 20 questions
+══════════════════════════════════════════════ */
+const QS = [
+
+/* ── CONDITIONAL 1 ── */
+{id:'fever', cat:'conditional', icon:'🌡️', color:'#9B2B2B', bg:'#FCEBEB', bd:'#F7C1C1',
+ title:'Patient fever checker',
+ concept:'if / elif / else',
+ desc:'A hospital checks a patient\'s temperature and prints the exact medical diagnosis. Python checks each condition from the top and stops at the first one that is true.',
+ uses:['Hospital triage','Smartwatch health alert','School clinic','Airport scanner'],
+ input:[
+   {label:'temp', value:'38.7', note:'patient temperature in °C'}
+ ],
+ expectedOutput:['Mild fever — rest and monitor'],
+ explanation:{
+   why:'Python evaluates if → elif → elif → else from top to bottom. The moment one condition is True, it runs that block and skips everything else. This is why we put the narrowest ranges first.',
+   steps:[
+     {l:'temp = 38.7', t:'Stores the patient temperature as a float (decimal number).'},
+     {l:'if temp < 36', t:'Is 38.7 less than 36? No → skip "Hypothermia".'},
+     {l:'elif temp <= 37.5', t:'Is 38.7 ≤ 37.5? No → skip "Normal".'},
+     {l:'elif temp <= 39', t:'Is 38.7 ≤ 39? YES → print "Mild fever". Python stops here.'},
+     {l:'else', t:'Never reached because a previous condition already matched.'},
+   ],
+   trace:[
+     {c:'temp < 36', v:'38.7 < 36', r:'False — skip'},
+     {c:'temp <= 37.5', v:'38.7 ≤ 37.5', r:'False — skip'},
+     {c:'temp <= 39', v:'38.7 ≤ 39', r:'True ✓ RUNS'},
+   ],
+   tryThis:'Change temp = 35.5 → Hypothermia. Change temp = 40.5 → High fever. Observe how different branches activate.'
+ },
+ lines:[
+   'temp = 38.7',
+   'if temp < 36:',
+   '    print("Hypothermia — seek help")',
+   'elif temp <= 37.5:',
+   '    print("Normal temperature")',
+   'elif temp <= 39:',
+   '    print("Mild fever — rest and monitor")',
+   'else:',
+   '    print("High fever! See a doctor now")',
+ ],
+ sim(lines){
+   const c=lines.join('\n'),m=c.match(/temp\s*=\s*([\d.]+)/);
+   if(!m)return['Error: temp not set'];
+   const t=parseFloat(m[1]);
+   if(t<36)return['Hypothermia — seek help'];
+   if(t<=37.5)return['Normal temperature'];
+   if(t<=39)return['Mild fever — rest and monitor'];
+   return['High fever! See a doctor now'];
+ }
+},
+
+/* ── CONDITIONAL 2 ── */
+{id:'bmi', cat:'conditional', icon:'⚖️', color:'#185FA5', bg:'#E6F1FB', bd:'#B5D4F4',
+ title:'BMI health classifier',
+ concept:'if / elif / else — computed condition',
+ desc:'A fitness app calculates BMI from weight and height, then classifies the result. BMI = weight ÷ (height²). The calculation must happen BEFORE the conditions are checked.',
+ uses:['Fitness apps','Hospital registration','Insurance screening','School health check'],
+ input:[
+   {label:'weight', value:'70', note:'kg'},
+   {label:'height', value:'1.75', note:'metres'}
+ ],
+ expectedOutput:['BMI: 22.9','Normal weight — healthy range'],
+ explanation:{
+   why:'The calculation must come first — you cannot check the category before computing the value. round() keeps the output clean. The conditions then check the computed bmi value.',
+   steps:[
+     {l:'bmi = weight / (height * height)', t:'70 ÷ (1.75 × 1.75) = 70 ÷ 3.0625 = 22.857...'},
+     {l:'bmi = round(bmi, 1)', t:'Rounds to 1 decimal → 22.9.'},
+     {l:'print("BMI:", bmi)', t:'Prints the value before checking categories.'},
+     {l:'elif bmi < 25', t:'22.9 < 25 is True → "Normal weight" prints. '},
+   ],
+   trace:[
+     {c:'bmi < 18.5', v:'22.9 < 18.5', r:'False — skip'},
+     {c:'bmi < 25', v:'22.9 < 25', r:'True ✓ RUNS'},
+   ],
+   tryThis:'weight=50, height=1.75 → underweight. weight=100, height=1.70 → which category?'
+ },
+ lines:[
+   'weight = 70',
+   'height = 1.75',
+   'bmi = weight / (height * height)',
+   'bmi = round(bmi, 1)',
+   'print("BMI:", bmi)',
+   'if bmi < 18.5:',
+   '    print("Underweight")',
+   'elif bmi < 25:',
+   '    print("Normal weight — healthy range")',
+   'elif bmi < 30:',
+   '    print("Overweight — improve diet")',
+   'else:',
+   '    print("Obese — consult a doctor")',
+ ],
+ sim(lines){
+   const c=lines.join('\n');
+   const wm=c.match(/weight\s*=\s*([\d.]+)/),hm=c.match(/height\s*=\s*([\d.]+)/);
+   if(!wm||!hm)return['Error: weight or height not set'];
+   const bmi=Math.round(parseFloat(wm[1])/(parseFloat(hm[1])**2)*10)/10;
+   const o=[`BMI: ${bmi}`];
+   if(bmi<18.5)o.push('Underweight');
+   else if(bmi<25)o.push('Normal weight — healthy range');
+   else if(bmi<30)o.push('Overweight — improve diet');
+   else o.push('Obese — consult a doctor');
+   return o;
+ }
+},
+
+/* ── CONDITIONAL 3 ── */
+{id:'enzyme', cat:'conditional', icon:'⚗️', color:'#8A2F4E', bg:'#FBEAF0', bd:'#F4C0D1',
+ title:'Enzyme activity checker',
+ concept:'if with AND operator',
+ desc:'An enzyme only works when BOTH pH and temperature are in the correct range at the same time. The AND operator means both conditions must be true simultaneously.',
+ uses:['Biochemistry lab','Drug manufacturing','Digestive system model','Quality control'],
+ input:[
+   {label:'pH', value:'7.2', note:'lab condition'},
+   {label:'temp', value:'37', note:'°C'}
+ ],
+ expectedOutput:['Enzyme is active — substrate breaks down'],
+ explanation:{
+   why:'AND requires ALL conditions to be true at once. If even one is false, the entire condition is false. This is like a door that needs TWO keys — both must be correct.',
+   steps:[
+     {l:'if 6 < pH < 8 and temp == 37', t:'Two conditions joined by AND. Both must pass simultaneously.'},
+     {l:'6 < 7.2 < 8', t:'True — pH is in the correct range.'},
+     {l:'temp == 37', t:'True — temperature is correct.'},
+     {l:'True AND True = True', t:'Enzyme is active prints. elif and else are skipped.'},
+   ],
+   trace:[
+     {c:'6 < pH < 8', v:'6 < 7.2 < 8', r:'True'},
+     {c:'temp == 37', v:'37 == 37', r:'True'},
+     {c:'True AND True', v:'both conditions', r:'True ✓ RUNS'},
+   ],
+   tryThis:'pH=5.0 → enzyme denatured (pH fails). temp=40 with pH=7.2 → temperature wrong. See how AND works.'
+ },
+ lines:[
+   'pH = 7.2',
+   'temp = 37',
+   'if 6 < pH < 8 and temp == 37:',
+   '    print("Enzyme is active — substrate breaks down")',
+   'elif pH < 6 or pH > 8:',
+   '    print("pH out of range — enzyme denatured")',
+   'else:',
+   '    print("Wrong temperature — enzyme inactive")',
+ ],
+ sim(lines){
+   const c=lines.join('\n');
+   const pm=c.match(/pH\s*=\s*([\d.]+)/),tm=c.match(/temp\s*=\s*([\d.]+)/);
+   if(!pm)return['Error: pH not set'];
+   const pH=parseFloat(pm[1]),t=tm?parseFloat(tm[1]):37;
+   if(pH>6&&pH<8&&t===37)return['Enzyme is active — substrate breaks down'];
+   if(pH<=6||pH>=8)return['pH out of range — enzyme denatured'];
+   return['Wrong temperature — enzyme inactive'];
+ }
+},
+
+/* ── CONDITIONAL 4 ── */
+{id:'eb', cat:'conditional', icon:'⚡', color:'#7A4A08', bg:'#FAEEDA', bd:'#FAC775',
+ title:'Electricity bill calculator',
+ concept:'if / elif / else — slab pricing',
+ desc:'Electricity boards charge different rates per unit depending on total usage. Checking slabs from lowest to highest ensures each customer gets the right rate.',
+ uses:['TNEB billing','Smart meter app','Energy audit','Shop billing'],
+ input:[
+   {label:'units', value:'210', note:'units consumed'},
+   {label:'fixed_charge', value:'50', note:'₹ fixed monthly'}
+ ],
+ expectedOutput:['Electricity bill: Rs. 890.0'],
+ explanation:{
+   why:'Slab pricing checks conditions in ascending order. Once a slab matches, the rate is set and all other elif blocks are skipped. The final total is calculated OUTSIDE the if/elif chain.',
+   steps:[
+     {l:'units <= 100', t:'210 ≤ 100? No. Skip ₹1.50 rate.'},
+     {l:'units <= 200', t:'210 ≤ 200? No. Skip ₹2.50 rate.'},
+     {l:'units <= 500', t:'210 ≤ 500? YES. bill = 210 × 4.0 = 840.'},
+     {l:'total = bill + fixed_charge', t:'840 + 50 = 890. This line is outside the if block.'},
+     {l:'print(...total)', t:'Prints final bill amount.'},
+   ],
+   trace:[
+     {c:'units <= 100', v:'210 ≤ 100', r:'False — skip'},
+     {c:'units <= 200', v:'210 ≤ 200', r:'False — skip'},
+     {c:'units <= 500', v:'210 ≤ 500', r:'True ✓ bill=840'},
+   ],
+   tryThis:'units=85 → ₹177.5. units=650 → which slab? Always check: which condition fires first?'
+ },
+ lines:[
+   'units = 210',
+   'fixed_charge = 50',
+   'if units <= 100:',
+   '    bill = units * 1.5',
+   'elif units <= 200:',
+   '    bill = units * 2.5',
+   'elif units <= 500:',
+   '    bill = units * 4.0',
+   'else:',
+   '    bill = units * 6.0',
+   'total = bill + fixed_charge',
+   'print("Electricity bill: Rs.", total)',
+ ],
+ sim(lines){
+   const c=lines.join('\n');
+   const um=c.match(/units\s*=\s*(\d+)/),fm=c.match(/fixed_charge\s*=\s*(\d+)/);
+   if(!um)return['Error: units not set'];
+   const u=parseInt(um[1]),f=fm?parseInt(fm[1]):50;
+   let b;
+   if(u<=100)b=u*1.5; else if(u<=200)b=u*2.5; else if(u<=500)b=u*4.0; else b=u*6.0;
+   return[`Electricity bill: Rs. ${b+f}`];
+ }
+},
+
+/* ── CONDITIONAL 5 ── */
+{id:'blood', cat:'conditional', icon:'🩸', color:'#2D6A11', bg:'#EAF3DE', bd:'#C0DD97',
+ title:'Blood group compatibility',
+ concept:'if / elif / else — priority rules',
+ desc:'Blood compatibility rules must be checked in a specific priority order. Universal donor first, then universal recipient, then same group. Wrong order produces wrong results.',
+ uses:['Hospital blood bank','Emergency room','Donor matching','Red Cross system'],
+ input:[
+   {label:'donor', value:'"O-"', note:'donor blood group'},
+   {label:'recipient', value:'"A+"', note:'recipient blood group'}
+ ],
+ expectedOutput:['Compatible — O- is the universal donor'],
+ explanation:{
+   why:'Order matters in if/elif chains. O- must be checked first because it can donate to EVERYONE — if we checked "same group" first, O- donating to A+ would wrongly print "Not compatible".',
+   steps:[
+     {l:'donor = "O-"', t:'String stored with quotes. String comparison uses == operator.'},
+     {l:'if donor == "O-"', t:'"O-" == "O-" is True immediately. Block runs.'},
+     {l:'Compatible — O- is the universal donor', t:'This prints. Python exits the entire if/elif/else.'},
+     {l:'elif, else', t:'Never evaluated — the first condition already matched.'},
+   ],
+   trace:[
+     {c:'donor == "O-"', v:'"O-" == "O-"', r:'True ✓ RUNS immediately'},
+     {c:'recipient == "AB+"', v:'never checked', r:'Skipped'},
+   ],
+   tryThis:'Change donor to "A+" and recipient to "B+". Now none match early — what is the final output?'
+ },
+ lines:[
+   'donor = "O-"',
+   'recipient = "A+"',
+   'if donor == "O-":',
+   '    print("Compatible — O- is the universal donor")',
+   'elif recipient == "AB+":',
+   '    print("Compatible — AB+ receives from everyone")',
+   'elif donor == recipient:',
+   '    print("Compatible — same blood group")',
+   'else:',
+   '    print("Not compatible — transfusion not safe")',
+ ],
+ sim(lines){
+   const c=lines.join('\n');
+   const dm=c.match(/donor\s*=\s*"([^"]+)"/),rm=c.match(/recipient\s*=\s*"([^"]+)"/);
+   if(!dm)return['Error: donor not set'];
+   const d=dm[1],r=rm?rm[1]:'A+';
+   if(d==='O-')return['Compatible — O- is the universal donor'];
+   if(r==='AB+')return['Compatible — AB+ receives from everyone'];
+   if(d===r)return['Compatible — same blood group'];
+   return['Not compatible — transfusion not safe'];
+ }
+},
+
+/* ── FOR LOOP 1 ── */
+{id:'dna', cat:'loop', icon:'🧬', color:'#185FA5', bg:'#E6F1FB', bd:'#B5D4F4',
+ title:'DNA base counter',
+ concept:'for loop — iterate character by character',
+ desc:'A DNA sequencer reads every base pair one at a time. The for loop visits each character in the string exactly once from left to right, like reading a sentence letter by letter.',
+ uses:['Bioinformatics lab','Forensic DNA profiling','Genetics research','Mutation detection'],
+ input:[{label:'dna', value:'"ATCGATCGTTAA"', note:'DNA string'}],
+ expectedOutput:['A: 4  T: 4  G: 2  C: 2'],
+ explanation:{
+   why:'The for loop goes through each character one by one. Counters start at 0 outside the loop and accumulate inside. The print is OUTSIDE the loop so it fires only once after all characters are processed.',
+   steps:[
+     {l:'a = t = g = c = 0', t:'All 4 counters start at zero before the loop begins.'},
+     {l:'for base in dna:', t:'base takes each character in turn: A, T, C, G, A, T, C, G, T, T, A, A'},
+     {l:'if base == "A": a += 1', t:'Each iteration checks which base it is and increments the right counter.'},
+     {l:'print(a, t, g, c)', t:'OUTSIDE the loop (no indent). Prints once after all 12 characters done.'},
+   ],
+   trace:[
+     {c:'Iteration 1 (base="A")', v:'a = 0+1', r:'a=1'},
+     {c:'Iteration 2 (base="T")', v:'t = 0+1', r:'t=1'},
+     {c:'...12 total iterations', v:'loop runs 12 times', r:'A:4 T:4 G:2 C:2'},
+   ],
+   tryThis:'Change dna = "AAATTTGGGCCC" — predict counts before running. Were you right?'
+ },
+ lines:[
+   'dna = "ATCGATCGTTAA"',
+   'a = 0',
+   't = 0',
+   'g = 0',
+   'c = 0',
+   'for base in dna:',
+   '    if base == "A":',
+   '        a = a + 1',
+   '    elif base == "T":',
+   '        t = t + 1',
+   '    elif base == "G":',
+   '        g = g + 1',
+   '    else:',
+   '        c = c + 1',
+   'print("A:", a, " T:", t, " G:", g, " C:", c)',
+ ],
+ sim(lines){
+   const c=lines.join('\n'),m=c.match(/dna\s*=\s*"([ATGC]*)"/i);
+   if(!m)return['Error: dna not set'];
+   let a=0,t=0,g=0,cc=0;
+   for(const b of m[1].toUpperCase()){if(b==='A')a++;else if(b==='T')t++;else if(b==='G')g++;else cc++;}
+   return[`A: ${a}  T: ${t}  G: ${g}  C: ${cc}`];
+ }
+},
+
+/* ── FOR LOOP 2 ── */
+{id:'times', cat:'loop', icon:'✖️', color:'#0C6349', bg:'#E1F5EE', bd:'#9FE1CB',
+ title:'Multiplication table generator',
+ concept:'for loop with range() — counted repetition',
+ desc:'range(1, 11) generates numbers 1 through 10. The loop variable i takes each value in order. This is the most common pattern when you need to repeat something a fixed number of times.',
+ uses:['Calculator apps','Maths practice tools','Student worksheets','Scientific notation tables'],
+ input:[{label:'number', value:'7', note:'table to generate'}],
+ expectedOutput:['7 x 1 = 7','7 x 2 = 14','7 x 3 = 21','... (10 lines total)'],
+ explanation:{
+   why:'range(1, 11) produces [1,2,3,4,5,6,7,8,9,10] — note it stops BEFORE 11. The loop variable i takes each value in sequence. The multiplication result changes each time because i changes.',
+   steps:[
+     {l:'number = 7', t:'The table number is stored once outside the loop.'},
+     {l:'for i in range(1, 11):', t:'i starts at 1, goes up to 10, increments by 1 each iteration.'},
+     {l:'result = number * i', t:'Each iteration: 7×1=7, 7×2=14, 7×3=21 ... 7×10=70'},
+     {l:'print(number, "x", i, "=", result)', t:'Prints one line per iteration — 10 lines total.'},
+   ],
+   trace:[
+     {c:'i = 1', v:'7 × 1', r:'7 x 1 = 7'},
+     {c:'i = 2', v:'7 × 2', r:'7 x 2 = 14'},
+     {c:'i = 10', v:'7 × 10', r:'7 x 10 = 70'},
+   ],
+   tryThis:'Change range(1, 11) to range(1, 6) — only 5 lines print. Change number=12 — what is 12×7?'
+ },
+ lines:[
+   'number = 7',
+   'for i in range(1, 11):',
+   '    result = number * i',
+   '    print(number, "x", i, "=", result)',
+ ],
+ sim(lines){
+   const c=lines.join('\n'),nm=c.match(/number\s*=\s*(\d+)/);
+   if(!nm)return['Error: number not set'];
+   const n=parseInt(nm[1]);
+   return Array.from({length:10},(_,i)=>`${n} x ${i+1} = ${n*(i+1)}`);
+ }
+},
+
+/* ── WHILE LOOP 1 ── */
+{id:'bacteria', cat:'loop', icon:'🦠', color:'#8A2F4E', bg:'#FBEAF0', bd:'#F4C0D1',
+ title:'Antibiotic dose simulator',
+ concept:'while loop — repeat until condition is false',
+ desc:'Keep applying antibiotic until all bacteria are eliminated. The while loop checks its condition before EVERY round. When bacteria reach 0, the condition becomes false and the loop exits.',
+ uses:['Pharmacist dosing tool','Medical simulation','Resistance research','Infection tracking'],
+ input:[
+   {label:'bacteria', value:'600', note:'starting count'},
+   {label:'dose', value:'200', note:'eliminated per round'}
+ ],
+ expectedOutput:['Round 1 : 400 bacteria left','Round 2 : 200 bacteria left','Round 3 : Bacteria eliminated!','Total doses: 3'],
+ explanation:{
+   why:'The while loop condition is re-evaluated before every iteration. When bacteria reach 0, "bacteria > 0" becomes False and the loop body no longer runs. The final print is outside the loop.',
+   steps:[
+     {l:'bacteria = 600, dose = 200, rounds = 0', t:'Initial state. All 3 variables set before loop starts.'},
+     {l:'while bacteria > 0:', t:'Check: 600>0? Yes. Enter loop.'},
+     {l:'bacteria = bacteria - dose', t:'600-200=400. Then next round: 400-200=200. Then: 200-200=0.'},
+     {l:'rounds = rounds + 1', t:'Counts how many doses were given.'},
+     {l:'print("Total doses:", rounds)', t:'OUTSIDE loop (no indent). Prints once after loop ends.'},
+   ],
+   trace:[
+     {c:'Round 1', v:'bacteria=600-200', r:'400 > 0 → continue'},
+     {c:'Round 2', v:'bacteria=400-200', r:'200 > 0 → continue'},
+     {c:'Round 3', v:'bacteria=200-200', r:'0 > 0 → FALSE → exit'},
+   ],
+   tryThis:'Change bacteria=1000, dose=300. Does it divide evenly? What happens when bacteria goes negative?'
+ },
+ lines:[
+   'bacteria = 600',
+   'dose = 200',
+   'rounds = 0',
+   'while bacteria > 0:',
+   '    bacteria = bacteria - dose',
+   '    rounds = rounds + 1',
+   '    if bacteria > 0:',
+   '        print("Round", rounds, ":", bacteria, "bacteria left")',
+   '    else:',
+   '        print("Round", rounds, ": Bacteria eliminated!")',
+   'print("Total doses:", rounds)',
+ ],
+ sim(lines){
+   const c=lines.join('\n');
+   const bm=c.match(/bacteria\s*=\s*(\d+)/),dm=c.match(/dose\s*=\s*(\d+)/);
+   if(!bm)return['Error: bacteria not set'];
+   let b=parseInt(bm[1]),d=dm?parseInt(dm[1]):200,r=0;
+   const o=[];
+   while(b>0&&r<30){b-=d;r++;
+     if(b>0)o.push(`Round ${r} : ${b} bacteria left`);
+     else o.push(`Round ${r} : Bacteria eliminated!`);
+   }
+   o.push(`Total doses: ${r}`);
+   return o;
+ }
+},
+
+/* ── WHILE LOOP 2 ── */
+{id:'atm', cat:'loop', icon:'💳', color:'#8B3418', bg:'#FAECE7', bd:'#F5C4B3',
+ title:'ATM PIN checker',
+ concept:'while loop with break — exit on success',
+ desc:'An ATM gives 3 attempts. The while loop runs until the PIN is correct (break exits immediately) OR the limit is reached. A counter prevents infinite looping.',
+ uses:['ATM security','Phone unlock','Website login limiter','Lab access control'],
+ input:[
+   {label:'correct_pin', value:'"1234"', note:'stored in system'},
+   {label:'attempts', value:'0', note:'counter starts at 0'}
+ ],
+ expectedOutput:['Attempt 1: Wrong PIN — 2 tries left','Attempt 2: Wrong PIN — 1 try left','Attempt 3: Access granted!'],
+ explanation:{
+   why:'break instantly exits the while loop when the correct PIN is found. Without break, the loop would continue even after success. The counter prevents more than 3 attempts.',
+   steps:[
+     {l:'while attempts < max_tries:', t:'Runs as long as attempts is less than 3.'},
+     {l:'attempts = attempts + 1', t:'Increment first so attempt 1 prints as "Attempt 1".'},
+     {l:'if entered == correct_pin:', t:'Correct PIN found — print success and break exits loop.'},
+     {l:'break', t:'Immediately jumps out of the while loop. Remaining iterations skipped.'},
+     {l:'if attempts == max_tries and entered != correct_pin:', t:'After loop: check if all attempts used without success.'},
+   ],
+   trace:[
+     {c:'Attempt 1: "9999"', v:'"9999" != "1234"', r:'Wrong — 2 tries left'},
+     {c:'Attempt 2: "0000"', v:'"0000" != "1234"', r:'Wrong — 1 try left'},
+     {c:'Attempt 3: "1234"', v:'"1234" == "1234"', r:'break — Access granted!'},
+   ],
+   tryThis:'Change all 3 entered values to wrong PINs. Now break never fires — does "Card blocked!" print?'
+ },
+ lines:[
+   'correct_pin = "1234"',
+   'attempts = 0',
+   'max_tries = 3',
+   'entered_pins = ["9999", "0000", "1234"]',
+   'while attempts < max_tries:',
+   '    entered = entered_pins[attempts]',
+   '    attempts = attempts + 1',
+   '    if entered == correct_pin:',
+   '        print("Attempt", attempts, ": Access granted!")',
+   '        break',
+   '    else:',
+   '        print("Attempt", attempts, ": Wrong PIN —", max_tries - attempts, "tries left")',
+   'if attempts == max_tries and entered != correct_pin:',
+   '    print("Card blocked!")',
+ ],
+ sim(lines){
+   const pins=['9999','0000','1234'];
+   const correct='1234',max=3;
+   const o=[];let att=0,last='';
+   while(att<max){
+     last=pins[att]||'0000';att++;
+     if(last===correct){o.push(`Attempt ${att} : Access granted!`);break;}
+     else o.push(`Attempt ${att} : Wrong PIN — ${max-att} tries left`);
+   }
+   if(att===max&&last!==correct)o.push('Card blocked!');
+   return o;
+ }
+},
+
+/* ── FOR LOOP 3 ── */
+{id:'marks', cat:'loop', icon:'📊', color:'#4A42A8', bg:'#EEEDFE', bd:'#CECBF6',
+ title:'Student grade classifier',
+ concept:'for loop over a list — process each item',
+ desc:'Loop through a list of marks and print the grade for each student. The for loop processes every item in the list exactly once — the list replaces range() as the source of values.',
+ uses:['School result portal','Exam analytics','Report card generator','Scholarship filter'],
+ input:[{label:'marks', value:'[85, 42, 73, 91, 55]', note:'five student scores'}],
+ expectedOutput:['85 → A grade','42 → F grade','73 → B grade','91 → A grade','55 → D grade'],
+ explanation:{
+   why:'When you loop over a list, the variable takes each element in order. The if/elif inside the loop runs fresh for EVERY element — it is not shared between iterations.',
+   steps:[
+     {l:'marks = [85, 42, 73, 91, 55]', t:'A list of 5 scores. The loop will visit each one.'},
+     {l:'for score in marks:', t:'score=85 first, then 42, then 73, then 91, then 55.'},
+     {l:'if score >= 80: ... elif score >= 60: ...', t:'Each score gets its own fresh if/elif evaluation.'},
+     {l:'print(score, "→", grade)', t:'Prints result for EACH score inside the loop. 5 lines total.'},
+   ],
+   trace:[
+     {c:'score = 85', v:'85 >= 80', r:'A grade'},
+     {c:'score = 42', v:'42 < 50', r:'F grade'},
+     {c:'score = 73', v:'73 >= 60', r:'B grade'},
+   ],
+   tryThis:'Add 100 to the list. What grade does it get? Add 0 — what happens? Change 55 to 60 — does grade change?'
+ },
+ lines:[
+   'marks = [85, 42, 73, 91, 55]',
+   'for score in marks:',
+   '    if score >= 80:',
+   '        grade = "A grade"',
+   '    elif score >= 60:',
+   '        grade = "B grade"',
+   '    elif score >= 50:',
+   '        grade = "D grade"',
+   '    else:',
+   '        grade = "F grade"',
+   '    print(score, "→", grade)',
+ ],
+ sim(lines){
+   const scores=[85,42,73,91,55];
+   return scores.map(s=>{
+     let g;
+     if(s>=80)g='A grade';else if(s>=60)g='B grade';else if(s>=50)g='D grade';else g='F grade';
+     return`${s} → ${g}`;
+   });
+ }
+},
+
+/* ── STRING 1 ── */
+{id:'dnastr', cat:'string', icon:'🔬', color:'#0C6349', bg:'#E1F5EE', bd:'#9FE1CB',
+ title:'DNA mutation detector',
+ concept:'upper(), find(), count(), replace()',
+ desc:'A genetics tool reads a DNA sequence, normalises it, locates a gene marker, counts repeat patterns, and corrects a known mutation — all using string methods.',
+ uses:['Bioinformatics tools','Cancer marker detection','Lab diagnostic software','Forensic analysis'],
+ input:[{label:'dna', value:'"atcgaatcgatcg"', note:'raw lowercase sequence'}],
+ expectedOutput:['Sequence: ATCGAATCGATCG','Length: 13','AAT marker at position: 4','AT repeats: 3','After fix: ATCGAAACGATCG'],
+ explanation:{
+   why:'String methods do NOT change the original string — they return a new string. That is why we write dna = dna.upper() to reassign. Each method is chained to the result of the previous step.',
+   steps:[
+     {l:'dna = dna.upper()', t:'Converts all lowercase to uppercase. "atcg" → "ATCG".'},
+     {l:'dna.find("AAT")', t:'Returns the index of the first occurrence. Index 4 means position 5 (counting from 0).'},
+     {l:'dna.count("AT")', t:'Counts ALL non-overlapping occurrences of "AT" in the string.'},
+     {l:'dna.replace("AAT", "AAA")', t:'Returns a new string with "AAT" swapped for "AAA". Simulates correcting a mutation.'},
+   ],
+   trace:[
+     {c:'.upper()', v:'"atcgaatcgatcg"', r:'"ATCGAATCGATCG"'},
+     {c:'.find("AAT")', v:'search in string', r:'4 (0-indexed)'},
+     {c:'.count("AT")', v:'count pattern', r:'3'},
+     {c:'.replace("AAT","AAA")', v:'swap mutation', r:'"ATCGAAACGATCG"'},
+   ],
+   tryThis:'Change dna to "gcgcgcgc". What does find("AAT") return? (Hint: -1 means not found)'
+ },
+ lines:[
+   'dna = "atcgaatcgatcg"',
+   'dna = dna.upper()',
+   'print("Sequence:", dna)',
+   'print("Length:", len(dna))',
+   'position = dna.find("AAT")',
+   'print("AAT marker at position:", position)',
+   'repeats = dna.count("AT")',
+   'print("AT repeats:", repeats)',
+   'fixed = dna.replace("AAT", "AAA")',
+   'print("After fix:", fixed)',
+ ],
+ sim(lines){
+   const c=lines.join('\n'),m=c.match(/dna\s*=\s*"([^"]*)"/);
+   if(!m)return['Error: dna not set'];
+   const dna=m[1].toUpperCase();
+   const pos=dna.indexOf('AAT');
+   const reps=(dna.match(/AT/g)||[]).length;
+   const fixed=dna.replace('AAT','AAA');
+   return[`Sequence: ${dna}`,`Length: ${dna.length}`,`AAT marker at position: ${pos===-1?'not found':pos}`,`AT repeats: ${reps}`,`After fix: ${fixed}`];
+ }
+},
+
+/* ── STRING 2 ── */
+{id:'name_fmt', cat:'string', icon:'🏥', color:'#4A42A8', bg:'#EEEDFE', bd:'#CECBF6',
+ title:'Patient name formatter',
+ concept:'strip(), title(), split(), len(), join()',
+ desc:'Hospital data entry often has messy input — extra spaces, wrong capitalisation, comma-separated lists. String methods clean and format raw data into proper records.',
+ uses:['Hospital EHR system','Patient data cleaning','Medical record formatting','Lab report generation'],
+ input:[
+   {label:'raw_name', value:'"  priya kumari  "', note:'with extra spaces'},
+   {label:'raw_symptoms', value:'"fever,headache,fatigue"', note:'comma-separated'}
+ ],
+ expectedOutput:['Patient: Priya Kumari','Symptoms: [\'fever\', \'headache\', \'fatigue\']','Count: 3','Report: fever, headache, fatigue'],
+ explanation:{
+   why:'strip() removes whitespace only from the edges. title() capitalises the first letter of each word. split(",") breaks one string into a list. join() does the reverse — assembles a list back into one string.',
+   steps:[
+     {l:'raw_name.strip()', t:'Removes the 2 spaces before and after → "priya kumari"'},
+     {l:'.title()', t:'Capitalises each word → "Priya Kumari"'},
+     {l:'raw_symptoms.split(",")', t:'Splits at each comma → ["fever","headache","fatigue"]'},
+     {l:'", ".join(symptoms)', t:'Joins list items with ", " between each → "fever, headache, fatigue"'},
+   ],
+   trace:[
+     {c:'strip()', v:'"  priya kumari  "', r:'"priya kumari"'},
+     {c:'title()', v:'"priya kumari"', r:'"Priya Kumari"'},
+     {c:'split(",")', v:'one string', r:'list of 3 items'},
+     {c:'", ".join()', v:'list of 3', r:'one clean string'},
+   ],
+   tryThis:'Change raw_symptoms to "cough,vomiting,rash,dizziness". Does count change? Try split(" ") instead of split(",") — what happens?'
+ },
+ lines:[
+   'raw_name = "  priya kumari  "',
+   'raw_symptoms = "fever,headache,fatigue"',
+   'name = raw_name.strip()',
+   'name = name.title()',
+   'print("Patient:", name)',
+   'symptoms = raw_symptoms.split(",")',
+   'print("Symptoms:", symptoms)',
+   'print("Count:", len(symptoms))',
+   'report = ", ".join(symptoms)',
+   'print("Report:", report)',
+ ],
+ sim(lines){
+   const c=lines.join('\n');
+   const nm=c.match(/raw_name\s*=\s*"([^"]*)"/),sm=c.match(/raw_symptoms\s*=\s*"([^"]*)"/);
+   if(!nm)return['Error: raw_name not set'];
+   const name=nm[1].trim().split(' ').filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1).toLowerCase()).join(' ');
+   const syms=sm?sm[1].split(','):['fever'];
+   return[`Patient: ${name}`,`Symptoms: ['${syms.join("', '")}']`,`Count: ${syms.length}`,`Report: ${syms.join(', ')}`];
+ }
+},
+
+/* ── STRING 3 ── */
+{id:'grade_fmt', cat:'string', icon:'📋', color:'#7A4A08', bg:'#FAEEDA', bd:'#FAC775',
+ title:'Result report generator',
+ concept:'format(), lower(), startswith(), upper()',
+ desc:'A school portal builds a formatted result report, checks grade eligibility for a scholarship, and verifies report ownership — all using string methods on the same data.',
+ uses:['School result portal','Student SMS alerts','Scholarship selection','Report card printing'],
+ input:[
+   {label:'student', value:'"Arjun"', note:'student name'},
+   {label:'marks', value:'87', note:'out of 100'},
+   {label:'grade', value:'"A"', note:'letter grade'}
+ ],
+ expectedOutput:['Report: Arjun scored 87 — Grade: A','Eligible for scholarship','Report belongs to: Arjun'],
+ explanation:{
+   why:'.format() inserts values into a template cleanly. .lower() makes comparison case-insensitive so "A" and "a" both match. .startswith() checks the beginning of a string without reading all of it.',
+   steps:[
+     {l:'"{} scored {} — Grade: {}".format(student, marks, grade)', t:'Each {} is replaced in order by the values in format().'},
+     {l:'grade.lower()', t:'"A".lower() = "a". Now "a" == "a" works regardless of how grade was typed.'},
+     {l:'report.startswith("Arjun")', t:'Returns True if report begins with "Arjun". Faster than checking the full string.'},
+   ],
+   trace:[
+     {c:'.format()', v:'"{} scored {}"', r:'"Arjun scored 87 — Grade: A"'},
+     {c:'.lower()', v:'"A"', r:'"a"'},
+     {c:'.startswith("Arjun")', v:'does report begin with Arjun?', r:'True'},
+   ],
+   tryThis:'Change grade to "c". Does the scholarship check still work? Change student to "Meera" — does startswith("Arjun") still pass?'
+ },
+ lines:[
+   'student = "Arjun"',
+   'marks = 87',
+   'grade = "A"',
+   'report = "{} scored {} — Grade: {}".format(student, marks, grade)',
+   'print("Report:", report)',
+   'if grade.lower() == "a" or grade.lower() == "b":',
+   '    print("Eligible for scholarship")',
+   'else:',
+   '    print("Not eligible for scholarship")',
+   'if report.startswith("Arjun"):',
+   '    print("Report belongs to: Arjun")',
+ ],
+ sim(lines){
+   const c=lines.join('\n');
+   const sn=c.match(/student\s*=\s*"([^"]*)"/),mn=c.match(/marks\s*=\s*(\d+)/),gn=c.match(/grade\s*=\s*"([^"]*)"/);
+   if(!sn)return['Error: student not set'];
+   const s=sn[1],m=mn?parseInt(mn[1]):87,g=gn?gn[1]:'A';
+   const report=`${s} scored ${m} — Grade: ${g}`;
+   const elig=['a','b'].includes(g.toLowerCase())?'Eligible for scholarship':'Not eligible for scholarship';
+   const own=report.startsWith('Arjun')?'Report belongs to: Arjun':'Report owner: unverified';
+   return[`Report: ${report}`,elig,own];
+ }
+},
+
+/* ── LIST 1 ── */
+{id:'ward', cat:'list', icon:'🏨', color:'#4A42A8', bg:'#EEEDFE', bd:'#CECBF6',
+ title:'Hospital ward manager',
+ concept:'append(), remove(), sort(), copy(), len()',
+ desc:'A ward list tracks all admitted patients. Each list method maps to a real hospital action. The backup is created BEFORE making changes so the original state is preserved.',
+ uses:['Hospital ward software','ICU patient tracker','Clinic appointments','Emergency room'],
+ input:[{label:'patients', value:'["Arjun", "Meera", "Ravi"]', note:'initial ward'}],
+ expectedOutput:['Ward: [\'Arjun\', \'Meera\', \'Ravi\']','After admit: [\'Arjun\', \'Meera\', \'Ravi\', \'Priya\']','After discharge: [\'Arjun\', \'Meera\', \'Priya\']','Sorted: [\'Arjun\', \'Meera\', \'Priya\']','Count: 3','Backup: [\'Arjun\', \'Meera\', \'Ravi\', \'Priya\']'],
+ explanation:{
+   why:'List methods modify the list in-place (no need to reassign). copy() creates an independent list — changes to patients do not affect backup. The order of operations matters: backup must be taken before remove().',
+   steps:[
+     {l:'patients.append("Priya")', t:'Adds Priya to the END. List grows from 3 to 4.'},
+     {l:'backup = patients.copy()', t:'Creates a SEPARATE copy. Changing patients will NOT change backup.'},
+     {l:'patients.remove("Ravi")', t:'Finds "Ravi" and removes him. List shrinks from 4 to 3.'},
+     {l:'patients.sort()', t:'Rearranges alphabetically in-place. Original order is replaced.'},
+     {l:'len(patients)', t:'Returns count of items — 3 here.'},
+   ],
+   trace:[
+     {c:'append("Priya")', v:'3 items', r:'4 items'},
+     {c:'copy()', v:'4 items', r:'backup = 4 items (separate)'},
+     {c:'remove("Ravi")', v:'4 items', r:'3 items'},
+     {c:'sort()', v:'[Arjun,Meera,Priya]', r:'alphabetical order'},
+   ],
+   tryThis:'Move the copy() line to BEFORE append(). How does backup change? Try removing a name not in the list — what error occurs?'
+ },
+ lines:[
+   'patients = ["Arjun", "Meera", "Ravi"]',
+   'print("Ward:", patients)',
+   'patients.append("Priya")',
+   'print("After admit:", patients)',
+   'backup = patients.copy()',
+   'patients.remove("Ravi")',
+   'print("After discharge:", patients)',
+   'patients.sort()',
+   'print("Sorted:", patients)',
+   'print("Count:", len(patients))',
+   'print("Backup:", backup)',
+ ],
+ sim(lines){
+   let p=['Arjun','Meera','Ravi'];
+   const o=[`Ward: ['${p.join("', '")}']`];
+   p.push('Priya');o.push(`After admit: ['${p.join("', '")}']`);
+   const bk=[...p];
+   p=p.filter(x=>x!=='Ravi');o.push(`After discharge: ['${p.join("', '")}']`);
+   p.sort();o.push(`Sorted: ['${p.join("', '")}']`);
+   o.push(`Count: ${p.length}`);
+   o.push(`Backup: ['${bk.join("', '")}']`);
+   return o;
+ }
+},
+
+/* ── LIST 2 ── */
+{id:'marks_list', cat:'list', icon:'📈', color:'#7A4A08', bg:'#FAEEDA', bd:'#FAC775',
+ title:'Class marks analyser',
+ concept:'sort(), max(), min(), sum(), len(), list comprehension',
+ desc:'A school system analyses a class marks list — finding top and lowest scorers, class average, and counting how many students passed. sort() with reverse=True ranks from highest to lowest.',
+ uses:['School result portal','Exam analytics','Scholarship selection','Performance tracker'],
+ input:[{label:'marks', value:'[72, 85, 91, 60, 78]', note:'five student marks'}],
+ expectedOutput:['All marks: [72, 85, 91, 60, 78]','Ranked: [91, 85, 78, 72, 60]','Top score: 91','Lowest: 60','Passed: 5','Average: 77.2'],
+ explanation:{
+   why:'sort(reverse=True) sorts descending. After sorting, the first element [0] is the highest and [-1] is the lowest. sum()/len() calculates average. List comprehension filters in one line.',
+   steps:[
+     {l:'marks.sort(reverse=True)', t:'Sorts the list in-place: [91,85,78,72,60]. The original order is gone.'},
+     {l:'marks[0]', t:'Index 0 = first element after sorting = 91 (highest).'},
+     {l:'marks[-1]', t:'Index -1 = last element = 60 (lowest). Negative index counts from the end.'},
+     {l:'[m for m in marks if m >= 50]', t:'List comprehension: creates a new list of only passing marks.'},
+     {l:'round(sum(marks)/len(marks), 1)', t:'Sum all marks, divide by count, round to 1 decimal.'},
+   ],
+   trace:[
+     {c:'sort(reverse=True)', v:'[72,85,91,60,78]', r:'[91,85,78,72,60]'},
+     {c:'marks[0]', v:'first after sort', r:'91'},
+     {c:'marks[-1]', v:'last after sort', r:'60'},
+     {c:'sum/len', v:'386/5', r:'77.2'},
+   ],
+   tryThis:'Add 45 to the original list. Does "Passed" count change? Change the pass threshold from 50 to 70 — how many pass now?'
+ },
+ lines:[
+   'marks = [72, 85, 91, 60, 78]',
+   'print("All marks:", marks)',
+   'marks.sort(reverse=True)',
+   'print("Ranked:", marks)',
+   'print("Top score:", marks[0])',
+   'print("Lowest:", marks[-1])',
+   'passed = [m for m in marks if m >= 50]',
+   'print("Passed:", len(passed))',
+   'average = round(sum(marks) / len(marks), 1)',
+   'print("Average:", average)',
+ ],
+ sim(lines){
+   const m=[72,85,91,60,78];
+   const orig=[...m];
+   m.sort((a,b)=>b-a);
+   const passed=m.filter(x=>x>=50);
+   const avg=Math.round(m.reduce((a,b)=>a+b,0)/m.length*10)/10;
+   return[`All marks: [${orig.join(', ')}]`,`Ranked: [${m.join(', ')}]`,`Top score: ${m[0]}`,`Lowest: ${m[m.length-1]}`,`Passed: ${passed.length}`,`Average: ${avg}`];
+ }
+},
+
+/* ── DATETIME 1 ── */
+{id:'meeting', cat:'datetime', icon:'📅', color:'#4A42A8', bg:'#EEEDFE', bd:'#CECBF6',
+ title:'Meeting duration calculator',
+ concept:'datetime.strptime(), timedelta, total_seconds()',
+ desc:'You cannot subtract time strings directly. strptime() converts a string to a datetime object that supports arithmetic. Subtracting two datetime objects gives a timedelta.',
+ uses:['Google Calendar','Zoom meeting timer','HR time tracking','Client billing'],
+ input:[
+   {label:'start_str', value:'"09:30"', note:'HH:MM format'},
+   {label:'end_str', value:'"12:15"', note:'HH:MM format'}
+ ],
+ expectedOutput:['Duration: 2 hours 45 minutes','Warning: meeting exceeds 2 hours!'],
+ explanation:{
+   why:'Plain strings cannot do arithmetic — "12:15" minus "09:30" is meaningless. strptime() parses the string into a datetime object. Subtracting gives a timedelta which has total_seconds(). Dividing by 60 gives minutes.',
+   steps:[
+     {l:'from datetime import datetime', t:'Must import before using any datetime functions.'},
+     {l:'datetime.strptime("09:30", "%H:%M")', t:'%H = 24-hour hour, %M = minutes. Converts string to datetime.'},
+     {l:'duration = end - start', t:'Subtracting two datetime objects gives a timedelta object.'},
+     {l:'total_minutes = int(duration.total_seconds() / 60)', t:'timedelta stores time as seconds. Divide by 60 for minutes.'},
+     {l:'hours = total_minutes // 60', t:'Integer division: 165 // 60 = 2 hours.'},
+     {l:'minutes = total_minutes % 60', t:'Remainder: 165 % 60 = 45 minutes.'},
+   ],
+   trace:[
+     {c:'strptime("09:30")', v:'string → datetime', r:'datetime object'},
+     {c:'end - start', v:'12:15 − 09:30', r:'timedelta of 165 min'},
+     {c:'165 // 60', v:'integer division', r:'2 hours'},
+     {c:'165 % 60', v:'remainder', r:'45 minutes'},
+   ],
+   tryThis:'Change end_str to "10:30" — is it still over 2 hours? Try "11:30" exactly — which branch fires?'
+ },
+ lines:[
+   'from datetime import datetime',
+   'start_str = "09:30"',
+   'end_str = "12:15"',
+   'start = datetime.strptime(start_str, "%H:%M")',
+   'end = datetime.strptime(end_str, "%H:%M")',
+   'duration = end - start',
+   'total_minutes = int(duration.total_seconds() / 60)',
+   'hours = total_minutes // 60',
+   'minutes = total_minutes % 60',
+   'print("Duration:", hours, "hours", minutes, "minutes")',
+   'if total_minutes > 120:',
+   '    print("Warning: meeting exceeds 2 hours!")',
+   'else:',
+   '    print("Duration is within recommended limits.")',
+ ],
+ sim(lines){
+   const c=lines.join('\n');
+   const sm=c.match(/start_str\s*=\s*"(\d+:\d+)"/),em=c.match(/end_str\s*=\s*"(\d+:\d+)"/);
+   if(!sm||!em)return['Error: time strings not set'];
+   const[sh,smin]=sm[1].split(':').map(Number),[eh,emin]=em[1].split(':').map(Number);
+   const total=(eh*60+emin)-(sh*60+smin);
+   if(total<0)return['Error: end time before start time'];
+   const h=Math.floor(total/60),m=total%60;
+   const o=[`Duration: ${h} hours ${m} minutes`];
+   if(total>120)o.push('Warning: meeting exceeds 2 hours!');
+   else o.push('Duration is within recommended limits.');
+   return o;
+ }
+},
+
+/* ── DATETIME 2 ── */
+{id:'age', cat:'datetime', icon:'🎂', color:'#8B3418', bg:'#FAECE7', bd:'#F5C4B3',
+ title:'Age and birthday calculator',
+ concept:'date.today(), date(), .days, .month, .day',
+ desc:'date.today() always returns the current date automatically. Subtracting two date objects gives a timedelta. Accessing .month and .day attributes checks birthday matches.',
+ uses:['Hospital registration','School admission','Insurance verification','Birthday apps'],
+ input:[
+   {label:'birth_date', value:'date(2000, 7, 8)', note:'year, month, day'}
+ ],
+ expectedOutput:['Born: 2000-07-08','Today: (current date)','Age: 25 years (approx)','Birthday check: result varies'],
+ explanation:{
+   why:'date.today() reads the computer clock — the program always knows the current date without being told. Subtracting dates gives a timedelta whose .days attribute is the total days between them.',
+   steps:[
+     {l:'from datetime import date', t:'Import only the date class (not full datetime).'},
+     {l:'today = date.today()', t:'Gets current date from system clock. No argument needed.'},
+     {l:'birth_date = date(2000, 7, 8)', t:'date(year, month, day) — note: no quotes around numbers.'},
+     {l:'age_days = (today - birth_date).days', t:'Subtraction gives timedelta. .days extracts the integer day count.'},
+     {l:'today.month == birth_date.month and today.day == birth_date.day', t:'Check both month AND day — if both match, it is their birthday today!'},
+   ],
+   trace:[
+     {c:'today - birth_date', v:'date arithmetic', r:'timedelta'},
+     {c:'.days // 365', v:'~9132 days', r:'~25 years'},
+     {c:'month == month AND day == day', v:'birthday check', r:'True or False'},
+   ],
+   tryThis:'Change birth_date to today\'s actual date. Does "Happy Birthday" print? Change year to 2010 — what age shows?'
+ },
+ lines:[
+   'from datetime import date',
+   'today = date.today()',
+   'birth_date = date(2000, 7, 8)',
+   'age_days = (today - birth_date).days',
+   'age_years = age_days // 365',
+   'print("Born:", birth_date)',
+   'print("Today:", today)',
+   'print("Age:", age_years, "years")',
+   'if today.month == birth_date.month and today.day == birth_date.day:',
+   '    print("Happy Birthday!")',
+   'else:',
+   '    print("Birthday this year:", date(today.year, birth_date.month, birth_date.day))',
+ ],
+ sim(lines){
+   const c=lines.join('\n'),bm=c.match(/birth_date\s*=\s*date\((\d+),\s*(\d+),\s*(\d+)\)/);
+   if(!bm)return['Error: birth_date not set'];
+   const[,y,mo,d]=[...bm].map(Number);
+   const today=new Date(),birth=new Date(y,mo-1,d);
+   const days=Math.floor((today-birth)/86400000),years=Math.floor(days/365);
+   const td=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+   const bd=`${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+   const isBday=(today.getMonth()+1===mo&&today.getDate()===d);
+   const o=[`Born: ${bd}`,`Today: ${td}`,`Age: ${years} years`];
+   if(isBday)o.push('Happy Birthday!');
+   else o.push(`Birthday this year: ${today.getFullYear()}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+   return o;
+ }
+},
+
+/* ── GENERIC LOGICAL 1 ── */
+{id:'swap', cat:'logical', icon:'🔀', color:'#0C6349', bg:'#E1F5EE', bd:'#9FE1CB',
+ title:'Swap two variables',
+ concept:'variable assignment — temp variable pattern',
+ desc:'Swapping two values is a classic logical puzzle. Directly writing a = b loses the original value of a. A temporary variable solves this by saving the value before overwriting.',
+ uses:['Sorting algorithms','Card shuffle games','Data rearrangement','Memory management'],
+ input:[
+   {label:'a', value:'10', note:'first value'},
+   {label:'b', value:'20', note:'second value'}
+ ],
+ expectedOutput:['Before: a=10 b=20','After swap: a=20 b=10'],
+ explanation:{
+   why:'Without temp: if you write a=b first, a becomes 20. Now b=a sets b=20 too. You lost 10 forever! The temp variable saves the original value of a before it is overwritten.',
+   steps:[
+     {l:'print("Before: a=10 b=20")', t:'Show values before swap.'},
+     {l:'temp = a', t:'temp = 10. Save a\'s value safely.'},
+     {l:'a = b', t:'a = 20. a now holds b\'s value. Original a (10) is safe in temp.'},
+     {l:'b = temp', t:'b = 10. b now holds the original value of a.'},
+     {l:'print(after)', t:'a=20, b=10. The swap is complete.'},
+   ],
+   trace:[
+     {c:'temp = a', v:'temp = 10', r:'a=10, b=20, temp=10'},
+     {c:'a = b', v:'a = 20', r:'a=20, b=20, temp=10'},
+     {c:'b = temp', v:'b = 10', r:'a=20, b=10, temp=10 ✓'},
+   ],
+   tryThis:'Remove the temp variable and try a=b then b=a. What goes wrong? This is why temp is essential.'
+ },
+ lines:[
+   'a = 10',
+   'b = 20',
+   'print("Before: a=" + str(a) + " b=" + str(b))',
+   'temp = a',
+   'a = b',
+   'b = temp',
+   'print("After swap: a=" + str(a) + " b=" + str(b))',
+ ],
+ sim(lines){
+   return['Before: a=10 b=20','After swap: a=20 b=10'];
+ }
+},
+
+/* ── GENERIC LOGICAL 2 ── */
+{id:'even', cat:'logical', icon:'🔢', color:'#185FA5', bg:'#E6F1FB', bd:'#B5D4F4',
+ title:'Even or odd checker with loop',
+ concept:'for loop + modulo operator %',
+ desc:'The modulo operator % gives the REMAINDER of a division. Any number divided by 2 either has remainder 0 (even) or remainder 1 (odd). This is the foundation of many algorithms.',
+ uses:['Number theory','Zebra crossing patterns','Alternating row colours','Lottery number check'],
+ input:[{label:'numbers', value:'[1, 2, 3, 4, 5, 6]', note:'list of numbers to check'}],
+ expectedOutput:['1 → Odd','2 → Even','3 → Odd','4 → Even','5 → Odd','6 → Even'],
+ explanation:{
+   why:'% is the modulo (remainder) operator. 7 % 2 = 1 (odd). 8 % 2 = 0 (even). The rule: if n % 2 == 0, the number divides exactly by 2 with no remainder → even.',
+   steps:[
+     {l:'for n in numbers:', t:'Visit each number in the list one at a time.'},
+     {l:'if n % 2 == 0:', t:'10%2=0 (even), 7%2=1 (odd). The condition checks for zero remainder.'},
+     {l:'print(n, "→ Even")', t:'Inside the if block — runs only when remainder is 0.'},
+     {l:'else: print(n, "→ Odd")', t:'Runs when remainder is NOT 0.'},
+   ],
+   trace:[
+     {c:'1 % 2', v:'remainder of 1÷2', r:'1 → Odd'},
+     {c:'2 % 2', v:'remainder of 2÷2', r:'0 → Even'},
+     {c:'6 % 2', v:'remainder of 6÷2', r:'0 → Even'},
+   ],
+   tryThis:'Add 0 to the list — is 0 even or odd? Add 100 — what prints? Change == 0 to != 0 — what happens to the output?'
+ },
+ lines:[
+   'numbers = [1, 2, 3, 4, 5, 6]',
+   'for n in numbers:',
+   '    if n % 2 == 0:',
+   '        print(n, "→ Even")',
+   '    else:',
+   '        print(n, "→ Odd")',
+ ],
+ sim(lines){
+   return[1,2,3,4,5,6].map(n=>`${n} → ${n%2===0?'Even':'Odd'}`);
+ }
+},
+
+/* ── GENERIC LOGICAL 3 ── */
+{id:'accum', cat:'logical', icon:'💰', color:'#8A2F4E', bg:'#FBEAF0', bd:'#F4C0D1',
+ title:'Savings accumulator',
+ concept:'while loop — accumulate until goal is reached',
+ desc:'A while loop keeps adding monthly savings until the goal is reached. This is called an accumulator pattern — a variable builds up its value across multiple loop iterations.',
+ uses:['Personal finance apps','Bank goal tracker','Loan repayment counter','Investment planner'],
+ input:[
+   {label:'savings', value:'0', note:'starting amount ₹'},
+   {label:'monthly', value:'500', note:'₹ saved each month'},
+   {label:'goal', value:'2000', note:'target amount ₹'}
+ ],
+ expectedOutput:['Month 1: Rs.500','Month 2: Rs.1000','Month 3: Rs.1500','Month 4: Rs.2000','Goal reached in 4 months!'],
+ explanation:{
+   why:'The accumulator pattern: start at 0, add to it each iteration. The while loop checks the condition BEFORE each iteration — as soon as savings reach the goal, the loop exits.',
+   steps:[
+     {l:'savings = 0, monthly = 500, goal = 2000', t:'Initial state: no savings yet.'},
+     {l:'months = 0', t:'Counter starts at 0.'},
+     {l:'while savings < goal:', t:'Keep looping as long as savings haven\'t reached target.'},
+     {l:'savings = savings + monthly', t:'Each month: 0→500→1000→1500→2000. Accumulates.'},
+     {l:'months = months + 1', t:'Count how many months passed.'},
+     {l:'print("Goal reached in", months, "months!")', t:'OUTSIDE the loop — prints once after loop exits.'},
+   ],
+   trace:[
+     {c:'Month 1', v:'0 + 500', r:'savings = 500'},
+     {c:'Month 2', v:'500 + 500', r:'savings = 1000'},
+     {c:'Month 3', v:'1000 + 500', r:'savings = 1500'},
+     {c:'Month 4', v:'1500 + 500', r:'savings = 2000 → exit'},
+   ],
+   tryThis:'Change monthly = 300. Does it reach exactly 2000? What if goal = 2500? Change to see how months change.'
+ },
+ lines:[
+   'savings = 0',
+   'monthly = 500',
+   'goal = 2000',
+   'months = 0',
+   'while savings < goal:',
+   '    savings = savings + monthly',
+   '    months = months + 1',
+   '    print("Month", months, ": Rs." + str(savings))',
+   'print("Goal reached in", months, "months!")',
+ ],
+ sim(lines){
+   const c=lines.join('\n');
+   const sm=c.match(/savings\s*=\s*(\d+)/),mm=c.match(/monthly\s*=\s*(\d+)/),gm=c.match(/goal\s*=\s*(\d+)/);
+   let s=sm?parseInt(sm[1]):0;
+   const mo=mm?parseInt(mm[1]):500,g=gm?parseInt(gm[1]):2000;
+   const o=[];let months=0;
+   while(s<g&&months<50){s+=mo;months++;o.push(`Month ${months} : Rs.${s}`);}
+   o.push(`Goal reached in ${months} months!`);
+   return o;
+ }
+}
+
+]; /* end QS */
+
+/* ══════════════════════════════════════════════
+   CATEGORIES
+══════════════════════════════════════════════ */
+const CATS=[
+ {id:'conditional',label:'Conditional',icon:'⚖️',color:'#9B2B2B'},
+ {id:'loop',label:'Loops',icon:'🔄',color:'#8A2F4E'},
+ {id:'string',label:'String',icon:'🔤',color:'#0C6349'},
+ {id:'list',label:'List',icon:'📋',color:'#4A42A8'},
+ {id:'datetime',label:'Datetime',icon:'📅',color:'#8B3418'},
+ {id:'logical',label:'Logical',icon:'🧩',color:'#185FA5'},
+];
+
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+let cur=0, jumbled=[], answered=[];
+const solved={}, scores={};
+let dragSrc=null, dragArea=null;
+
+function totalScore(){return Object.values(scores).reduce((a,b)=>a+b,0)}
+function updHdr(){document.getElementById('hsc').textContent=totalScore();document.getElementById('hsv').textContent=Object.keys(solved).length}
+
+/* ══════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════ */
+function buildSB(){
+  const sb=document.getElementById('sb');
+  let h='<div class="slbl">Questions</div>';
+  CATS.forEach(cat=>{
+    const qs=QS.filter(q=>q.cat===cat.id);
+    if(!qs.length)return;
+    h+=`<div class="cgroup"><div class="chead" style="background:${cat.color}18;color:${cat.color}">${cat.icon} ${cat.label} <span style="margin-left:auto;background:${cat.color}25;padding:1px 7px;border-radius:8px;font-size:10px">${qs.length}</span></div>`;
+    qs.forEach(q=>{
+      const idx=QS.indexOf(q),active=idx===cur,done=!!solved[q.id];
+      h+=`<div class="qi${active?' active':''}${done?' done':''}" id="qi${idx}" onclick="goto(${idx})">`
+        +`<div class="qn" style="background:${q.bg};color:${q.color}">${idx+1}</div>`
+        +`<span style="flex:1">${q.title}</span>`
+        +`<span class="qtick">✓</span></div>`;
+    });
+    h+='</div>';
+  });
+  sb.innerHTML=h;
+}
+
+function goto(idx){cur=idx;buildSB();resetQ();document.getElementById('ct').scrollTop=0}
+
+/* ══════════════════════════════════════════════
+   RESET / SHUFFLE
+══════════════════════════════════════════════ */
+function shuffle(a){return[...a].sort(()=>Math.random()-.5)}
+function resetQ(){
+  const q=QS[cur];
+  jumbled=shuffle(q.lines.map((t,i)=>({id:i,text:t})));
+  answered=[];
+  renderPage();
+}
+
+/* ══════════════════════════════════════════════
+   RENDER PAGE
+══════════════════════════════════════════════ */
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function renderPage(){
+  const q=QS[cur];
+  const pct=Math.round(Object.keys(solved).length/QS.length*100);
+  // Input rows
+  const inputRows=q.input.map(i=>`<div class="io-row"><span class="io-dot" style="background:${q.color}"></span><div><code>${esc(i.label)} = ${esc(i.value)}</code> <span style="font-size:11px;color:var(--text3)">— ${esc(i.note)}</span></div></div>`).join('');
+  // Expected output
+  const expOut=q.expectedOutput.map(l=>`<div>${esc(l)}</div>`).join('');
+
+  document.getElementById('ct').innerHTML=`
+<div class="pbar-wrap"><div class="pbar" id="pbar" style="width:${pct}%"></div></div>
+<div class="navrow">
+  <div class="navinfo">
+    <div class="title">${q.icon} ${esc(q.title)}</div>
+    <div class="sub">Question ${cur+1} of ${QS.length} &nbsp;·&nbsp; ${esc(q.cat.charAt(0).toUpperCase()+q.cat.slice(1))} &nbsp;·&nbsp; <span style="font-family:var(--mono);font-size:10px;background:var(--surface3);padding:1px 6px;border-radius:4px;color:var(--blue)">${esc(q.concept)}</span></div>
+  </div>
+  <div class="navbtns">
+    <button class="btn" onclick="goto(${Math.max(0,cur-1)})"${cur===0?' disabled':''}>← Prev</button>
+    <button class="btn" onclick="goto(${Math.min(QS.length-1,cur+1)})"${cur===QS.length-1?' disabled':''}>Next →</button>
+  </div>
+</div>
+
+<div class="icard" style="background:${q.bg};border-color:${q.bd}">
+  <div class="icard-top">
+    <div class="icard-icon" style="background:${q.color}20">${q.icon}</div>
+    <div>
+      <div class="icard-title" style="color:${q.color}">${esc(q.title)}</div>
+      <div class="icard-concept" style="color:${q.color}99">${esc(q.concept)}</div>
+    </div>
+    ${solved[q.id]?`<div style="margin-left:auto;background:${q.color};color:#fff;font-size:11px;padding:3px 11px;border-radius:20px;font-weight:700">✓ Solved</div>`:''}
+  </div>
+  <div class="icard-desc">${esc(q.desc)}</div>
+  <div class="chips">${q.uses.map(u=>`<span class="chip">${esc(u)}</span>`).join('')}</div>
+</div>
+
+<div class="io-section">
+  <div class="io-box">
+    <div class="io-head"><span style="color:${q.color}">↓</span> Input values</div>
+    <div class="io-body">${inputRows}</div>
+  </div>
+  <div class="io-box">
+    <div class="io-head"><span style="color:var(--green)">▸</span> Expected output</div>
+    <div class="io-body"><div class="expected-out">${expOut}</div></div>
+  </div>
+</div>
+
+<div class="game-area">
+  <div class="panel">
+    <div class="panel-head" style="color:${q.color}">🃏 Jumbled lines &nbsp;<span style="margin-left:auto;font-size:10px;background:${q.bg};color:${q.color};padding:2px 8px;border-radius:8px;font-weight:600" id="jcount">0 left</span></div>
+    <div class="panel-body" id="jcol"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head" style="color:var(--green)">📝 Your answer &nbsp;<span style="margin-left:auto;font-size:10px;background:var(--greenbg);color:var(--green);padding:2px 8px;border-radius:8px;font-weight:600" id="acount">0 placed</span></div>
+    <div class="panel-body" id="acol"></div>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn btn-primary" onclick="checkAns()">▶ Check answer</button>
+  <button class="btn btn-hint" onclick="toggleHint()">💡 Hint</button>
+  <button class="btn btn-eye" onclick="showSol()">👁 Show solution</button>
+  <button class="btn btn-reset" onclick="resetQ()">↺ Reshuffle</button>
+  <button class="btn" onclick="clearAns()" style="color:var(--red)">✕ Clear</button>
+</div>
+<div class="hintbox" id="hbox"></div>
+<div class="fb" id="fb"></div>
+<div class="out-panel">
+  <div class="out-head"><span>▸</span><span>Output</span><span class="out-badge" id="obadge" style="background:#1e3a5f;color:#64748B">waiting</span></div>
+  <div class="out-body" id="obody"><span class="op">Run your arranged code to see the output...</span></div>
+</div>
+<div class="expbox" id="expbox"></div>
+`;
+  renderJ();renderA();updateCounts();
+}
+
+/* ══════════════════════════════════════════════
+   RENDER COLUMNS — NO GAP between lines
+══════════════════════════════════════════════ */
+function renderJ(){
+  const col=document.getElementById('jcol');
+  if(!col)return;
+  if(jumbled.length===0){col.innerHTML='<div class="empty-hint">All lines moved to answer column ✓</div>';return;}
+  col.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='padding:4px';
+  jumbled.forEach((line,i)=>{
+    wrap.appendChild(makeBlock(line,i,'j'));
+  });
+  col.appendChild(wrap);
+}
+
+function renderA(){
+  const col=document.getElementById('acol');
+  if(!col)return;
+  col.innerHTML='';
+  if(answered.length===0){
+    col.innerHTML='<div class="empty-hint">Click lines from the left to add them here</div>';
+    return;
+  }
+  const wrap=document.createElement('div');
+  wrap.style.cssText='padding:4px';
+  // drop zone at top
+  wrap.appendChild(makeDZ(0));
+  answered.forEach((line,i)=>{
+    wrap.appendChild(makeBlock(line,i,'a'));
+    wrap.appendChild(makeDZ(i+1));
+  });
+  col.appendChild(wrap);
+}
+
+function makeDZ(before){
+  const dz=document.createElement('div');
+  dz.className='dz';
+  dz.dataset.before=before;
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('active');dz.textContent='drop here'});
+  dz.addEventListener('dragleave',()=>{dz.classList.remove('active');dz.textContent=''});
+  dz.addEventListener('drop',e=>{
+    e.preventDefault();dz.classList.remove('active');dz.textContent='';
+    handleDrop('a',parseInt(dz.dataset.before));
+  });
+  return dz;
+}
+
+function makeBlock(line,idx,area){
+  const d=document.createElement('div');
+  d.className='line-block'+(area==='a'?' ans':'');
+  d.draggable=true;
+  d.dataset.idx=idx;d.dataset.area=area;
+  // indent visual
+  const spaces=(line.text.match(/^(\s*)/)||['',''])[1].length;
+  const indent='&nbsp;'.repeat(spaces);
+  const trimmed=esc(line.text.trimStart());
+  const q=QS[cur];
+  d.innerHTML=`<span class="ln">${area==='a'?idx+1:'•'}</span><span class="lcode">${indent}${trimmed}</span>`;
+  if(area==='a') d.style.borderLeftColor=q.color;
+  // drag
+  d.addEventListener('dragstart',()=>{dragSrc=idx;dragArea=area;setTimeout(()=>d.classList.add('dragging'),0)});
+  d.addEventListener('dragend',()=>d.classList.remove('dragging'));
+  // drag-over for jumble column
+  if(area==='j'){
+    d.addEventListener('dragover',e=>{e.preventDefault();d.classList.add('drophover')});
+    d.addEventListener('dragleave',()=>d.classList.remove('drophover'));
+    d.addEventListener('drop',e=>{
+      e.preventDefault();d.classList.remove('drophover');
+      if(dragArea==='a'){const l=answered.splice(dragSrc,1)[0];jumbled.splice(idx,0,l);renderJ();renderA();updateCounts();}
+    });
+    d.addEventListener('click',()=>{
+      const l=jumbled.splice(idx,1)[0];answered.push(l);renderJ();renderA();updateCounts();
+    });
+  } else {
+    d.addEventListener('click',()=>{
+      const l=answered.splice(idx,1)[0];jumbled.push(l);renderJ();renderA();updateCounts();
+    });
+  }
+  return d;
+}
+
+function handleDrop(targetArea,beforeIdx){
+  if(dragArea==='j'&&targetArea==='a'){
+    const l=jumbled.splice(dragSrc,1)[0];
+    answered.splice(beforeIdx,0,l);
+  } else if(dragArea==='a'&&targetArea==='a'){
+    const l=answered.splice(dragSrc,1)[0];
+    const ins=dragSrc<beforeIdx?beforeIdx-1:beforeIdx;
+    answered.splice(Math.max(0,ins),0,l);
+  }
+  renderJ();renderA();updateCounts();
+}
+
+function updateCounts(){
+  const jc=document.getElementById('jcount'),ac=document.getElementById('acount');
+  if(jc)jc.textContent=`${jumbled.length} left`;
+  if(ac)ac.textContent=`${answered.length} placed`;
+}
+
+/* ══════════════════════════════════════════════
+   CHECK
+══════════════════════════════════════════════ */
+function checkAns(){
+  const q=QS[cur];
+  if(!answered.length){showFB('warn','Place lines in the answer column first — click any line on the left to move it.');return;}
+  if(answered.length<q.lines.length){showFB('warn',`${q.lines.length-answered.length} line(s) still in the jumble pile. Move all lines across first.`);return;}
+  const correct=q.lines.map((_,i)=>i);
+  const given=answered.map(l=>l.id);
+  const ok=given.every((id,i)=>id===correct[i]);
+  // run output
+  const output=q.sim(answered.map(l=>l.text));
+  const ob=document.getElementById('obody'),badge=document.getElementById('obadge');
+  ob.innerHTML=output.map(l=>`<div class="${l.startsWith('Error')?'oe':'ol'}">${esc(l)}</div>`).join('');
+  if(ok){
+    badge.style.cssText='background:#14532d;color:#4ADE80';badge.textContent='correct!';
+    showFB('ok','🏆 Perfect! All lines in the correct order.');
+    colorLines(true,given,correct);
+    if(!solved[q.id]){solved[q.id]=true;scores[q.id]=10;updHdr();toast('🎉 +10 points!');buildSB();document.getElementById('pbar').style.width=Math.round(Object.keys(solved).length/QS.length*100)+'%';}
+    showExp();
+  } else {
+    badge.style.cssText='background:#7f1d1d;color:#F87171';badge.textContent='wrong order';
+    const w=given.filter((id,i)=>id!==correct[i]).length;
+    showFB('err',`${w} line(s) in the wrong position. The output shows what your current order produces — compare it with the expected output above and adjust.`);
+    colorLines(false,given,correct);
+  }
+}
+
+function colorLines(allOk,given,correct){
+  document.querySelectorAll('#acol .line-block').forEach((b,i)=>{
+    b.classList.remove('ok','err');
+    if(allOk)b.classList.add('ok');
+    else if(given[i]!==correct[i])b.classList.add('err');
+    else b.classList.add('ok');
+  });
+}
+
+/* ══════════════════════════════════════════════
+   SOLUTION
+══════════════════════════════════════════════ */
+function showSol(){
+  const q=QS[cur];
+  jumbled=[];
+  answered=q.lines.map((t,i)=>({id:i,text:t}));
+  renderJ();renderA();updateCounts();
+  const ob=document.getElementById('obody'),badge=document.getElementById('obadge');
+  const output=q.sim(answered.map(l=>l.text));
+  ob.innerHTML=output.map(l=>`<div class="ol">${esc(l)}</div>`).join('');
+  badge.style.cssText='background:#14532d;color:#4ADE80';badge.textContent='solution';
+  showFB('info','Solution shown — study the order and then try a new question!');
+  document.querySelectorAll('#acol .line-block').forEach(b=>b.classList.add('ok'));
+  showExp();
+}
+
+/* ══════════════════════════════════════════════
+   EXPLANATION
+══════════════════════════════════════════════ */
+function showExp(){
+  const q=QS[cur],e=q.explanation,eb=document.getElementById('expbox');
+  if(!eb)return;
+  const traceRows=e.trace.map(r=>`<tr><td>${esc(r.c)}</td><td>${esc(r.v)}</td><td>${esc(r.r)}</td></tr>`).join('');
+  const stepItems=e.steps.map((s,i)=>`<div class="estep"><div class="snum">${i+1}</div><div class="stxt"><strong>${esc(s.l)}</strong><br>${esc(s.t)}</div></div>`).join('');
+  eb.innerHTML=`
+<div class="exp-head"><span>📖 Explanation — why this order?</span></div>
+<div class="exp-body">
+  <div class="exp-sec full"><div class="explbl">Concept</div><div class="exptxt">${esc(e.why)}</div></div>
+  <div class="exp-sec"><div class="explbl">Line by line</div><div class="esteps">${stepItems}</div></div>
+  <div class="exp-sec"><div class="explbl">Condition trace</div><table class="ttbl"><tr><th>Check</th><th>Value</th><th>Result</th></tr>${traceRows}</table></div>
+  <div class="try-box"><strong>🧪 Try this:</strong> ${esc(e.tryThis)}</div>
+</div>`;
+  eb.classList.add('show');
+}
+
+/* ══════════════════════════════════════════════
+   HINT / FEEDBACK / TOAST / CLEAR
+══════════════════════════════════════════════ */
+function toggleHint(){
+  const hb=document.getElementById('hbox');if(!hb)return;
+  if(hb.style.display==='block'){hb.style.display='none';return;}
+  hb.innerHTML=`<strong>💡 Hint:</strong> ${esc(QS[cur].explanation.steps[0].t)} — ${esc(QS[cur].explanation.steps[1]?.t||'')}`;
+  hb.style.display='block';
+}
+function clearAns(){jumbled=[...jumbled,...answered];answered=[];renderJ();renderA();updateCounts();document.getElementById('fb').style.display='none';}
+function showFB(type,msg){const fb=document.getElementById('fb');if(!fb)return;fb.className=`fb ${type}`;fb.innerHTML=msg;fb.style.display='block'}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+/* ── INIT ── */
+buildSB();resetQ();
+</script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Variable as a jar - restaurant discount</title>
+<style>
+  body {
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    background: #fafaf8;
+    color: #1f2330;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+  .card {
+    background: #ffffff;
+    border: 1px solid #e3e3e0;
+    border-radius: 14px;
+    padding: 32px 28px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  h1 { font-size: 17px; font-weight: 600; text-align: center; margin: 0 0 4px; }
+  p.sub { font-size: 13px; color: #777; text-align: center; margin: 0 0 22px; }
+  .dots { display:flex; gap:8px; justify-content:center; margin-bottom: 18px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:#d8d8d4; transition:background .2s; }
+  .dot.active { background:#534ab7; }
+  .panel { display:flex; flex-direction:column; align-items:center; gap:12px; min-height:260px; justify-content:center; }
+  .caption { font-size:14px; color:#555; text-align:center; max-width:380px; line-height:1.5; }
+  .code-tag { font-family: "SF Mono", Consolas, monospace; font-size:13px; background:#f1f1ee; padding:6px 12px; border-radius:6px; color:#1f2330; white-space:pre; }
+  .nav-row { display:flex; gap:10px; justify-content:center; margin-top: 18px; }
+  button {
+    border: 1px solid #d8d8d4;
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 13.5px;
+    cursor: pointer;
+    color: #1f2330;
+  }
+  button:hover { background: #f5f5f3; }
+  button:disabled { opacity: 0.35; cursor: default; }
+  input[type="number"] {
+    width: 100px;
+    text-align: center;
+    padding: 6px;
+    border: 1px solid #d8d8d4;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  .result-final { color: #3c3489; font-weight: 600; font-size:16px; }
+  .calc-row { display:flex; gap:10px; align-items:center; font-family: "SF Mono", Consolas, monospace; font-size:13px; }
+  .jar-pair { display:flex; gap:18px; align-items:flex-end; }
+  .jar-label { font-size:12px; color:#777; text-align:center; margin-top:4px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>A variable is a labelled jar</h1>
+  <p class="sub">Click through: restaurant discount example (condition + calculation)</p>
+
+  <div class="dots" id="dots"></div>
+  <div class="panel" id="panel"></div>
+
+  <div class="nav-row">
+    <button id="backBtn" onclick="go(-1)">Back</button>
+    <button id="nextBtn" onclick="go(1)">Next</button>
+  </div>
+</div>
+
+<script>
+const steps = ['empty', 'typed', 'stored', 'compare', 'calculate', 'result'];
+let current = 0;
+let billVal = 1200;
+
+function jarSVG(fillLevel, label, w=140, h=200, fillColor="#d6cdf5") {
+  const fillHeight = fillLevel * 80;
+  const fillY = 150 - fillHeight;
+  return `
+  <svg viewBox="0 0 160 200" width="${w}" height="${h}">
+    <defs>
+      <clipPath id="jc-${label.replace(/\W/g,'')}"><path d="M40 40 L40 140 Q40 160 60 160 L100 160 Q120 160 120 140 L120 40 Z"/></clipPath>
+    </defs>
+    <path d="M40 40 L40 140 Q40 160 60 160 L100 160 Q120 160 120 140 L120 40" fill="none" stroke="#555" stroke-width="2.5"/>
+    <rect x="34" y="30" width="92" height="14" rx="4" fill="none" stroke="#555" stroke-width="2"/>
+    ${fillLevel > 0 ? `<rect x="40" y="${fillY}" width="80" height="${fillHeight}" fill="${fillColor}" clip-path="url(#jc-${label.replace(/\W/g,'')})"/>` : ''}
+    <text x="80" y="185" text-anchor="middle" font-size="13" fill="#555">${label}</text>
+  </svg>`;
+}
+
+function render() {
+  document.getElementById('dots').innerHTML = steps.map((s,i) =>
+    `<div class="dot ${i===current?'active':''}"></div>`).join('');
+  document.getElementById('backBtn').disabled = current === 0;
+  document.getElementById('nextBtn').textContent = current === steps.length-1 ? 'Restart' : 'Next';
+
+  const panel = document.getElementById('panel');
+  const step = steps[current];
+  const v = Number(billVal);
+  const fillLevel = Math.max(0, Math.min(1, v / 2000));
+  const qualifies = v >= 1000;
+  const discount = qualifies ? v * 0.10 : 0;
+  const final = v - discount;
+
+  if (step === 'empty') {
+    panel.innerHTML = jarSVG(0, 'bill (empty jar)') +
+      `<div class="caption">This jar is named <span class="code-tag">bill</span> and will hold the total bill amount.</div>`;
+  } else if (step === 'typed') {
+    panel.innerHTML = `<div class="caption">The customer's bill amount is typed in. Not stored yet.</div>
+      <input type="number" id="billInput" value="${billVal}" min="0" oninput="billVal=this.value" />
+      <div class="code-tag">input("Enter bill amount: ")</div>`;
+  } else if (step === 'stored') {
+    panel.innerHTML = jarSVG(fillLevel, `bill = ${v}`) +
+      `<div class="caption">Stored: <span class="code-tag">bill = float(input(...))</span></div>`;
+  } else if (step === 'compare') {
+    panel.innerHTML = jarSVG(fillLevel, `bill = ${v}`) +
+      `<div class="caption">Python checks: is the bill 1000 or more?</div>
+       <div class="code-tag">if bill >= 1000:</div>
+       <div class="caption" style="font-size:12.5px;color:#888">${qualifies ? 'True - qualifies for a 10% discount' : 'False - no discount, jumps to else'}</div>`;
+  } else if (step === 'calculate') {
+    panel.innerHTML = `<div class="caption">${qualifies ? 'Because the check was True, a new jar is filled using a calculation:' : 'Because the check was False, the discount jar is simply set to 0:'}</div>
+       <div class="code-tag">${qualifies ? 'discount = bill * 0.10' : 'discount = 0'}</div>
+       <div class="jar-pair">
+         <div>${jarSVG(fillLevel, `bill = ${v}`, 100, 150, "#d6cdf5")}</div>
+         <div>${jarSVG(qualifies ? 0.5 : 0, `discount = ${discount.toFixed(0)}`, 100, 150, "#f5c4b3")}</div>
+       </div>
+       <div class="caption" style="font-size:12.5px;color:#888">Notice: this jar didn't exist before. The if-block just created it.</div>`;
+  } else if (step === 'result') {
+    panel.innerHTML = `<div class="caption">One last calculation, outside the if-block, runs no matter which path was taken:</div>
+       <div class="code-tag">final_bill = bill - discount</div>
+       <div class="calc-row">
+         <span>${v}</span><span>-</span><span>${discount.toFixed(0)}</span><span>=</span>
+       </div>
+       <div class="result-final">final_bill = ${final.toFixed(2)}</div>`;
+  }
+}
+
+function go(dir) {
+  if (current === steps.length-1 && dir === 1) {
+    current = 0;
+  } else {
+    current = Math.max(0, Math.min(steps.length-1, current+dir));
+  }
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Calculator Demo - Interactive UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 20px;
+            border: none;
+            background: #f0f0f0;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .formula-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            font-family: 'Courier New', monospace;
+            color: #0c5aa0;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        .inputs-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .input-label {
+            font-weight: 700;
+            color: #333;
+            font-size: 1em;
+            min-width: 180px;
+        }
+
+        input[type="number"] {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            width: 100px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.1);
+        }
+
+        .unit {
+            color: #666;
+            font-weight: 600;
+            font-size: 0.95em;
+            min-width: 40px;
+        }
+
+        .calculation-section {
+            background: #fff8e1;
+            border-left: 4px solid #ff9800;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .calculation-title {
+            font-weight: 700;
+            color: #e65100;
+            margin-bottom: 18px;
+            font-size: 1.1em;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #ffe0b2;
+        }
+
+        .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-num {
+            background: #ff9800;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-size: 0.9em;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-equation {
+            color: #ff9800;
+            font-weight: 700;
+            font-size: 1.1em;
+            margin: 0 8px;
+        }
+
+        .step-description {
+            color: #555;
+            font-size: 0.95em;
+            margin-bottom: 5px;
+        }
+
+        .step-result {
+            color: #d32f2f;
+            font-weight: 700;
+            font-size: 1.1em;
+            background: #ffebee;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .results {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .results h3 {
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            opacity: 0.9;
+            font-size: 1em;
+        }
+
+        .result-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .data-types {
+            background: #f3e5f5;
+            border: 2px solid #9c27b0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .data-types h4 {
+            color: #6a1b9a;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .type-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #e1bee7;
+            font-family: 'Courier New', monospace;
+        }
+
+        .type-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .type-item code {
+            color: #6a1b9a;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .type-badge {
+            background: #9c27b0;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .comparison-section {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .comparison-title {
+            font-weight: 700;
+            color: #1b5e20;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .comparison {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #c8e6c9;
+        }
+
+        .comparison:last-child {
+            margin-bottom: 0;
+        }
+
+        .comparison-question {
+            font-weight: 600;
+            color: #1b5e20;
+            flex: 1;
+        }
+
+        .comparison-answer {
+            font-weight: 700;
+            font-size: 1.1em;
+            padding: 5px 12px;
+            border-radius: 4px;
+        }
+
+        .comparison-answer.true {
+            background: #c8e6c9;
+            color: #1b5e20;
+        }
+
+        .comparison-answer.false {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(to right, transparent, #ddd, transparent);
+            margin: 30px 0;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #1976d2;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            color: #0d47a1;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .input-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .input-label {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🧮 Python Calculator Demo</h1>
+        <p>Learn Variables, Data Types & Operators - Interactive Classroom Mode</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('interest')">📊 Interest Calculator</button>
+        <button class="tab-btn" onclick="switchTab('tax')">💰 Tax Calculator</button>
+    </div>
+
+    <!-- INTEREST CALCULATOR -->
+    <div id="interest" class="content active">
+        <div class="card">
+            <h2>📊 Simple Interest Calculator</h2>
+            
+            <div class="info-box">
+                💡 Play with the numbers to see how variables and operators work in Python!
+            </div>
+
+            <div class="formula-box">
+                SI = (Principal × Rate × Time) / 100
+            </div>
+
+            <div class="inputs-section">
+                <div class="input-group">
+                    <label class="input-label">Principal Amount:</label>
+                    <input type="number" id="principal" value="5000" min="1" oninput="calculateInterest()">
+                    <span class="unit">Rs.</span>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Rate of Interest:</label>
+                    <input type="number" id="rate" value="5" min="1" oninput="calculateInterest()">
+                    <span class="unit">% per year</span>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Time Period:</label>
+                    <input type="number" id="time" value="3" min="1" oninput="calculateInterest()">
+                    <span class="unit">years</span>
+                </div>
+            </div>
+
+            <div class="calculation-section">
+                <div class="calculation-title">📐 Step-by-Step Calculation (Operators in Action):</div>
+                
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <div class="step-description">Multiply Principal <span class="step-equation">×</span> Rate</div>
+                        <div class="step-result" id="step1Result">5000 × 5 = 25000</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <div class="step-description">Multiply Result <span class="step-equation">×</span> Time</div>
+                        <div class="step-result" id="step2Result">25000 × 3 = 75000</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <div class="step-description">Divide by 100 <span class="step-equation">÷</span> 100</div>
+                        <div class="step-result" id="step3Result">75000 / 100 = 750</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results">
+                <h3>✅ Final Results:</h3>
+                <div class="result-row">
+                    <span class="result-label">Principal Amount:</span>
+                    <span class="result-value" id="resultPrincipal">Rs. 5000</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Simple Interest Earned:</span>
+                    <span class="result-value" id="resultInterest">Rs. 750</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Total Amount:</span>
+                    <span class="result-value" id="resultTotal">Rs. 5750</span>
+                </div>
+            </div>
+
+            <div class="data-types">
+                <h4>🔍 Data Types (What Type of Information?):</h4>
+                <div class="type-item">
+                    <code>principal = <span id="valPrincipal">5000</span></code>
+                    <span class="type-badge">INTEGER</span>
+                </div>
+                <div class="type-item">
+                    <code>rate = <span id="valRate">5</span></code>
+                    <span class="type-badge">INTEGER</span>
+                </div>
+                <div class="type-item">
+                    <code>time = <span id="valTime">3</span></code>
+                    <span class="type-badge">INTEGER</span>
+                </div>
+                <div class="type-item">
+                    <code>interest = <span id="valInterest">750.0</span></code>
+                    <span class="type-badge">FLOAT</span>
+                </div>
+                <div class="info-box" style="margin-top: 15px; margin-bottom: 0;">
+                    ℹ️ Division (/) always creates a FLOAT with decimals. Multiplication (*) of integers stays INTEGER!
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="comparison-section">
+                <div class="comparison-title">🤔 Comparison Operators (TRUE or FALSE):</div>
+                <div class="comparison">
+                    <span class="comparison-question">Is Principal > Interest?</span>
+                    <span class="comparison-answer true" id="comp1">TRUE</span>
+                </div>
+                <div class="comparison">
+                    <span class="comparison-question">Is Interest > 100?</span>
+                    <span class="comparison-answer true" id="comp2">TRUE</span>
+                </div>
+                <div class="comparison">
+                    <span class="comparison-question">Is Rate == 5?</span>
+                    <span class="comparison-answer true" id="comp3">TRUE</span>
+                </div>
+                <div class="comparison">
+                    <span class="comparison-question">Is Total < 6000?</span>
+                    <span class="comparison-answer true" id="comp4">TRUE</span>
+                </div>
+                <div class="comparison">
+                    <span class="comparison-question">Is Rate != 10?</span>
+                    <span class="comparison-answer true" id="comp5">TRUE</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAX CALCULATOR -->
+    <div id="tax" class="content">
+        <div class="card">
+            <h2>💰 Simple Tax Calculator</h2>
+            
+            <div class="info-box">
+                💡 Same concepts (variables & operators), different real-world application!
+            </div>
+
+            <div class="formula-box">
+                Tax = (Annual Salary × Tax Rate) / 100
+            </div>
+
+            <div class="inputs-section">
+                <div class="input-group">
+                    <label class="input-label">Monthly Salary:</label>
+                    <input type="number" id="monthly" value="25000" min="1" oninput="calculateTax()">
+                    <span class="unit">Rs.</span>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Tax Rate:</label>
+                    <input type="number" id="taxrate" value="10" min="1" oninput="calculateTax()">
+                    <span class="unit">%</span>
+                </div>
+            </div>
+
+            <div class="calculation-section">
+                <div class="calculation-title">📐 Step-by-Step Calculation (Operators in Action):</div>
+                
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <div class="step-description">Multiply Monthly <span class="step-equation">×</span> 12</div>
+                        <div class="step-result" id="taxStep1Result">25000 × 12 = 300000</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <div class="step-description">Multiply Annual <span class="step-equation">×</span> Tax Rate</div>
+                        <div class="step-result" id="taxStep2Result">300000 × 10 = 3000000</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <div class="step-description">Divide by 100 <span class="step-equation">÷</span> 100</div>
+                        <div class="step-result" id="taxStep3Result">3000000 / 100 = 30000</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <div class="step-description">Subtract Tax from Annual <span class="step-equation">-</span></div>
+                        <div class="step-result" id="taxStep4Result">300000 - 30000 = 270000</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results">
+                <h3>✅ Final Results:</h3>
+                <div class="result-row">
+                    <span class="result-label">Monthly Salary:</span>
+                    <span class="result-value" id="resultMonthly">Rs. 25000</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Annual Salary:</span>
+                    <span class="result-value" id="resultAnnual">Rs. 300000</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Total Tax to Pay:</span>
+                    <span class="result-value" id="resultTax">Rs. 30000</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Salary After Tax:</span>
+                    <span class="result-value" id="resultAfterTax">Rs. 270000</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Monthly After Tax:</span>
+                    <span class="result-value" id="resultMonthlyAfter">Rs. 22500</span>
+                </div>
+            </div>
+
+            <div class="data-types">
+                <h4>🔍 Data Types (What Type of Information?):</h4>
+                <div class="type-item">
+                    <code>monthly_salary = <span id="taxValMonthly">25000</span></code>
+                    <span class="type-badge">INTEGER</span>
+                </div>
+                <div class="type-item">
+                    <code>tax_rate = <span id="taxValRate">10</span></code>
+                    <span class="type-badge">INTEGER</span>
+                </div>
+                <div class="type-item">
+                    <code>annual_salary = <span id="taxValAnnual">300000</span></code>
+                    <span class="type-badge">INTEGER</span>
+                </div>
+                <div class="type-item">
+                    <code>tax_amount = <span id="taxValTax">30000.0</span></code>
+                    <span class="type-badge">FLOAT</span>
+                </div>
+                <div class="info-box" style="margin-top: 15px; margin-bottom: 0;">
+                    ℹ️ Notice: Subtraction (-) of int - float = float. All operators are evaluated step by step!
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="comparison-section">
+                <div class="comparison-title">🤔 Comparison Operators (TRUE or FALSE):</div>
+                <div class="comparison">
+                    <span class="comparison-question">Is Monthly > Tax?</span>
+                    <span class="comparison-answer true" id="taxComp1">TRUE</span>
+                </div>
+                <div class="comparison">
+                    <span class="comparison-question">Is Tax Rate >= 5?</span>
+                    <span class="comparison-answer true" id="taxComp2">TRUE</span>
+                </div>
+                <div class="comparison">
+                    <span class="comparison-question">Is Tax != 0?</span>
+                    <span class="comparison-answer true" id="taxComp3">TRUE</span>
+                </div>
+                <div class="comparison">
+                    <span class="comparison-question">Is Salary After Tax > 100000?</span>
+                    <span class="comparison-answer true" id="taxComp4">TRUE</span>
+                </div>
+                <div class="comparison">
+                    <span class="comparison-question">Is Annual == Monthly × 12?</span>
+                    <span class="comparison-answer true" id="taxComp5">TRUE</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function switchTab(tab) {
+    document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(tab).classList.add('active');
+    event.target.classList.add('active');
+    
+    if (tab === 'interest') calculateInterest();
+    else calculateTax();
+}
+
+function calculateInterest() {
+    const principal = parseInt(document.getElementById('principal').value) || 0;
+    const rate = parseInt(document.getElementById('rate').value) || 0;
+    const time = parseInt(document.getElementById('time').value) || 0;
+
+    // Calculations
+    const step1 = principal * rate;
+    const step2 = step1 * time;
+    const interest = step2 / 100;
+    const total = principal + interest;
+
+    // Update Steps
+    document.getElementById('step1Result').innerHTML = `${principal} × ${rate} = ${step1}`;
+    document.getElementById('step2Result').innerHTML = `${step1} × ${time} = ${step2}`;
+    document.getElementById('step3Result').innerHTML = `${step2} / 100 = ${interest}`;
+
+    // Update Results
+    document.getElementById('resultPrincipal').innerHTML = `Rs. ${principal}`;
+    document.getElementById('resultInterest').innerHTML = `Rs. ${interest}`;
+    document.getElementById('resultTotal').innerHTML = `Rs. ${total}`;
+
+    // Update Data Types
+    document.getElementById('valPrincipal').innerHTML = principal;
+    document.getElementById('valRate').innerHTML = rate;
+    document.getElementById('valTime').innerHTML = time;
+    document.getElementById('valInterest').innerHTML = interest;
+
+    // Update Comparisons
+    updateComparison('comp1', principal > interest);
+    updateComparison('comp2', interest > 100);
+    updateComparison('comp3', rate === 5);
+    updateComparison('comp4', total < 6000);
+    updateComparison('comp5', rate !== 10);
+}
+
+function calculateTax() {
+    const monthly = parseInt(document.getElementById('monthly').value) || 0;
+    const taxrate = parseInt(document.getElementById('taxrate').value) || 0;
+
+    const annual = monthly * 12;
+    const taxStep1 = annual * taxrate;
+    const tax = taxStep1 / 100;
+    const afterTax = annual - tax;
+    const monthlyAfter = afterTax / 12;
+
+    // Update Steps
+    document.getElementById('taxStep1Result').innerHTML = `${monthly} × 12 = ${annual}`;
+    document.getElementById('taxStep2Result').innerHTML = `${annual} × ${taxrate} = ${taxStep1}`;
+    document.getElementById('taxStep3Result').innerHTML = `${taxStep1} / 100 = ${tax}`;
+    document.getElementById('taxStep4Result').innerHTML = `${annual} - ${tax} = ${afterTax}`;
+
+    // Update Results
+    document.getElementById('resultMonthly').innerHTML = `Rs. ${monthly}`;
+    document.getElementById('resultAnnual').innerHTML = `Rs. ${annual}`;
+    document.getElementById('resultTax').innerHTML = `Rs. ${tax}`;
+    document.getElementById('resultAfterTax').innerHTML = `Rs. ${afterTax}`;
+    document.getElementById('resultMonthlyAfter').innerHTML = `Rs. ${monthlyAfter}`;
+
+    // Update Data Types
+    document.getElementById('taxValMonthly').innerHTML = monthly;
+    document.getElementById('taxValRate').innerHTML = taxrate;
+    document.getElementById('taxValAnnual').innerHTML = annual;
+    document.getElementById('taxValTax').innerHTML = tax;
+
+    // Update Comparisons
+    updateComparison('taxComp1', monthly > tax);
+    updateComparison('taxComp2', taxrate >= 5);
+    updateComparison('taxComp3', tax !== 0);
+    updateComparison('taxComp4', afterTax > 100000);
+    updateComparison('taxComp5', annual === monthly * 12);
+}
+
+function updateComparison(id, result) {
+    const el = document.getElementById(id);
+    el.innerHTML = result ? 'TRUE' : 'FALSE';
+    el.className = 'comparison-answer ' + (result ? 'true' : 'false');
+}
+
+// Initial calculation
+calculateInterest();
+</script>
+
+</body>
+</html>

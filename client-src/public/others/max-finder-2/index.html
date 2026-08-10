@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Max Finder — 3D Cinematic</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#02030A;--s1:#06091A;--s2:#090E24;--s3:#0D1330;
+  --bd:#162040;--bd2:#203060;
+  --tx:#EEF4FF;--tx2:#7A9CC8;--tx3:#344A70;
+  --blue:#3B82F6;--bluebg:#030D20;--bluebd:#1A3460;
+  --green:#10B981;--greenbg:#020E08;--greenbd:#0A4028;
+  --amber:#F59E0B;--amberbg:#130900;
+  --red:#EF4444;--redbg:#110404;
+  --gold:#FFD60A;--goldbg:#110E00;--goldbd:#6A5200;
+  --purple:#8B5CF6;--purplebg:#07051E;
+  --teal:#06B6D4;--tealbg:#021416;
+  --mono:'Courier New',monospace;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ━━━ TOP BAR ━━━ */
+.bar{background:var(--s1);border-bottom:1px solid var(--bd);padding:8px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;height:50px}
+.bar-logo{font-size:22px}
+.bar-info{flex:1}
+.bar-title{font-size:14px;font-weight:700;color:var(--tx)}
+.bar-sub{font-size:10px;color:var(--tx3);margin-top:1px}
+.bar-right{display:flex;gap:6px;align-items:center}
+.spd{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bd2);color:var(--tx3);background:var(--s2);transition:.13s;user-select:none}
+.spd:hover{border-color:var(--blue);color:var(--tx2)}
+.spd.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.rst{padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--bd2);color:var(--tx3);background:var(--s2);user-select:none;transition:.13s}
+.rst:hover{color:var(--tx);border-color:var(--bd)}
+
+/* ━━━ DOT STRIP ━━━ */
+.dotbar{background:var(--s1);border-bottom:1px solid var(--bd);padding:5px 18px;display:flex;align-items:center;gap:7px;flex-shrink:0;height:28px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bd);transition:.3s;cursor:pointer;flex-shrink:0}
+.dot.dn{background:var(--green)}.dot.cr{background:var(--blue);transform:scale(1.45)}.dot.fu{background:var(--bd)}
+.dot-lbl{font-size:10px;color:var(--tx3);margin-left:auto;white-space:nowrap}
+
+/* ━━━ BODY ━━━ */
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;min-height:0}
+
+/* ━━━ LEFT PANEL ━━━ */
+.LP{border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;position:relative;background:radial-gradient(ellipse at 50% 30%, #080D20 0%, var(--bg) 70%)}
+.LP-head{padding:7px 14px;border-bottom:1px solid var(--bd);background:var(--s1);flex-shrink:0;height:34px;display:flex;align-items:center;justify-content:space-between}
+.LP-head h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin:0}
+.LP-head span{font-size:10px;color:var(--tx3)}
+.LP-scene{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 10px 10px;gap:10px;overflow:visible;position:relative}
+
+/* ━━━ 3D LIST ━━━ */
+.list3d{perspective:900px;perspective-origin:50% 32%;width:100%;flex-shrink:0;padding-top:36px;margin-top:-36px}
+.list-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;transform:rotateX(6deg);padding:36px 6px 26px;transform-style:preserve-3d}
+
+/* ━━━ SLOT ━━━ */
+.slot{
+  width:58px;height:74px;
+  background:linear-gradient(155deg,#0C1830,#05091A);
+  border:1.5px solid var(--bd2);border-radius:11px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+  transition:all .5s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 10px 28px rgba(0,0,0,.65),0 2px 4px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05);
+  flex-shrink:0;
+  transform-style:preserve-3d;
+}
+.slot::after{content:'';position:absolute;bottom:-8px;left:10%;width:80%;height:8px;background:rgba(0,0,0,.4);border-radius:50%;filter:blur(4px)}
+.slot .sv{font-family:var(--mono);font-size:22px;font-weight:700;color:rgba(255,255,255,.45);line-height:1;transition:.4s}
+.slot .sl{font-size:8px;color:var(--tx3);margin-top:5px;font-weight:600;transition:.3s;text-align:center;line-height:1.2}
+.slot .sx{position:absolute;bottom:-17px;font-size:9px;color:var(--tx3);font-weight:500;white-space:nowrap}
+
+/* slot states */
+.slot.s-active{
+  transform:translateY(-32px) scale(1.22) rotateX(-6deg)!important;
+  border-color:#fff!important;
+  background:linear-gradient(155deg,#1C3A80,#0A1E50)!important;
+  box-shadow:0 28px 56px rgba(59,130,246,.55),0 0 0 2px rgba(255,255,255,.18),0 0 40px rgba(59,130,246,.2)!important;
+}
+.slot.s-active .sv{color:#fff!important;text-shadow:0 0 24px rgba(255,255,255,.6)}
+.slot.s-active .sl{color:var(--blue)!important}
+.slot.s-champ{
+  transform:translateY(-8px) scale(1.06)!important;
+  background:linear-gradient(155deg,#2E1C00,#170E00)!important;
+  border-color:var(--gold)!important;
+  box-shadow:0 14px 36px rgba(255,214,10,.35),0 0 0 1px rgba(255,214,10,.1),inset 0 1px 0 rgba(255,214,10,.1)!important;
+}
+.slot.s-champ .sv{color:var(--gold)!important}
+.slot.s-champ .sl{color:var(--amber)!important}
+.slot.s-done{
+  background:linear-gradient(155deg,#041810,#020C08)!important;
+  border-color:var(--greenbd)!important;
+  box-shadow:0 4px 12px rgba(16,185,129,.1)!important;
+}
+.slot.s-done .sv{color:var(--greenbd)!important}
+.slot.s-no{opacity:.13;transform:scale(.94)!important}
+.slot.s-lose{
+  background:linear-gradient(155deg,#180404,#0C0202)!important;
+  border-color:var(--red)!important;
+  box-shadow:0 6px 16px rgba(239,68,68,.15)!important;
+  animation:shakeSlot .4s ease;
+}
+.slot.s-lose .sv{color:var(--red)!important}
+@keyframes shakeSlot{0%,100%{transform:translateY(-32px) scale(1.22) rotate(0)}25%{transform:translateY(-32px) scale(1.22) rotate(-4deg)}75%{transform:translateY(-32px) scale(1.22) rotate(4deg)}}
+
+/* slot arrive animation */
+.s-arrive{animation:sArrive .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes sArrive{from{transform:translateY(30px) scale(.7);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+
+/* agent pin */
+.apin{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:16px;animation:bob .75s ease-in-out infinite;z-index:2}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(5px)}}
+
+/* crown */
+.crown{position:absolute;top:-13px;right:-9px;font-size:14px;animation:cfl 1.8s ease-in-out infinite;z-index:2}
+@keyframes cfl{0%,100%{transform:translateY(0) rotate(-8deg) scale(1)}50%{transform:translateY(-5px) rotate(8deg) scale(1.1)}}
+
+/* ━━━ MAX VARIABLE BOX ━━━ */
+.max-var-section{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0}
+.max-var-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--tx3);display:flex;align-items:center;gap:6px}
+.type-chip{padding:2px 8px;border-radius:5px;font-size:9px;font-weight:700;border:1px solid var(--purple);background:var(--purplebg);color:var(--purple)}
+.name-chip{padding:2px 8px;border-radius:5px;font-size:9px;font-weight:700;border:1px solid var(--goldbd);background:var(--goldbg);color:var(--gold)}
+
+.maxbox{
+  width:90px;height:96px;
+  border-radius:16px;
+  border:2px solid var(--goldbd);
+  background:linear-gradient(155deg,#201600,#100C00);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+  transition:all .5s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 14px 40px rgba(255,214,10,.18),0 4px 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,214,10,.08);
+}
+.maxbox.empty{border-color:var(--bd2);border-style:dashed;background:linear-gradient(155deg,#080C1A,#040810);box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.maxbox.glow{box-shadow:0 0 0 3px rgba(255,214,10,.12),0 20px 50px rgba(255,214,10,.45),inset 0 1px 0 rgba(255,214,10,.12)}
+.maxbox.pulse{animation:mbp .45s ease}
+@keyframes mbp{0%,100%{transform:scale(1)}45%{transform:scale(1.12)}}
+.maxbox .mv{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--gold);transition:.4s;line-height:1}
+.maxbox .ml{font-size:9px;color:var(--amber);margin-top:5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.maxbox.empty .mv{color:var(--tx3);font-size:16px}
+.maxbox.empty .ml{color:var(--tx3)}
+
+/* ━━━ COMPARE ARENA ━━━ */
+.arena{
+  width:100%;max-width:380px;
+  background:var(--s2);border:1px solid var(--bd);border-radius:13px;
+  padding:11px 14px;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  flex-wrap:wrap;
+  transition:opacity .4s,transform .4s;
+  flex-shrink:0;
+}
+.arena.hidden{opacity:0;transform:translateY(14px);pointer-events:none;height:0;padding:0;margin:0;overflow:hidden}
+.atile{width:58px;height:58px;border-radius:10px;border:2px solid var(--bd);background:var(--s3);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
+.atile .av{font-family:var(--mono);font-size:20px;font-weight:700;line-height:1}
+.atile .al{font-size:8px;margin-top:3px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.atile.ab{border-color:var(--blue);background:var(--bluebg)}.atile.ab .av,.atile.ab .al{color:var(--blue)}
+.atile.ag{border-color:var(--gold);background:var(--goldbg)}.atile.ag .av,.atile.ag .al{color:var(--gold)}
+.atile.aok{border-color:var(--green);background:var(--greenbg);animation:tileWin .4s ease}.atile.aok .av,.atile.aok .al{color:var(--green)}
+.atile.ano{border-color:var(--red);background:var(--redbg)}.atile.ano .av,.atile.ano .al{color:var(--red)}
+@keyframes tileWin{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.asym{font-size:24px;font-weight:700;color:var(--tx3);flex-shrink:0}
+.ares{flex-basis:100%;text-align:center;font-size:12px;font-weight:600;margin-top:5px;padding:5px 0;border-top:1px solid var(--bd)}
+
+/* ━━━ FLOW DIAGRAM ━━━ */
+.flow-wrap{display:flex;flex-direction:column;align-items:center;gap:0;width:100%;max-width:300px}
+.fbox{background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:6px 14px;font-size:11px;color:var(--tx2);text-align:center;width:100%;transition:all .45s}
+.fbox.show{opacity:1;transform:translateY(0)}
+.fbox.fa{border-color:var(--bluebd);color:var(--blue);background:var(--bluebg)}
+.fbox.fg{border-color:var(--greenbd);color:var(--green);background:var(--greenbg)}
+.fbox.fw{border-color:#3A2200;color:var(--amber);background:var(--amberbg)}
+.fbox.fp{border-color:var(--purple);color:var(--purple);background:var(--purplebg)}
+.farrow{font-size:12px;color:var(--tx3);padding:2px 0;text-align:center;}
+.farrow.show{opacity:1}
+
+/* ━━━ CODE PANEL ━━━ */
+.code-panel{
+  position:absolute;bottom:0;left:0;right:0;
+  background:#0D1117;
+  border-top:2px solid var(--bluebd);
+  border-radius:14px 14px 0 0;
+  padding:12px 14px 14px;
+  transform:translateY(100%);
+  transition:transform .48s cubic-bezier(.25,.8,.25,1);
+  z-index:50;
+  max-height:58%;
+  overflow:hidden;
+  box-shadow:0 -8px 32px rgba(0,0,0,.6);
+}
+.code-panel.visible{transform:translateY(0)}
+.cp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.cp-title{font-size:10px;font-weight:700;color:#858596;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:6px}
+.cp-title::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block}
+.cp-close{font-size:11px;color:#858596;cursor:pointer;padding:2px 8px;border-radius:5px;background:#161b22;border:1px solid #30363d;transition:.13s;user-select:none}
+.cp-close:hover{color:var(--tx)}
+.cline{display:flex;align-items:flex-start;gap:8px;padding:4px 8px;border-radius:5px;border-left:2px solid transparent;transition:.35s;font-family:var(--mono);font-size:12px;line-height:1.85}
+.cline.ca{background:rgba(59,130,246,.15);border-left-color:#89b4fa}
+.cline.cd{background:rgba(16,185,129,.07);border-left-color:#4ade80}
+.cline.cf{opacity:.25}
+.cln{color:#6c7086;font-size:10px;min-width:16px;text-align:right;margin-top:2px;flex-shrink:0}
+.clt{flex:1}
+.ck{color:#89b4fa}.cv{color:#fab387}.cg{color:#a6e3a1}.cs{color:#f38ba8}.cc{color:#6c7086;font-style:italic}
+
+/* code toggle button */
+.code-btn{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  background:var(--s2);border:1px solid var(--bd2);border-radius:20px;
+  padding:5px 16px;font-size:11px;font-weight:600;color:var(--tx2);
+  cursor:pointer;transition:all .2s;z-index:51;white-space:nowrap;user-select:none;
+  display:flex;align-items:center;gap:6px;
+}
+.code-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--bluebg)}
+.code-btn.code-open{background:var(--bluebg);border-color:var(--bluebd);color:var(--blue)}
+
+/* ━━━ RIGHT PANEL ━━━ */
+.RP{display:flex;flex-direction:column;overflow:hidden;background:var(--s1);cursor:pointer;user-select:none;position:relative}
+.RP-head{padding:7px 14px;border-bottom:1px solid var(--bd);background:var(--s2);flex-shrink:0;height:34px;display:flex;align-items:center;justify-content:space-between}
+.RP-head h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin:0}
+.click-hint{font-size:10px;color:var(--tx3);animation:hp 2s ease-in-out infinite}
+@keyframes hp{0%,100%{opacity:.5}50%{opacity:1}}
+.bubble-area{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 20px;gap:10px;overflow:hidden}
+
+/* ━━━ BUBBLE ━━━ */
+.bubble{
+  border-radius:14px;border:1px solid var(--bd);background:var(--s2);
+  padding:14px 16px;
+  transform-origin:top center;
+}
+.bubble.entering{animation:bIn .45s cubic-bezier(.34,1.3,.64,1) forwards}
+.bubble.exiting{animation:bOut .34s ease-in forwards}
+@keyframes bIn{0%{opacity:0;transform:translateY(20px) scale(.93)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes bOut{0%{opacity:1;transform:translateY(0) scale(1);max-height:400px;margin-bottom:10px}100%{opacity:0;transform:translateY(-14px) scale(.95);max-height:0;padding:0;margin:0;border-width:0}}
+
+/* bubble variants */
+.b-intro{border-color:var(--purple);background:var(--purplebg)}
+.b-intro .bwho{color:var(--purple)}
+.b-loop{border-color:var(--bluebd);background:var(--bluebg)}
+.b-loop .bwho{color:var(--blue)}
+.b-compare{border-color:#3A2800;background:#100900}
+.b-compare .bwho{color:var(--amber)}
+.b-yes{border-color:var(--greenbd);background:var(--greenbg)}
+.b-yes .bwho{color:var(--green)}
+.b-no{border-color:#2A0808;background:#090202}
+.b-no .bwho{color:var(--red)}
+.b-final{border-color:var(--goldbd);background:var(--goldbg)}
+.b-final .bwho{color:var(--gold)}
+.b-think{border-color:var(--bd2);background:var(--s3)}
+.b-think .bwho{color:var(--tx2)}
+
+.bwho{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.bico{font-size:15px}
+.btitle{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:6px;line-height:1.4}
+.btext{font-size:12px;color:var(--tx2);line-height:1.8}
+.btext strong{color:var(--tx);font-weight:600}
+.btext .hl{color:var(--amber);font-weight:600}
+.btext .ok{color:var(--green);font-weight:600}
+.btext .no{color:var(--red);font-weight:600}
+.btext .gold{color:var(--gold);font-weight:600}
+.btext .bl{color:var(--blue);font-weight:600}
+.btext .code{font-family:var(--mono);background:var(--s1);padding:1px 5px;border-radius:3px;font-size:11px;color:var(--tx)}
+
+/* ━━━ BOTTOM NAV ━━━ */
+.nav{background:var(--s1);border-top:1px solid var(--bd);padding:8px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;height:46px}
+.nbtn{background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--tx2);cursor:pointer;transition:.13s;user-select:none;white-space:nowrap}
+.nbtn:hover:not(:disabled){color:var(--tx);border-color:var(--bd2)}
+.nbtn:disabled{opacity:.3;cursor:default}
+.nbtn.play{background:var(--blue);color:#fff;border-color:var(--blue)}
+.nbtn.play:hover{background:#1D4ED8}
+.nav-mid{flex:1;text-align:center;font-size:11px;color:var(--tx2)}
+
+/* ━━━ RESULT ━━━ */
+.result-big{border-radius:13px;padding:16px;text-align:center;border:2px solid var(--green);background:var(--greenbg);position:relative;overflow:hidden;animation:pop .5s cubic-bezier(.26,1.6,.54,1);width:100%;max-width:340px;flex-shrink:0}
+@keyframes pop{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+.confwrap{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cbit{position:absolute;border-radius:2px;animation:cfall linear forwards}
+@keyframes cfall{0%{opacity:1;transform:translateY(-6px) rotate(0)}100%{opacity:0;transform:translateY(150px) rotate(540deg)}}
+
+/* ━━━ SCENE TITLE OVERLAY ━━━ */
+.scene-title-overlay{
+  background:var(--s2);border:1px solid var(--bd2);border-radius:20px;
+  padding:3px 14px;font-size:10px;font-weight:600;color:var(--tx2);
+  white-space:nowrap;margin-bottom:4px;
+  animation:fadeInDown .4s ease;
+}
+@keyframes fadeInDown{from{opacity:0;transform:translateX(-50%) translateY(-6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* intro idle */
+.idle-center{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px}
+.idle-trophy{font-size:64px;animation:trophySpin 3s ease-in-out infinite}
+@keyframes trophySpin{0%,100%{transform:rotate(-5deg) scale(1)}50%{transform:rotate(5deg) scale(1.08)}}
+
+@media(max-width:640px){
+  .body{grid-template-columns:1fr}
+  .LP{height:44vh;border-right:none;border-bottom:1px solid var(--bd)}
+  .RP{height:calc(56vh - 124px)}
+  .list-row{gap:6px}
+  .slot{width:44px;height:56px}.slot .sv{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="bar">
+  <div class="bar-logo">🏆</div>
+  <div class="bar-info">
+    <div class="bar-title">Max Finder — 3D Cinematic</div>
+    <div class="bar-sub">Click right panel · or press ▶ Auto · code slides up on demand</div>
+  </div>
+  <div class="bar-right">
+    <div class="spd" id="sp0" onclick="setSpd(0)">🐢 Slow</div>
+    <div class="spd on" id="sp1" onclick="setSpd(1)">▶ Normal</div>
+    <div class="spd" id="sp2" onclick="setSpd(2)">⚡ Fast</div>
+    <div class="rst" onclick="doReset()">↺ Restart</div>
+  </div>
+</div>
+
+<!-- DOTS -->
+<div class="dotbar" id="dotbar">
+  <span class="dot-lbl" id="dot-lbl">Not started</span>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+  <!-- LEFT: 3D Visual -->
+  <div class="LP">
+    <div class="LP-head">
+      <h2 id="lph">3D View</h2>
+      <span id="lpb"></span>
+    </div>
+    <div class="LP-scene" id="lpscene">
+      <div class="idle-center">
+        <div class="idle-trophy">🏆</div>
+        <div style="font-size:13px;font-weight:600;color:var(--tx)">Max Finder</div>
+        <div style="font-size:11px;color:var(--tx3);text-align:center;max-width:220px;line-height:1.6">Press ▶ Auto or click the right panel to begin the cinematic journey</div>
+      </div>
+    </div>
+    <!-- code panel -->
+    <div class="code-panel" id="cpanel">
+      <div class="cp-hdr">
+        <div class="cp-title">What the code looks like</div>
+        <div class="cp-close" onclick="hideCode()">✕ close</div>
+      </div>
+      <div id="cplines"></div>
+    </div>
+    <!-- code toggle -->
+    <div class="code-btn" id="cbtn" onclick="toggleCode()" style="display:none">
+      <span id="cbico">📋</span><span id="cblbl">Show code</span>
+    </div>
+  </div>
+
+  <!-- RIGHT: Thought Bubbles -->
+  <div class="RP" id="rpanel" onclick="rpClick()">
+    <div class="RP-head">
+      <h2>Thinking</h2>
+      <span class="click-hint" id="chint">👆 click to advance</span>
+    </div>
+    <div class="bubble-area" id="barea">
+      <div style="text-align:center;color:var(--tx3);font-size:13px;padding:20px 0">
+        <div style="font-size:32px;margin-bottom:10px">💭</div>
+        Thought bubbles appear here.<br>Each one reveals one idea, then hides.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nbtn" id="bprev" onclick="prevSc()" disabled>← Prev</button>
+  <div class="nav-mid" id="navmid">Not started</div>
+  <button class="nbtn" id="bnext" onclick="clickNext()" disabled>Next →</button>
+  <button class="nbtn play" id="bauto" onclick="togAuto()">▶ Begin</button>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   DATA
+═══════════════════════════════════════ */
+var LIST = [3,7,1,9,2,8,4];
+var SPEEDS = [2200,1300,650];
+var spdIdx = 1;
+var autoRun = false;
+var curSc = -1;
+var curBub = 0;
+var codeOpen = false;
+var bubTimers = [];
+
+/* ═══════════════════════════════════════
+   SCENE DEFINITIONS
+═══════════════════════════════════════ */
+var SC = [];
+
+function buildSC(){
+  SC = [];
+  var n = LIST.length;
+  var maxVal = LIST.reduce(function(a,b){return a>b?a:b;});
+
+  /* ─ S0: Meet the variable ─ */
+  SC.push({
+    lh:'Variable: max', lb:'type = int · name = max',
+    left:function(el){
+      el.innerHTML = '<div class="scene-title-overlay">Scene 1 · Meet the Variable</div>'
+      +'<div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:20px">'
+      /* big animated variable type tag */
+      +'<div style="display:flex;align-items:center;gap:10px">'
+      +'<div class="type-chip" style="font-size:13px;padding:6px 14px;animation:tagIn .5s ease">int</div>'
+      +'<div style="font-size:18px;color:var(--tx3)">→</div>'
+      +'<div class="name-chip" style="font-size:13px;padding:6px 14px;animation:tagIn .6s .1s ease both">max</div>'
+      +'</div>'
+      /* big maxbox empty */
+      +'<div class="max-var-section">'
+      +'<div class="maxbox-label"><span class="type-chip">int</span> <span style="color:var(--tx3)">variable named</span> <span class="name-chip">max</span></div>'
+      +'<div class="maxbox empty" style="width:100px;height:108px;margin-top:8px">'
+      +'<div class="mv" style="font-size:14px;color:var(--tx3)">empty</div>'
+      +'<div class="ml" style="color:var(--tx3)">no value yet</div>'
+      +'</div>'
+      +'</div>'
+      /* three info chips */
+      +'<div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:center">'
+      +'<div style="padding:5px 12px;border-radius:8px;border:1px solid var(--purple);background:var(--purplebg);font-size:11px;color:var(--purple)"><strong>type</strong> = int</div>'
+      +'<div style="padding:5px 12px;border-radius:8px;border:1px solid var(--goldbd);background:var(--goldbg);font-size:11px;color:var(--gold)"><strong>name</strong> = max</div>'
+      +'<div style="padding:5px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--s2);font-size:11px;color:var(--tx3)"><strong>value</strong> = ?</div>'
+      +'</div>'
+      +'</div>';
+    },
+    bubbles:[
+      {cls:'b-intro',ico:'🤔',who:'Variable',
+       title:'Meet the variable: max',
+       text:'I am a variable named <span class="gold">max</span>.<br>My type is <span class="bl">int</span> — I hold whole numbers only.<br><br>Right now I am <strong>empty</strong>. I have a name, a type, but no value yet.'},
+      {cls:'b-think',ico:'💭',who:'Purpose',
+       title:'I am a memory slot — one number at a time',
+       text:'Think of me like a whiteboard with a label that says <span class="gold">max</span>. I hold one number, erase it, hold another.<br><br>My job: <strong>remember the biggest number seen so far</strong>.'},
+    ],
+    code:[
+      {n:1,st:'',t:'<span class="cc"># declare the variable</span>'},
+      {n:2,st:'ca',t:'<span class="cv">max</span> = <span class="cc">???</span>&nbsp;&nbsp;<span class="cc">← empty for now</span>'},
+    ]
+  });
+
+  /* ─ S1: The list arrives ─ */
+  SC.push({
+    lh:'The List', lb:n+' elements',
+    left:function(el){
+      el.innerHTML = '<div class="scene-title-overlay">Scene 2 · The List Arrives</div>'
+      +'<div class="list3d"><div class="list-row">'
+      +LIST.map(function(v,i){
+        return'<div class="slot s-arrive" style="animation-delay:'+(i*70)+'ms">'
+          +'<div class="sv">'+v+'</div><div class="sl"></div>'
+          +'<div class="sx">['+i+']</div></div>';
+      }).join('')
+      +'</div></div>'
+      +'<div style="font-size:11px;color:var(--tx3);text-align:center;margin-top:4px">'+n+' boxes · each has an index · each hides a number</div>'
+      +'<div class="max-var-section">'
+      +'<div class="maxbox-label"><span class="name-chip">max</span> <span style="color:var(--tx3)">= ?</span></div>'
+      +'<div class="maxbox empty"><div class="mv">?</div><div class="ml">not set</div></div>'
+      +'</div>';
+    },
+    bubbles:[
+      {cls:'b-loop',ico:'📦',who:'The List',
+       title:''+n+' numbers just arrived',
+       text:'List = [<span class="gold">'+LIST.join(', ')+'</span>]<br><br>Each lives in a numbered box. Box [0] = '+LIST[0]+'. Box [1] = '+LIST[1]+'. And so on.<br><br><span class="gold">max</span> is still empty.'},
+      {cls:'b-intro',ico:'🤔',who:'The Problem',
+       title:'Which box has the biggest number?',
+       text:'I cannot see all boxes at once. I can only open <strong>one box at a time</strong>.<br><br>The biggest could be hiding anywhere — first box, last box, anywhere in the middle.'},
+    ],
+    code:[
+      {n:1,st:'ca',t:'<span class="cv">numbers</span> = [<span class="cg">'+LIST.join(',')+'</span>]'},
+      {n:2,st:'',t:'<span class="cv">max</span> = <span class="cc">???</span>'},
+    ]
+  });
+
+  /* ─ S2: Set max = first value ─ */
+  SC.push({
+    lh:'Set max = first value', lb:'max = '+LIST[0],
+    left:function(el){
+      var h='<div class="scene-title-overlay">Scene 3 · First Value into max</div>'
+      +'<div class="list3d"><div class="list-row">'
+      +LIST.map(function(v,i){
+        var cls = i===0 ? 'slot s-active' : 'slot';
+        return'<div class="'+cls+'">'
+          +(i===0?'<div class="apin">👆</div>':'')
+          +'<div class="sv">'+v+'</div>'
+          +'<div class="sl">'+(i===0?'opening':'')+'</div>'
+          +'<div class="sx">['+i+']</div></div>';
+      }).join('')
+      +'</div></div>'
+      +'<div class="max-var-section">'
+      +'<div class="maxbox-label"><span class="name-chip">max</span> <span style="color:var(--tx3)">gets first value</span></div>'
+      +'<div class="maxbox glow pulse" id="mbox"><div class="mv">'+LIST[0]+'</div><div class="ml">first value</div></div>'
+      +'</div>';
+      el.innerHTML = h;
+    },
+    bubbles:[
+      {cls:'b-yes',ico:'⚡',who:'Action',
+       title:'Open box [0] → put its value into max',
+       text:'Box [0] = <span class="gold">'+LIST[0]+'</span>.<br><br>We place it into <span class="gold">max</span>. Not because it\'s the biggest — we don\'t know yet. We just need a <strong>real starting value</strong>.'},
+      {cls:'b-compare',ico:'🤔',who:'Why not start max = 0?',
+       title:'Starting at 0 would be a mistake',
+       text:'If all numbers were negative — like [-5,-3,-8] — and we set max = 0, we would return 0. But 0 is not even in the list!<br><br><strong>Always start max with list[0].</strong>'},
+    ],
+    code:[
+      {n:1,st:'cd',t:'<span class="cv">numbers</span> = [<span class="cg">'+LIST.join(',')+'</span>]'},
+      {n:2,st:'ca',t:'<span class="cv">max</span> = <span class="cv">numbers</span>[<span class="cg">0</span>]&nbsp;&nbsp;<span class="cc">← max = '+LIST[0]+'</span>'},
+    ]
+  });
+
+  /* ─ S3: Why loop ─ */
+  SC.push({
+    lh:'Why we need a loop', lb:(n-1)+' boxes still to check',
+    left:function(el){
+      var h='<div class="scene-title-overlay">Scene 4 · Why a Loop?</div>'
+      +'<div class="list3d"><div class="list-row">'
+      +LIST.map(function(v,i){
+        var cls = i===0 ? 'slot s-done' : 'slot';
+        var needsVisit = i>0;
+        return'<div class="'+cls+'">'
+          +(needsVisit?'<div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--tx3)">?</div>':'')
+          +'<div class="sv">'+v+'</div>'
+          +'<div class="sl">'+(i===0?'done ✓':i===1?'next':'')+'</div>'
+          +'<div class="sx">['+i+']</div></div>';
+      }).join('')
+      +'</div></div>';
+      /* flow diagram */
+      var steps = [
+        {t:'Open box [1]',c:'fa'},
+        {t:'Compare with max',c:'fw'},
+        {t:'Update if bigger',c:'fw'},
+        {t:'Move to box [2]',c:'fa'},
+        {t:'… repeat to ['+(n-1)+']',c:'fw'},
+        {t:'Report max',c:'fg'},
+      ];
+      h+='<div class="flow-wrap">';
+      steps.forEach(function(s,i){
+        h+='<div class="fbox '+s.c+' show" style="transition-delay:'+(i*80)+'ms">'+s.t+'</div>';
+        if(i<steps.length-1) h+='<div class="farrow show" style="transition-delay:'+(i*80+50)+'ms">↓</div>';
+      });
+      h+='</div>';
+      el.innerHTML = h;
+    },
+    bubbles:[
+      {cls:'b-loop',ico:'🔄',who:'Why loop?',
+       title:'The biggest could be hiding in any remaining box',
+       text:'Box [0] = <span class="gold">'+LIST[0]+'</span> is in max. But is that the biggest? I don\'t know.<br><br><span class="hl">'+LIST[2]+'</span> is in box [2]. <span class="hl">'+LIST[3]+'</span> is in box [3]. I need to check <strong>all of them</strong>.'},
+      {cls:'b-loop',ico:'🔄',who:'The loop plan',
+       title:'Visit boxes [1] through ['+(n-1)+'] one by one',
+       text:'For each box:<br>① Open it<br>② Compare value with max<br>③ If bigger → update max<br>④ If not → leave max alone<br><br><strong>'+(n-1)+' comparisons. Then we\'re done.</strong>'},
+    ],
+    code:[
+      {n:1,st:'cd',t:'<span class="cv">max</span> = <span class="cv">numbers</span>[<span class="cg">0</span>]'},
+      {n:2,st:'ca',t:'<span class="ck">for</span> i <span class="ck">in</span> <span class="cg">range</span>(<span class="cg">1</span>, <span class="cg">'+n+'</span>):&nbsp;&nbsp;<span class="cc">← visits [1] to ['+(n-1)+']</span>'},
+    ]
+  });
+
+  /* ─ Iteration scenes ─ */
+  var champ = LIST[0];
+  var champIdx = 0;
+
+  for(var i=1;i<LIST.length;i++){
+    (function(idx,prevChamp,prevChampIdx){
+      var curr = LIST[idx];
+      var isUp = curr > prevChamp;
+      var newChamp = isUp ? curr : prevChamp;
+      var newChampIdx = isUp ? idx : prevChampIdx;
+
+      SC.push({
+        lh:'Box ['+idx+'] · value = '+curr,
+        lb: curr+(isUp?' > ':' ≤ ')+prevChamp+' → max = '+newChamp,
+        iterIdx: idx,
+        left:function(el){
+          /* 3D list */
+          var h='<div class="scene-title-overlay">Iteration '+idx+' / '+(n-1)+'</div>'
+          +'<div class="list3d"><div class="list-row">'
+          +LIST.map(function(v,j){
+            var cls='slot ';
+            if(j===idx) cls+=(isUp?'s-active':'s-lose');
+            else if(j===newChampIdx&&j!==idx) cls+='s-champ';
+            else if(j<idx&&j!==newChampIdx) cls+='s-done';
+            else cls+='s-no';
+            return'<div class="'+cls+'">'
+              +(j===idx?'<div class="apin">👆</div>':'')
+              +(j===newChampIdx&&j!==idx?'<div class="crown">👑</div>':'')
+              +'<div class="sv">'+v+'</div>'
+              +'<div class="sl">'+(j===idx?'checking':j===newChampIdx&&j!==idx?'champion':j<idx?'visited':'')+'</div>'
+              +'<div class="sx">['+j+']</div></div>';
+          }).join('')
+          +'</div></div>';
+          /* compare arena */
+          h+='<div class="arena">'
+          +'<div class="atile '+(isUp?'aok':'ab')+'"><div class="av">'+curr+'</div><div class="al">box['+idx+']</div></div>'
+          +'<div class="asym">'+(isUp?'>':'≤')+'</div>'
+          +'<div class="atile ag"><div class="av">'+prevChamp+'</div><div class="al">max now</div></div>'
+          +'<div class="asym">→</div>'
+          +'<div class="atile '+(isUp?'aok':'ano')+'"><div class="av">'+(isUp?'YES':'NO')+'</div><div class="al">'+(isUp?'update!':'keep')+'</div></div>'
+          +'<div class="ares" style="color:'+(isUp?'var(--green)':'var(--red)')+'"><strong>'+(isUp?'✓ '+curr+' > '+prevChamp+' → max = '+curr:'✗ '+curr+' ≤ '+prevChamp+' → max stays '+prevChamp)+'</strong></div>'
+          +'</div>';
+          /* max box */
+          h+='<div class="max-var-section">'
+          +'<div class="maxbox-label"><span class="name-chip">max</span> <span style="color:var(--tx3)">= '+(isUp?curr:prevChamp)+'</span></div>'
+          +'<div class="maxbox '+(isUp?'glow pulse':'')+'" id="mbox'+idx+'">'
+          +'<div class="mv">'+(isUp?curr:prevChamp)+'</div>'
+          +'<div class="ml">'+(isUp?'↑ updated':'unchanged')+'</div>'
+          +'</div></div>';
+          el.innerHTML = h;
+        },
+        bubbles: isUp ? [
+          {cls:'b-compare',ico:'⚖️',who:'Comparing',
+           title:'Box ['+idx+'] = '+curr+' vs max = '+prevChamp,
+           text:'Opening box ['+idx+']. Value = <span class="bl">'+curr+'</span>.<br>Current max = <span class="gold">'+prevChamp+'</span>.<br><br>Is <span class="bl">'+curr+'</span> bigger than <span class="gold">'+prevChamp+'</span>?'},
+          {cls:'b-yes',ico:'🏆',who:'YES — update max',
+           title:curr+' > '+prevChamp+' — new champion!',
+           text:'<span class="ok">'+curr+'</span> beats <span class="gold">'+prevChamp+'</span>!<br><br>max was <span class="gold">'+prevChamp+'</span>.<br>max is now <span class="ok">'+curr+'</span>.<br><br>Box ['+idx+'] holds the crown 👑'},
+        ] : [
+          {cls:'b-compare',ico:'⚖️',who:'Comparing',
+           title:'Box ['+idx+'] = '+curr+' vs max = '+prevChamp,
+           text:'Opening box ['+idx+']. Value = <span class="bl">'+curr+'</span>.<br>Current max = <span class="gold">'+prevChamp+'</span>.<br><br>Is <span class="bl">'+curr+'</span> bigger than <span class="gold">'+prevChamp+'</span>?'},
+          {cls:'b-no',ico:'➡️',who:'NO — leave max alone',
+           title:curr+' ≤ '+prevChamp+' — max stays '+prevChamp,
+           text:'<span class="no">'+curr+'</span> does not beat <span class="gold">'+prevChamp+'</span>.<br><br>max stays at <span class="gold">'+prevChamp+'</span>.<br>We do <strong>nothing</strong>. Move to the next box.'},
+        ],
+        code:[
+          {n:1,st:'cd',t:'<span class="cv">max</span> = <span class="cv">numbers</span>[<span class="cg">0</span>]'},
+          {n:2,st:'cd',t:'<span class="ck">for</span> i <span class="ck">in</span> <span class="cg">range</span>(<span class="cg">1</span>,<span class="cg">'+n+'</span>):'},
+          {n:3,st:'ca',t:'&nbsp;&nbsp;<span class="ck">if</span> <span class="cv">numbers</span>[i] > <span class="cv">max</span>:&nbsp;<span class="cc">← i='+idx+', '+curr+(isUp?' > ':' ≤ ')+prevChamp+'</span>'},
+          isUp
+            ?{n:4,st:'ca',t:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="cv">max</span> = <span class="cv">numbers</span>[i]&nbsp;<span class="cc">← max = '+curr+'</span>'}
+            :{n:4,st:'cf',t:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="cv">max</span> = <span class="cv">numbers</span>[i]&nbsp;<span class="cc">← not this time</span>'},
+        ]
+      });
+      champ = newChamp;
+      champIdx = newChampIdx;
+    })(i, champ, champIdx);
+  }
+
+  /* ─ Final result ─ */
+  var midx = LIST.indexOf(maxVal);
+  SC.push({
+    lh:'Result', lb:'Maximum = '+maxVal,
+    left:function(el){
+      var h='<div class="scene-title-overlay">Final Result</div>'
+      +'<div class="list3d"><div class="list-row">'
+      +LIST.map(function(v,i){
+        var cls = i===midx ? 'slot s-champ' : 'slot s-done';
+        return'<div class="'+cls+'">'
+          +(i===midx?'<div class="crown">👑</div>':'')
+          +'<div class="sv">'+v+'</div>'
+          +'<div class="sl">'+(i===midx?'MAXIMUM!':'visited')+'</div>'
+          +'<div class="sx">['+i+']</div></div>';
+      }).join('')
+      +'</div></div>'
+      +'<div class="max-var-section">'
+      +'<div class="maxbox-label"><span class="name-chip">max</span></div>'
+      +'<div class="maxbox glow" style="width:100px;height:108px"><div class="mv" style="font-size:32px">'+maxVal+'</div><div class="ml">MAXIMUM ✓</div></div>'
+      +'</div>';
+      var conf='';
+      var cl=['#FFD60A','#3B82F6','#10B981','#8B5CF6','#EF4444'];
+      for(var ci=0;ci<20;ci++){var s=4+Math.random()*4;conf+='<div class="cbit" style="left:'+(Math.random()*100)+'%;width:'+s+'px;height:'+s+'px;background:'+cl[ci%5]+';animation-duration:'+(0.8+Math.random()*.9)+'s;animation-delay:'+(Math.random()*.5)+'s"></div>';}
+      h+='<div class="result-big" style="margin-top:4px"><div class="confwrap">'+conf+'</div>'
+        +'<div style="font-size:32px;margin-bottom:5px">🎉</div>'
+        +'<div style="font-size:17px;font-weight:700;color:var(--green)">Maximum = '+maxVal+'</div>'
+        +'<div style="font-size:11px;color:var(--tx2);margin-top:4px">Visited all '+n+' boxes. max never lost the crown after '+maxVal+' claimed it.</div>'
+        +'</div>';
+      el.innerHTML = h;
+    },
+    bubbles:[
+      {cls:'b-final',ico:'✅',who:'Done!',
+       title:'All '+n+' boxes visited. Maximum = '+maxVal,
+       text:'The loop ran <strong>'+(n-1)+' times</strong>. The number <span class="gold">'+maxVal+'</span> claimed max and was never beaten.<br><br>Maximum = <span class="gold">'+maxVal+'</span>'},
+      {cls:'b-think',ico:'🧠',who:'What we learned',
+       title:'One variable. One comparison. Repeated.',
+       text:'• <span class="gold">max</span> = one integer variable<br>• <span class="bl">for loop</span> = visit every box<br>• <span class="ok">if current > max</span> = the only question<br>• <span class="hl">max = current</span> = update when bigger<br><br>Same idea works for <strong>minimum</strong> (flip >), <strong>sum</strong> (add instead), <strong>count</strong>.'},
+    ],
+    code:[
+      {n:1,st:'cd',t:'<span class="cv">max</span> = <span class="cv">numbers</span>[<span class="cg">0</span>]'},
+      {n:2,st:'cd',t:'<span class="ck">for</span> i <span class="ck">in</span> <span class="cg">range</span>(<span class="cg">1</span>,<span class="cg">'+n+'</span>):'},
+      {n:3,st:'cd',t:'&nbsp;&nbsp;<span class="ck">if</span> <span class="cv">numbers</span>[i] > <span class="cv">max</span>:'},
+      {n:4,st:'cd',t:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="cv">max</span> = <span class="cv">numbers</span>[i]'},
+      {n:5,st:'ca',t:'<span class="cg">print</span>(<span class="cs">"Maximum:"</span>, <span class="cv">max</span>)&nbsp;&nbsp;<span class="cc">← '+maxVal+'</span>'},
+    ]
+  });
+}
+
+/* ═══════════════════════════════════════
+   DOTS
+═══════════════════════════════════════ */
+function buildDots(){
+  var bar=document.getElementById('dotbar');
+  var h='';
+  SC.forEach(function(_,i){
+    var cl=i<curSc?'dn':i===curSc?'cr':'fu';
+    h+='<div class="dot '+cl+'" onclick="jumpTo('+i+')" title="Scene '+(i+1)+'"></div>';
+  });
+  h+='<span class="dot-lbl" id="dot-lbl">'+(curSc<0?'Not started':'Scene '+(curSc+1)+' of '+SC.length)+'</span>';
+  bar.innerHTML=h;
+}
+function jumpTo(i){stopAuto();curSc=i;curBub=0;renderSc(i);}
+
+/* ═══════════════════════════════════════
+   RENDER SCENE
+═══════════════════════════════════════ */
+function renderSc(si){
+  if(si<0||si>=SC.length) return;
+  var sc=SC[si];
+  clearBT();
+  /* left */
+  document.getElementById('lph').textContent=sc.lh;
+  document.getElementById('lpb').textContent=sc.lb;
+  sc.left(document.getElementById('lpscene'));
+  /* code */
+  if(sc.code){
+    document.getElementById('cplines').innerHTML=sc.code.map(function(l){
+      return'<div class="cline '+(l.st||'')+'"><div class="cln">'+l.n+'</div><div class="clt">'+l.t+'</div></div>';
+    }).join('');
+  }
+  document.getElementById('cbtn').style.display='flex';
+  /* first bubble */
+  curBub=0;
+  showBub(si,0,true);
+  /* nav */
+  document.getElementById('bprev').disabled=(si===0);
+  document.getElementById('bnext').disabled=(si>=SC.length-1);
+  document.getElementById('navmid').textContent='Scene '+(si+1)+' of '+SC.length;
+  buildDots();
+}
+
+/* ═══════════════════════════════════════
+   BUBBLE SYSTEM
+═══════════════════════════════════════ */
+function clearBT(){bubTimers.forEach(function(t){clearTimeout(t);});bubTimers=[];}
+
+function showBub(si,bi,fresh){
+  var sc=SC[si];
+  if(!sc||bi>=sc.bubbles.length) return;
+  var bub=sc.bubbles[bi];
+  var area=document.getElementById('barea');
+  if(fresh){
+    var old=area.querySelectorAll('.bubble');
+    old.forEach(function(el){el.classList.remove('entering');el.classList.add('exiting');});
+    var t=setTimeout(function(){
+      area.innerHTML='';
+      appendBub(area,bub,si,bi);
+    },old.length?360:0);
+    bubTimers.push(t);
+  } else {
+    appendBub(area,bub,si,bi);
+  }
+}
+
+function appendBub(area,bub,si,bi){
+  var sc=SC[si];
+  var el=document.createElement('div');
+  el.className='bubble '+bub.cls+' entering';
+  el.innerHTML='<div class="bwho"><span class="bico">'+bub.ico+'</span>'+bub.who+'</div>'
+    +'<div class="btitle">'+bub.title+'</div>'
+    +'<div class="btext">'+bub.text+'</div>';
+  area.appendChild(el);
+  area.scrollTop=area.scrollHeight;
+  var isLast=(bi>=sc.bubbles.length-1);
+  var hint=document.getElementById('chint');
+  if(hint) hint.textContent=isLast?'👆 click for next scene':'👆 click for next thought';
+  if(autoRun){
+    var t=setTimeout(function(){if(autoRun)advBubble();},SPEEDS[spdIdx]);
+    bubTimers.push(t);
+  }
+}
+
+function advBubble(){
+  if(curSc<0) return;
+  var sc=SC[curSc];
+  if(curBub<sc.bubbles.length-1){
+    curBub++;
+    showBub(curSc,curBub,false);
+  } else {
+    if(curSc<SC.length-1){
+      curSc++;curBub=0;
+      renderSc(curSc);
+    } else {
+      stopAuto();
+    }
+  }
+}
+
+/* ═══════════════════════════════════════
+   CODE PANEL
+═══════════════════════════════════════ */
+function toggleCode(){
+  codeOpen=!codeOpen;
+  document.getElementById('cpanel').className='code-panel'+(codeOpen?' visible':'');
+  document.getElementById('cbico').textContent=codeOpen?'✕':'📋';
+  document.getElementById('cblbl').textContent=codeOpen?'Hide code':'Show code';
+  document.getElementById('cbtn').className='code-btn'+(codeOpen?' code-open':'');
+}
+function hideCode(){
+  codeOpen=false;
+  document.getElementById('cpanel').className='code-panel';
+  document.getElementById('cbico').textContent='📋';
+  document.getElementById('cblbl').textContent='Show code';
+  document.getElementById('cbtn').className='code-btn';
+}
+
+/* ═══════════════════════════════════════
+   AUTO / SPEED / NAV
+═══════════════════════════════════════ */
+function setSpd(i){
+  spdIdx=i;
+  ['sp0','sp1','sp2'].forEach(function(id,k){
+    document.getElementById(id).className='spd'+(k===i?' on':'');
+  });
+}
+
+function togAuto(){
+  if(curSc<0){
+    /* first launch — start in manual click mode */
+    autoRun=false;curSc=0;curBub=0;
+    document.getElementById('bauto').textContent='▶ Auto';
+    renderSc(0);
+    document.getElementById('bnext').disabled=false;
+    document.getElementById('bprev').disabled=false;
+    return;
+  }
+  autoRun=!autoRun;updABtn();
+  if(autoRun){
+    var t=setTimeout(function(){if(autoRun)advBubble();},SPEEDS[spdIdx]);
+    bubTimers.push(t);
+  }
+}
+function stopAuto(){autoRun=false;updABtn();clearBT();}
+function updABtn(){
+  var b=document.getElementById('bauto');
+  b.textContent=autoRun?'⏸ Pause':'▶ Auto';
+  b.className='nbtn play';
+}
+function prevSc(){stopAuto();curSc=Math.max(0,curSc-1);curBub=0;renderSc(curSc);}
+function nextSc(){stopAuto();curSc=Math.min(SC.length-1,curSc+1);curBub=0;renderSc(curSc);}
+
+function doReset(){
+  stopAuto();curSc=-1;curBub=0;hideCode();
+  document.getElementById('cbtn').style.display='none';
+  document.getElementById('lpscene').innerHTML=
+    '<div class="idle-center"><div class="idle-trophy">🏆</div>'
+    +'<div style="font-size:13px;font-weight:600;color:var(--tx)">Max Finder</div>'
+    +'<div style="font-size:11px;color:var(--tx3);text-align:center;max-width:220px;line-height:1.6">Press ▶ or click the right panel</div></div>';
+  document.getElementById('barea').innerHTML=
+    '<div style="text-align:center;color:var(--tx3);font-size:13px;padding:20px 0">'
+    +'<div style="font-size:32px;margin-bottom:10px">💭</div>'
+    +'Press <strong style="color:var(--tx2)">▶ Auto</strong> to begin.</div>';
+  document.getElementById('bprev').disabled=true;
+  document.getElementById('bnext').disabled=true;
+  document.getElementById('navmid').textContent='Not started';
+  buildDots();
+}
+
+/* rpClick — manual click on right panel */
+function rpClick(){
+  if(curSc<0){togAuto();return;}
+  if(autoRun) stopAuto();
+  advBubble();
+}
+
+/* clickNext — advances bubble within scene first, then scene */
+function clickNext(){
+  if(curSc<0){togAuto();return;}
+  stopAuto();
+  advBubble();
+}
+
+/* boot */
+buildSC();
+buildDots();
+</script>
+</body>
+</html>

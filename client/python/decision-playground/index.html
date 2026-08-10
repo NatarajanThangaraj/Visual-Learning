@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Playground - Python Conditional Learning</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 32px; margin-bottom: 10px; }
+        .header p { font-size: 16px; opacity: 0.9; }
+
+        .content { padding: 30px; }
+
+        .guide-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .guide-box h3 { color: #1e40af; margin-bottom: 12px; font-size: 16px; }
+        .guide-box ol { color: #1e40af; margin-left: 20px; line-height: 1.8; }
+
+        .module-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .module-btn {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .module-btn:hover { border-color: #667eea; color: #667eea; }
+        .module-btn.active { background: #667eea; color: white; border-color: #667eea; }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
+
+        .section {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="number"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        .button-group { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102,126,234,0.3); }
+
+        .btn-secondary { background: white; color: #667eea; border: 2px solid #667eea; }
+        .btn-secondary:hover { background: #667eea; color: white; }
+
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.6s ease-out;
+        }
+        .timeline-item.visible { opacity: 1; transform: translateX(0); }
+
+        .timeline-number {
+            width: 40px; height: 40px;
+            background: #ccc;
+            color: white;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+            transition: all 0.5s;
+        }
+        .timeline-item.visible .timeline-number { background: #667eea; }
+        .timeline-item.eval-true .timeline-number { background: #10b981; }
+        .timeline-item.eval-false .timeline-number { background: #ef4444; }
+
+        .timeline-content { flex: 1; padding-bottom: 20px; border-left: 2px solid #eee; padding-left: 15px; margin-left: 5px; }
+        .timeline-item:last-child .timeline-content { border-left: none; }
+
+        .timeline-label { font-size: 12px; font-weight: 600; color: #667eea; text-transform: uppercase; margin-bottom: 4px; }
+        .timeline-value { font-size: 14px; color: #333; font-family: 'Courier New', monospace; }
+        .timeline-desc { font-size: 12px; color: #666; margin-top: 4px; }
+
+        .timeline-badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.4s ease-out 0.3s;
+        }
+        .timeline-item.visible .timeline-badge { opacity: 1; transform: scale(1); }
+        .badge-true { background: #d1fae5; color: #065f46; }
+        .badge-false { background: #fee2e2; color: #7f1d1d; }
+        .badge-info { background: #eff6ff; color: #1e40af; }
+
+        .flow-diagram {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            background: #f0f4ff;
+            border-left: 4px solid #ccc;
+            padding: 15px;
+            border-radius: 4px;
+            opacity: 0.3;
+            transform: scale(0.98);
+            transition: all 0.5s ease-out;
+        }
+        .flow-step.active { opacity: 1; transform: scale(1); border-left-color: #667eea; background: #e7f0ff; }
+        .flow-step.done { opacity: 1; transform: scale(1); border-left-color: #10b981; background: #f0fdf4; }
+
+        .flow-label { font-size: 11px; font-weight: 700; color: #667eea; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .flow-step.done .flow-label { color: #10b981; }
+
+        .flow-value { font-size: 16px; font-weight: 600; color: #333; font-family: 'Courier New', monospace; word-break: break-all; }
+
+        .flow-arrow { text-align: center; color: #ccc; font-size: 28px; margin: 12px 0; transition: all 0.3s; }
+        .flow-arrow.active { color: #667eea; }
+        .flow-arrow.done { color: #10b981; }
+
+        .flow-next-btn {
+            display: block; margin: 20px auto 0; padding: 12px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; border-radius: 6px;
+            font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+        }
+        .flow-next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.3); }
+
+        .flow-status { text-align: center; margin-top: 12px; font-size: 13px; color: #667eea; font-weight: 500; }
+
+        .comparison-box { background: white; border: 2px solid #ddd; border-radius: 6px; padding: 15px; margin-top: 15px; }
+        .comparison-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px; align-items: center; }
+        .comparison-item { background: #f0f4ff; padding: 12px; border-radius: 4px; text-align: center; font-family: 'Courier New', monospace; font-weight: 600; font-size: 18px; }
+        .comparison-operator { font-size: 22px; font-weight: bold; color: #667eea; }
+
+        .condition-result {
+            padding: 15px; border-radius: 6px; text-align: center;
+            font-weight: 700; font-size: 18px; margin-top: 10px;
+            opacity: 0; transform: scale(0.8); transition: all 0.5s ease-out;
+        }
+        .condition-result.show { opacity: 1; transform: scale(1); }
+        .condition-true { background: #d1fae5; color: #065f46; border: 2px solid #6ee7b7; }
+        .condition-false { background: #fee2e2; color: #7f1d1d; border: 2px solid #fca5a5; }
+
+        .code-section {
+            background: #1e1e1e; color: #d4d4d4;
+            border-radius: 8px; padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px; line-height: 1.8;
+            overflow-x: auto; margin: 20px 0;
+        }
+        .code-line {
+            display: flex; align-items: center; padding: 2px 0;
+            border-left: 3px solid transparent; padding-left: 8px;
+            transition: all 0.3s;
+        }
+        .code-line.highlight { background: rgba(102,126,234,0.15); border-left-color: #667eea; }
+        .code-line-number { color: #858585; margin-right: 20px; min-width: 25px; text-align: right; font-size: 12px; user-select: none; }
+        .code-text { white-space: pre; }
+        .hl-kw { color: #c586c0; font-weight: bold; }
+        .hl-fn { color: #dcdcaa; }
+        .hl-str { color: #ce9178; }
+        .hl-num { color: #b5cea8; }
+        .hl-cmt { color: #6a9955; font-style: italic; }
+
+        .debug-panel {
+            background: #0d1117; color: #e6edf3;
+            border: 2px solid #30363d; border-radius: 8px;
+            padding: 20px; font-family: 'Courier New', monospace;
+            font-size: 13px; line-height: 1.8; margin: 20px 0;
+        }
+        .debug-header { color: #58a6ff; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+        .debug-line { margin: 8px 0; display: flex; align-items: center; flex-wrap: wrap; }
+        .debug-var { color: #79c0ff; font-weight: bold; }
+        .debug-value { color: #85e89d; margin-left: 10px; }
+        .debug-type { color: #d2a8ff; margin-left: 5px; font-size: 11px; opacity: 0.7; }
+
+        .output-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border-radius: 8px; padding: 30px; text-align: center; margin: 20px 0;
+        }
+        .output-value { font-size: 28px; font-weight: 700; margin-bottom: 10px; line-height: 1.4; white-space: pre-line; }
+        .output-label { font-size: 13px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+
+        .empty-state { text-align: center; color: #999; padding: 40px 20px; font-size: 14px; }
+
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #ddd; }
+
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .header { padding: 30px 20px; }
+            .header h1 { font-size: 24px; }
+            .content { padding: 20px; }
+            .comparison-row { grid-template-columns: 1fr; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Decision Playground</h1>
+            <p>Master Python Conditional Statements with Visual Learning</p>
+        </div>
+
+        <div class="content">
+            <div class="guide-box">
+                <h3>📖 Beginner Guide</h3>
+                <ol>
+                    <li><strong>Choose a module</strong> (Voting, Odd/Even, etc.)</li>
+                    <li><strong>Enter input value</strong> and click <strong>Run Module</strong></li>
+                    <li><strong>Watch the timeline</strong> — each step appears slowly with animation</li>
+                    <li><strong>Click "Next Step"</strong> in the flow diagram to walk through the decision</li>
+                    <li><strong>Read the code and debug window</strong> to understand Python syntax</li>
+                    <li><strong>Reset and try different values</strong> to see how output changes</li>
+                </ol>
+            </div>
+
+            <div class="module-selector" id="moduleSelector"></div>
+
+            <div class="main-grid">
+                <div class="section" style="margin-bottom:0">
+                    <div class="section-title">📥 STEP 1: Enter Input Value</div>
+                    <div id="inputArea"></div>
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="executeModule()">▶️ Run Module</button>
+                        <button class="btn-secondary" onclick="resetExecution()">🔄 Reset</button>
+                    </div>
+                </div>
+                <div class="section" style="margin-bottom:0">
+                    <div class="section-title">📊 Execution Timeline (Slow Animated)</div>
+                    <div id="timelineArea"><div class="empty-state">Enter a value and click "Run Module"</div></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🔄 Decision Flow Diagram — Click "Next Step" to advance</div>
+                <div id="flowDiagram"><div class="empty-state">Run a module to see the flow diagram</div></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📝 Python Code (Syntax Highlighted)</div>
+                <div id="pythonCode"><div class="empty-state">Run a module to see the Python code</div></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🐛 Debug Window (Variable Tracker)</div>
+                <div id="debugPanel"><div class="empty-state">Run a module to see variable values</div></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">✨ STEP 5: Final Output</div>
+                <div id="outputArea"><div class="empty-state">Run a module to see the result</div></div>
+            </div>
+        </div>
+
+        <div class="footer">💡 Tip: Try different input values and click Run again to see how the output changes!</div>
+    </div>
+
+    <script>
+        var modules = [
+            {
+                id: 'voting', name: '🗳️ Voting Eligibility',
+                inputType: 'number', inputLabel: 'Enter your age',
+                inputMin: 0, inputMax: 120, inputDefault: 20,
+                scenario: function(input) {
+                    var age = parseInt(input) || 0;
+                    var cond = age >= 18;
+                    return {
+                        timeline: [
+                            { step: '1. Read input', value: 'age = ' + age, desc: 'Python reads the age value you entered', badge: 'info', badgeText: 'Input received' },
+                            { step: '2. Check condition', value: 'age >= 18', desc: 'Python asks: Is ' + age + ' greater than or equal to 18?', badge: 'info', badgeText: 'Evaluating...' },
+                            { step: '3. Evaluate result', value: age + ' >= 18  →  ' + cond, desc: cond ? 'YES! ' + age + ' is >= 18. Condition is TRUE' : 'NO! ' + age + ' is < 18. Condition is FALSE', badge: cond ? 'true' : 'false', badgeText: cond ? '✅ TRUE' : '❌ FALSE' },
+                            { step: '4. Execute block', value: cond ? 'Run IF block' : 'Run ELSE block', desc: cond ? 'Python runs the code inside the if block' : 'Python skips if and runs else block', badge: cond ? 'true' : 'false', badgeText: cond ? '✅ Eligible!' : '❌ Not eligible' }
+                        ],
+                        vars: [
+                            { name: 'age', value: age, type: 'int' },
+                            { name: 'condition (age >= 18)', value: cond, type: 'bool' },
+                            { name: 'result', value: cond ? '"You can vote!"' : '"Wait a few more years"', type: 'string' }
+                        ],
+                        cond: { expr: 'age >= 18', result: cond, left: age, op: '>=', right: 18 },
+                        output: cond ? '✅ You can vote!' : '❌ Wait a few more years',
+                        codeLines: [
+                            { text: '# Voting Eligibility Checker', type: 'comment' },
+                            { text: 'age = ' + age, hl: true },
+                            { text: '' },
+                            { text: 'if age >= 18:', hl: cond },
+                            { text: '    print("You can vote!")', hl: cond },
+                            { text: 'else:', hl: !cond },
+                            { text: '    print("Wait a few more years")', hl: !cond }
+                        ]
+                    };
+                }
+            },
+            {
+                id: 'oddeven', name: '🔢 Odd or Even',
+                inputType: 'number', inputLabel: 'Enter a number',
+                inputMin: 0, inputMax: 10000, inputDefault: 14,
+                scenario: function(input) {
+                    var num = parseInt(input) || 0;
+                    var rem = num % 2;
+                    var isEven = rem === 0;
+                    return {
+                        timeline: [
+                            { step: '1. Read input', value: 'number = ' + num, desc: 'Python reads the number you entered', badge: 'info', badgeText: 'Input received' },
+                            { step: '2. Calculate modulo', value: num + ' % 2 = ' + rem, desc: 'Python divides ' + num + ' by 2 and gets remainder = ' + rem, badge: 'info', badgeText: 'Remainder: ' + rem },
+                            { step: '3. Evaluate result', value: 'remainder == 0  →  ' + isEven, desc: isEven ? 'Remainder is 0, so number is EVEN' : 'Remainder is 1, so number is ODD', badge: isEven ? 'true' : 'false', badgeText: isEven ? '✅ EVEN' : '❌ ODD' },
+                            { step: '4. Execute block', value: isEven ? 'Run IF block (Even)' : 'Run ELSE block (Odd)', desc: isEven ? 'Python prints "Even"' : 'Python prints "Odd"', badge: isEven ? 'true' : 'false', badgeText: isEven ? '✅ Even!' : '✅ Odd!' }
+                        ],
+                        vars: [
+                            { name: 'number', value: num, type: 'int' },
+                            { name: 'remainder (num % 2)', value: rem, type: 'int' },
+                            { name: 'is_even', value: isEven, type: 'bool' }
+                        ],
+                        cond: { expr: 'number % 2 == 0', result: isEven, left: num + ' % 2 = ' + rem, op: '==', right: 0 },
+                        output: isEven ? '✨ ' + num + ' is EVEN' : '✨ ' + num + ' is ODD',
+                        codeLines: [
+                            { text: '# Odd or Even Checker', type: 'comment' },
+                            { text: 'number = ' + num, hl: true },
+                            { text: 'remainder = number % 2', hl: true },
+                            { text: '' },
+                            { text: 'if remainder == 0:', hl: isEven },
+                            { text: '    print("Even")', hl: isEven },
+                            { text: 'else:', hl: !isEven },
+                            { text: '    print("Odd")', hl: !isEven }
+                        ]
+                    };
+                }
+            },
+            {
+                id: 'discount', name: '🏪 Restaurant Discount',
+                inputType: 'number', inputLabel: 'Enter bill amount ($)',
+                inputMin: 0, inputMax: 10000, inputDefault: 1200,
+                scenario: function(input) {
+                    var bill = parseInt(input) || 0;
+                    var ok = bill > 1000;
+                    var disc = ok ? Math.round(bill * 0.1) : 0;
+                    var fin = bill - disc;
+                    return {
+                        timeline: [
+                            { step: '1. Read input', value: 'bill = $' + bill, desc: 'Customer bill total entered', badge: 'info', badgeText: 'Input received' },
+                            { step: '2. Check condition', value: 'bill > 1000', desc: 'Is $' + bill + ' greater than $1000?', badge: 'info', badgeText: 'Evaluating...' },
+                            { step: '3. Evaluate result', value: '$' + bill + ' > $1000  →  ' + ok, desc: ok ? 'YES! Bill qualifies for 10% discount' : 'NO! Bill does not qualify', badge: ok ? 'true' : 'false', badgeText: ok ? '✅ Discount!' : '❌ No discount' },
+                            { step: '4. Calculate', value: ok ? 'Discount: $' + disc + ' → Final: $' + fin : 'No discount → Final: $' + bill, desc: 'Final bill calculated', badge: ok ? 'true' : 'false', badgeText: 'Final: $' + fin }
+                        ],
+                        vars: [
+                            { name: 'bill', value: '$' + bill, type: 'float' },
+                            { name: 'condition (bill > 1000)', value: ok, type: 'bool' },
+                            { name: 'discount_amount', value: '$' + disc, type: 'float' },
+                            { name: 'final_bill', value: '$' + fin, type: 'float' }
+                        ],
+                        cond: { expr: 'bill > 1000', result: ok, left: '$' + bill, op: '>', right: '$1000' },
+                        output: ok ? '💰 Final: $' + fin + '\n(Saved $' + disc + '!)' : '💰 Final: $' + bill + '\n(No discount)',
+                        codeLines: [
+                            { text: '# Restaurant Discount Calculator', type: 'comment' },
+                            { text: 'bill = ' + bill, hl: true },
+                            { text: '' },
+                            { text: 'if bill > 1000:', hl: ok },
+                            { text: '    discount = bill * 0.1', hl: ok },
+                            { text: '    final_bill = bill - discount', hl: ok },
+                            { text: 'else:', hl: !ok },
+                            { text: '    final_bill = bill', hl: !ok },
+                            { text: '' },
+                            { text: 'print(final_bill)', hl: true }
+                        ]
+                    };
+                }
+            },
+            {
+                id: 'battery', name: '🔋 Battery Status',
+                inputType: 'number', inputLabel: 'Battery percentage (%)',
+                inputMin: 0, inputMax: 100, inputDefault: 25,
+                scenario: function(input) {
+                    var b = parseInt(input) || 0;
+                    var status, emoji, ml;
+                    if (b < 10) { status='CRITICAL'; emoji='🚨'; ml=4; }
+                    else if (b < 30) { status='LOW'; emoji='⚠️'; ml=6; }
+                    else if (b < 70) { status='MEDIUM'; emoji='🟡'; ml=8; }
+                    else { status='HEALTHY'; emoji='✅'; ml=10; }
+                    return {
+                        timeline: [
+                            { step: '1. Read input', value: 'battery = ' + b + '%', desc: 'Battery level entered', badge: 'info', badgeText: 'Input received' },
+                            { step: '2. Check battery < 10', value: b + ' < 10  →  ' + (b<10), desc: b<10 ? 'TRUE! Battery is critical' : 'FALSE. Check next condition...', badge: b<10 ? 'true' : 'false', badgeText: b<10 ? '✅ Matched!' : '❌ Not matched' },
+                            { step: '3. Check battery < 30', value: b<10 ? 'Skipped (already matched)' : b + ' < 30  →  ' + (b<30), desc: b<10 ? 'Already found answer' : (b<30 ? 'TRUE! Battery is low' : 'FALSE. Check next...'), badge: b<10 ? 'info' : (b<30 ? 'true' : 'false'), badgeText: b<10 ? '⏭️ Skipped' : (b<30 ? '✅ Matched!' : '❌ Not matched') },
+                            { step: '4. Final status', value: emoji + ' ' + status, desc: 'Battery status: ' + status, badge: 'true', badgeText: emoji + ' ' + status }
+                        ],
+                        vars: [
+                            { name: 'battery', value: b + '%', type: 'int' },
+                            { name: 'battery < 10', value: b<10, type: 'bool' },
+                            { name: 'battery < 30', value: b<30, type: 'bool' },
+                            { name: 'battery < 70', value: b<70, type: 'bool' },
+                            { name: 'status', value: '"' + status + '"', type: 'string' }
+                        ],
+                        cond: { expr: 'if / elif / else chain', result: true },
+                        output: emoji + ' Status: ' + status + '\nBattery: ' + b + '%',
+                        codeLines: [
+                            { text: '# Battery Status Checker', type: 'comment' },
+                            { text: 'battery = ' + b, hl: true },
+                            { text: '' },
+                            { text: 'if battery < 10:', hl: ml===4 },
+                            { text: '    status = "CRITICAL"', hl: ml===4 },
+                            { text: 'elif battery < 30:', hl: ml===6 },
+                            { text: '    status = "LOW"', hl: ml===6 },
+                            { text: 'elif battery < 70:', hl: ml===8 },
+                            { text: '    status = "MEDIUM"', hl: ml===8 },
+                            { text: 'else:', hl: ml===10 },
+                            { text: '    status = "HEALTHY"', hl: ml===10 },
+                            { text: '' },
+                            { text: 'print(status)', hl: true }
+                        ]
+                    };
+                }
+            },
+            {
+                id: 'exam', name: '📚 Exam Grades',
+                inputType: 'number', inputLabel: 'Enter marks (0-100)',
+                inputMin: 0, inputMax: 100, inputDefault: 75,
+                scenario: function(input) {
+                    var m = parseInt(input) || 0;
+                    var grade, emoji, ml;
+                    if (m >= 90) { grade='A+'; emoji='🌟'; ml=4; }
+                    else if (m >= 80) { grade='A'; emoji='⭐'; ml=6; }
+                    else if (m >= 70) { grade='B'; emoji='👍'; ml=8; }
+                    else if (m >= 50) { grade='D (Pass)'; emoji='✓'; ml=10; }
+                    else { grade='F (Fail)'; emoji='❌'; ml=12; }
+                    return {
+                        timeline: [
+                            { step: '1. Read input', value: 'marks = ' + m, desc: 'Student score entered', badge: 'info', badgeText: m + ' / 100' },
+                            { step: '2. Check ranges', value: '>= 90?  >= 80?  >= 70?  ...', desc: 'Python checks each condition top to bottom', badge: 'info', badgeText: 'Scanning...' },
+                            { step: '3. Find match', value: m + '  →  Grade ' + grade.split(' ')[0], desc: 'First matching condition wins', badge: 'true', badgeText: emoji + ' ' + grade.split(' ')[0] },
+                            { step: '4. Output', value: emoji + ' ' + grade, desc: 'Grade assigned', badge: 'true', badgeText: 'Done!' }
+                        ],
+                        vars: [
+                            { name: 'marks', value: m, type: 'int' },
+                            { name: 'marks >= 90', value: m>=90, type: 'bool' },
+                            { name: 'marks >= 80', value: m>=80, type: 'bool' },
+                            { name: 'marks >= 70', value: m>=70, type: 'bool' },
+                            { name: 'grade', value: '"' + grade + '"', type: 'string' }
+                        ],
+                        cond: { expr: 'cascading elif', result: true },
+                        output: emoji + ' Grade: ' + grade + '\nMarks: ' + m + ' / 100',
+                        codeLines: [
+                            { text: '# Exam Grade Calculator', type: 'comment' },
+                            { text: 'marks = ' + m, hl: true },
+                            { text: '' },
+                            { text: 'if marks >= 90:', hl: ml===4 },
+                            { text: '    grade = "A+"', hl: ml===4 },
+                            { text: 'elif marks >= 80:', hl: ml===6 },
+                            { text: '    grade = "A"', hl: ml===6 },
+                            { text: 'elif marks >= 70:', hl: ml===8 },
+                            { text: '    grade = "B"', hl: ml===8 },
+                            { text: 'elif marks >= 50:', hl: ml===10 },
+                            { text: '    grade = "D (Pass)"', hl: ml===10 },
+                            { text: 'else:', hl: ml===12 },
+                            { text: '    grade = "F (Fail)"', hl: ml===12 },
+                            { text: '' },
+                            { text: 'print(grade)', hl: true }
+                        ]
+                    };
+                }
+            },
+            {
+                id: 'login', name: '🔐 Login System',
+                inputType: 'password', inputLabel: 'Enter password (hint: python123)',
+                inputDefault: 'python123',
+                scenario: function(input) {
+                    var ok = input === 'python123';
+                    return {
+                        timeline: [
+                            { step: '1. Read input', value: 'password = "' + (input ? '***' : '(empty)') + '"', desc: 'User types password', badge: 'info', badgeText: 'Input received' },
+                            { step: '2. Compare', value: 'input == stored_password', desc: 'Python compares your input with the saved password', badge: 'info', badgeText: 'Comparing...' },
+                            { step: '3. Evaluate', value: 'Match?  →  ' + ok, desc: ok ? 'Passwords match!' : 'Passwords do NOT match', badge: ok ? 'true' : 'false', badgeText: ok ? '✅ Match!' : '❌ No match' },
+                            { step: '4. Execute', value: ok ? '✅ Access granted' : '❌ Access denied', desc: ok ? 'Login successful' : 'Try again', badge: ok ? 'true' : 'false', badgeText: ok ? '🔓 Open' : '🔒 Locked' }
+                        ],
+                        vars: [
+                            { name: 'input_password', value: input ? '"***"' : '"(empty)"', type: 'string' },
+                            { name: 'stored_password', value: '"***"', type: 'string' },
+                            { name: 'passwords_match', value: ok, type: 'bool' }
+                        ],
+                        cond: { expr: 'password == stored', result: ok, left: input ? '***' : '(empty)', op: '==', right: '***' },
+                        output: ok ? '✅ Access Granted!\nWelcome!' : '❌ Access Denied\nWrong Password',
+                        codeLines: [
+                            { text: '# Login Authentication', type: 'comment' },
+                            { text: 'password = "' + input + '"', hl: true },
+                            { text: 'stored = "python123"', hl: true },
+                            { text: '' },
+                            { text: 'if password == stored:', hl: ok },
+                            { text: '    print("Access Granted!")', hl: ok },
+                            { text: 'else:', hl: !ok },
+                            { text: '    print("Access Denied!")', hl: !ok }
+                        ]
+                    };
+                }
+            },
+            {
+                id: 'ticket', name: '🎬 Movie Ticket',
+                inputType: 'number', inputLabel: 'Enter age',
+                inputMin: 1, inputMax: 120, inputDefault: 16,
+                scenario: function(input) {
+                    var age = parseInt(input) || 0;
+                    var tt, price, emoji, ml;
+                    if (age < 12) { tt='Child'; price=8; emoji='👶'; ml=4; }
+                    else if (age >= 60) { tt='Senior'; price=10; emoji='👴'; ml=6; }
+                    else { tt='Adult'; price=15; emoji='👤'; ml=8; }
+                    return {
+                        timeline: [
+                            { step: '1. Read input', value: 'age = ' + age, desc: 'Customer age entered', badge: 'info', badgeText: 'Age: ' + age },
+                            { step: '2. Check age < 12', value: age + ' < 12  →  ' + (age<12), desc: age<12 ? 'TRUE! Child ticket' : 'FALSE. Check next...', badge: age<12 ? 'true' : 'false', badgeText: age<12 ? '✅ Child!' : '❌ Next' },
+                            { step: '3. Check age >= 60', value: age<12 ? 'Skipped' : age + ' >= 60  →  ' + (age>=60), desc: age<12 ? 'Already matched' : (age>=60 ? 'TRUE! Senior ticket' : 'FALSE → else block (Adult)'), badge: age<12 ? 'info' : (age>=60 ? 'true' : 'false'), badgeText: age<12 ? '⏭️ Skip' : (age>=60 ? '✅ Senior!' : '→ Adult') },
+                            { step: '4. Assign price', value: emoji + ' ' + tt + ' — $' + price, desc: 'Ticket type and price set', badge: 'true', badgeText: '$' + price }
+                        ],
+                        vars: [
+                            { name: 'age', value: age, type: 'int' },
+                            { name: 'age < 12', value: age<12, type: 'bool' },
+                            { name: 'age >= 60', value: age>=60, type: 'bool' },
+                            { name: 'ticket_type', value: '"' + tt + '"', type: 'string' },
+                            { name: 'price', value: '$' + price, type: 'float' }
+                        ],
+                        cond: { expr: 'age-based if/elif/else', result: true },
+                        output: emoji + ' ' + tt + ' Ticket\nPrice: $' + price,
+                        codeLines: [
+                            { text: '# Movie Ticket Pricing', type: 'comment' },
+                            { text: 'age = ' + age, hl: true },
+                            { text: '' },
+                            { text: 'if age < 12:', hl: ml===4 },
+                            { text: '    ticket = "Child — $8"', hl: ml===4 },
+                            { text: 'elif age >= 60:', hl: ml===6 },
+                            { text: '    ticket = "Senior — $10"', hl: ml===6 },
+                            { text: 'else:', hl: ml===8 },
+                            { text: '    ticket = "Adult — $15"', hl: ml===8 },
+                            { text: '' },
+                            { text: 'print(ticket)', hl: true }
+                        ]
+                    };
+                }
+            }
+        ];
+
+        var currentModule = modules[0];
+        var currentState = null;
+        var flowStep = 0;
+        var tlTimer = null;
+
+        function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+        function hlPy(text) {
+            var s = esc(text);
+            var parts = [];
+            var re = /(&quot;[^&]*?&quot;)/g;
+            var last = 0, m;
+            while ((m = re.exec(s)) !== null) {
+                parts.push(s.substring(last, m.index));
+                parts.push('<span class="hl-str">' + m[0] + '</span>');
+                last = re.lastIndex;
+            }
+            parts.push(s.substring(last));
+            s = parts.join('');
+            s = s.replace(/\b(if|elif|else|and|or|not|True|False)\b(?![^<]*<\/span>)/g, '<span class="hl-kw">$1</span>');
+            s = s.replace(/\b(print)\b(?![^<]*<\/span>)/g, '<span class="hl-fn">$1</span>');
+            s = s.replace(/(?<![a-zA-Z_&;])(\d+\.?\d*)(?![a-zA-Z_&;])(?![^<]*<\/span>)/g, '<span class="hl-num">$1</span>');
+            return s;
+        }
+
+        function init() {
+            var sel = document.getElementById('moduleSelector');
+            for (var i = 0; i < modules.length; i++) {
+                var b = document.createElement('button');
+                b.className = 'module-btn' + (i === 0 ? ' active' : '');
+                b.textContent = modules[i].name;
+                b.setAttribute('data-i', i);
+                b.onclick = function() {
+                    var idx = parseInt(this.getAttribute('data-i'));
+                    currentModule = modules[idx];
+                    var all = document.querySelectorAll('.module-btn');
+                    for (var j = 0; j < all.length; j++) all[j].classList.remove('active');
+                    this.classList.add('active');
+                    renderInput();
+                    clearAll();
+                    currentState = null;
+                };
+                sel.appendChild(b);
+            }
+            renderInput();
+        }
+
+        function renderInput() {
+            var a = document.getElementById('inputArea');
+            a.innerHTML = '<div class="input-group"><label class="input-label">' + esc(currentModule.inputLabel) + '</label></div>';
+            var inp = document.createElement('input');
+            inp.type = currentModule.inputType;
+            inp.id = 'moduleInput';
+            inp.value = currentModule.inputDefault;
+            if (currentModule.inputMin !== undefined) inp.min = currentModule.inputMin;
+            if (currentModule.inputMax !== undefined) inp.max = currentModule.inputMax;
+            a.querySelector('.input-group').appendChild(inp);
+        }
+
+        function executeModule() {
+            if (tlTimer) { clearTimeout(tlTimer); tlTimer = null; }
+            var v = document.getElementById('moduleInput').value;
+            currentState = currentModule.scenario(v);
+            flowStep = 0;
+            animateTimeline();
+            renderFlow();
+            renderCode();
+            renderDebug();
+            renderOutput();
+        }
+
+        function animateTimeline() {
+            var a = document.getElementById('timelineArea');
+            a.innerHTML = '';
+            var tl = currentState.timeline;
+            for (var i = 0; i < tl.length; i++) {
+                var t = tl[i];
+                var bc = 'badge-info';
+                if (t.badge === 'true') bc = 'badge-true';
+                else if (t.badge === 'false') bc = 'badge-false';
+                var d = document.createElement('div');
+                d.className = 'timeline-item';
+                d.id = 'tl-' + i;
+                d.innerHTML =
+                    '<div class="timeline-number">' + (i+1) + '</div>' +
+                    '<div class="timeline-content">' +
+                    '<div class="timeline-label">' + esc(t.step) + '</div>' +
+                    '<div class="timeline-value">' + esc(t.value) + '</div>' +
+                    '<div class="timeline-desc">' + esc(t.desc) + '</div>' +
+                    '<div class="timeline-badge ' + bc + '">' + esc(t.badgeText) + '</div>' +
+                    '</div>';
+                a.appendChild(d);
+            }
+            revealTL(0);
+        }
+
+        function revealTL(i) {
+            if (!currentState || i >= currentState.timeline.length) return;
+            var el = document.getElementById('tl-' + i);
+            if (!el) return;
+            el.classList.add('visible');
+            var bg = currentState.timeline[i].badge;
+            if (bg === 'true') el.classList.add('eval-true');
+            else if (bg === 'false') el.classList.add('eval-false');
+            if (i + 1 < currentState.timeline.length) {
+                tlTimer = setTimeout(function() { revealTL(i + 1); }, 1200);
+            }
+        }
+
+        function renderFlow() {
+            var a = document.getElementById('flowDiagram');
+            a.innerHTML = '';
+            if (!currentState) return;
+
+            var dg = document.createElement('div');
+            dg.className = 'flow-diagram';
+
+            var steps = [];
+
+            var compHTML = '';
+            if (currentState.cond.left !== undefined && currentState.cond.op) {
+                compHTML = '<div class="comparison-box"><div class="comparison-row">' +
+                    '<div class="comparison-item">' + esc(currentState.cond.left) + '</div>' +
+                    '<div class="comparison-operator">' + esc(currentState.cond.op) + '</div>' +
+                    '<div class="comparison-item">' + esc(currentState.cond.right) + '</div>' +
+                    '</div></div>';
+            }
+
+            var resClass = currentState.cond.result ? 'condition-true' : 'condition-false';
+            var resText = currentState.cond.result ? '✅ TRUE — Condition matched!' : '❌ FALSE — Condition not matched';
+
+            steps.push({ label: '📥 Step 1: Input value', value: esc(currentState.timeline[0].value), extra: '' });
+            steps.push({ label: '⚖️ Step 2: Check condition', value: esc(currentState.cond.expr), extra: compHTML });
+            steps.push({ label: '🎯 Step 3: Evaluate result', value: '', extra: '<div class="condition-result ' + resClass + '" id="condRes">' + resText + '</div>' });
+            steps.push({ label: '⚡ Step 4: Execute action', value: esc(currentState.timeline[3].value), extra: '' });
+
+            for (var i = 0; i < steps.length; i++) {
+                var sd = document.createElement('div');
+                sd.className = 'flow-step';
+                sd.id = 'fs-' + i;
+                sd.innerHTML = '<div class="flow-label">' + steps[i].label + '</div>' +
+                    (steps[i].value ? '<div class="flow-value">' + steps[i].value + '</div>' : '') +
+                    steps[i].extra;
+                dg.appendChild(sd);
+                if (i < steps.length - 1) {
+                    var ar = document.createElement('div');
+                    ar.className = 'flow-arrow';
+                    ar.id = 'fa-' + i;
+                    ar.innerHTML = '&#11015;';
+                    dg.appendChild(ar);
+                }
+            }
+
+            var st = document.createElement('div');
+            st.className = 'flow-status';
+            st.id = 'flowSt';
+            st.textContent = 'Click "Next Step" to walk through the decision flow';
+            dg.appendChild(st);
+
+            var btn = document.createElement('button');
+            btn.className = 'flow-next-btn';
+            btn.id = 'flowBtn';
+            btn.textContent = '👉 Next Step (1 of 4)';
+            btn.onclick = advanceFlow;
+            dg.appendChild(btn);
+
+            a.appendChild(dg);
+            flowStep = 0;
+            setFlowStep(0);
+        }
+
+        function setFlowStep(idx) {
+            var labels = [
+                'Step 1: Python reads the input value',
+                'Step 2: Python checks the condition',
+                'Step 3: Python evaluates TRUE or FALSE',
+                'Step 4: Python executes the matching block'
+            ];
+            for (var i = 0; i < 4; i++) {
+                var s = document.getElementById('fs-' + i);
+                if (!s) continue;
+                s.classList.remove('active', 'done');
+                if (i < idx) s.classList.add('done');
+                else if (i === idx) s.classList.add('active');
+                if (i < 3) {
+                    var ar = document.getElementById('fa-' + i);
+                    ar.classList.remove('active', 'done');
+                    if (i < idx) ar.classList.add('done');
+                    else if (i === idx) ar.classList.add('active');
+                }
+            }
+            var cr = document.getElementById('condRes');
+            if (cr) { if (idx >= 2) cr.classList.add('show'); else cr.classList.remove('show'); }
+
+            var btn = document.getElementById('flowBtn');
+            var st = document.getElementById('flowSt');
+            if (idx >= 3) {
+                btn.textContent = '🔄 Replay Flow';
+                btn.onclick = function() { flowStep = 0; setFlowStep(0); btn.textContent = '👉 Next Step (1 of 4)'; btn.onclick = advanceFlow; st.textContent = 'Click "Next Step" to walk through the decision flow'; };
+                st.textContent = '🎉 All steps complete! Python has made its decision.';
+            } else {
+                st.textContent = labels[idx];
+                btn.textContent = '👉 Next Step (' + (idx + 2) + ' of 4)';
+            }
+        }
+
+        function advanceFlow() {
+            flowStep++;
+            if (flowStep > 3) flowStep = 3;
+            setFlowStep(flowStep);
+        }
+
+        function renderCode() {
+            var a = document.getElementById('pythonCode');
+            a.innerHTML = '';
+            if (!currentState) return;
+            var cd = document.createElement('div');
+            cd.className = 'code-section';
+            var lines = currentState.codeLines;
+            for (var i = 0; i < lines.length; i++) {
+                var ln = lines[i];
+                var ld = document.createElement('div');
+                ld.className = 'code-line' + (ln.hl ? ' highlight' : '');
+                var num = document.createElement('span');
+                num.className = 'code-line-number';
+                num.textContent = (i + 1 < 10 ? '0' : '') + (i + 1);
+                var code = document.createElement('span');
+                code.className = 'code-text';
+                if (ln.type === 'comment') {
+                    code.innerHTML = '<span class="hl-cmt">' + esc(ln.text) + '</span>';
+                } else if (!ln.text) {
+                    code.innerHTML = ' ';
+                } else {
+                    code.innerHTML = hlPy(ln.text);
+                }
+                ld.appendChild(num);
+                ld.appendChild(code);
+                cd.appendChild(ld);
+            }
+            a.appendChild(cd);
+        }
+
+        function renderDebug() {
+            var a = document.getElementById('debugPanel');
+            a.innerHTML = '';
+            if (!currentState) return;
+            var dp = document.createElement('div');
+            dp.className = 'debug-panel';
+            dp.innerHTML = '<div class="debug-header">🐛 DEBUG WATCH — All Variables</div>';
+            for (var i = 0; i < currentState.vars.length; i++) {
+                var v = currentState.vars[i];
+                var d = document.createElement('div');
+                d.className = 'debug-line';
+                d.innerHTML = '<span class="debug-var">' + esc(v.name) + '</span><span class="debug-value"> = ' + esc(String(v.value)) + '</span><span class="debug-type"> &lt;' + v.type + '&gt;</span>';
+                dp.appendChild(d);
+            }
+            var sep = document.createElement('div');
+            sep.style.cssText = 'margin-top:15px;padding-top:10px;border-top:1px solid #30363d;color:#58a6ff;font-weight:bold;';
+            sep.textContent = '>>> CONDITION RESULT';
+            dp.appendChild(sep);
+            var ed = document.createElement('div');
+            ed.className = 'debug-line';
+            ed.innerHTML = '<span class="debug-var">expression</span><span class="debug-value"> = ' + esc(currentState.cond.expr) + '</span>';
+            dp.appendChild(ed);
+            var rd = document.createElement('div');
+            rd.className = 'debug-line';
+            rd.innerHTML = '<span class="debug-var">result</span><span class="debug-value" style="color:' + (currentState.cond.result ? '#85e89d' : '#f85149') + ';"> = ' + currentState.cond.result + '</span>';
+            dp.appendChild(rd);
+            a.appendChild(dp);
+        }
+
+        function renderOutput() {
+            var a = document.getElementById('outputArea');
+            a.innerHTML = '';
+            if (!currentState) return;
+            var c = document.createElement('div');
+            c.className = 'output-card';
+            c.innerHTML = '<div class="output-value">' + esc(currentState.output) + '</div><div class="output-label">Final Result</div>';
+            a.appendChild(c);
+        }
+
+        function clearAll() {
+            if (tlTimer) { clearTimeout(tlTimer); tlTimer = null; }
+            document.getElementById('timelineArea').innerHTML = '<div class="empty-state">Enter a value and click "Run Module"</div>';
+            document.getElementById('flowDiagram').innerHTML = '<div class="empty-state">Run a module to see the flow diagram</div>';
+            document.getElementById('pythonCode').innerHTML = '<div class="empty-state">Run a module to see the Python code</div>';
+            document.getElementById('debugPanel').innerHTML = '<div class="empty-state">Run a module to see variable values</div>';
+            document.getElementById('outputArea').innerHTML = '<div class="empty-state">Run a module to see the result</div>';
+        }
+
+        function resetExecution() {
+            currentState = null;
+            clearAll();
+            document.getElementById('moduleInput').value = currentModule.inputDefault;
+        }
+
+        window.onload = init;
+        document.addEventListener('keypress', function(e) { if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'moduleInput') executeModule(); });
+    </script>
+</body>
+</html>

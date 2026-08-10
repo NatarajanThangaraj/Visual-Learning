@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>List Integer Lab</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04060E;--s1:#080D1C;--s2:#0D1428;--s3:#111B36;
+  --bd:#1A2A48;--bd2:#26406A;
+  --tx:#E8F2FF;--tx2:#7A9AC0;--tx3:#3A5070;
+  --blue:#3B82F6;--bluebg:#040E1E;--bluebd:#1A3460;
+  --green:#10B981;--greenbg:#030E08;--greenbd:#0A3828;
+  --amber:#F59E0B;--amberbg:#100900;
+  --red:#EF4444;--redbg:#0C0404;
+  --purple:#8B5CF6;--purplebg:#060416;
+  --teal:#06B6D4;--tealbg:#021416;
+  --pink:#EC4899;--pinkbg:#0E040A;
+  --gold:#FFD60A;--goldbg:#100C00;
+  --mono:'Courier New',monospace;
+  --vsbg:#1E1E1E;--vssel:#264F78;--vsgreen:#4EC9B0;--vsyellow:#DCDCAA;--vsblue:#569CD6;--vsred:#F44747;--vsorange:#CE9178;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── TOP BAR ── */
+.topbar{background:var(--s1);border-bottom:1px solid var(--bd);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;height:50px}
+.tb-logo{font-size:20px}
+.tb-title{font-size:14px;font-weight:700;color:var(--tx)}
+.tb-sub{font-size:10px;color:var(--tx3);margin-top:1px}
+.tb-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.pill{background:var(--s2);border:1px solid var(--bd);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:4px}
+.pill .pv{font-weight:700;color:var(--gold)}
+
+/* ── AGENT TABS ── */
+.agent-bar{background:var(--s1);border-bottom:1px solid var(--bd);padding:0 12px;display:flex;gap:1px;flex-shrink:0;overflow-x:auto;height:38px;align-items:stretch;scrollbar-width:none}
+.agent-bar::-webkit-scrollbar{display:none}
+.atab{padding:0 11px;font-size:11px;font-weight:600;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.12s;user-select:none;display:flex;align-items:center;gap:5px}
+.atab:hover{color:var(--tx2)}
+.atab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.atab.done{color:var(--green)}
+
+/* ── PHASE PILLS ── */
+.phase-bar{background:var(--s2);border-bottom:1px solid var(--bd);padding:0 12px;display:flex;gap:4px;align-items:center;flex-shrink:0;height:36px;overflow-x:auto;scrollbar-width:none}
+.phase-bar::-webkit-scrollbar{display:none}
+.ppill{padding:3px 11px;border-radius:20px;font-size:10px;font-weight:600;color:var(--tx3);cursor:pointer;border:1px solid var(--bd);transition:.12s;user-select:none;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.ppill:hover{color:var(--tx2);border-color:var(--bd2)}
+.ppill.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.ppill.ph-done{border-color:var(--greenbd);color:var(--green)}
+
+/* ── BODY GRID ── */
+.body-wrap{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;min-height:0}
+
+/* ── LEFT PANEL ── */
+.left-panel{border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.lp-head{padding:8px 13px;border-bottom:1px solid var(--bd);background:var(--s1);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;height:36px}
+.lp-head h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3)}
+.lp-body{flex:1;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;gap:8px}
+
+/* ── RIGHT PANEL ── */
+.right-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--s1)}
+.rp-head{padding:8px 13px;border-bottom:1px solid var(--bd);background:var(--s2);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;height:36px}
+.rp-head h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3)}
+.rp-body{flex:1;overflow-y:auto;padding:10px 13px;scrollbar-width:thin;scrollbar-color:var(--bd2) var(--s2)}
+.rp-body::-webkit-scrollbar{width:4px}
+.rp-body::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+
+/* ── 3D LIST SLOTS ── */
+.list-scene{perspective:800px;perspective-origin:50% 36%;width:100%}
+.list-floor{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;transform:rotateX(5deg);padding:16px 4px 20px}
+.lslot{
+  width:54px;height:68px;
+  background:linear-gradient(160deg,#0E1828,#060C18);
+  border:1.5px solid var(--bd2);border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;transition:all .4s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 7px 18px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);
+  flex-shrink:0;cursor:default;
+}
+.lslot .sv{font-family:var(--mono);font-size:20px;font-weight:700;color:rgba(255,255,255,.55);transition:.35s;line-height:1}
+.lslot .si{font-size:8px;color:var(--tx3);margin-top:4px;font-weight:600;transition:.3s}
+.lslot .sidx{position:absolute;bottom:-17px;font-size:8px;color:var(--tx3);font-weight:500}
+/* states */
+.lslot.ss-active{transform:translateY(-26px) scale(1.18)!important;border-color:#fff!important;background:linear-gradient(160deg,#1A3575,#0C1A40)!important;box-shadow:0 22px 42px rgba(59,130,246,.5),0 0 0 2px rgba(255,255,255,.13)!important}
+.lslot.ss-active .sv{color:#fff!important;text-shadow:0 0 16px rgba(255,255,255,.4)}
+.lslot.ss-champ{background:linear-gradient(160deg,#2A1800,#140C00)!important;border-color:var(--gold)!important;box-shadow:0 8px 20px rgba(255,214,10,.25)!important}
+.lslot.ss-champ .sv{color:var(--gold)!important}
+.lslot.ss-champ .si{color:var(--amber)!important}
+.lslot.ss-match{background:linear-gradient(160deg,#0A2A18,#040E08)!important;border-color:var(--green)!important;box-shadow:0 8px 20px rgba(16,185,129,.25)!important}
+.lslot.ss-match .sv{color:var(--green)!important}
+.lslot.ss-even{background:linear-gradient(160deg,#081828,#040C18)!important;border-color:var(--blue)!important;box-shadow:0 6px 16px rgba(59,130,246,.2)!important}
+.lslot.ss-even .sv{color:var(--blue)!important}
+.lslot.ss-odd{background:linear-gradient(160deg,#1A0828,#0E0418)!important;border-color:var(--purple)!important;box-shadow:0 6px 16px rgba(139,92,246,.2)!important}
+.lslot.ss-odd .sv{color:var(--purple)!important}
+.lslot.ss-no{opacity:.2}
+.lslot.ss-done{background:linear-gradient(160deg,#040E08,#020608)!important;border-color:var(--greenbd)!important}
+.lslot.ss-done .sv{color:var(--greenbd)!important}
+.lslot.ss-sum{background:linear-gradient(160deg,#0A1A10,#040A08)!important;border-color:var(--teal)!important}
+.lslot.ss-sum .sv{color:var(--teal)!important}
+.agent-pin{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:15px;animation:bob .7s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(3px)}}
+.crown-pin{position:absolute;top:-11px;right:-7px;font-size:13px;animation:spin 2s linear infinite}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.slot-tag{position:absolute;top:-10px;right:-7px;font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px}
+
+/* ── VS CODE MEMORY PANEL ── */
+.vsmem{background:var(--vsbg);border:1px solid #333;border-radius:9px;width:100%;max-width:420px;font-family:var(--mono);font-size:11px;overflow:hidden}
+.vsmem-title{background:#252526;padding:5px 10px;font-size:10px;color:#858585;border-bottom:1px solid #333;display:flex;align-items:center;gap:6px}
+.vsmem-title span{color:#ccc;font-weight:500}
+.vsmem-row{padding:4px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #1a1a1a;transition:.3s}
+.vsmem-row.hi{background:var(--vssel)}
+.vsmem-row.changed{background:#1E3A1E}
+.vmr-name{color:var(--vsblue);min-width:90px}
+.vmr-eq{color:#858585}
+.vmr-val{color:var(--vsorange);font-weight:700}
+.vmr-val.green{color:var(--vsgreen)}
+.vmr-val.yellow{color:var(--vsyellow)}
+.vmr-val.red{color:var(--vsred)}
+.vmr-comment{color:#6A9955;font-size:10px;margin-left:auto}
+
+/* ── STEP NAV ── */
+.snav{display:flex;align-items:center;gap:6px;width:100%;max-width:420px;flex-wrap:wrap}
+.snbtn{background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;color:var(--tx2);cursor:pointer;transition:.12s;user-select:none;white-space:nowrap}
+.snbtn:hover:not(:disabled){color:var(--tx);border-color:var(--bd2)}
+.snbtn:disabled{opacity:.3;cursor:default}
+.snbtn.play{background:var(--blue);color:#fff;border-color:var(--blue)}
+.snbtn.play:hover{background:#1D5EE0}
+.step-ctr{flex:1;text-align:center;min-width:60px}
+.step-lbl{font-size:11px;color:var(--tx2)}
+.sdots{display:flex;gap:3px;justify-content:center;margin-top:2px}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--bd);transition:.2s}
+.sdot.dcur{background:var(--blue)}.sdot.ddn{background:var(--green)}
+
+/* ── OP TILE ── */
+.op-strip{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:center;width:100%;max-width:420px;background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:9px;min-height:58px}
+.otile{width:50px;height:50px;border-radius:8px;border:2px solid var(--bd);background:var(--s3);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:.3s;flex-shrink:0}
+.otile .ov{font-family:var(--mono);font-size:14px;font-weight:700;line-height:1}
+.otile .ol{font-size:8px;margin-top:3px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.otile.blue{border-color:var(--blue);background:var(--bluebg)}.otile.blue .ov,.otile.blue .ol{color:var(--blue)}
+.otile.green{border-color:var(--green);background:var(--greenbg)}.otile.green .ov,.otile.green .ol{color:var(--green)}
+.otile.amber{border-color:var(--amber);background:var(--amberbg)}.otile.amber .ov,.otile.amber .ol{color:var(--amber)}
+.otile.gold{border-color:var(--gold);background:var(--goldbg)}.otile.gold .ov,.otile.gold .ol{color:var(--gold)}
+.otile.purple{border-color:var(--purple);background:var(--purplebg)}.otile.purple .ov,.otile.purple .ol{color:var(--purple)}
+.otile.teal{border-color:var(--teal);background:var(--tealbg)}.otile.teal .ov,.otile.teal .ol{color:var(--teal)}
+.otile.red{border-color:var(--red);background:var(--redbg)}.otile.red .ov,.otile.red .ol{color:var(--red)}
+.oarr{font-size:16px;color:var(--tx3);font-weight:700;flex-shrink:0}
+.oeq{font-size:15px;font-weight:700;color:var(--tx2)}
+
+/* ── RIGHT PANEL ELEMENTS ── */
+.slbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.slbl::after{content:'';flex:1;height:1px;background:var(--bd)}
+.narr{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:9px 11px;font-size:12px;color:var(--tx);line-height:1.7;margin-bottom:9px}
+.narr .nl{font-size:8px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.icard{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:9px 11px;margin-bottom:8px}
+.ictitle{font-size:11px;font-weight:700;color:var(--tx);margin-bottom:5px}
+.icbody{font-size:11px;color:var(--tx2);line-height:1.65}
+.inp-sec{background:var(--s3);border:1px solid var(--bd);border-radius:8px;padding:9px 11px;margin-bottom:9px}
+.inp-row{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap}
+.inp-row:last-child{margin-bottom:0}
+.inp-row label{font-size:11px;color:var(--tx2);min-width:60px;font-family:var(--mono)}
+input.fin{background:var(--s2);border:1px solid var(--bd2);border-radius:6px;padding:5px 9px;font-size:13px;font-family:var(--mono);color:var(--tx);outline:none;transition:.12s;width:180px}
+input.fin:focus{border-color:var(--blue)}
+input.fin.sm{width:70px}
+.rbtn{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 13px;font-size:11px;font-weight:700;cursor:pointer;transition:.12s}
+.rbtn:hover{background:#1D5EE0}
+
+/* trace */
+.ttbl{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}
+.ttbl th{background:var(--s3);color:var(--tx2);padding:5px 8px;border:1px solid var(--bd);font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;text-align:left}
+.ttbl td{padding:5px 8px;border:1px solid var(--bd);font-family:var(--mono);color:var(--tx);font-size:11px;vertical-align:middle}
+.ttbl tr.ta td{background:var(--bluebg);border-color:var(--bluebd)}
+.ttbl tr.td td{background:var(--greenbg);border-color:var(--greenbd);color:var(--green)}
+.ttbl tr.tf td{background:var(--bluebg);border-color:var(--blue);font-weight:700;color:var(--blue)}
+.bv{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600;white-space:nowrap}
+.bv.ok{background:var(--greenbg);color:var(--green)}.bv.no{background:var(--s2);color:var(--tx3);border:1px solid var(--bd)}
+.bv.gold{background:var(--goldbg);color:var(--gold)}.bv.bl{background:var(--bluebg);color:var(--blue)}
+.bv.pu{background:var(--purplebg);color:var(--purple)}.bv.te{background:var(--tealbg);color:var(--teal)}
+
+/* result */
+.result-box{border-radius:9px;padding:10px;text-align:center;border:2px solid;margin-bottom:8px;position:relative;overflow:hidden;animation:pop .4s cubic-bezier(.26,1.6,.54,1)}
+.rb-ok{background:var(--greenbg);border-color:var(--green)}
+.rb-no{background:var(--redbg);border-color:var(--red)}
+.rb-info{background:var(--bluebg);border-color:var(--bluebd)}
+@keyframes pop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+.confwrap{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cbit{position:absolute;border-radius:2px;animation:cfall linear forwards}
+@keyframes cfall{0%{transform:translateY(-6px) rotate(0);opacity:1}100%{transform:translateY(120px) rotate(540deg);opacity:0}}
+
+/* pseudo */
+.psbox{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.9;margin-bottom:9px}
+.pl{display:flex;align-items:flex-start;gap:7px;margin:1px 0}
+.pl-n{width:15px;text-align:right;color:var(--tx3);font-size:10px;margin-top:2px;font-family:var(--mono);flex-shrink:0}
+.pl-t{flex:1;line-height:1.6}
+.i1{padding-left:15px}.i2{padding-left:30px}
+.kw{color:var(--blue);font-weight:600}.vv{color:var(--amber);font-weight:600}.rr{color:var(--green);font-weight:600}.cm{color:var(--tx3);font-style:italic}
+
+/* scaffold */
+.bstep{background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:7px 10px;cursor:pointer;transition:.12s;display:flex;gap:7px;align-items:flex-start;margin-bottom:4px;user-select:none}
+.bstep:hover{border-color:var(--blue);background:var(--bluebg)}
+.bstep.added{border-color:var(--green);background:var(--greenbg)}
+.bs-n{width:17px;height:17px;border-radius:50%;background:var(--bluebg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px}
+.bstep.added .bs-n{background:var(--greenbg);color:var(--green)}
+.bs-t{font-size:11px;font-weight:600;color:var(--tx);margin-bottom:1px}
+.bs-c{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--s3);padding:2px 5px;border-radius:3px;margin-top:3px;display:inline-block}
+.bstep.added .bs-c{color:var(--green)}
+.cdisp{background:#030810;border:1px solid var(--bd);border-radius:7px;padding:9px 11px;font-family:var(--mono);font-size:11px;line-height:1.85;color:#e2e8f0;min-height:70px;overflow-x:auto;margin-bottom:6px}
+.cbtns{display:flex;gap:5px;margin-bottom:7px}
+.cbtn{padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:.12s;user-select:none}
+.cbtn.run{background:var(--green);color:#fff;border-color:var(--green)}
+.cbtn.clr{background:var(--s2);color:var(--tx2);border-color:var(--bd)}
+.cbtn.fill{background:var(--s2);color:var(--blue);border-color:var(--bluebd)}
+.obox{background:#030810;border:1px solid var(--bd);border-radius:7px;padding:7px 10px;font-family:var(--mono);font-size:11px;min-height:32px}
+.obox .ok{color:var(--green)}.obox .no{color:var(--red)}.obox .dim{color:var(--tx3)}.obox .info{color:var(--teal)}
+
+/* quiz */
+.qcard{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-bottom:7px}
+.qq{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:7px;line-height:1.55}
+.qopts{display:flex;flex-direction:column;gap:4px}
+.qopt{background:var(--s3);border:1px solid var(--bd);border-radius:6px;padding:7px 9px;font-size:11px;cursor:pointer;color:var(--tx2);transition:.12s;user-select:none}
+.qopt:hover{border-color:var(--bd2);color:var(--tx)}
+.qopt.qok{background:var(--greenbg);border-color:var(--green);color:var(--green)}
+.qopt.qerr{background:var(--redbg);border-color:var(--red);color:var(--red)}
+.qexp{font-size:11px;color:var(--tx2);background:var(--s3);border-radius:5px;padding:6px 8px;margin-top:5px;line-height:1.6;display:none}
+
+/* nav */
+.nav-btns{display:flex;gap:6px;margin-top:8px;padding-top:7px;border-top:1px solid var(--bd)}
+.nbtn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:.12s;user-select:none}
+.nbtn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.nbtn.primary:hover{background:#1D5EE0}
+.nbtn.secondary{background:var(--s2);color:var(--tx2);border-color:var(--bd)}
+.nbtn.secondary:hover{background:var(--s3)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+
+@media(max-width:680px){
+  .body-wrap{grid-template-columns:1fr}
+  .left-panel{height:42vh;border-right:none;border-bottom:1px solid var(--bd)}
+  .right-panel{height:calc(58vh - 124px)}
+  .list-floor{gap:4px}
+  .lslot{width:40px;height:52px}
+  .lslot .sv{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-logo">📊</div>
+  <div><div class="tb-title">List Integer Lab</div><div class="tb-sub">7 agents · every operation · visual + memory</div></div>
+  <div class="tb-right">
+    <div class="pill">Score <span class="pv" id="sc">0</span></div>
+    <div class="pill">Done <span class="pv" id="sd">0/7</span></div>
+  </div>
+</div>
+
+<div class="agent-bar" id="agent-bar"></div>
+<div class="phase-bar" id="phase-bar"></div>
+
+<div class="body-wrap">
+  <div class="left-panel">
+    <div class="lp-head"><h2 id="lp-title">3D View</h2><span id="lp-badge" style="font-size:10px;color:var(--tx3)"></span></div>
+    <div class="lp-body" id="lp-body"></div>
+  </div>
+  <div class="right-panel">
+    <div class="rp-head"><h2 id="rp-title">Details</h2><span id="rp-badge" style="font-size:10px;color:var(--tx3)"></span></div>
+    <div class="rp-body" id="rp-body"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   AGENT DEFINITIONS
+═══════════════════════════════════════ */
+var AGENTS=[
+
+/* ── 1. INPUT COLLECTOR ── */
+{id:'input',icon:'📥',title:'Input Collector',color:'#3B82F6',
+ tagline:'How do numbers get into the list?',
+ story:'Before any operation can run, the list needs numbers. The Input Collector stands at a conveyor belt. As each number arrives, it is placed into the next empty slot — one by one, left to right.',
+ bigIdea:'A list is like a row of numbered boxes. Box 0, Box 1, Box 2... The collector places one number into each box in order. It never skips a box.',
+ defaultList:[10,3,7,1,9,4,6],
+ ops:[
+   {t:'Create empty list',d:'Start with an empty row of boxes — list = []',c:'list = []'},
+   {t:'Ask for a number',d:'User types one number. Store it.',c:'n = input("Enter number: ")'},
+   {t:'Convert to integer',d:'Input arrives as text. Convert to integer.',c:'n = int(n)'},
+   {t:'Add to list',d:'Place the number into the next empty box.',c:'list.append(n)'},
+   {t:'Repeat for each number',d:'Loop until all numbers are collected.',c:'REPEAT for each item'},
+ ],
+ pseudo:[
+   {t:'list = [] <span class="cm">← empty row of boxes</span>',i:0},
+   {t:'<span class="kw">FOR EACH</span> number the user will enter:',i:0},
+   {t:'Ask user: <span class="vv">type a number</span>',i:1},
+   {t:'Convert text to integer',i:1},
+   {t:'<span class="rr">Place it</span> into the next empty box: <span class="vv">list.append(n)</span>',i:1},
+   {t:'<span class="rr">Result:</span> list is now full',i:0},
+ ],
+ run:function(lst){
+   var steps=[];
+   for(var i=0;i<lst.length;i++){
+     var snap=lst.slice(0,i+1);
+     steps.push({i:i,val:lst[i],snap:snap.slice(),action:'append'});
+   }
+   steps.push({final:true,lst:lst.slice()});
+   return steps;
+ },
+ buildFloor:function(lst,steps,si){
+   var html='';
+   var built=si>=0&&si<steps.length-1?steps[si].snap:(si>=steps.length-1?lst:[]);
+   lst.forEach(function(v,i){
+     var filled=i<built.length,isActive=i===built.length-1&&si>=0&&si<steps.length-1&&si===i;
+     var cls='lslot '+(isActive?'ss-active':filled?'ss-match':'');
+     html+='<div class="'+cls+'">'
+       +(isActive?'<div class="agent-pin">👆</div>':'')
+       +'<div class="sv">'+(filled||isActive?v:'')+'</div>'
+       +'<div class="si">'+(filled||isActive?'added':'empty')+'</div>'
+       +'<div class="sidx">['+i+']</div></div>';
+   });
+   return html;
+ },
+ getMemory:function(steps,si){
+   if(si<0)return[{n:'list',v:'[]',c:'empty',hi:false},{n:'n',v:'—',c:'not yet',hi:false}];
+   if(si>=steps.length-1){var s=steps[steps.length-1];return[{n:'list',v:'['+s.lst.join(', ')+']',c:'complete!',hi:false,cls:'green'}];}
+   var s=steps[si];
+   return[
+     {n:'list',v:'['+s.snap.join(', ')+']',c:'updated',hi:true,cls:'green'},
+     {n:'n',v:String(s.val),c:'just appended',hi:true,cls:'yellow'},
+     {n:'index',v:String(s.i),c:'box number',hi:false},
+   ];
+ },
+ getNarr:function(steps,si){
+   if(si<0)return'I start with an empty list: <strong>[]</strong>. Press <strong>Next →</strong> to watch me fill each box.';
+   if(si>=steps.length-1)return'<strong>All done!</strong> The list is now: <strong style="color:var(--green)">['+steps[steps.length-1].lst.join(', ')+']</strong>. Every box has been filled.';
+   var s=steps[si];
+   return'<strong>Step '+(si+1)+'</strong> — User typed <strong style="color:var(--amber)">'+s.val+'</strong>. I converted it to an integer and placed it into box <strong>['+s.i+']</strong>. List is now: <strong style="color:var(--green)">['+s.snap.join(', ')+']</strong>';
+ },
+ getOp:function(steps,si){
+   if(si<0||si>=steps.length-1)return null;
+   var s=steps[si];
+   return{tiles:[{c:'blue',v:String(s.val),l:'input'},{c:'green',v:'append',l:'action'},{c:'green',v:'['+s.i+']',l:'box '+s.i}]};
+ },
+ traceHeaders:['Step','Value added','Box index','List so far'],
+ traceRow:function(s,i,ai){
+   if(s.final)return'<tr class="tf"><td colspan="4" style="text-align:center">List complete: ['+s.lst.join(', ')+']</td></tr>';
+   var cl=i===ai?'ta':i<ai?'td':'';
+   return'<tr class="'+cl+'"><td>'+(i+1)+'</td><td style="font-weight:700">'+s.val+'</td><td><span class="bv bl">['+s.i+']</span></td><td style="font-size:10px">['+s.snap.join(',')+']</td></tr>';
+ },
+ quizzes:[
+   {q:'What does list.append(n) do?',opts:['Removes n from the list','Adds n to the end (next empty box)','Sorts the list','Finds n in the list'],correct:1,exp:'append() adds one item to the END of the list — filling the next box in order.'},
+   {q:'Why do we write int(n) after input()?',opts:['To make it bigger','Input always gives TEXT. int() converts it to a number so we can do math.','To add it to the list','int() is optional'],correct:1,exp:'input() always returns a string. int("7") converts it to the number 7. Without this, "3" + "4" would give "34", not 7.'},
+   {q:'If list = [5,2,8] and we append 4, what is the new list?',opts:['[4,5,2,8]','[5,2,8,4]','[5,4,2,8]','[4,5,2,4]'],correct:1,exp:'append always adds to the END. [5,2,8] + append(4) = [5,2,8,4]. Box index 3 gets filled.'},
+ ]
+},
+
+/* ── 2. MAX FINDER ── */
+{id:'max',icon:'🏆',title:'Max Finder',color:'#F59E0B',
+ tagline:'Who holds the trophy?',
+ story:'The trophy starts with the first number. As the agent walks the list, every new number challenges the champion. If the challenger is bigger — it takes the trophy. At the end, whoever holds the trophy is the maximum.',
+ bigIdea:'The champion variable remembers the current biggest number seen so far. It gets updated whenever a bigger number appears. After visiting all boxes, the champion IS the answer.',
+ defaultList:[3,7,1,9,2,8,4],
+ ops:[
+   {t:'Champion = first number',d:'Give the trophy to the first number. It is the best we know so far.',c:'champion = list[0]'},
+   {t:'Walk from box 1 onward',d:'Start from the second box (index 1). Box 0 is already the champion.',c:'for i in range(1, len(list))'},
+   {t:'Challenge: is this bigger?',d:'Ask: is list[i] > champion?',c:'if list[i] > champion:'},
+   {t:'YES — new champion',d:'The current box beats the champion. Award it the trophy.',c:'champion = list[i]'},
+ ],
+ pseudo:[
+   {t:'<span class="vv">champion = list[0]</span> <span class="cm">← first number holds trophy</span>',i:0},
+   {t:'<span class="kw">FOR EACH</span> remaining number in list (starting from index 1):',i:0},
+   {t:'<span class="kw">IF</span> current number <span class="vv">> champion</span>:',i:1},
+   {t:'<span class="rr">champion = current number</span> <span class="cm">← new record!</span>',i:2},
+   {t:'<span class="rr">Report champion</span> — that is the maximum',i:0},
+ ],
+ run:function(lst){
+   var champ=lst[0],steps=[];
+   steps.push({i:0,val:lst[0],champ:champ,updated:false,initial:true});
+   for(var i=1;i<lst.length;i++){
+     var prev=champ,updated=lst[i]>champ;
+     if(updated)champ=lst[i];
+     steps.push({i:i,val:lst[i],champ:champ,prev:prev,updated:updated});
+   }
+   steps.push({final:true,max:champ,lst:lst.slice()});
+   return steps;
+ },
+ buildFloor:function(lst,steps,si){
+   var html='',champIdx=-1,doneSet={};
+   if(si>=0&&si<steps.length-1){
+     champIdx=steps[si].updated?steps[si].i:(steps[si].initial?0:(si>0?steps.slice(0,si+1).reduce(function(a,s){return s.updated?s.i:a;},0):0));
+     for(var k=0;k<=si;k++) doneSet[steps[k].i]=true;
+   }
+   if(si>=steps.length-1) champIdx=lst.indexOf(steps[steps.length-1].max);
+   lst.forEach(function(v,i){
+     var isActive=si>=0&&si<steps.length-1&&steps[si].i===i;
+     var isChamp=i===champIdx&&si>=0;
+     var isDone=doneSet[i]&&!isActive;
+     var cls='lslot '+(isActive?'ss-active ':isChamp?'ss-champ ':isDone?'ss-done ':'');
+     html+='<div class="'+cls+'">'
+       +(isActive?'<div class="agent-pin">👆</div>':'')
+       +(isChamp&&!isActive?'<div class="crown-pin">🏆</div>':'')
+       +'<div class="sv">'+v+'</div>'
+       +'<div class="si">'+(isChamp&&!isActive?'champion':isActive?'checking':'')+'</div>'
+       +'<div class="sidx">['+i+']</div></div>';
+   });
+   return html;
+ },
+ getMemory:function(steps,si){
+   if(si<0)return[{n:'list',v:'['+this.defaultList.join(', ')+']',c:'given',hi:false},{n:'champion',v:'?',c:'not set yet',hi:false}];
+   if(si>=steps.length-1)return[{n:'champion',v:String(steps[steps.length-1].max),c:'MAXIMUM!',hi:false,cls:'green'},{n:'list[0]',v:String(steps[0].champ),c:'initial',hi:false}];
+   var s=steps[si];
+   var rows=[{n:'champion',v:String(s.champ),c:s.updated?'UPDATED!':'holds',hi:s.updated,cls:s.updated?'green':'yellow'}];
+   if(!s.initial) rows.push({n:'list['+s.i+']',v:String(s.val),c:s.updated?'new champion':'smaller, skip',hi:true,cls:s.updated?'green':'red'});
+   rows.push({n:'comparing',v:s.initial?'(start)':s.val+' > '+s.prev,c:s.updated?'true → update':'false → skip',hi:false});
+   return rows;
+ },
+ getNarr:function(steps,si){
+   if(si<0)return'I start by giving the trophy to the first number: <strong style="color:var(--gold)">'+this.defaultList[0]+'</strong>. Press <strong>Next →</strong> to see each challenge.';
+   if(si>=steps.length-1)return'<strong>All done!</strong> The champion who never lost the trophy: <strong style="color:var(--gold);font-size:16px">'+steps[steps.length-1].max+'</strong> is the MAXIMUM.';
+   var s=steps[si];
+   if(s.initial)return'<strong>Box [0]</strong> — value <strong style="color:var(--gold)">'+s.val+'</strong> gets the trophy first. No competition yet.';
+   return'<strong>Box ['+s.i+']</strong> — value <strong style="color:var(--amber)">'+s.val+'</strong> challenges champion <strong style="color:var(--gold)">'+s.prev+'</strong>. '
+     +(s.updated?'<strong style="color:var(--green)">'+s.val+' > '+s.prev+' → NEW CHAMPION! 🏆</strong>':'<strong style="color:var(--red)">'+s.val+' ≤ '+s.prev+' → champion keeps the trophy</strong>');
+ },
+ getOp:function(steps,si){
+   if(si<0||si>=steps.length-1)return null;
+   var s=steps[si];
+   if(s.initial)return{tiles:[{c:'gold',v:String(s.val),l:'champion'},{c:'gold',v:'first',l:'box [0]'}]};
+   return{tiles:[{c:'amber',v:String(s.val),l:'current'},{c:'oeq',v:'>'},
+     {c:'gold',v:String(s.prev),l:'champion'},{c:'arr',v:'→'},{c:s.updated?'green':'red',v:s.updated?'YES':'NO',l:s.updated?'update!':'skip'}]};
+ },
+ traceHeaders:['Step','Box','Value','Champion before','Updated?','Champion now'],
+ traceRow:function(s,i,ai){
+   if(s.final)return'<tr class="tf"><td colspan="6" style="text-align:center">Maximum = '+s.max+'</td></tr>';
+   var cl=i===ai?'ta':i<ai?'td':'';
+   if(s.initial)return'<tr class="'+cl+'"><td>0</td><td><span class="bv bl">[0]</span></td><td style="font-weight:700">'+s.val+'</td><td>—</td><td><span class="bv ok">init</span></td><td style="color:var(--gold);font-weight:700">'+s.champ+'</td></tr>';
+   return'<tr class="'+cl+'"><td>'+(i+1)+'</td><td><span class="bv bl">['+s.i+']</span></td><td style="font-weight:700">'+s.val+'</td><td>'+s.prev+'</td>'
+     +'<td><span class="bv '+(s.updated?'ok':'no')+'">'+(s.updated?'YES':'No')+'</span></td><td style="color:var(--gold);font-weight:700">'+s.champ+'</td></tr>';
+ },
+ quizzes:[
+   {q:'Why does the champion start at list[0] and not at 0?',opts:['list[0] is always the biggest','If we start at 0 (zero), a list of all negative numbers would give wrong answer. list[0] guarantees a real starting champion.','It is just convention','To save memory'],correct:1,exp:'Starting champion at 0 fails for [-5,-3,-9] — the real max is -3 but 0 would win falsely. Starting at list[0] uses an actual list value.'},
+   {q:'List = [4,7,2,9,1]. When does the champion change?',opts:['At box [1] when 7 replaces 4, and at box [3] when 9 replaces 7','Only at the end','It never changes','At every step'],correct:0,exp:'4 starts as champion. 7 > 4 → new champion. 2 < 7 → no change. 9 > 7 → new champion. 1 < 9 → no change. Final champion: 9.'},
+ ]
+},
+
+/* ── 3. MIN FINDER ── */
+{id:'min',icon:'🥇',title:'Min Finder',color:'#06B6D4',
+ tagline:'Who is the smallest?',
+ story:'Mirror image of the Max Finder. The agent walks the list looking for the SMALLEST. The champion is replaced only when a SMALLER challenger appears.',
+ bigIdea:'Same pattern as Max — but the comparison flips. Instead of "is this bigger?", ask "is this smaller?". Everything else is identical.',
+ defaultList:[3,7,1,9,2,8,4],
+ ops:[
+   {t:'Champion = first number',d:'First number is the smallest we know so far.',c:'champion = list[0]'},
+   {t:'Walk from box 1',d:'Compare each to champion.',c:'for i in range(1, len(list))'},
+   {t:'Challenge: is this SMALLER?',d:'Flip the comparison from Max.',c:'if list[i] < champion:'},
+   {t:'YES — new minimum champion',d:'Smaller number takes the crown.',c:'champion = list[i]'},
+ ],
+ pseudo:[
+   {t:'<span class="vv">champion = list[0]</span> <span class="cm">← first number is smallest so far</span>',i:0},
+   {t:'<span class="kw">FOR EACH</span> remaining number (index 1 onward):',i:0},
+   {t:'<span class="kw">IF</span> current number <span class="vv">< champion</span>:',i:1},
+   {t:'<span class="rr">champion = current number</span> <span class="cm">← new minimum</span>',i:2},
+   {t:'<span class="rr">Report champion</span> — that is the minimum',i:0},
+ ],
+ run:function(lst){
+   var champ=lst[0],steps=[];
+   steps.push({i:0,val:lst[0],champ:champ,updated:false,initial:true});
+   for(var i=1;i<lst.length;i++){
+     var prev=champ,updated=lst[i]<champ;
+     if(updated)champ=lst[i];
+     steps.push({i:i,val:lst[i],champ:champ,prev:prev,updated:updated});
+   }
+   steps.push({final:true,min:champ,lst:lst.slice()});
+   return steps;
+ },
+ buildFloor:function(lst,steps,si){
+   var html='',champIdx=0,doneSet={};
+   if(si>=0&&si<steps.length-1){
+     champIdx=steps.slice(0,si+1).reduce(function(a,s){return s.updated?s.i:a;},0);
+     for(var k=0;k<=si;k++) doneSet[steps[k].i]=true;
+   }
+   if(si>=steps.length-1) champIdx=lst.indexOf(steps[steps.length-1].min);
+   lst.forEach(function(v,i){
+     var isActive=si>=0&&si<steps.length-1&&steps[si].i===i;
+     var isChamp=i===champIdx&&si>=0;
+     var isDone=doneSet[i]&&!isActive;
+     var cls='lslot '+(isActive?'ss-active ':isChamp?'ss-champ ':isDone?'ss-done ':'');
+     html+='<div class="'+cls+'">'
+       +(isActive?'<div class="agent-pin">👆</div>':'')
+       +(isChamp&&!isActive?'<div class="crown-pin">🥇</div>':'')
+       +'<div class="sv">'+v+'</div>'
+       +'<div class="si">'+(isChamp&&!isActive?'minimum':isActive?'checking':'')+'</div>'
+       +'<div class="sidx">['+i+']</div></div>';
+   });
+   return html;
+ },
+ getMemory:function(steps,si){
+   if(si<0)return[{n:'champion',v:'?',c:'not set yet'},{n:'list[0]',v:String(this.defaultList[0]),c:'will be first'}];
+   if(si>=steps.length-1)return[{n:'champion',v:String(steps[steps.length-1].min),c:'MINIMUM!',hi:false,cls:'green'}];
+   var s=steps[si];
+   return[
+     {n:'champion',v:String(s.champ),c:s.updated?'UPDATED!':'holds',hi:s.updated,cls:s.updated?'green':'yellow'},
+     {n:'list['+s.i+']',v:String(s.val),c:s.updated?'new minimum':'larger, skip',hi:true,cls:s.updated?'green':'red'},
+   ];
+ },
+ getNarr:function(steps,si){
+   if(si<0)return'First number <strong style="color:var(--teal)">'+this.defaultList[0]+'</strong> holds the minimum crown. Press <strong>Next →</strong> to see each challenge.';
+   if(si>=steps.length-1)return'<strong>All done!</strong> Minimum = <strong style="color:var(--teal);font-size:16px">'+steps[steps.length-1].min+'</strong>';
+   var s=steps[si];
+   if(s.initial)return'<strong>Box [0]</strong> — value <strong style="color:var(--teal)">'+s.val+'</strong> holds the crown first.';
+   return'<strong>Box ['+s.i+']</strong> — value <strong style="color:var(--amber)">'+s.val+'</strong> vs champion <strong style="color:var(--teal)">'+s.prev+'</strong>. '
+     +(s.updated?'<strong style="color:var(--green)">'+s.val+' < '+s.prev+' → NEW MINIMUM! 🥇</strong>':'<strong style="color:var(--red)">'+s.val+' ≥ '+s.prev+' → champion stays</strong>');
+ },
+ getOp:function(steps,si){
+   if(si<0||si>=steps.length-1)return null;
+   var s=steps[si];
+   if(s.initial)return{tiles:[{c:'teal',v:String(s.val),l:'champion'},{c:'teal',v:'first',l:'box [0]'}]};
+   return{tiles:[{c:'amber',v:String(s.val),l:'current'},{c:'oeq',v:'<'},{c:'teal',v:String(s.prev),l:'champion'},{c:'arr',v:'→'},{c:s.updated?'green':'red',v:s.updated?'YES':'NO',l:s.updated?'update!':'skip'}]};
+ },
+ traceHeaders:['Step','Box','Value','Champion before','Smaller?','Champion now'],
+ traceRow:function(s,i,ai){
+   if(s.final)return'<tr class="tf"><td colspan="6" style="text-align:center">Minimum = '+s.min+'</td></tr>';
+   var cl=i===ai?'ta':i<ai?'td':'';
+   if(s.initial)return'<tr class="'+cl+'"><td>0</td><td>[0]</td><td style="font-weight:700">'+s.val+'</td><td>—</td><td><span class="bv ok">init</span></td><td style="color:var(--teal);font-weight:700">'+s.champ+'</td></tr>';
+   return'<tr class="'+cl+'"><td>'+(i+1)+'</td><td>['+s.i+']</td><td style="font-weight:700">'+s.val+'</td><td>'+s.prev+'</td>'
+     +'<td><span class="bv '+(s.updated?'ok':'no')+'">'+(s.updated?'YES':'No')+'</span></td><td style="color:var(--teal);font-weight:700">'+s.champ+'</td></tr>';
+ },
+ quizzes:[
+   {q:'Min and Max are almost identical. What is the ONE thing that changes?',opts:['The loop direction','Only the comparison sign: > becomes <','The starting champion','Everything'],correct:1,exp:'Literally only the comparison: > (Max) becomes < (Min). The loop, the champion variable, the update logic — all identical.'},
+   {q:'List = [6,2,8,1,5]. What is the minimum?',opts:['6','2','1','5'],correct:2,exp:'6 starts. 2<6→new. 8>2→skip. 1<2→new champion. 5>1→skip. Answer: 1.'},
+ ]
+},
+
+/* ── 4. SEARCH ELEMENT ── */
+{id:'search',icon:'🔍',title:'Search Element',color:'#10B981',
+ tagline:'Is this number in the list?',
+ story:'The agent walks each box. At every box it asks: is this the number I am looking for? The moment it finds a match — it reports YES and stops. If it walks the entire list without finding it — reports NO.',
+ bigIdea:'Walk every box. Ask the same one question. Stop the moment you find a match. This is the simplest search — called linear search.',
+ defaultList:[10,3,7,1,9,4,6],
+ ops:[
+   {t:'Set target',d:'What number are we looking for?',c:'target = 9'},
+   {t:'Walk each box',d:'Go through boxes one by one.',c:'for i in range(len(list))'},
+   {t:'Is this the one?',d:'Compare list[i] to target.',c:'if list[i] == target:'},
+   {t:'YES — report found',d:'Stop immediately.',c:'print("Found at", i)\nbreak'},
+ ],
+ pseudo:[
+   {t:'<span class="vv">target = 9</span> <span class="cm">← what we are looking for</span>',i:0},
+   {t:'<span class="kw">FOR EACH</span> box in the list:',i:0},
+   {t:'<span class="kw">IF</span> list[box] == <span class="vv">target</span>:',i:1},
+   {t:'<span class="rr">Print "Found!"</span> → <span class="kw">STOP</span>',i:2},
+   {t:'<span class="kw">ELSE:</span> move to next box',i:1},
+   {t:'<span class="cm">If loop ends without finding: "Not found"</span>',i:0},
+ ],
+ run:function(lst,tgt){
+   var steps=[],found=false;
+   for(var i=0;i<lst.length;i++){
+     var m=lst[i]===tgt;
+     steps.push({i:i,val:lst[i],match:m,tgt:tgt});
+     if(m){found=true;steps.push({final:true,found:true,pos:i,val:tgt,lst:lst.slice()});return steps;}
+   }
+   steps.push({final:true,found:false,val:tgt,lst:lst.slice()});
+   return steps;
+ },
+ buildFloor:function(lst,steps,si){
+   var html='',doneSet={};
+   if(si>=0){for(var k=0;k<si&&k<steps.length-1;k++) doneSet[steps[k].i]=true;}
+   var allDone=si>=steps.length-1;
+   lst.forEach(function(v,i){
+     var isActive=si>=0&&si<steps.length-1&&steps[si].i===i;
+     var isDone=doneSet[i];
+     var isMatch=isDone&&steps.slice(0,si).some(function(s){return s.i===i&&s.match;});
+     var cls='lslot '+(allDone&&isMatch?'ss-match ':isActive&&steps[si]&&steps[si].match?'ss-match ':isActive?'ss-active ':isDone&&isMatch?'ss-match ':isDone?'ss-no ':'');
+     html+='<div class="'+cls+'">'
+       +(isActive?'<div class="agent-pin">👆</div>':'')
+       +(isMatch||isActive&&steps[si]&&steps[si].match?'<div class="slot-tag" style="background:var(--greenbg);border:1px solid var(--green);color:var(--green)">✓</div>':'')
+       +'<div class="sv">'+v+'</div>'
+       +'<div class="sidx">['+i+']</div></div>';
+   });
+   return html;
+ },
+ getMemory:function(steps,si){
+   if(si<0)return[{n:'list',v:'['+this.defaultList.join(',')+']'},{n:'target',v:'?',c:'not set'}];
+   var tgt=steps[0]?steps[0].tgt:9;
+   if(si>=steps.length-1){var l=steps[steps.length-1];return[{n:'target',v:String(tgt),cls:'yellow'},{n:'found',v:String(l.found),c:l.found?'at index '+l.pos:'not in list',cls:l.found?'green':'red'}];}
+   var s=steps[si];
+   return[
+     {n:'target',v:String(s.tgt),cls:'yellow'},
+     {n:'list['+s.i+']',v:String(s.val),c:s.match?'MATCH!':'not a match',hi:true,cls:s.match?'green':'red'},
+     {n:'found',v:String(s.match),hi:s.match,cls:s.match?'green':'red'},
+   ];
+ },
+ getNarr:function(steps,si){
+   if(si<0)return'Looking for target. Press <strong>Next →</strong> to start checking each box.';
+   if(si>=steps.length-1){var l=steps[steps.length-1];return l.found?'<strong style="color:var(--green)">Found '+l.val+' at index ['+l.pos+']! ✅</strong> Detective stops immediately.':'<strong style="color:var(--red)">'+l.val+' is NOT in the list. ❌</strong> Walked all boxes, no match found.';}
+   var s=steps[si];
+   return'<strong>Box ['+s.i+']</strong> = <strong style="color:var(--amber)">'+s.val+'</strong>. '+(s.match?'<strong style="color:var(--green)">MATCH! Found it! Stopping now. ✅</strong>':'<strong style="color:var(--red)">Not the target. Moving on.</strong>');
+ },
+ getOp:function(steps,si){
+   if(si<0||si>=steps.length-1)return null;
+   var s=steps[si];
+   return{tiles:[{c:'blue',v:String(s.val),l:'list['+s.i+']'},{c:'oeq',v:'=='},{c:'amber',v:String(s.tgt),l:'target'},{c:'arr',v:'→'},{c:s.match?'green':'red',v:s.match?'FOUND':'skip',l:s.match?'stop!':'next'}]};
+ },
+ traceHeaders:['Box','Value','== target?','Action'],
+ traceRow:function(s,i,ai){
+   if(s.final)return'<tr class="tf"><td colspan="4" style="text-align:center">'+(s.found?'Found at index '+s.pos:'Not found')+'</td></tr>';
+   var cl=i===ai?'ta':i<ai?'td':'';
+   return'<tr class="'+cl+'"><td>['+s.i+']</td><td style="font-weight:700">'+s.val+'</td><td><span class="bv '+(s.match?'ok':'no')+'">'+(s.match?'YES':'No')+'</span></td><td>'+(s.match?'<span class="bv ok">FOUND! Stop</span>':'<span class="bv no">skip</span>')+'</td></tr>';
+ },
+ quizzes:[
+   {q:'What happens if the target is not in the list?',opts:['Python crashes','The loop finishes without finding it — report "not found"','The list gets modified','The agent loops forever'],correct:1,exp:'The loop visits every box. If none match, it exits naturally — the target was not found. No crash, no infinity.'},
+   {q:'In [10,3,7,1,9,4,6], searching for 9 — how many boxes are checked?',opts:['All 7','5 (stops at index 4 when 9 is found)','1','7 then report'],correct:1,exp:'Boxes [0]=10, [1]=3, [2]=7, [3]=1, [4]=9 ← match! Only 5 boxes checked. Break exits immediately.'},
+ ]
+},
+
+/* ── 5. SUM CALCULATOR ── */
+{id:'sum',icon:'➕',title:'Sum Calculator',color:'#8B5CF6',
+ tagline:'Add everything into the jar',
+ story:'The agent carries a jar. As it walks each box, it picks up the number and drops it into the jar. At the end, the jar holds the total of all numbers.',
+ bigIdea:'A running total starts at 0. Every box visited adds its value to the total. No comparisons, no stopping — every single number gets added.',
+ defaultList:[3,7,1,9,2,8,4],
+ ops:[
+   {t:'total = 0',d:'The jar starts empty.',c:'total = 0'},
+   {t:'Walk every box',d:'No skipping, no stopping.',c:'for num in list:'},
+   {t:'Add to total',d:'Drop the number into the jar.',c:'total = total + num'},
+   {t:'Report total',d:'After all boxes, the jar holds the answer.',c:'print("Sum:", total)'},
+ ],
+ pseudo:[
+   {t:'<span class="vv">total = 0</span> <span class="cm">← jar starts empty</span>',i:0},
+   {t:'<span class="kw">FOR EACH</span> number in list (visit ALL):',i:0},
+   {t:'<span class="rr">total = total + number</span> <span class="cm">← drop into jar</span>',i:1},
+   {t:'<span class="rr">Report total</span>',i:0},
+ ],
+ run:function(lst){
+   var total=0,steps=[];
+   for(var i=0;i<lst.length;i++){total+=lst[i];steps.push({i:i,val:lst[i],total:total,prev:total-lst[i]});}
+   steps.push({final:true,sum:total,lst:lst.slice()});
+   return steps;
+ },
+ buildFloor:function(lst,steps,si){
+   var html='',doneSet={};
+   if(si>=0){for(var k=0;k<=si&&k<steps.length-1;k++) doneSet[steps[k].i]=true;}
+   var allDone=si>=steps.length-1;
+   lst.forEach(function(v,i){
+     var isActive=si>=0&&si<steps.length-1&&steps[si].i===i;
+     var isDone=doneSet[i];
+     var cls='lslot '+(isActive?'ss-active ':allDone?'ss-sum ':isDone?'ss-sum ':'');
+     html+='<div class="'+cls+'">'
+       +(isActive?'<div class="agent-pin">👆</div>':'')
+       +'<div class="sv">'+v+'</div>'
+       +'<div class="si">'+(isDone||allDone?'added':'')+'</div>'
+       +'<div class="sidx">['+i+']</div></div>';
+   });
+   return html;
+ },
+ getMemory:function(steps,si){
+   if(si<0)return[{n:'total',v:'0',c:'jar empty',cls:'yellow'},{n:'list',v:'['+this.defaultList.join(',')+']'}];
+   if(si>=steps.length-1)return[{n:'total',v:String(steps[steps.length-1].sum),c:'FINAL SUM',hi:false,cls:'green'}];
+   var s=steps[si];
+   return[
+     {n:'total',v:String(s.total),c:'after adding '+s.val,hi:true,cls:'green'},
+     {n:'list['+s.i+']',v:String(s.val),c:'just added',hi:true,cls:'yellow'},
+     {n:'calculation',v:s.prev+' + '+s.val+' = '+s.total,c:'running total',hi:false},
+   ];
+ },
+ getNarr:function(steps,si){
+   if(si<0)return'Jar starts at <strong>0</strong>. Every number will be dropped in. Press <strong>Next →</strong>.';
+   if(si>=steps.length-1)return'<strong>All numbers added!</strong> Sum = <strong style="color:var(--purple);font-size:16px">'+steps[steps.length-1].sum+'</strong>';
+   var s=steps[si];
+   return'<strong>Box ['+s.i+']</strong> = <strong style="color:var(--amber)">'+s.val+'</strong>. Drop into jar: <strong>'+s.prev+' + '+s.val+' = <span style="color:var(--purple)">'+s.total+'</span></strong>';
+ },
+ getOp:function(steps,si){
+   if(si<0||si>=steps.length-1)return null;
+   var s=steps[si];
+   return{tiles:[{c:'purple',v:String(s.prev),l:'total before'},{c:'oeq',v:'+'},{c:'amber',v:String(s.val),l:'list['+s.i+']'},{c:'arr',v:'='},{c:'green',v:String(s.total),l:'new total'}]};
+ },
+ traceHeaders:['Box','Value','Total before','+ value','Total now'],
+ traceRow:function(s,i,ai){
+   if(s.final)return'<tr class="tf"><td colspan="5" style="text-align:center">Sum = '+s.sum+'</td></tr>';
+   var cl=i===ai?'ta':i<ai?'td':'';
+   return'<tr class="'+cl+'"><td>['+s.i+']</td><td style="font-weight:700">'+s.val+'</td><td>'+s.prev+'</td><td><span class="bv te">+'+s.val+'</span></td><td style="font-weight:700;color:var(--purple)">'+s.total+'</td></tr>';
+ },
+ quizzes:[
+   {q:'Sum of [3,7,1,9,2,8,4] is?',opts:['34','32','30','28'],correct:0,exp:'3+7=10, +1=11, +9=20, +2=22, +8=30, +4=34. Sum = 34.'},
+   {q:'Does the sum loop ever break early?',opts:['Yes — when total is big enough','Never — every single number must be added','Yes — after half the list','Yes — when it finds zero'],correct:1,exp:'Sum visits ALL boxes. No break. Stopping early would give a wrong (smaller) total.'},
+ ]
+},
+
+/* ── 6. EVEN FILTER ── */
+{id:'even',icon:'🔵',title:'Even Numbers',color:'#3B82F6',
+ tagline:'Two gates — only even numbers pass',
+ story:'The agent stands at a gate. Every number approaches. The agent checks: is it divisible by 2 with no remainder? YES → blue gate (even list). NO → grey gate (skip). The even list fills up as the agent walks.',
+ bigIdea:'Even numbers have zero remainder when divided by 2. The modulo operation (% 2) gives the remainder. If remainder == 0 → even. If remainder == 1 → odd.',
+ defaultList:[3,7,2,9,4,8,5,6,1],
+ ops:[
+   {t:'evens = []',d:'Empty list for even numbers.',c:'evens = []'},
+   {t:'Walk every box',d:'',c:'for num in list:'},
+   {t:'Is remainder 0?',d:'num % 2 == 0 means even.',c:'if num % 2 == 0:'},
+   {t:'YES — add to evens',d:'Send through the even gate.',c:'evens.append(num)'},
+ ],
+ pseudo:[
+   {t:'<span class="vv">evens = []</span> <span class="cm">← empty even gate</span>',i:0},
+   {t:'<span class="kw">FOR EACH</span> number in list:',i:0},
+   {t:'<span class="kw">IF</span> number <span class="vv">% 2 == 0</span> (no remainder):',i:1},
+   {t:'<span class="rr">evens.append(number)</span> <span class="cm">← through the even gate</span>',i:2},
+   {t:'<span class="kw">ELSE:</span> skip (odd number)',i:1},
+   {t:'<span class="rr">Report evens list</span>',i:0},
+ ],
+ run:function(lst){
+   var evens=[],steps=[];
+   for(var i=0;i<lst.length;i++){
+     var rem=lst[i]%2,isEven=rem===0;
+     if(isEven)evens.push(lst[i]);
+     steps.push({i:i,val:lst[i],isEven:isEven,rem:rem,evens:evens.slice()});
+   }
+   steps.push({final:true,evens:evens.slice(),lst:lst.slice()});
+   return steps;
+ },
+ buildFloor:function(lst,steps,si){
+   var html='',doneSet={};
+   if(si>=0){for(var k=0;k<=si&&k<steps.length-1;k++) doneSet[steps[k].i]=steps[k].isEven?'even':'odd';}
+   var allDone=si>=steps.length-1;
+   lst.forEach(function(v,i){
+     var isActive=si>=0&&si<steps.length-1&&steps[si].i===i;
+     var state=doneSet[i];
+     var isEvenActive=isActive&&steps[si]&&steps[si].isEven;
+     var cls='lslot '+(isActive&&isEvenActive?'ss-match ':isActive?'ss-active ':state==='even'?'ss-even ':state==='odd'?'ss-no ':'');
+     html+='<div class="'+cls+'">'
+       +(isActive?'<div class="agent-pin">👆</div>':'')
+       +'<div class="sv">'+v+'</div>'
+       +'<div class="si">'+(state==='even'?'even':state==='odd'?'odd':isActive?'checking':'')+'</div>'
+       +'<div class="sidx">['+i+']</div></div>';
+   });
+   return html;
+ },
+ getMemory:function(steps,si){
+   if(si<0)return[{n:'evens',v:'[]',c:'empty',cls:'yellow'},{n:'current',v:'—'}];
+   if(si>=steps.length-1)return[{n:'evens',v:'['+steps[steps.length-1].evens.join(',')+']',c:'RESULT',cls:'green'}];
+   var s=steps[si];
+   return[
+     {n:'num',v:String(s.val),c:'current',hi:true,cls:'yellow'},
+     {n:'num % 2',v:String(s.rem),c:s.isEven?'→ EVEN':'→ ODD',hi:true,cls:s.isEven?'green':'red'},
+     {n:'evens',v:'['+s.evens.join(',')+']',c:'so far',hi:s.isEven,cls:'green'},
+   ];
+ },
+ getNarr:function(steps,si){
+   if(si<0)return'Checking each number: is it divisible by 2? Press <strong>Next →</strong>.';
+   if(si>=steps.length-1)return'<strong>Done!</strong> Even numbers: <strong style="color:var(--blue)">['+steps[steps.length-1].evens.join(', ')+']</strong>';
+   var s=steps[si];
+   return'<strong>'+s.val+'</strong> % 2 = <strong style="color:var(--amber)">'+s.rem+'</strong>. '
+     +(s.isEven?'<strong style="color:var(--blue)">Remainder = 0 → EVEN! Added to evens list.</strong>':'<strong style="color:var(--red)">Remainder = 1 → ODD. Skip.</strong>');
+ },
+ getOp:function(steps,si){
+   if(si<0||si>=steps.length-1)return null;
+   var s=steps[si];
+   return{tiles:[{c:'blue',v:String(s.val),l:'current'},{c:'oeq',v:'%2'},{c:s.isEven?'green':'red',v:String(s.rem),l:'remainder'},{c:'arr',v:'→'},{c:s.isEven?'green':'red',v:s.isEven?'EVEN':'ODD',l:s.isEven?'add':'skip'}]};
+ },
+ traceHeaders:['Box','Value','% 2','Even?','evens list'],
+ traceRow:function(s,i,ai){
+   if(s.final)return'<tr class="tf"><td colspan="5" style="text-align:center">Evens: ['+s.evens.join(', ')+']</td></tr>';
+   var cl=i===ai?'ta':i<ai?'td':'';
+   return'<tr class="'+cl+'"><td>['+s.i+']</td><td style="font-weight:700">'+s.val+'</td><td><span class="bv '+(s.isEven?'ok':'no')+'">'+s.rem+'</span></td>'
+     +'<td><span class="bv '+(s.isEven?'ok':'no')+'">'+(s.isEven?'YES':'No')+'</span></td>'
+     +'<td style="color:var(--blue);font-size:10px">['+s.evens.join(',')+']</td></tr>';
+ },
+ quizzes:[
+   {q:'What does 7 % 2 give?',opts:['0','1','2','3'],correct:1,exp:'7 ÷ 2 = 3 remainder 1. So 7 % 2 = 1. Remainder is not 0 → 7 is odd.'},
+   {q:'What does 12 % 2 give?',opts:['0','1','6','2'],correct:0,exp:'12 ÷ 2 = 6 remainder 0. So 12 % 2 = 0. Remainder is 0 → 12 is even.'},
+ ]
+},
+
+/* ── 7. ODD FILTER ── */
+{id:'odd',icon:'🟣',title:'Odd Numbers',color:'#8B5CF6',
+ tagline:'Same gate — purple side',
+ story:'Exact mirror of Even Filter. The same modulo test — but now numbers with remainder 1 (odd numbers) pass through the purple gate. The code changes just one character: == 0 becomes == 1.',
+ bigIdea:'% 2 == 1 catches odd numbers. Every other part is identical to the even filter. Learning one teaches the other instantly.',
+ defaultList:[3,7,2,9,4,8,5,6,1],
+ ops:[
+   {t:'odds = []',d:'Empty list for odd numbers.',c:'odds = []'},
+   {t:'Walk every box',d:'',c:'for num in list:'},
+   {t:'Is remainder 1?',d:'num % 2 == 1 means odd.',c:'if num % 2 == 1:'},
+   {t:'YES — add to odds',d:'Send through the odd gate.',c:'odds.append(num)'},
+ ],
+ pseudo:[
+   {t:'<span class="vv">odds = []</span> <span class="cm">← empty odd gate</span>',i:0},
+   {t:'<span class="kw">FOR EACH</span> number in list:',i:0},
+   {t:'<span class="kw">IF</span> number <span class="vv">% 2 == 1</span> (remainder = 1):',i:1},
+   {t:'<span class="rr">odds.append(number)</span> <span class="cm">← through the odd gate</span>',i:2},
+   {t:'<span class="kw">ELSE:</span> skip (even number)',i:1},
+   {t:'<span class="rr">Report odds list</span>',i:0},
+ ],
+ run:function(lst){
+   var odds=[],steps=[];
+   for(var i=0;i<lst.length;i++){
+     var rem=lst[i]%2,isOdd=rem===1;
+     if(isOdd)odds.push(lst[i]);
+     steps.push({i:i,val:lst[i],isOdd:isOdd,rem:rem,odds:odds.slice()});
+   }
+   steps.push({final:true,odds:odds.slice(),lst:lst.slice()});
+   return steps;
+ },
+ buildFloor:function(lst,steps,si){
+   var html='',doneSet={};
+   if(si>=0){for(var k=0;k<=si&&k<steps.length-1;k++) doneSet[steps[k].i]=steps[k].isOdd?'odd':'even';}
+   var allDone=si>=steps.length-1;
+   lst.forEach(function(v,i){
+     var isActive=si>=0&&si<steps.length-1&&steps[si].i===i;
+     var state=doneSet[i];
+     var isOddActive=isActive&&steps[si]&&steps[si].isOdd;
+     var cls='lslot '+(isActive&&isOddActive?'ss-odd ':isActive?'ss-active ':state==='odd'?'ss-odd ':state==='even'?'ss-no ':'');
+     html+='<div class="'+cls+'">'+(isActive?'<div class="agent-pin">👆</div>':'')+'<div class="sv">'+v+'</div>'
+       +'<div class="si">'+(state==='odd'?'odd':state==='even'?'even':isActive?'checking':'')+'</div>'
+       +'<div class="sidx">['+i+']</div></div>';
+   });
+   return html;
+ },
+ getMemory:function(steps,si){
+   if(si<0)return[{n:'odds',v:'[]',c:'empty',cls:'yellow'},{n:'current',v:'—'}];
+   if(si>=steps.length-1)return[{n:'odds',v:'['+steps[steps.length-1].odds.join(',')+']',c:'RESULT',cls:'green'}];
+   var s=steps[si];
+   return[
+     {n:'num',v:String(s.val),c:'current',hi:true,cls:'yellow'},
+     {n:'num % 2',v:String(s.rem),c:s.isOdd?'→ ODD':'→ EVEN',hi:true,cls:s.isOdd?'green':'red'},
+     {n:'odds',v:'['+s.odds.join(',')+']',c:'so far',hi:s.isOdd,cls:'green'},
+   ];
+ },
+ getNarr:function(steps,si){
+   if(si<0)return'Looking for odd numbers (remainder = 1). Press <strong>Next →</strong>.';
+   if(si>=steps.length-1)return'<strong>Done!</strong> Odd numbers: <strong style="color:var(--purple)">['+steps[steps.length-1].odds.join(', ')+']</strong>';
+   var s=steps[si];
+   return'<strong>'+s.val+'</strong> % 2 = <strong style="color:var(--amber)">'+s.rem+'</strong>. '
+     +(s.isOdd?'<strong style="color:var(--purple)">Remainder = 1 → ODD! Added to odds list.</strong>':'<strong style="color:var(--red)">Remainder = 0 → EVEN. Skip.</strong>');
+ },
+ getOp:function(steps,si){
+   if(si<0||si>=steps.length-1)return null;
+   var s=steps[si];
+   return{tiles:[{c:'purple',v:String(s.val),l:'current'},{c:'oeq',v:'%2'},{c:s.isOdd?'green':'red',v:String(s.rem),l:'remainder'},{c:'arr',v:'→'},{c:s.isOdd?'purple':'red',v:s.isOdd?'ODD':'EVEN',l:s.isOdd?'add':'skip'}]};
+ },
+ traceHeaders:['Box','Value','% 2','Odd?','odds list'],
+ traceRow:function(s,i,ai){
+   if(s.final)return'<tr class="tf"><td colspan="5" style="text-align:center">Odds: ['+s.odds.join(', ')+']</td></tr>';
+   var cl=i===ai?'ta':i<ai?'td':'';
+   return'<tr class="'+cl+'"><td>['+s.i+']</td><td style="font-weight:700">'+s.val+'</td><td><span class="bv '+(s.isOdd?'ok':'no')+'">'+s.rem+'</span></td>'
+     +'<td><span class="bv '+(s.isOdd?'ok':'no')+'">'+(s.isOdd?'YES':'No')+'</span></td>'
+     +'<td style="color:var(--purple);font-size:10px">['+s.odds.join(',')+']</td></tr>';
+ },
+ quizzes:[
+   {q:'Even and Odd programs are mirrors. What single character changes?',opts:['== changes to !=','== 0 becomes == 1 (zero remainder vs one remainder)','% 2 becomes % 1','Everything changes'],correct:1,exp:'Only the check: % 2 == 0 (even) becomes % 2 == 1 (odd). The loop, the append, the list — all identical.'},
+   {q:'Which list contains only odd numbers from [3,7,2,9,4,8,5]?',opts:['[2,4,8]','[3,7,9,5]','[3,7,2,9]','[7,9,5]'],correct:1,exp:'3%2=1✓ 7%2=1✓ 2%2=0✗ 9%2=1✓ 4%2=0✗ 8%2=0✗ 5%2=1✓ → [3,7,9,5]'},
+ ]
+}
+
+]; /* end AGENTS */
+
+var PHASES=['🤔 Mission','💡 Big Idea','👁 3D Walk','📋 Logic','✏️ Code','🧩 Quiz'];
+
+/* ═══════ STATE ═══════ */
+var curA=0,curP=0;
+var steps=[],stepIdx=-1;
+var aTimer=null,aRun=false,aSpeed=1200;
+var bAdded=[],cLines=[];
+var qIdx=0,qAns=[];
+var score=0,solved={},pDone={};
+var inputList=[],inputTgt=0;
+
+function ag(){return AGENTS[curA];}
+function addScore(n){score=Math.max(0,score+n);document.getElementById('sc').textContent=score;}
+function updSD(){document.getElementById('sd').textContent=Object.keys(solved).length+'/7';}
+
+/* ═══════ TABS ═══════ */
+function buildAgentBar(){
+  var c=document.getElementById('agent-bar');
+  c.innerHTML=AGENTS.map(function(a,i){
+    return'<div class="atab'+(i===curA?' active':'')+(solved[a.id]?' done':'')+'" onclick="switchAgent('+i+')">'
+      +a.icon+' '+a.title+'</div>';
+  }).join('');
+}
+function buildPhaseBar(){
+  var c=document.getElementById('phase-bar'),key=ag().id;
+  c.innerHTML=PHASES.map(function(ph,i){
+    var done=pDone[key]&&pDone[key][i];
+    return'<div class="ppill'+(i===curP?' active':'')+(done?' ph-done':'')+'" onclick="goPhase('+i+')">'
+      +(i+1)+' '+ph+'</div>';
+  }).join('');
+}
+function switchAgent(i){
+  if(aRun){clearInterval(aTimer);aRun=false;}
+  curA=i;curP=0;stepIdx=-1;steps=[];
+  bAdded=[];cLines=[];qIdx=0;qAns=[];
+  inputList=AGENTS[i].defaultList.slice();
+  inputTgt=inputList[Math.floor(inputList.length/2)];
+  buildAgentBar();buildPhaseBar();renderBoth();
+}
+function goPhase(i){
+  if(aRun){clearInterval(aTimer);aRun=false;}
+  curP=i;stepIdx=-1;buildPhaseBar();renderBoth();
+}
+function markDone(pi){var k=ag().id;if(!pDone[k])pDone[k]={};pDone[k][pi]=true;buildPhaseBar();}
+function nextP(){markDone(curP);goPhase(Math.min(curP+1,PHASES.length-1));}
+function prevP(){goPhase(Math.max(curP-1,0));}
+
+/* ═══════ RENDER ═══════ */
+function renderBoth(){
+  var ph=curP;
+  if(ph===0){rMissionL();rMissionR();}
+  else if(ph===1){rBigIdeaL();rBigIdeaR();}
+  else if(ph===2){rWalkL();rWalkR();}
+  else if(ph===3){rLogicL();rLogicR();}
+  else if(ph===4){rCodeL();rCodeR();}
+  else if(ph===5){rQuizL();rQuizR();}
+}
+function setH(lid,lh,lt,lb,rid,rh,rt,rb){
+  document.getElementById('lp-title').textContent=lt;
+  document.getElementById('lp-badge').textContent=lb||'';
+  document.getElementById('lp-body').innerHTML=lh;
+  document.getElementById('rp-title').textContent=rt;
+  document.getElementById('rp-badge').textContent=rb||'';
+  document.getElementById('rp-body').innerHTML=rh;
+}
+
+/* ═══════ PHASE 0 — MISSION ═══════ */
+function rMissionL(){
+  var a=ag();
+  var html='<div class="list-scene"><div class="list-floor">';
+  a.defaultList.forEach(function(v,i){
+    html+='<div class="lslot" style="border-color:'+a.color+'33">'
+      +'<div class="sv" style="color:'+a.color+'">'+v+'</div>'
+      +'<div class="si" style="color:var(--tx3)">['+i+']</div>'
+      +'<div class="sidx">box '+i+'</div></div>';
+  });
+  html+='</div></div>';
+  html+='<div style="background:'+a.color+'0C;border:1px solid '+a.color+'44;border-radius:9px;padding:10px 12px;width:100%;max-width:360px;text-align:center">'
+    +'<div style="font-size:11px;font-weight:700;color:'+a.color+';margin-bottom:4px">'+a.icon+' '+a.title+'</div>'
+    +'<div style="font-size:12px;font-weight:600;color:var(--tx)">'+a.tagline+'</div></div>';
+  document.getElementById('lp-title').textContent='The List';
+  document.getElementById('lp-badge').textContent=a.defaultList.length+' elements';
+  document.getElementById('lp-body').innerHTML=html;
+}
+function rMissionR(){
+  var a=ag();
+  var html='<div class="slbl">The story</div>'
+    +'<div class="icard"><div class="icbody">'+a.story+'</div></div>';
+  html+='<div class="slbl">Key facts</div>';
+  html+='<div class="icard"><div class="icbody"><strong style="color:var(--tx)">Index</strong> = the box number. Always starts at 0.<br>'
+    +'<strong style="color:var(--tx)">Element</strong> = the value inside the box.<br>'
+    +'<strong style="color:var(--tx)">len(list)</strong> = total number of boxes.<br>'
+    +'<strong style="color:var(--tx)">list[i]</strong> = value in box number i.</div></div>';
+  html+='<div class="icard"><div class="ictitle" style="color:'+a.color+'">What this agent does</div><div class="icbody">'+a.bigIdea+'</div></div>';
+  html+='<div class="nav-btns"><button class="nbtn primary" onclick="nextP()">Next: big idea →</button></div>';
+  document.getElementById('rp-title').textContent='Mission Brief';
+  document.getElementById('rp-badge').textContent=a.icon+' '+a.title;
+  document.getElementById('rp-body').innerHTML=html;
+}
+
+/* ═══════ PHASE 1 — BIG IDEA ═══════ */
+function rBigIdeaL(){
+  var a=ag();
+  var html='<div style="display:flex;flex-direction:column;align-items:center;gap:0;width:170px">';
+  var flow=[
+    [a.color,'Agent receives list'],
+    ['var(--tx2)','Stands at box [0]'],
+    ['var(--amber)','Applies the rule'],
+    ['var(--tx2)','Moves to box [1]'],
+    ['var(--amber)','Applies the rule again'],
+    ['var(--tx2)','... repeats ...'],
+    ['var(--green)','All boxes done → answer'],
+  ];
+  flow.forEach(function(f,i){
+    html+='<div style="background:var(--s2);border:1px solid '+f[0]+'55;border-radius:7px;padding:5px 12px;font-size:11px;color:'+f[0]+';width:100%;text-align:center">'+f[1]+'</div>';
+    if(i<flow.length-1)html+='<div style="font-size:12px;color:var(--tx3);padding:2px 0;text-align:center">↓</div>';
+  });
+  html+='</div>';
+  document.getElementById('lp-title').textContent='How It Works';
+  document.getElementById('lp-badge').textContent='flow';
+  document.getElementById('lp-body').innerHTML=html;
+}
+function rBigIdeaR(){
+  var a=ag();
+  var html='<div class="icard"><div class="ictitle" style="color:'+a.color+'">The mental model</div><div class="icbody">'+a.bigIdea+'</div></div>';
+  html+='<div class="icard"><div class="ictitle">What changes at each box</div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:5px">';
+  a.ops.forEach(function(op){
+    html+='<div style="background:var(--s3);border-radius:7px;padding:7px">'
+      +'<div style="font-size:11px;font-weight:600;color:var(--tx);margin-bottom:3px">'+op.t+'</div>'
+      +'<div style="font-size:10px;color:var(--tx2);margin-bottom:4px">'+op.d+'</div>'
+      +'<div style="font-family:var(--mono);font-size:10px;color:'+a.color+';background:var(--s2);padding:3px 6px;border-radius:4px">'+op.c+'</div>'
+      +'</div>';
+  });
+  html+='</div></div>';
+  html+='<div class="nav-btns"><button class="nbtn secondary" onclick="prevP()">← Back</button><button class="nbtn primary" onclick="nextP()">Next: 3D walk →</button></div>';
+  document.getElementById('rp-title').textContent='Big Idea';
+  document.getElementById('rp-badge').textContent='before the code';
+  document.getElementById('rp-body').innerHTML=html;
+}
+
+/* ═══════ PHASE 2 — 3D WALK ═══════ */
+function regenSteps(){
+  var a=ag();
+  var lst=inputList.slice();
+  if(a.id==='search') steps=a.run(lst,inputTgt);
+  else steps=a.run(lst);
+}
+function rWalkL(){
+  var a=ag();
+  if(!steps.length) regenSteps();
+  document.getElementById('lp-title').textContent='3D Walk-through';
+  document.getElementById('lp-badge').textContent=stepIdx<0?'not started':'step '+(stepIdx+1)+' of '+(steps.length-1);
+  var html='<div class="list-scene"><div class="list-floor" id="lfloor">'+a.buildFloor(inputList,steps,stepIdx)+'</div></div>';
+  var op=a.getOp(steps,stepIdx);
+  html+='<div class="op-strip">'+buildOpStrip(op)+'</div>';
+  html+='<div class="snav">'
+    +'<button class="snbtn" id="bprev" onclick="tstep(-1)"'+(stepIdx<0?' disabled':'')+'>← Prev</button>'
+    +'<div class="step-ctr"><div class="step-lbl" id="slbl">'+(stepIdx<0?'Press Next →':'Step '+(stepIdx+1)+' of '+(steps.length-1))+'</div>'
+    +'<div class="sdots" id="sdots">'+buildDots()+'</div></div>'
+    +'<button class="snbtn" id="bnext" onclick="tstep(1)"'+(stepIdx>=steps.length-1?' disabled':'')+'>Next →</button>'
+    +'<button class="snbtn play" id="bauto" onclick="toggleAuto()">▶</button>'
+    +'<button class="snbtn" onclick="toggleSpeed()" id="bspd">🐢</button>'
+    +'<button class="snbtn" onclick="stepIdx=-1;rWalkL();rWalkR()">↺</button>'
+    +'</div>';
+  document.getElementById('lp-body').innerHTML=html;
+}
+function rWalkR(){
+  var a=ag();
+  var html='<div class="slbl">Input values</div>';
+  html+='<div class="inp-sec">';
+  html+='<div class="inp-row"><label>list =</label><input class="fin" id="ihay" value="'+inputList.join(',')+'" oninput="inputList=this.value.split(\',\').map(function(x){return parseInt(x.trim())||0;})"></div>';
+  if(a.id==='search') html+='<div class="inp-row"><label>target =</label><input class="fin sm" id="itgt" value="'+inputTgt+'" oninput="inputTgt=parseInt(this.value)||0"></div>';
+  html+='<button class="rbtn" onclick="regenSteps();stepIdx=-1;rWalkL();rWalkR()">▶ Rebuild trace</button></div>';
+  html+='<div class="slbl">VS Code memory — what\'s alive now</div>';
+  html+='<div class="vsmem"><div class="vsmem-title"><span>VARIABLES</span><span style="color:#555;font-size:9px;margin-left:auto">⚡ changes highlighted</span></div>';
+  var mem=a.getMemory(steps,stepIdx);
+  mem.forEach(function(m){
+    html+='<div class="vsmem-row'+(m.hi?' hi':'')+(m.changed?' changed':'')+'">'
+      +'<span class="vmr-name">'+m.n+'</span>'
+      +'<span class="vmr-eq">=</span>'
+      +'<span class="vmr-val'+(m.cls?' '+m.cls:'')+'">'+m.v+'</span>'
+      +(m.c?'<span class="vmr-comment">// '+m.c+'</span>':'')
+      +'</div>';
+  });
+  html+='</div>';
+  html+='<div class="slbl" style="margin-top:8px">Narration</div>';
+  html+='<div class="narr"><div class="nl">Agent 🤖</div>'+a.getNarr(steps,stepIdx)+'</div>';
+  html+='<div class="slbl">Step log</div><div style="overflow-x:auto">';
+  html+='<table class="ttbl"><tr>'+a.traceHeaders.map(function(h){return'<th>'+h+'</th>';}).join('')+'</tr>';
+  steps.forEach(function(s,i){html+=a.traceRow(s,i,stepIdx);});
+  html+='</table></div>';
+  html+='<div class="nav-btns"><button class="nbtn secondary" onclick="prevP()">← Back</button><button class="nbtn primary" onclick="nextP()">Next: logic →</button></div>';
+  document.getElementById('rp-title').textContent='Step Details + Memory';
+  document.getElementById('rp-badge').textContent='VS Code style';
+  document.getElementById('rp-body').innerHTML=html;
+}
+
+function buildOpStrip(op){
+  if(!op)return'<span style="font-size:11px;color:var(--tx3)">operation appears here</span>';
+  var html='';
+  op.tiles.forEach(function(t){
+    if(t.c==='arr')html+='<span class="oarr">'+t.v+'</span>';
+    else if(t.c==='oeq')html+='<span class="oeq">'+t.v+'</span>';
+    else html+='<div class="otile '+t.c+'"><div class="ov">'+t.v+'</div><div class="ol">'+t.l+'</div></div>';
+  });
+  return html;
+}
+function buildDots(){
+  var n=Math.min(steps.length-1,14),h='';
+  for(var i=0;i<n;i++) h+='<div class="sdot '+(i<stepIdx?'ddn':i===stepIdx?'dcur':'')+'" ></div>';
+  return h;
+}
+function tstep(dir){
+  if(!steps.length) regenSteps();
+  stepIdx+=dir;
+  if(stepIdx<-1)stepIdx=-1;
+  if(stepIdx>steps.length-1)stepIdx=steps.length-1;
+  rWalkL();rWalkR();
+}
+function toggleAuto(){
+  var btn=document.getElementById('bauto');
+  if(aRun){clearInterval(aTimer);aRun=false;if(btn){btn.textContent='▶';btn.className='snbtn play';}return;}
+  aRun=true;if(btn){btn.textContent='⏸';btn.className='snbtn';}
+  aTimer=setInterval(function(){
+    if(stepIdx>=steps.length-1){clearInterval(aTimer);aRun=false;var b=document.getElementById('bauto');if(b){b.textContent='▶';b.className='snbtn play';}return;}
+    stepIdx++;rWalkL();rWalkR();
+  },aSpeed);
+}
+function toggleSpeed(){
+  aSpeed=aSpeed===1200?2200:1200;
+  var btn=document.getElementById('bspd');
+  if(btn)btn.textContent=aSpeed===2200?'🐇':'🐢';
+}
+
+/* ═══════ PHASE 3 — LOGIC ═══════ */
+function rLogicL(){
+  var a=ag();
+  var html='<div class="psbox" style="width:100%;max-width:360px;font-size:11px">';
+  a.pseudo.forEach(function(l,i){
+    html+='<div class="pl"><div class="pl-n">'+(i+1)+'</div><div class="pl-t'+(l.i===2?' i2':l.i===1?' i1':'')+'">' +l.t+'</div></div>';
+  });
+  html+='</div>';
+  document.getElementById('lp-title').textContent='Plain Language Logic';
+  document.getElementById('lp-badge').textContent='no code — just thinking';
+  document.getElementById('lp-body').innerHTML=html;
+}
+function rLogicR(){
+  var a=ag();
+  var qa=[
+    'What does the agent receive?','The list of integers to process.',
+    'Where does it start?','Box [0] — the first element.',
+    'What question does it ask per box?',a.id==='max'?'Is this bigger than the current champion?':a.id==='min'?'Is this smaller than the champion?':a.id==='search'?'Is this equal to the target?':a.id==='sum'?'(No question — always add)':a.id==='input'?'(No question — always append)':'Is this % 2 == 0 (or 1)?',
+    'What does it remember between steps?',a.id==='max'||a.id==='min'?'The current champion':a.id==='sum'?'The running total (jar)':a.id==='input'?'The growing list':a.id==='search'?'Whether it has found the target yet':'The filtered list built so far',
+    'When does it stop?',a.id==='search'?'The moment a match is found (break), or when all boxes are checked.':'After visiting EVERY box — no early stopping.',
+    'What is the final answer?',a.id==='max'?'The champion = maximum':a.id==='min'?'The champion = minimum':a.id==='sum'?'The total':a.id==='input'?'The complete list':a.id==='search'?'Found at index X, or not found':'The filtered list',
+  ];
+  var html='<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:9px">';
+  for(var i=0;i<qa.length;i+=2){
+    html+='<div class="icard" style="padding:7px 10px">'
+      +'<div style="display:flex;gap:7px;align-items:flex-start">'
+      +'<div style="width:16px;height:16px;border-radius:50%;background:var(--bluebg);color:var(--blue);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">'+(i/2+1)+'</div>'
+      +'<div><div style="font-size:10px;font-weight:700;color:var(--tx2)">'+qa[i]+'</div>'
+      +'<div style="font-size:11px;color:var(--tx);margin-top:2px">'+qa[i+1]+'</div></div></div></div>';
+  }
+  html+='</div>';
+  html+='<div class="nav-btns"><button class="nbtn secondary" onclick="prevP()">← Back</button><button class="nbtn primary" onclick="nextP()">Next: write code →</button></div>';
+  document.getElementById('rp-title').textContent='Thinking Steps';
+  document.getElementById('rp-badge').textContent='Q & A';
+  document.getElementById('rp-body').innerHTML=html;
+}
+
+/* ═══════ PHASE 4 — CODE ═══════ */
+function rCodeL(){
+  document.getElementById('lp-title').textContent='Your Code';
+  document.getElementById('lp-badge').textContent='builds here';
+  var html='<div style="width:100%;max-width:380px">';
+  html+='<div class="cbtns"><button class="cbtn clr" onclick="clearCode()">Clear</button><button class="cbtn fill" onclick="fillAll()">Fill all</button><button class="cbtn run" onclick="runCode()">▶ Run</button></div>';
+  html+='<div class="cdisp" id="cdisp">'+renderCDisp()+'</div>';
+  html+='<div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Output</div>';
+  html+='<div class="obox" id="obox"><span class="dim">click ▶ Run</span></div>';
+  html+='</div>';
+  document.getElementById('lp-body').innerHTML=html;
+}
+function rCodeR(){
+  var a=ag();
+  document.getElementById('rp-title').textContent='Build Steps';
+  document.getElementById('rp-badge').textContent='click each to add';
+  var html='<div class="slbl">Click a step to add it to your code</div>';
+  a.ops.forEach(function(s,i){
+    html+='<div class="bstep'+(bAdded[i]?' added':'')+'" id="bs'+i+'" onclick="addStep('+i+')">'
+      +'<div class="bs-n">'+(i+1)+'</div>'
+      +'<div><div class="bs-t">'+s.t+'</div><div class="bs-c">'+s.c.replace(/\n/g,' | ')+'</div></div></div>';
+  });
+  html+='<div class="nav-btns"><button class="nbtn secondary" onclick="prevP()">← Back</button><button class="nbtn primary" onclick="nextP()">Next: quiz →</button></div>';
+  document.getElementById('rp-body').innerHTML=html;
+}
+function renderCDisp(){
+  if(!cLines.length)return'<span style="color:#334155">// click steps on the right →</span>';
+  return cLines.map(function(l){
+    var e=l.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var col=l.includes('for ')||l.includes('while ')||l.includes('if ')||l.includes('else')?'#93c5fd':l.includes('print')||l.includes('append')?'#4ade80':l.includes('= 0')||l.includes('= []')||l.includes('[0]')?'#fde68a':'#e2e8f0';
+    return'<span style="color:'+col+'">'+e+'</span>';
+  }).join('<br>');
+}
+function addStep(i){
+  if(bAdded[i])return;
+  bAdded[i]=true;
+  cLines.push(ag().ops[i].c.trimEnd());
+  var el=document.getElementById('bs'+i);if(el)el.classList.add('added');
+  var cd=document.getElementById('cdisp');if(cd)cd.innerHTML=renderCDisp();
+}
+function clearCode(){
+  cLines=[];bAdded=[];
+  ag().ops.forEach(function(_,i){var el=document.getElementById('bs'+i);if(el)el.classList.remove('added');});
+  var cd=document.getElementById('cdisp');if(cd)cd.innerHTML='<span style="color:#334155">// click steps on the right →</span>';
+  var ob=document.getElementById('obox');if(ob)ob.innerHTML='<span class="dim">click ▶ Run</span>';
+}
+function fillAll(){ag().ops.forEach(function(_,i){if(!bAdded[i])addStep(i);});}
+function runCode(){
+  var a=ag(),ob=document.getElementById('obox');if(!ob)return;
+  var lst=inputList.slice(),out='';
+  if(a.id==='input'){out='<span class="ok">list = ['+lst.join(', ')+']</span>';}
+  else if(a.id==='max'){var m=lst[0];lst.forEach(function(v){if(v>m)m=v;});out='<span class="ok">Maximum = '+m+'</span>';}
+  else if(a.id==='min'){var mn=lst[0];lst.forEach(function(v){if(v<mn)mn=v;});out='<span class="ok">Minimum = '+mn+'</span>';}
+  else if(a.id==='search'){var f=lst.indexOf(inputTgt);out=f>=0?'<span class="ok">Found '+inputTgt+' at index '+f+'</span>':'<span class="no">'+inputTgt+' not found</span>';}
+  else if(a.id==='sum'){var s=0;lst.forEach(function(v){s+=v;});out='<span class="ok">Sum = '+s+'</span>';}
+  else if(a.id==='even'){var ev=lst.filter(function(v){return v%2===0;});out='<span class="ok">Evens = ['+ev.join(', ')+']</span>';}
+  else if(a.id==='odd'){var od=lst.filter(function(v){return v%2===1;});out='<span class="ok">Odds = ['+od.join(', ')+']</span>';}
+  ob.innerHTML=out;
+  if(!solved[a.id]){solved[a.id]=true;addScore(15);updSD();buildAgentBar();}
+}
+
+/* ═══════ PHASE 5 — QUIZ ═══════ */
+function rQuizL(){
+  var a=ag();
+  var done=qIdx>=a.quizzes.length;
+  document.getElementById('lp-title').textContent='Quiz';
+  document.getElementById('lp-badge').textContent=a.title;
+  document.getElementById('lp-body').innerHTML='<div style="text-align:center;padding:20px">'
+    +'<div style="font-size:46px;margin-bottom:10px">'+(done?'🏆':qAns[qIdx]===undefined?'🤔':qAns[qIdx]===a.quizzes[qIdx]&&qAns[qIdx]===a.quizzes[qIdx].correct?'🎉':'📚')+'</div>'
+    +'<div style="font-size:12px;color:var(--tx2)">Question '+(Math.min(qIdx+1,a.quizzes.length))+' of '+a.quizzes.length+'</div>'
+    +'<div style="height:4px;background:var(--bd);border-radius:2px;overflow:hidden;margin:9px 0">'
+    +'<div style="width:'+Math.round(qIdx/a.quizzes.length*100)+'%;height:100%;background:'+a.color+'"></div></div>'
+    +'</div>';
+}
+function rQuizR(){
+  var a=ag();
+  document.getElementById('rp-title').textContent='Test Yourself';
+  document.getElementById('rp-badge').textContent=a.quizzes.length+' questions';
+  if(qIdx>=a.quizzes.length){showQEnd();return;}
+  var q=a.quizzes[qIdx];
+  var html='<div class="qcard"><div class="qq">'+q.q+'</div><div class="qopts">';
+  q.opts.forEach(function(opt,oi){
+    var cl='';
+    if(qAns[qIdx]!==undefined){if(oi===q.correct)cl=' qok';else if(oi===qAns[qIdx]&&oi!==q.correct)cl=' qerr';}
+    html+='<div class="qopt'+cl+'" onclick="ansQ('+oi+')">'+opt+'</div>';
+  });
+  html+='</div><div class="qexp" id="qexp"'+(qAns[qIdx]!==undefined?' style="display:block"':'')+'>'+q.exp+'</div>';
+  if(qAns[qIdx]!==undefined)html+='<div style="display:flex;justify-content:flex-end;margin-top:7px"><button class="nbtn primary" onclick="nxtQ()">'+(qIdx<a.quizzes.length-1?'Next →':'See results')+'</button></div>';
+  html+='</div><div class="nav-btns"><button class="nbtn secondary" onclick="prevP()">← Back</button></div>';
+  document.getElementById('rp-body').innerHTML=html;
+}
+function ansQ(oi){
+  if(qAns[qIdx]!==undefined)return;
+  qAns[qIdx]=oi;
+  if(oi===ag().quizzes[qIdx].correct)addScore(10);
+  rQuizL();rQuizR();
+}
+function nxtQ(){qIdx++;rQuizL();rQuizR();}
+function showQEnd(){
+  var a=ag(),correct=0;
+  qAns.forEach(function(ans,i){if(ans===a.quizzes[i].correct)correct++;});
+  markDone(5);
+  document.getElementById('rp-body').innerHTML='<div class="icard" style="text-align:center;padding:16px">'
+    +'<div style="font-size:38px;margin-bottom:7px">'+(correct===a.quizzes.length?'🏆':'🎉')+'</div>'
+    +'<div style="font-size:16px;font-weight:700;margin-bottom:5px">'+correct+' / '+a.quizzes.length+'</div>'
+    +'<div class="icbody" style="margin-bottom:13px">'+(correct===a.quizzes.length?'Perfect!':'Try the 3D walk again.')+'</div>'
+    +'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">'
+    +'<button class="nbtn secondary" onclick="qIdx=0;qAns=[];rQuizL();rQuizR()">Retry</button>'
+    +(curA<AGENTS.length-1?'<button class="nbtn primary" onclick="switchAgent('+(curA+1)+')">Next agent →</button>':'')
+    +'</div></div>';
+}
+
+/* ═══════ BOOT ═══════ */
+inputList=AGENTS[0].defaultList.slice();
+inputTgt=inputList[Math.floor(inputList.length/2)];
+buildAgentBar();buildPhaseBar();renderBoth();
+</script>
+</body>
+</html>

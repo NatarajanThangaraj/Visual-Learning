@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐍 PyStory — Learn Python Through Stories</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0d0d1a;color:#e0e0e0;font-size:14px}
+
+/* LOADING */
+#loading{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px}
+.ld-snake{font-size:72px;animation:bounce 1.2s ease-in-out infinite alternate}
+@keyframes bounce{from{transform:translateY(-12px) rotate(-5deg)}to{transform:translateY(12px) rotate(5deg)}}
+.ld-title{font-size:2.2rem;font-weight:800;background:linear-gradient(90deg,#7c6fff,#ff6b9d);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ld-sub{color:#8899bb;font-size:.92rem}
+.ld-bar{width:280px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.ld-fill{height:100%;width:0%;background:linear-gradient(90deg,#7c6fff,#ff6b9d);border-radius:3px;transition:width .4s ease}
+.ld-fact{color:#6677aa;font-size:.8rem;text-align:center;max-width:320px;min-height:36px;line-height:1.5}
+
+/* APP SHELL — header | desc-strip | main */
+#app{height:100vh;display:grid;grid-template-rows:50px auto 1fr;display:none;overflow:hidden}
+#app.visible{display:grid}
+
+/* HEADER */
+header{background:#12122a;border-bottom:1px solid #2a2a4a;display:flex;align-items:center;padding:0 14px;gap:12px;overflow:hidden}
+.logo{font-size:1rem;font-weight:800;color:#fff;white-space:nowrap;display:flex;align-items:center;gap:6px;letter-spacing:-.3px}
+.logo em{color:#7c6fff;font-style:normal}
+.proj-tabs{flex:1;display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;padding:4px 0}
+.proj-tabs::-webkit-scrollbar{display:none}
+.tab{padding:5px 11px;border-radius:16px;border:1px solid #2a2a4a;background:transparent;color:#778;font-size:.72rem;cursor:pointer;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:4px}
+.tab:hover{border-color:#7c6fff;color:#ccc}
+.tab.active{background:#7c6fff;border-color:#7c6fff;color:#fff;font-weight:700}
+.tab.done::after{content:'✓';color:#51cf66;margin-left:2px}
+.py-badge{font-size:.7rem;padding:3px 10px;border-radius:10px;white-space:nowrap;background:rgba(81,207,102,.12);color:#51cf66;border:1px solid rgba(81,207,102,.3)}
+.py-badge.loading{background:rgba(255,212,59,.1);color:#ffd43b;border-color:rgba(255,212,59,.3)}
+.py-badge.err{background:rgba(255,107,107,.1);color:#ff6b6b;border-color:rgba(255,107,107,.3)}
+
+/* DESC STRIP — full-width horizontal info bar */
+.desc-strip{background:#16162e;border-bottom:2px solid #2a2a4a;display:flex;align-items:stretch;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#2a2a4a transparent;flex-shrink:0}
+.desc-strip::-webkit-scrollbar{height:3px}
+.desc-strip::-webkit-scrollbar-thumb{background:#2a2a4a}
+.ds-sec{padding:14px 20px;display:flex;flex-direction:column;justify-content:center;gap:5px;flex-shrink:0}
+.ds-div{width:1px;background:#2a2a4a;flex-shrink:0;align-self:stretch;margin:10px 0}
+.ds-identity{min-width:180px;max-width:210px}
+.ds-story{min-width:260px;max-width:340px}
+.ds-objectives{min-width:220px;max-width:280px}
+.ds-concepts{min-width:180px;flex:1}
+.ds-proj-icon{font-size:2rem;line-height:1}
+.ds-proj-title{font-size:1.05rem;font-weight:800;color:#ffffff;line-height:1.25;margin-top:4px;text-shadow:0 0 20px rgba(124,111,255,.4)}
+.ds-sec-label{font-size:.66rem;font-weight:700;color:#6677aa;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.diff-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.68rem;font-weight:700;margin-top:2px;width:fit-content}
+.diff-beginner{background:#1a3a2a;color:#51cf66}
+.diff-intermediate{background:#3a2a10;color:#ffd43b}
+.diff-advanced{background:#3a1020;color:#ff6b6b}
+.ds-story-text{color:#c4d4e8;font-size:.84rem;line-height:1.65;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.ds-obj-item{display:flex;gap:5px;align-items:flex-start;color:#dde8f5;font-size:.82rem;line-height:1.45}
+.ds-obj-dot{color:#a08fff;flex-shrink:0}
+.concept-tag{display:inline-block;background:rgba(124,111,255,.18);border:1px solid rgba(124,111,255,.4);color:#a998fa;font-size:.64rem;padding:2px 7px;border-radius:10px;margin:2px 1px}
+.ds-hint-btn{margin-top:4px;padding:5px 10px;border-radius:7px;background:rgba(255,212,59,.12);border:1px solid rgba(255,212,59,.3);color:#ffd43b;font-size:.7rem;cursor:pointer;transition:all .2s;white-space:nowrap;width:fit-content}
+.ds-hint-btn:hover{background:rgba(255,212,59,.22)}
+
+/* MAIN — 2 panels: code (left) | right-panel (game + console) */
+.main{display:grid;grid-template-columns:52% 48%;overflow:hidden;height:100%}
+
+/* RIGHT PANEL — game on top, console below */
+.right-panel{display:flex;flex-direction:column;overflow:hidden;border-left:1px solid #2a2a4a}
+
+/* Reuse .story for legacy compat, now unused */
+.story{display:none}
+
+/* GAME — top of right panel, scrollable */
+.game{background:#f0f2f5;overflow-y:auto;position:relative;display:flex;flex-direction:column;align-items:center;flex:1;min-height:0}
+.game-inner{padding:18px;width:100%;max-width:700px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.toast{position:fixed;top:62px;left:50%;transform:translateX(-50%);padding:8px 20px;border-radius:20px;font-size:.82rem;font-weight:600;opacity:0;pointer-events:none;z-index:100;transition:opacity .3s;white-space:nowrap}
+.toast.show{opacity:1}
+.toast.ok{background:#51cf66;color:#000}
+.toast.err{background:#ff6b6b;color:#fff}
+.toast.warn{background:#ffd43b;color:#000}
+.toast.info{background:#7c6fff;color:#fff}
+
+/* CONSOLE — bottom of right panel */
+.console-bottom{height:160px;background:#12122a;border-top:2px solid #2a2a4a;display:flex;flex-direction:column;flex-shrink:0}
+.console-hdr{padding:5px 12px;border-bottom:1px solid #2a2a4a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.console-hdr-title{font-size:.68rem;font-weight:700;color:#445;text-transform:uppercase;letter-spacing:.05em}
+.console-clear{background:none;border:none;color:#445;font-size:.7rem;cursor:pointer;padding:2px 6px;border-radius:4px}
+.console-clear:hover{color:#ff6b6b}
+.console-out{flex:1;overflow-y:auto;padding:6px 12px;font-family:'Fira Code','Consolas',monospace;font-size:.74rem;scrollbar-width:thin;scrollbar-color:#2a2a4a transparent}
+.cl{margin-bottom:1px;white-space:pre-wrap;word-break:break-all;line-height:1.5}
+.cl-std{color:#c5c8c6}
+.cl-err{color:#ff6b6b}
+.cl-ok{color:#51cf66}
+.cl-info{color:#74c0fc}
+.cl-warn{color:#ffd43b}
+.cl-sys{color:#7c6fff;font-style:italic}
+
+/* RIGHT — CODE */
+.code-panel{background:#282a36;border-left:1px solid #2a2a4a;display:flex;flex-direction:column;overflow:hidden}
+.code-hdr{padding:8px 12px;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.code-hdr-title{font-size:.8rem;font-weight:600;color:#bbb;display:flex;align-items:center;gap:5px}
+.code-btns{display:flex;gap:5px}
+.btn-run{padding:5px 14px;border-radius:6px;background:#51cf66;border:none;color:#000;font-size:.78rem;font-weight:800;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px}
+.btn-run:hover:not(:disabled){background:#40bf55;transform:scale(1.03)}
+.btn-run:disabled{background:#3a4a3a;color:#556;cursor:not-allowed;transform:none}
+.btn-reset{padding:5px 9px;border-radius:6px;background:transparent;border:1px solid #444;color:#888;font-size:.78rem;cursor:pointer;transition:all .2s}
+.btn-reset:hover{border-color:#ff6b6b;color:#ff6b6b}
+.editor-wrap{flex:1;overflow:hidden;min-height:0}
+.editor-wrap .CodeMirror{height:100%;font-size:.93rem;font-family:'Fira Code','Consolas',monospace;line-height:1.6}
+.code-footer{padding:10px 12px;border-top:1px solid #1e1e2e;background:#1e1e2e;flex-shrink:0;min-height:60px;max-height:110px;overflow-y:auto}
+.tests-title{font-size:.66rem;font-weight:700;color:#556;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.test-item{display:flex;align-items:flex-start;gap:5px;font-size:.74rem;padding:3px 6px;border-radius:4px;margin-bottom:2px;line-height:1.4}
+.test-pass{background:rgba(81,207,102,.08);color:#51cf66}
+.test-fail{background:rgba(255,107,107,.08);color:#ff6b6b}
+.test-pending{color:#556}
+
+/* HINT POPOVER (anchored to desc strip hint button) */
+.hint-popover{position:fixed;z-index:200;background:#1e1e2e;border:1px solid rgba(255,212,59,.35);border-radius:10px;padding:12px 14px;max-width:300px;box-shadow:0 8px 28px rgba(0,0,0,.5);display:none}
+.hint-popover.show{display:block}
+.hint-popover-text{color:#e0c97a;font-size:.78rem;line-height:1.55}
+.hint-popover-nav{display:flex;justify-content:space-between;align-items:center;margin-top:8px;border-top:1px solid rgba(255,212,59,.15);padding-top:7px}
+.hint-popover-counter{font-size:.68rem;color:#887}
+.hint-arrow{background:none;border:none;color:#ffd43b;cursor:pointer;font-size:.78rem;padding:2px 6px;border-radius:4px}
+.hint-arrow:hover{background:rgba(255,212,59,.15)}
+.hint-arrow:disabled{color:#445;cursor:not-allowed}
+
+/* ===== PROJECT UIs ===== */
+
+/* FOREST */
+.forest-wrap{width:100%}
+.trees-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.tree-card{background:#fff;border-radius:16px;padding:16px 14px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.09);min-width:130px;flex:1;max-width:160px;transition:transform .2s,box-shadow .2s;border:2px solid transparent}
+.tree-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.13)}
+.tree-icon{font-size:2.4rem;display:block;margin-bottom:4px}
+.tree-fruit{font-size:.75rem;color:#888;margin-bottom:2px}
+.tree-count{font-size:2rem;font-weight:900;color:#7c6fff;line-height:1;margin-bottom:10px}
+.tree-count.zero{color:#ddd}
+.pick-btn{width:100%;padding:8px;background:#7c6fff;color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s}
+.pick-btn:hover:not(:disabled){background:#6a5de0;transform:scale(1.03)}
+.pick-btn:disabled{background:#f0f0f0;color:#bbb;cursor:not-allowed;transform:none}
+.basket-card{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 2px 12px rgba(0,0,0,.08);width:100%}
+.basket-title{font-size:.72rem;font-weight:700;color:#aaa;text-align:center;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.basket-grid{display:flex;gap:20px;justify-content:center}
+.basket-item{text-align:center}
+.basket-emoji{font-size:1.4rem}
+.basket-count{font-size:1.6rem;font-weight:900;color:#333;line-height:1}
+.basket-label{font-size:.65rem;color:#999}
+.basket-total{text-align:center;margin-top:10px;padding-top:10px;border-top:1px solid #f5f5f5;font-size:.8rem;color:#7c6fff;font-weight:700}
+
+/* SHOP */
+.shop-wrap{width:100%}
+.shop-sign{text-align:center;background:#fff;border-radius:12px;padding:10px;font-weight:800;font-size:1rem;color:#333;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:14px}
+.shelf{background:#fff;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:8px}
+.shelf-icon{font-size:2rem;flex-shrink:0}
+.shelf-info{flex:1}
+.shelf-name{font-weight:700;color:#333;font-size:.88rem}
+.shelf-qty{font-size:.72rem;color:#999;margin-bottom:4px}
+.stock-bar-bg{background:#f0f0f0;border-radius:3px;height:5px}
+.stock-bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.bar-green{background:#51cf66}
+.bar-yellow{background:#ffd43b}
+.bar-red{background:#ff6b6b}
+.shelf-btns{display:flex;gap:5px;flex-shrink:0}
+.sell-btn{padding:5px 9px;border-radius:6px;border:1px solid #7c6fff;color:#7c6fff;background:transparent;font-size:.74rem;font-weight:700;cursor:pointer;transition:all .2s}
+.sell-btn:hover:not(:disabled){background:#7c6fff;color:#fff}
+.sell-btn:disabled{opacity:.35;cursor:not-allowed}
+.cash-card{background:#fff;border-radius:12px;padding:12px 15px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-top:4px}
+.cash-icon{font-size:1.8rem}
+.cash-label{font-size:.68rem;color:#aaa}
+.cash-amount{font-size:1.6rem;font-weight:900;color:#51cf66}
+
+/* ATM */
+.atm{background:linear-gradient(145deg,#1a2744,#243562);border-radius:20px;padding:20px;width:300px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.atm-screen{background:#0a0a1a;border-radius:12px;padding:18px;margin-bottom:16px;text-align:center;border:2px solid #1a2a4a}
+.atm-logo{font-size:.65rem;color:#3344aa;letter-spacing:.1em;margin-bottom:3px}
+.atm-welcome{font-size:.78rem;color:#667;margin-bottom:10px}
+.atm-balance-lbl{font-size:.7rem;color:#556}
+.atm-balance{font-size:1.9rem;font-weight:900;color:#51cf66;margin-bottom:6px;letter-spacing:-1px}
+.atm-status-chip{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.7rem;font-weight:700}
+.chip-ok{background:rgba(81,207,102,.15);color:#51cf66}
+.chip-warn{background:rgba(255,212,59,.15);color:#ffd43b}
+.chip-low{background:rgba(255,107,107,.15);color:#ff6b6b}
+.atm-pad{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.atm-btn{padding:11px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#eee;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s}
+.atm-btn:hover:not(:disabled){background:rgba(255,255,255,.2);transform:scale(1.03)}
+.atm-btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.atm-btn.wide{grid-column:1/-1;background:rgba(255,107,107,.2);border-color:rgba(255,107,107,.4);color:#ffaaaa}
+.atm-log{background:rgba(0,0,0,.3);border-radius:8px;padding:8px;max-height:72px;overflow-y:auto}
+.atm-log-item{font-size:.68rem;color:#668;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.atm-log-item:last-child{border:none}
+.atm-log-item.debit{color:#ff9999}
+
+/* WATER TANK */
+.tank-scene{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+.tank-wrap{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.09);text-align:center}
+.tank-info-card{background:#fff;border-radius:12px;padding:12px 20px;box-shadow:0 2px 10px rgba(0,0,0,.08);text-align:center;min-width:200px}
+.tank-lvl{font-size:2rem;font-weight:900;color:#0288d1}
+.tank-cap{font-size:.72rem;color:#aaa;margin-top:2px}
+.tank-status-chip{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.72rem;font-weight:700;margin-top:6px}
+.ts-full{background:#e1f5fe;color:#0288d1}
+.ts-good{background:#e8f5e9;color:#2e7d32}
+.ts-low{background:#fff8e1;color:#f57f17}
+.ts-empty{background:#ffebee;color:#c62828}
+.tank-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:340px}
+.tank-ctrl-btn{padding:10px;border-radius:9px;border:none;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s}
+.tank-ctrl-btn.fill{background:#e1f5fe;color:#0277bd;border:1px solid #81d4fa}
+.tank-ctrl-btn.use{background:#fce4ec;color:#c62828;border:1px solid #ef9a9a}
+.tank-ctrl-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.tank-ctrl-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+/* PET */
+.pet-scene{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:380px}
+.pet-display{background:#fff;border-radius:20px;padding:22px;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.1);width:100%}
+.pet-face{font-size:4.5rem;display:block;margin-bottom:8px;transition:all .4s;line-height:1}
+.pet-name{font-weight:800;font-size:1rem;color:#333}
+.pet-mood{font-size:.78rem;color:#888;margin-top:2px}
+.pet-stats{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 2px 10px rgba(0,0,0,.08);width:100%}
+.stat-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.stat-row:last-child{margin-bottom:0}
+.stat-ic{font-size:1rem;width:22px;text-align:center}
+.stat-lbl{font-size:.72rem;color:#777;width:70px}
+.stat-bar-bg{flex:1;background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden}
+.stat-bar-f{height:100%;border-radius:4px;transition:width .5s ease}
+.sf-hunger{background:#ff6b6b}
+.sf-energy{background:#ffd43b}
+.sf-happy{background:#7c6fff}
+.stat-val{font-size:.72rem;font-weight:700;color:#444;width:28px;text-align:right}
+.pet-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;width:100%}
+.pet-btn{padding:10px 6px;border-radius:10px;border:none;cursor:pointer;font-size:.75rem;font-weight:700;transition:all .2s;text-align:center}
+.pet-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.pet-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.pb-feed{background:#e8f5e9;color:#2e7d32}
+.pb-play{background:#e3f2fd;color:#1565c0}
+.pb-sleep{background:#f3e5f5;color:#6a1b9a}
+
+/* TREASURE */
+.treasure-scene{width:100%}
+.gold-banner{background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:14px}
+.gold-amount{font-size:2rem;font-weight:900;color:#f59e0b}
+.gold-lbl{font-size:.72rem;color:#aaa;margin-top:2px}
+.chests-wrap{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.chest{text-align:center;cursor:default;transition:transform .3s}
+.chest-em{font-size:2.8rem;display:block;transition:all .4s;line-height:1}
+.chest.open .chest-em{transform:scale(1.2);filter:drop-shadow(0 2px 6px rgba(245,158,11,.5))}
+.chest-gold{font-size:.7rem;color:#888;margin-top:4px}
+.hunt-btn{width:100%;padding:12px;background:linear-gradient(135deg,#ffd700,#ffa500);border:none;border-radius:10px;font-size:.9rem;font-weight:800;color:#000;cursor:pointer;transition:all .2s;box-shadow:0 3px 12px rgba(245,158,11,.3)}
+.hunt-btn:hover:not(:disabled){transform:scale(1.02);box-shadow:0 5px 20px rgba(245,158,11,.4)}
+.hunt-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.hunt-log{background:#fff;border-radius:10px;padding:10px;max-height:70px;overflow-y:auto;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.hunt-log-item{font-size:.74rem;color:#666;padding:2px 0}
+
+/* ATTENDANCE */
+.att-scene{width:100%}
+.att-board{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.09);margin-bottom:12px}
+.att-hdr{background:#3b82f6;padding:12px 16px;color:#fff;font-weight:800;text-align:center;font-size:.9rem}
+.att-row{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid #f5f5f5;transition:background .3s}
+.att-row:last-child{border-bottom:none}
+.att-row.present{background:rgba(81,207,102,.06)}
+.att-row.absent{background:rgba(255,107,107,.04)}
+.att-num{font-size:.7rem;color:#ccc;width:22px}
+.att-name{flex:1;font-weight:600;color:#333;font-size:.88rem}
+.att-badge{font-size:.7rem;padding:3px 10px;border-radius:10px;font-weight:700}
+.badge-present{background:#e8f5e9;color:#2e7d32}
+.badge-absent{background:#ffebee;color:#c62828}
+.badge-pending{background:#f5f5f5;color:#aaa}
+.att-summary{background:#fff;border-radius:10px;padding:12px;display:flex;justify-content:space-around;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:12px}
+.att-stat-num{font-size:1.5rem;font-weight:900;text-align:center}
+.att-stat-lbl{font-size:.65rem;color:#aaa;text-align:center;margin-top:2px}
+.att-btn{width:100%;padding:11px;background:#3b82f6;border:none;border-radius:10px;color:#fff;font-size:.88rem;font-weight:800;cursor:pointer;transition:all .2s}
+.att-btn:hover:not(:disabled){background:#2563eb}
+.att-btn:disabled{opacity:.5;cursor:not-allowed}
+.att-btn.reset{background:#f0f0f0;color:#666;margin-top:6px}
+.att-btn.reset:hover:not(:disabled){background:#e0e0e0}
+
+/* ANIMATIONS */
+@keyframes float-up{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-70px);opacity:0}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.float-emoji{position:fixed;pointer-events:none;font-size:1.6rem;z-index:9999;animation:float-up .9s ease forwards}
+.pulse{animation:pulse .4s ease}
+.shake{animation:shake .4s ease}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+
+/* SCROLLBARS */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2a2a4a;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loading">
+  <div class="ld-snake">🐍</div>
+  <div class="ld-title">PyStory</div>
+  <div class="ld-sub">Setting up your Python environment…</div>
+  <div class="ld-bar"><div class="ld-fill" id="ld-fill"></div></div>
+  <div class="ld-fact" id="ld-fact">Python was named after Monty Python, not the snake!</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="logo">🐍 <em>PyStory</em></div>
+    <div class="proj-tabs" id="proj-tabs"></div>
+    <div class="py-badge loading" id="py-badge">⏳ Loading Python</div>
+  </header>
+
+  <!-- DESCRIPTION STRIP — full width below header -->
+  <div class="desc-strip" id="desc-strip"></div>
+
+  <!-- MAIN — 2 columns: code | right-panel -->
+  <div class="main">
+    <!-- LEFT: CODE PANEL -->
+    <div class="code-panel">
+      <div class="code-hdr">
+        <div class="code-hdr-title">📝 Your Python Code</div>
+        <div class="code-btns">
+          <button class="btn-reset" onclick="resetCode()">↺ Reset</button>
+          <button class="btn-run" id="run-btn" onclick="runCode()">▶ Run</button>
+        </div>
+      </div>
+      <div class="editor-wrap"><textarea id="editor"></textarea></div>
+      <div class="code-footer">
+        <div class="tests-title">Test Results</div>
+        <div id="test-results"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: GAME (top) + CONSOLE (bottom) -->
+    <div class="right-panel">
+      <div class="game">
+        <div class="game-inner" id="game-inner"></div>
+      </div>
+      <div class="console-bottom">
+        <div class="console-hdr">
+          <span class="console-hdr-title">📟 Console Output</span>
+          <button class="console-clear" onclick="clearConsole()">Clear</button>
+        </div>
+        <div class="console-out" id="console-out">
+          <div class="cl cl-sys">🐍 PyStory ready. Write your code and click ▶ Run!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- HINT POPOVER -->
+<div class="hint-popover" id="hint-popover">
+  <div class="hint-popover-text" id="hint-text"></div>
+  <div class="hint-popover-nav">
+    <button class="hint-arrow" id="hint-prev" onclick="prevHint()">← Prev</button>
+    <span class="hint-popover-counter" id="hint-counter"></span>
+    <button class="hint-arrow" id="hint-next" onclick="nextHint()">Next →</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script>
+/* ============================================================
+   PROJECTS DATA
+   ============================================================ */
+const PROJECTS = [
+{
+  id:1, title:"Forest Fruit Adventure", emoji:"🌳", concept:"Variables & Functions", difficulty:"beginner",
+  story:`<p>A group of children are visiting the magical <strong>Greenwood Forest</strong>! 🌿</p>
+<p>Three fruit trees are full of delicious fruits waiting to be picked. Each child has a basket to collect them.</p>
+<p>The trees have apples 🍎, mangoes 🥭, and oranges 🍊. But someone needs to write the code to pick the fruits!</p>
+<p>Your job: write functions so when a child picks a fruit, it moves from the tree into their basket.</p>`,
+  objectives:["Decrease fruit count when picked","Increase basket count when picked","Prevent picking below zero"],
+  concepts:["Variables","Functions","Global Variables","Increment / Decrement"],
+  hints:[
+    "Use <code>global apple_count, basket_apples</code> at the top of your function to modify global variables.",
+    "To decrease: <code>apple_count -= 1</code> &nbsp; To increase: <code>basket_apples += 1</code>",
+    "Add a guard: <code>if apple_count > 0:</code> before changing the values.",
+    "All three functions follow the exact same pattern — just different variable names!"
+  ],
+  initialState:{apple_count:10,mango_count:8,orange_count:6,basket_apples:0,basket_mangos:0,basket_oranges:0},
+  stateVars:['apple_count','mango_count','orange_count','basket_apples','basket_mangos','basket_oranges'],
+  starterCode:`# 🌳 Forest Fruit Adventure
+# Help the children collect fruits!
+
+apple_count = 10
+mango_count = 8
+orange_count = 6
+basket_apples = 0
+basket_mangos = 0
+basket_oranges = 0
+
+def pick_apple():
+    global apple_count, basket_apples
+    # TODO: Decrease apple_count by 1
+    # TODO: Increase basket_apples by 1
+    # BONUS: Don't let count go below 0!
+    pass
+
+def pick_mango():
+    global mango_count, basket_mangos
+    # Write your code here
+    pass
+
+def pick_orange():
+    global orange_count, basket_oranges
+    # Write your code here
+    pass
+`,
+  tests:[
+    {desc:"pick_apple() decreases apple_count by 1",code:`
+_a=apple_count; pick_apple()
+assert apple_count == _a-1, "apple_count should decrease by 1"
+apple_count = _a`},
+    {desc:"pick_apple() increases basket_apples by 1",code:`
+_b=basket_apples; pick_apple()
+assert basket_apples == _b+1, "basket_apples should increase by 1"
+basket_apples=_b`},
+    {desc:"pick_mango() works correctly",code:`
+_m=mango_count; _bm=basket_mangos; pick_mango()
+assert mango_count==_m-1 and basket_mangos==_bm+1
+mango_count=_m; basket_mangos=_bm`},
+    {desc:"pick_orange() works correctly",code:`
+_o=orange_count; _bo=basket_oranges; pick_orange()
+assert orange_count==_o-1 and basket_oranges==_bo+1
+orange_count=_o; basket_oranges=_bo`},
+  ],
+  renderUI: renderForest
+},{
+  id:2, title:"Village Shop", emoji:"🏪", concept:"Conditions & Arithmetic", difficulty:"beginner",
+  story:`<p>Welcome to <strong>Ramu's Village Shop</strong>! 🛒</p>
+<p>Ramu is a friendly shopkeeper who sells biscuits 🍪, chocolates 🍫, and juice 🧃.</p>
+<p>Customers come in all day buying things. But Ramu needs help tracking his inventory!</p>
+<p>Write functions to sell items. If a customer asks for more than what's in stock, show them a warning message.</p>`,
+  objectives:["Reduce stock when items are sold","Collect payment into the cash box","Show warning when stock is too low"],
+  concepts:["Variables","Arithmetic Operators","If / Else Conditions"],
+  hints:[
+    "Use <code>global</code> to modify biscuit_stock, chocolate_stock, juice_stock, and cash.",
+    "First check: <code>if biscuit_stock >= quantity:</code> — only sell if enough stock.",
+    "Collect cash: <code>cash += quantity * biscuit_price</code>",
+    "When not enough stock, set a <code>message</code> variable to show the warning in the UI."
+  ],
+  initialState:{biscuit_stock:20,chocolate_stock:15,juice_stock:10,cash:0,biscuit_price:5,chocolate_price:10,juice_price:15,message:""},
+  stateVars:['biscuit_stock','chocolate_stock','juice_stock','cash','message'],
+  starterCode:`# 🏪 Village Shop
+# Help Ramu manage his inventory!
+
+biscuit_stock = 20
+chocolate_stock = 15
+juice_stock = 10
+cash = 0
+biscuit_price = 5
+chocolate_price = 10
+juice_price = 15
+message = ""
+
+def sell_biscuit(quantity):
+    global biscuit_stock, cash, message
+    # Check if enough stock
+    # If yes: reduce stock, add to cash
+    # If no: set message = "Not enough biscuits!"
+    pass
+
+def sell_chocolate(quantity):
+    global chocolate_stock, cash, message
+    # Write your code here
+    pass
+
+def sell_juice(quantity):
+    global juice_stock, cash, message
+    # Write your code here
+    pass
+`,
+  tests:[
+    {desc:"sell_biscuit() reduces biscuit_stock",code:`
+_s=biscuit_stock; sell_biscuit(2)
+assert biscuit_stock == _s-2, "biscuit_stock should decrease by quantity"
+biscuit_stock=_s`},
+    {desc:"sell_biscuit() adds to cash",code:`
+_c=cash; sell_biscuit(2)
+assert cash == _c+2*biscuit_price, "cash should increase by quantity*price"
+cash=_c`},
+    {desc:"sell_chocolate() works correctly",code:`
+_s=chocolate_stock; _c=cash; sell_chocolate(1)
+assert chocolate_stock==_s-1 and cash>=_c+chocolate_price
+chocolate_stock=_s; cash=_c`},
+  ],
+  renderUI: renderShop
+},{
+  id:3, title:"ATM Simulator", emoji:"🏧", concept:"Functions & Conditions", difficulty:"beginner",
+  story:`<p>At the <strong>GreenLeaf Bank ATM</strong>, a customer needs to withdraw cash 💳</p>
+<p>The ATM has ₹5000 in the account. The customer can withdraw ₹100, ₹500, or ₹1000 at a time.</p>
+<p>But the ATM should be smart — it should refuse if the withdrawal amount is more than the current balance!</p>
+<p>Write the <code>withdraw(amount)</code> function to make the ATM work properly.</p>`,
+  objectives:["Reduce balance after a valid withdrawal","Block withdrawal if balance is insufficient","Store a status message for the screen"],
+  concepts:["Functions with Parameters","If / Else Conditions","Variables"],
+  hints:[
+    "Use <code>global balance, message</code> to modify these variables.",
+    "Check: <code>if amount <= balance:</code> to verify sufficient funds.",
+    "On success: <code>balance -= amount</code>",
+    "On failure: set <code>message = 'Insufficient funds!'</code>"
+  ],
+  initialState:{balance:5000,message:"Welcome! Please select an amount.",last_txn:""},
+  stateVars:['balance','message','last_txn'],
+  starterCode:`# 🏧 ATM Simulator
+# Make the ATM work!
+
+balance = 5000
+message = "Welcome! Please select an amount."
+last_txn = ""
+
+def withdraw(amount):
+    global balance, message, last_txn
+    # Check if balance is enough
+    # If yes: subtract amount from balance, update last_txn
+    # If no: set message = "Insufficient funds!"
+    pass
+`,
+  tests:[
+    {desc:"withdraw() reduces balance correctly",code:`
+_b=balance; withdraw(100)
+assert balance == _b-100, "balance should decrease by 100"
+balance=_b`},
+    {desc:"withdraw() blocks overdraft",code:`
+_b=balance; balance=50; withdraw(500)
+assert balance==50, "balance should not change when insufficient"
+balance=_b`},
+    {desc:"withdraw(500) works correctly",code:`
+_b=balance; withdraw(500)
+assert balance == _b-500
+balance=_b`},
+  ],
+  renderUI: renderATM
+},{
+  id:4, title:"Water Tank Manager", emoji:"💧", concept:"Variables & Conditions", difficulty:"intermediate",
+  story:`<p>The village of <strong>Sunndale</strong> has a big water tank on the hill 🏔️</p>
+<p>Every morning, a pump fills the tank. Throughout the day, households use the water.</p>
+<p>The tank holds a maximum of <strong>1000 litres</strong>. It must never overflow or run dry!</p>
+<p>Write functions to fill and use water, making sure the level stays within safe limits.</p>`,
+  objectives:["Increase tank level when filling","Decrease tank level when using","Keep level between 0 and max capacity"],
+  concepts:["Variables","If / Else Conditions","Min / Max Logic"],
+  hints:[
+    "Use <code>global tank_level</code> at the start of both functions.",
+    "For fill: <code>tank_level += liters</code> then check <code>if tank_level > max_capacity: tank_level = max_capacity</code>",
+    "For use: check first <code>if tank_level >= liters:</code> before subtracting.",
+    "You can use <code>min()</code> and <code>max()</code>: e.g., <code>tank_level = min(tank_level + liters, max_capacity)</code>"
+  ],
+  initialState:{tank_level:500,max_capacity:1000,status:"Normal",message:""},
+  stateVars:['tank_level','max_capacity','status','message'],
+  starterCode:`# 💧 Water Tank Manager
+# Keep the village water supply safe!
+
+tank_level = 500
+max_capacity = 1000
+status = "Normal"
+message = ""
+
+def fill_water(liters):
+    global tank_level, status, message
+    # Add liters to tank_level
+    # Don't let it exceed max_capacity!
+    # Update status based on level
+    pass
+
+def use_water(liters):
+    global tank_level, status, message
+    # Check if enough water available
+    # If yes: subtract liters
+    # If no: show a warning message
+    pass
+`,
+  tests:[
+    {desc:"fill_water() increases tank level",code:`
+_t=tank_level; fill_water(100)
+assert tank_level == _t+100, "tank should increase by 100"
+tank_level=_t`},
+    {desc:"fill_water() does not exceed max capacity",code:`
+tank_level=900; fill_water(200)
+assert tank_level <= max_capacity, "tank cannot exceed max_capacity"
+tank_level=500`},
+    {desc:"use_water() decreases tank level",code:`
+_t=tank_level; use_water(50)
+assert tank_level == _t-50
+tank_level=_t`},
+    {desc:"use_water() doesn't go below zero",code:`
+tank_level=30; use_water(100)
+assert tank_level >= 0
+tank_level=500`},
+  ],
+  renderUI: renderTank
+},{
+  id:5, title:"Pet Care Simulator", emoji:"🐾", concept:"Functions & Variables", difficulty:"intermediate",
+  story:`<p>Meet <strong>Mango</strong> 🐱 — the most adorable virtual pet in the world!</p>
+<p>Mango has three needs: <em>Hunger</em>, <em>Energy</em>, and <em>Happiness</em>. Each value goes from 0 to 100.</p>
+<p>High hunger means Mango is very hungry. Low energy means Mango is tired. Low happiness means Mango is sad.</p>
+<p>Write functions to take care of Mango and keep all stats in the happy range!</p>`,
+  objectives:["Feed Mango to reduce hunger","Play with Mango to boost happiness","Let Mango sleep to restore energy"],
+  concepts:["Variables","Functions","Clamping Values (0–100)"],
+  hints:[
+    "Use <code>global hunger, energy, happiness</code> in each function.",
+    "Feeding reduces hunger: <code>hunger -= 20</code>. Use <code>max(0, ...)</code> to keep it ≥ 0.",
+    "Playing increases happiness but costs energy: <code>happiness += 15; energy -= 10</code>",
+    "Sleeping restores energy but increases hunger: <code>energy += 30; hunger += 10</code>",
+    "Clamp values: <code>hunger = max(0, min(100, hunger))</code>"
+  ],
+  initialState:{hunger:50,energy:70,happiness:60},
+  stateVars:['hunger','energy','happiness'],
+  starterCode:`# 🐾 Pet Care Simulator
+# Take care of Mango!
+
+hunger = 50      # 0=full, 100=starving
+energy = 70      # 0=exhausted, 100=fully rested
+happiness = 60   # 0=sad, 100=very happy
+
+def feed_pet():
+    global hunger, energy, happiness
+    # Feeding decreases hunger by 20 (min 0)
+    # It makes Mango a little happier too (+5)
+    pass
+
+def play_with_pet():
+    global hunger, energy, happiness
+    # Playing increases happiness by 15 (max 100)
+    # But costs energy (-10) and increases hunger (+5)
+    pass
+
+def put_pet_to_sleep():
+    global hunger, energy, happiness
+    # Sleeping restores energy (+30, max 100)
+    # And increases hunger a little (+10)
+    # But happiness drops slightly (-5)
+    pass
+`,
+  tests:[
+    {desc:"feed_pet() reduces hunger",code:`
+hunger=60; feed_pet()
+assert hunger < 60, "feeding should reduce hunger"
+hunger=50`},
+    {desc:"hunger never goes below 0",code:`
+hunger=5; feed_pet(); feed_pet()
+assert hunger >= 0, "hunger cannot go below 0"
+hunger=50`},
+    {desc:"play_with_pet() increases happiness",code:`
+_h=happiness; play_with_pet()
+assert happiness > _h, "playing should increase happiness"
+happiness=_h`},
+    {desc:"put_pet_to_sleep() restores energy",code:`
+energy=40; put_pet_to_sleep()
+assert energy > 40, "sleeping should restore energy"
+energy=70`},
+  ],
+  renderUI: renderPet
+},{
+  id:6, title:"Treasure Hunt", emoji:"💰", concept:"For Loops", difficulty:"intermediate",
+  story:`<p>Explorer <strong>Arjun</strong> has discovered a hidden cave with <strong>5 treasure chests</strong>! 🗺️</p>
+<p>Each chest contains a random amount of gold coins. Arjun wants to collect all the gold.</p>
+<p>But to open all chests, he needs a <em>loop</em> — a way to repeat an action for each chest.</p>
+<p>Write <code>collect_treasures(chests)</code> using a <strong>for loop</strong> to open every chest and collect all the gold!</p>`,
+  objectives:["Loop through all chests using a for loop","Add gold from each chest to total","Mark each chest as opened"],
+  concepts:["For Loops","Lists","Accumulating Values"],
+  hints:[
+    "Use a for loop: <code>for chest in chests:</code>",
+    "Each chest is a dictionary. Access gold with: <code>chest['gold']</code>",
+    "Add to total: <code>total_gold += chest['gold']</code>",
+    "Mark as opened: <code>chest['opened'] = True</code>",
+    "Remember to declare <code>global total_gold</code> at the start!"
+  ],
+  initialState:{total_gold:0,chests:[{id:1,gold:45,opened:false},{id:2,gold:80,opened:false},{id:3,gold:30,opened:false},{id:4,gold:120,opened:false},{id:5,gold:65,opened:false}],hunt_log:[]},
+  stateVars:['total_gold','chests','hunt_log'],
+  starterCode:`# 💰 Treasure Hunt
+# Use a for loop to collect all the gold!
+
+total_gold = 0
+chests = [
+    {"id": 1, "gold": 45,  "opened": False},
+    {"id": 2, "gold": 80,  "opened": False},
+    {"id": 3, "gold": 30,  "opened": False},
+    {"id": 4, "gold": 120, "opened": False},
+    {"id": 5, "gold": 65,  "opened": False},
+]
+hunt_log = []
+
+def collect_treasures(chests):
+    global total_gold, hunt_log
+    # Use a for loop to go through each chest
+    # For each chest: add its gold to total_gold
+    # Mark it as opened: chest["opened"] = True
+    # Optionally: add to hunt_log
+    pass
+`,
+  tests:[
+    {desc:"collect_treasures() opens all chests",code:`
+chests=[{"id":1,"gold":50,"opened":False}]; collect_treasures(chests)
+assert chests[0]["opened"] == True`},
+    {desc:"total_gold is correctly accumulated",code:`
+total_gold=0; chests=[{"id":1,"gold":50,"opened":False},{"id":2,"gold":30,"opened":False}]
+collect_treasures(chests)
+assert total_gold == 80, f"Expected 80 gold, got {total_gold}"`},
+    {desc:"all chests are opened",code:`
+chests=[{"id":i,"gold":10,"opened":False} for i in range(3)]
+collect_treasures(chests)
+assert all(c["opened"] for c in chests), "All chests should be opened"`},
+  ],
+  renderUI: renderTreasure
+},{
+  id:7, title:"School Attendance", emoji:"🏫", concept:"Lists & Loops", difficulty:"advanced",
+  story:`<p>It's Monday morning at <strong>Sunrise Primary School</strong>! 🌅</p>
+<p>Teacher <strong>Mrs. Sharma</strong> needs to take attendance. She has a list of 8 students.</p>
+<p>Write <code>mark_attendance(students)</code> to go through the list and mark each student as present.</p>
+<p>Then write <code>mark_absent(name)</code> to mark a specific student as absent.</p>`,
+  objectives:["Loop through student list and mark all present","Mark individual students as absent","Calculate attendance percentage"],
+  concepts:["Lists","For Loops","Dictionaries","String Comparison"],
+  hints:[
+    "Use a for loop: <code>for student in students:</code>",
+    "Each student is a dict: <code>student['present'] = True</code>",
+    "For mark_absent: loop through students and find where <code>student['name'] == name</code>",
+    "Count present: <code>sum(1 for s in students if s['present'])</code>",
+    "Percentage: <code>present_count / len(students) * 100</code>"
+  ],
+  initialState:{students:[{name:"Aarav",present:null},{name:"Diya",present:null},{name:"Rohan",present:null},{name:"Priya",present:null},{name:"Karan",present:null},{name:"Ananya",present:null},{name:"Vikram",present:null},{name:"Meera",present:null}],present_count:0,attendance_pct:0,class_message:""},
+  stateVars:['students','present_count','attendance_pct','class_message'],
+  starterCode:`# 🏫 School Attendance
+# Help Mrs. Sharma take attendance!
+
+students = [
+    {"name": "Aarav",  "present": None},
+    {"name": "Diya",   "present": None},
+    {"name": "Rohan",  "present": None},
+    {"name": "Priya",  "present": None},
+    {"name": "Karan",  "present": None},
+    {"name": "Ananya", "present": None},
+    {"name": "Vikram", "present": None},
+    {"name": "Meera",  "present": None},
+]
+present_count = 0
+attendance_pct = 0
+class_message = ""
+
+def mark_attendance(students):
+    global present_count, attendance_pct, class_message
+    # Loop through students and mark each as present
+    # Calculate present_count and attendance_pct
+    pass
+
+def mark_absent(name):
+    global students, present_count, attendance_pct
+    # Find the student with this name and set present = False
+    # Recalculate counts
+    pass
+`,
+  tests:[
+    {desc:"mark_attendance() marks all students present",code:`
+for s in students: s["present"]=None
+mark_attendance(students)
+assert all(s["present"]==True for s in students), "All students should be marked present"`},
+    {desc:"present_count is calculated correctly",code:`
+for s in students: s["present"]=None
+mark_attendance(students)
+assert present_count == len(students), f"present_count should be {len(students)}"`},
+    {desc:"mark_absent() marks a student absent",code:`
+mark_attendance(students); mark_absent("Rohan")
+rohan = next(s for s in students if s["name"]=="Rohan")
+assert rohan["present"] == False, "Rohan should be absent"`},
+  ],
+  renderUI: renderAttendance
+}];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let pyodide = null;
+let pyReady = false;
+let currentProject = PROJECTS[0];
+let currentState = {};
+let editor = null;
+let hintIndex = 0;
+let completedProjects = new Set();
+let toastTimer = null;
+
+/* ============================================================
+   PYODIDE INIT
+   ============================================================ */
+const FACTS = [
+  "Python was named after Monty Python, not the snake! 🎭",
+  "Python is used by NASA, Google, and Netflix! 🚀",
+  "Python is one of the most popular languages for beginners! 📚",
+  "You can write a full game in Python with just a few lines! 🎮",
+  "Python was created by Guido van Rossum in 1991! 👨‍💻",
+];
+
+async function initPyodide() {
+  const fill = document.getElementById('ld-fill');
+  const factEl = document.getElementById('ld-fact');
+  let factIdx = 0;
+  const factInterval = setInterval(() => {
+    factIdx = (factIdx+1) % FACTS.length;
+    factEl.textContent = FACTS[factIdx];
+  }, 3000);
+
+  // Animate progress bar
+  let progress = 0;
+  const progressInterval = setInterval(() => {
+    progress = Math.min(progress + Math.random()*8, 90);
+    fill.style.width = progress + '%';
+  }, 400);
+
+  try {
+    pyodide = await loadPyodide();
+    // Setup stdout/stderr capture
+    await pyodide.runPythonAsync(`
+import sys
+
+class _PyStoryCapture:
+    def __init__(self): self._lines = []
+    def write(self, s): self._lines.append(str(s)); return len(str(s))
+    def flush(self): pass
+    def getvalue(self): return ''.join(self._lines)
+    def clear(self): self._lines.clear()
+
+sys.stdout = _PyStoryCapture()
+sys.stderr = _PyStoryCapture()
+`);
+    pyReady = true;
+    clearInterval(progressInterval);
+    clearInterval(factInterval);
+    fill.style.width = '100%';
+
+    await new Promise(r => setTimeout(r, 500));
+    document.getElementById('loading').style.display = 'none';
+    const app = document.getElementById('app');
+    app.classList.add('visible');
+
+    document.getElementById('py-badge').textContent = '🟢 Python Ready';
+    document.getElementById('py-badge').className = 'py-badge';
+    loadProject(PROJECTS[0]);
+  } catch(e) {
+    clearInterval(progressInterval);
+    clearInterval(factInterval);
+    document.getElementById('loading').innerHTML = `<div style="color:#ff6b6b;text-align:center;padding:40px">
+      <div style="font-size:3rem">😞</div>
+      <h2 style="margin:12px 0">Failed to load Python</h2>
+      <p style="color:#8899bb">Please check your internet connection and reload the page.</p>
+      <button onclick="location.reload()" style="margin-top:16px;padding:10px 20px;background:#7c6fff;border:none;border-radius:8px;color:#fff;font-size:1rem;cursor:pointer">Reload</button>
+    </div>`;
+  }
+}
+
+/* ============================================================
+   PROJECT LOADING
+   ============================================================ */
+function buildNav() {
+  const nav = document.getElementById('proj-tabs');
+  nav.innerHTML = PROJECTS.map(p =>
+    `<button class="tab ${p.id===1?'active':''} ${completedProjects.has(p.id)?'done':''}"
+      id="tab-${p.id}" onclick="loadProject(PROJECTS[${p.id-1}])">${p.emoji} ${p.title}</button>`
+  ).join('');
+}
+
+function loadProject(proj) {
+  currentProject = proj;
+  currentState = JSON.parse(JSON.stringify(proj.initialState));
+  hintIndex = 0;
+  hintPopoverOpen = false;
+  document.getElementById('hint-popover').classList.remove('show');
+
+  // Update tabs
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const tab = document.getElementById('tab-'+proj.id);
+  if(tab) tab.classList.add('active');
+
+  // Render story
+  renderStory(proj);
+
+  // Render game UI
+  proj.renderUI(currentState);
+
+  // Load code into editor
+  editor.setValue(proj.starterCode);
+  editor.clearHistory();
+
+  // Clear test results
+  document.getElementById('test-results').innerHTML =
+    proj.tests.map(t => `<div class="test-item test-pending">⬜ ${t.desc}</div>`).join('');
+
+  // Clear console
+  clearConsole();
+  addLog(`🌟 Loaded: ${proj.title}`, 'cl-sys');
+}
+
+function renderStory(proj) {
+  // Strip HTML tags from story for plain text preview
+  const storyPlain = proj.story.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+  document.getElementById('desc-strip').innerHTML = `
+    <!-- Identity -->
+    <div class="ds-sec ds-identity">
+      <div class="ds-proj-icon">${proj.emoji}</div>
+      <div class="ds-proj-title">${proj.title}</div>
+      <div class="diff-badge diff-${proj.difficulty}">${proj.difficulty.charAt(0).toUpperCase()+proj.difficulty.slice(1)}</div>
+    </div>
+    <div class="ds-div"></div>
+
+    <!-- Story -->
+    <div class="ds-sec ds-story">
+      <div class="ds-sec-label">Story</div>
+      <div class="ds-story-text">${storyPlain}</div>
+    </div>
+    <div class="ds-div"></div>
+
+    <!-- Objectives -->
+    <div class="ds-sec ds-objectives">
+      <div class="ds-sec-label">Objectives</div>
+      ${proj.objectives.map(o=>`<div class="ds-obj-item"><span class="ds-obj-dot">▸</span><span>${o}</span></div>`).join('')}
+    </div>
+    <div class="ds-div"></div>
+
+    <!-- Concepts + Hints -->
+    <div class="ds-sec ds-concepts">
+      <div class="ds-sec-label">What You'll Learn</div>
+      <div>${proj.concepts.map(c=>`<span class="concept-tag">${c}</span>`).join('')}</div>
+      <button class="ds-hint-btn" id="hint-trigger-btn" onclick="toggleHintPopover(this)">💡 Hint</button>
+    </div>
+  `;
+}
+
+/* ============================================================
+   CODE EXECUTION
+   ============================================================ */
+async function runCode() {
+  if(!pyReady){ showToast('Python is still loading...','warn'); return; }
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">⏳</span> Running…';
+
+  const code = editor.getValue();
+  try {
+    // Clear capture buffer
+    await pyodide.runPythonAsync('import sys; sys.stdout.clear(); sys.stderr.clear()');
+    // Run the student code
+    await pyodide.runPythonAsync(code);
+    // Read output
+    const out = pyodide.runPython('import sys; sys.stdout.getvalue()');
+    const err = pyodide.runPython('import sys; sys.stderr.getvalue()');
+    if(out.trim()) addLog(out.trim(),'cl-std');
+    if(err.trim()) addLog(err.trim(),'cl-err');
+    // Sync state
+    syncFromPython();
+    currentProject.renderUI(currentState);
+    showToast('Code executed! ✓','ok');
+    addLog('✅ Code ran successfully!','cl-ok');
+    // Run tests
+    await runTests();
+  } catch(e) {
+    const msg = cleanError(e.message);
+    addLog('❌ '+msg,'cl-err');
+    showToast('Error — check console','err');
+    shakeEditor();
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '▶ Run';
+  }
+}
+
+function cleanError(msg) {
+  // Extract the useful part of Pyodide errors
+  const lines = msg.split('\n');
+  const last = lines.filter(l=>l.trim()).pop() || msg;
+  return last.length > 120 ? last.slice(0,120)+'…' : last;
+}
+
+async function executeAction(fnName, ...args) {
+  if(!pyReady){ showToast('Click ▶ Run first!','warn'); return; }
+  try {
+    await pyodide.runPythonAsync('import sys; sys.stdout.clear(); sys.stderr.clear()');
+    const argsStr = args.map(a => JSON.stringify(a)).join(', ');
+    await pyodide.runPythonAsync(`${fnName}(${argsStr})`);
+    const out = pyodide.runPython('import sys; sys.stdout.getvalue()');
+    if(out.trim()) addLog(out.trim(),'cl-std');
+    syncFromPython();
+    currentProject.renderUI(currentState);
+    floatEmoji(getActionEmoji(fnName));
+  } catch(e) {
+    const msg = cleanError(e.message);
+    if(msg.includes("not defined")) {
+      showToast("Function not found — click ▶ Run first!",'warn');
+      addLog("⚠️ Function '"+fnName+"' not defined. Click ▶ Run first!",'cl-warn');
+    } else {
+      addLog('❌ '+msg,'cl-err');
+      showToast('Error in function','err');
+    }
+  }
+}
+
+function getActionEmoji(fn) {
+  const map={pick_apple:'🍎',pick_mango:'🥭',pick_orange:'🍊',sell_biscuit:'🍪',sell_chocolate:'🍫',sell_juice:'🧃',withdraw:'💸',fill_water:'💧',use_water:'🚿',feed_pet:'🍖',play_with_pet:'🎾',put_pet_to_sleep:'💤',collect_treasures:'✨',mark_attendance:'✅',mark_absent:'❌'};
+  return map[fn] || '⭐';
+}
+
+function syncFromPython() {
+  const proj = currentProject;
+  for(const varName of proj.stateVars) {
+    try {
+      const val = pyodide.globals.get(varName);
+      if(val === undefined || val === null) continue;
+      if(typeof val.toJs === 'function') {
+        currentState[varName] = val.toJs({dict_converter: Object.fromEntries});
+      } else {
+        currentState[varName] = val;
+      }
+    } catch(e) {}
+  }
+}
+
+/* ============================================================
+   TESTS
+   ============================================================ */
+async function runTests() {
+  const proj = currentProject;
+  const resultsEl = document.getElementById('test-results');
+  const results = [];
+  for(const test of proj.tests) {
+    try {
+      await pyodide.runPythonAsync(test.code);
+      results.push({pass:true, desc:test.desc});
+    } catch(e) {
+      results.push({pass:false, desc:test.desc, err:cleanError(e.message)});
+    }
+  }
+  resultsEl.innerHTML = results.map(r =>
+    `<div class="test-item ${r.pass?'test-pass':'test-fail'}">
+      ${r.pass?'✅':'❌'} ${r.desc}
+      ${r.err?`<br><span style="opacity:.7;font-size:.7rem">${r.err}</span>`:''}
+    </div>`
+  ).join('');
+
+  if(results.every(r=>r.pass)) {
+    completedProjects.add(proj.id);
+    buildNav();
+    showToast('🎉 All tests passed!','ok');
+    confetti();
+  }
+}
+
+/* ============================================================
+   RENDER FUNCTIONS
+   ============================================================ */
+
+function renderForest(state) {
+  const total = (state.basket_apples||0)+(state.basket_mangos||0)+(state.basket_oranges||0);
+  document.getElementById('game-inner').innerHTML = `
+    <div class="forest-wrap">
+      <div class="trees-row">
+        <div class="tree-card">
+          <span class="tree-icon">🌳</span>
+          <div class="tree-fruit">🍎 Apples</div>
+          <div class="tree-count ${state.apple_count<=0?'zero':''}">${state.apple_count}</div>
+          <button class="pick-btn" onclick="executeAction('pick_apple')" ${state.apple_count<=0?'disabled':''}>Pick Apple 🍎</button>
+        </div>
+        <div class="tree-card">
+          <span class="tree-icon">🌴</span>
+          <div class="tree-fruit">🥭 Mangoes</div>
+          <div class="tree-count ${state.mango_count<=0?'zero':''}">${state.mango_count}</div>
+          <button class="pick-btn" onclick="executeAction('pick_mango')" ${state.mango_count<=0?'disabled':''}>Pick Mango 🥭</button>
+        </div>
+        <div class="tree-card">
+          <span class="tree-icon">🍊🌳</span>
+          <div class="tree-fruit">🍊 Oranges</div>
+          <div class="tree-count ${state.orange_count<=0?'zero':''}">${state.orange_count}</div>
+          <button class="pick-btn" onclick="executeAction('pick_orange')" ${state.orange_count<=0?'disabled':''}>Pick Orange 🍊</button>
+        </div>
+      </div>
+      <div class="basket-card">
+        <div class="basket-title">🧺 Basket</div>
+        <div class="basket-grid">
+          <div class="basket-item"><div class="basket-emoji">🍎</div><div class="basket-count">${state.basket_apples||0}</div><div class="basket-label">Apples</div></div>
+          <div class="basket-item"><div class="basket-emoji">🥭</div><div class="basket-count">${state.basket_mangos||0}</div><div class="basket-label">Mangoes</div></div>
+          <div class="basket-item"><div class="basket-emoji">🍊</div><div class="basket-count">${state.basket_oranges||0}</div><div class="basket-label">Oranges</div></div>
+        </div>
+        <div class="basket-total">Total collected: ${total} fruit${total!==1?'s':''}</div>
+      </div>
+    </div>`;
+}
+
+function renderShop(state) {
+  const maxBiscuit=20, maxChoc=15, maxJuice=10;
+  function bar(val, max) {
+    const pct = Math.max(0,Math.min(100,(val/max)*100));
+    const cls = pct>50?'bar-green':pct>20?'bar-yellow':'bar-red';
+    return `<div class="stock-bar-bg"><div class="stock-bar-fill ${cls}" style="width:${pct}%"></div></div>`;
+  }
+  const msg = state.message||'';
+  document.getElementById('game-inner').innerHTML = `
+    <div class="shop-wrap">
+      <div class="shop-sign">🏪 Ramu's Village Shop</div>
+      ${msg?`<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:8px 12px;font-size:.8rem;color:#856404;margin-bottom:8px">⚠️ ${msg}</div>`:''}
+      <div class="shelf-container">
+        <div class="shelf">
+          <div class="shelf-icon">🍪</div>
+          <div class="shelf-info">
+            <div class="shelf-name">Biscuits</div>
+            <div class="shelf-qty">Stock: <strong>${state.biscuit_stock}</strong> packs • ₹${state.biscuit_price} each</div>
+            ${bar(state.biscuit_stock,maxBiscuit)}
+          </div>
+          <div class="shelf-btns">
+            <button class="sell-btn" onclick="executeAction('sell_biscuit',2)" ${state.biscuit_stock<=0?'disabled':''}>Sell 2</button>
+            <button class="sell-btn" onclick="executeAction('sell_biscuit',5)" ${state.biscuit_stock<5?'disabled':''}>Sell 5</button>
+          </div>
+        </div>
+        <div class="shelf">
+          <div class="shelf-icon">🍫</div>
+          <div class="shelf-info">
+            <div class="shelf-name">Chocolates</div>
+            <div class="shelf-qty">Stock: <strong>${state.chocolate_stock}</strong> bars • ₹${state.chocolate_price} each</div>
+            ${bar(state.chocolate_stock,maxChoc)}
+          </div>
+          <div class="shelf-btns">
+            <button class="sell-btn" onclick="executeAction('sell_chocolate',1)" ${state.chocolate_stock<=0?'disabled':''}>Sell 1</button>
+            <button class="sell-btn" onclick="executeAction('sell_chocolate',3)" ${state.chocolate_stock<3?'disabled':''}>Sell 3</button>
+          </div>
+        </div>
+        <div class="shelf">
+          <div class="shelf-icon">🧃</div>
+          <div class="shelf-info">
+            <div class="shelf-name">Juice Boxes</div>
+            <div class="shelf-qty">Stock: <strong>${state.juice_stock}</strong> boxes • ₹${state.juice_price} each</div>
+            ${bar(state.juice_stock,maxJuice)}
+          </div>
+          <div class="shelf-btns">
+            <button class="sell-btn" onclick="executeAction('sell_juice',1)" ${state.juice_stock<=0?'disabled':''}>Sell 1</button>
+            <button class="sell-btn" onclick="executeAction('sell_juice',2)" ${state.juice_stock<2?'disabled':''}>Sell 2</button>
+          </div>
+        </div>
+      </div>
+      <div class="cash-card">
+        <div class="cash-icon">💰</div>
+        <div><div class="cash-label">Cash Collected</div><div class="cash-amount">₹${state.cash}</div></div>
+      </div>
+    </div>`;
+}
+
+function renderATM(state) {
+  const bal = state.balance||0;
+  let chipClass = bal>=1000?'chip-ok':bal>=200?'chip-warn':'chip-low';
+  let chipText = bal>=1000?'Balance OK':bal>=200?'Low Balance':'Very Low';
+  document.getElementById('game-inner').innerHTML = `
+    <div class="atm">
+      <div class="atm-screen">
+        <div class="atm-logo">◆ GREENLEAF BANK ◆</div>
+        <div class="atm-welcome">${state.message||'Welcome!'}</div>
+        <div class="atm-balance-lbl">Available Balance</div>
+        <div class="atm-balance">₹${bal.toLocaleString('en-IN')}</div>
+        <span class="atm-status-chip ${chipClass}">${chipText}</span>
+      </div>
+      <div class="atm-pad">
+        <button class="atm-btn" onclick="executeAction('withdraw',100)" ${bal<100?'disabled':''}>₹ 100</button>
+        <button class="atm-btn" onclick="executeAction('withdraw',500)" ${bal<500?'disabled':''}>₹ 500</button>
+        <button class="atm-btn" onclick="executeAction('withdraw',1000)" ${bal<1000?'disabled':''}>₹ 1,000</button>
+        <button class="atm-btn" onclick="executeAction('withdraw',2000)" ${bal<2000?'disabled':''}>₹ 2,000</button>
+      </div>
+      <div class="atm-log" id="atm-log">
+        ${state.last_txn?`<div class="atm-log-item debit">↓ Withdrew ₹${state.last_txn}</div>`:'<div class="atm-log-item">No transactions yet</div>'}
+      </div>
+    </div>`;
+}
+
+function renderTank(state) {
+  const lvl = state.tank_level||0;
+  const max = state.max_capacity||1000;
+  const pct = Math.min(100, Math.max(0, (lvl/max)*100));
+  const waterH = Math.round(pct * 1.8);
+  const waterY = 20 + 180 - waterH;
+  const waterColor = pct>60?'#29b6f6':pct>30?'#ffd43b':'#ff6b6b';
+  let statusCls = 'ts-good', statusTxt = 'Normal';
+  if(pct>=90){statusCls='ts-full';statusTxt='Tank Full!'}
+  else if(pct>=50){statusCls='ts-good';statusTxt='Good Level'}
+  else if(pct>=20){statusCls='ts-low';statusTxt='Running Low'}
+  else{statusCls='ts-empty';statusTxt='Almost Empty!'}
+
+  document.getElementById('game-inner').innerHTML = `
+    <div class="tank-scene">
+      <div class="tank-wrap">
+        <svg width="140" height="220" viewBox="0 0 140 220" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="20" width="100" height="180" rx="5" fill="#f0f8ff" stroke="#bbd" stroke-width="2.5"/>
+          ${pct>0?`<rect x="22" y="${waterY}" width="96" height="${waterH}" fill="${waterColor}" opacity=".85"/>
+          <ellipse cx="70" cy="${waterY}" rx="48" ry="5" fill="${waterColor}" opacity=".5"/>`:''}
+          <rect x="20" y="20" width="100" height="180" rx="5" fill="none" stroke="#99aac0" stroke-width="2.5"/>
+          <line x1="115" y1="20" x2="122" y2="20" stroke="#bbb" stroke-width="1"/>
+          <text x="125" y="24" font-size="8" fill="#999" font-family="sans-serif">100%</text>
+          <line x1="115" y1="110" x2="122" y2="110" stroke="#bbb" stroke-width="1"/>
+          <text x="125" y="114" font-size="8" fill="#999" font-family="sans-serif">50%</text>
+          <line x1="115" y1="200" x2="122" y2="200" stroke="#bbb" stroke-width="1"/>
+          <text x="125" y="204" font-size="8" fill="#999" font-family="sans-serif">0%</text>
+          <text x="70" y="112" font-size="14" font-weight="bold" fill="${pct>60?'#00697c':pct>30?'#c07000':'#a00000'}" text-anchor="middle" font-family="sans-serif">${Math.round(pct)}%</text>
+          <rect x="100" y="185" width="30" height="8" rx="2" fill="#778" />
+          <rect x="128" y="188" width="8" height="4" rx="1" fill="#667"/>
+        </svg>
+      </div>
+      <div class="tank-info-card">
+        <div class="tank-lvl">${lvl} L</div>
+        <div class="tank-cap">of ${max} L capacity</div>
+        <span class="tank-status-chip ${statusCls}">${statusTxt}</span>
+      </div>
+      <div class="tank-controls">
+        <button class="tank-ctrl-btn fill" onclick="executeAction('fill_water',100)" ${pct>=100?'disabled':''}>💧 Fill +100L</button>
+        <button class="tank-ctrl-btn use" onclick="executeAction('use_water',50)" ${lvl<50?'disabled':''}>🚰 Use 50L</button>
+        <button class="tank-ctrl-btn fill" onclick="executeAction('fill_water',200)" ${pct>=100?'disabled':''}>💧 Fill +200L</button>
+        <button class="tank-ctrl-btn use" onclick="executeAction('use_water',150)" ${lvl<150?'disabled':''}>🏠 Use 150L</button>
+      </div>
+    </div>`;
+}
+
+function renderPet(state) {
+  const h = state.hunger||0, e = state.energy||0, hap = state.happiness||0;
+  let face='😊', mood='Happy and healthy!';
+  if(h>80){face='😭';mood='I am SO hungry! Feed me!'}
+  else if(e<20){face='😴';mood='Zzz... I need sleep...'}
+  else if(hap<20){face='😢';mood='I am bored and sad...'}
+  else if(h>60){face='😟';mood='Getting a bit hungry...'}
+  else if(e<40){face='😪';mood='Feeling tired...'}
+  else if(hap>80&&h<30&&e>70){face='🥳';mood='Best day ever!'}
+  else if(hap>60){face='😸';mood='Doing great!'}
+  document.getElementById('game-inner').innerHTML = `
+    <div class="pet-scene">
+      <div class="pet-display">
+        <span class="pet-face">${face}</span>
+        <div class="pet-name">Mango the Cat</div>
+        <div class="pet-mood">${mood}</div>
+      </div>
+      <div class="pet-stats">
+        <div class="stat-row">
+          <span class="stat-ic">🍖</span>
+          <span class="stat-lbl">Hunger</span>
+          <div class="stat-bar-bg"><div class="stat-bar-f sf-hunger" style="width:${h}%"></div></div>
+          <span class="stat-val">${h}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-ic">⚡</span>
+          <span class="stat-lbl">Energy</span>
+          <div class="stat-bar-bg"><div class="stat-bar-f sf-energy" style="width:${e}%"></div></div>
+          <span class="stat-val">${e}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-ic">💜</span>
+          <span class="stat-lbl">Happiness</span>
+          <div class="stat-bar-bg"><div class="stat-bar-f sf-happy" style="width:${hap}%"></div></div>
+          <span class="stat-val">${hap}</span>
+        </div>
+      </div>
+      <div class="pet-actions">
+        <button class="pet-btn pb-feed" onclick="executeAction('feed_pet')">🍖<br>Feed</button>
+        <button class="pet-btn pb-play" onclick="executeAction('play_with_pet')">🎾<br>Play</button>
+        <button class="pet-btn pb-sleep" onclick="executeAction('put_pet_to_sleep')">💤<br>Sleep</button>
+      </div>
+    </div>`;
+}
+
+function renderTreasure(state) {
+  const chests = Array.isArray(state.chests) ? state.chests :
+    (state.chests && typeof state.chests.toJs === 'function' ? state.chests.toJs() : []);
+  const allOpen = chests.length>0 && chests.every(c=>c.opened||c.get&&c.get('opened'));
+  document.getElementById('game-inner').innerHTML = `
+    <div class="treasure-scene">
+      <div class="gold-banner">
+        <div class="gold-amount">🪙 ${state.total_gold||0}</div>
+        <div class="gold-lbl">Gold Coins Collected</div>
+      </div>
+      <div class="chests-wrap">
+        ${chests.map((c,i)=>{
+          const opened = c.opened!==undefined ? c.opened : (c.get ? c.get('opened') : false);
+          const gold = c.gold!==undefined ? c.gold : (c.get ? c.get('gold') : '?');
+          return `<div class="chest ${opened?'open':''}">
+            <span class="chest-em">${opened?'📦':'🎁'}</span>
+            <div class="chest-gold">${opened?'🪙 '+gold:'???'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="hunt-btn" onclick="startHunt()" ${allOpen?'disabled':''}>
+        ${allOpen?'✅ All Chests Opened!':'⚔️ Start Treasure Hunt!'}
+      </button>
+      ${state.hunt_log && state.hunt_log.length>0 ? `
+      <div class="hunt-log">
+        ${(Array.isArray(state.hunt_log)?state.hunt_log:Array.from(state.hunt_log)).map(l=>`<div class="hunt-log-item">• ${l}</div>`).join('')}
+      </div>`:
+      `<div style="color:#aaa;font-size:.8rem;text-align:center;padding:8px">Click "Start Treasure Hunt!" to open all chests using your for loop!</div>`}
+    </div>`;
+}
+
+async function doMarkAttendance() {
+  if(!pyReady){ showToast('Click ▶ Run first!','warn'); return; }
+  try {
+    await pyodide.runPythonAsync('import sys; sys.stdout.clear(); sys.stderr.clear()');
+    await pyodide.runPythonAsync('mark_attendance(students)');
+    const out = pyodide.runPython('import sys; sys.stdout.getvalue()');
+    if(out.trim()) addLog(out.trim(),'cl-std');
+    syncFromPython();
+    currentProject.renderUI(currentState);
+    floatEmoji('✅');
+    addLog('✅ Attendance marked!','cl-ok');
+  } catch(e) {
+    const msg = cleanError(e.message);
+    if(msg.includes("not defined")){ showToast("Click ▶ Run first!",'warn'); addLog("⚠️ Run your code first!",'cl-warn'); }
+    else{ addLog('❌ '+msg,'cl-err'); showToast('Error in function','err'); }
+  }
+}
+
+async function startHunt() {
+  if(!pyReady){ showToast('Click ▶ Run first!','warn'); return; }
+  try {
+    await pyodide.runPythonAsync('import sys; sys.stdout.clear(); sys.stderr.clear()');
+    await pyodide.runPythonAsync('collect_treasures(chests)');
+    const out = pyodide.runPython('import sys; sys.stdout.getvalue()');
+    if(out.trim()) addLog(out.trim(),'cl-std');
+    syncFromPython();
+    currentProject.renderUI(currentState);
+    floatEmoji('✨');
+    floatEmoji('🪙');
+  } catch(e) {
+    const msg = cleanError(e.message);
+    if(msg.includes("not defined")){showToast("Click ▶ Run first!",'warn');}
+    else{addLog('❌ '+msg,'cl-err');showToast('Error in function','err');}
+  }
+}
+
+function renderAttendance(state) {
+  const students = Array.isArray(state.students) ? state.students : [];
+  const present = students.filter(s=>s.present===true||s.present===1).length;
+  const absent = students.filter(s=>s.present===false||s.present===0).length;
+  const pending = students.filter(s=>s.present===null||s.present===undefined).length;
+  const pct = students.length>0 ? Math.round((present/students.length)*100) : 0;
+  document.getElementById('game-inner').innerHTML = `
+    <div class="att-scene">
+      <div class="att-board">
+        <div class="att-hdr">🏫 Sunrise Primary School — Attendance</div>
+        ${students.map((s,i)=>{
+          const p = s.present===true||s.present===1;
+          const ab = s.present===false||s.present===0;
+          return `<div class="att-row ${p?'present':ab?'absent':''}">
+            <span class="att-num">${i+1}</span>
+            <span class="att-name">${s.name}</span>
+            <span class="att-badge ${p?'badge-present':ab?'badge-absent':'badge-pending'}">${p?'Present':ab?'Absent':'Pending'}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="att-summary">
+        <div class="att-stat"><div class="att-stat-num" style="color:#51cf66">${present}</div><div class="att-stat-lbl">Present</div></div>
+        <div class="att-stat"><div class="att-stat-num" style="color:#ff6b6b">${absent}</div><div class="att-stat-lbl">Absent</div></div>
+        <div class="att-stat"><div class="att-stat-num" style="color:#7c6fff">${pct}%</div><div class="att-stat-lbl">Attendance</div></div>
+      </div>
+      <button class="att-btn" onclick="doMarkAttendance()" ${pending===0&&present===students.length?'disabled':''}>
+        ✅ Mark All Present
+      </button>
+      <button class="att-btn reset" onclick="markAbsentPrompt()">❌ Mark Someone Absent</button>
+    </div>`;
+}
+
+function markAbsentPrompt() {
+  const students = currentState.students || [];
+  const names = students.map(s=>s.name).join(', ');
+  const name = prompt(`Mark absent — enter student name:\n(${names})`);
+  if(name && name.trim()) executeAction('mark_absent', name.trim());
+}
+
+/* ============================================================
+   CONSOLE
+   ============================================================ */
+function addLog(text, cls='cl-std') {
+  const out = document.getElementById('console-out');
+  const div = document.createElement('div');
+  div.className = 'cl '+cls;
+  div.textContent = text;
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+function clearConsole() {
+  document.getElementById('console-out').innerHTML='';
+}
+
+/* ============================================================
+   HINTS — popover anchored to the hint button in desc-strip
+   ============================================================ */
+let hintPopoverOpen = false;
+
+function toggleHintPopover(btn) {
+  const popover = document.getElementById('hint-popover');
+  if(hintPopoverOpen) {
+    popover.classList.remove('show');
+    hintPopoverOpen = false;
+    return;
+  }
+  hintIndex = 0;
+  renderHintPopover(btn);
+}
+
+function renderHintPopover(btn) {
+  const hints = currentProject.hints;
+  if(!hints||!hints.length) return;
+  const popover = document.getElementById('hint-popover');
+  document.getElementById('hint-text').innerHTML = hints[hintIndex];
+  document.getElementById('hint-counter').textContent = `${hintIndex+1} / ${hints.length}`;
+  document.getElementById('hint-prev').disabled = hintIndex===0;
+  document.getElementById('hint-next').disabled = hintIndex===hints.length-1;
+
+  // Position below the hint button
+  const trigger = btn || document.getElementById('hint-trigger-btn');
+  if(trigger) {
+    const rect = trigger.getBoundingClientRect();
+    popover.style.top = (rect.bottom+6)+'px';
+    popover.style.left = Math.min(rect.left, window.innerWidth-310)+'px';
+  }
+  popover.classList.add('show');
+  hintPopoverOpen = true;
+}
+
+function prevHint(){
+  if(hintIndex>0){ hintIndex--; renderHintPopover(); }
+}
+function nextHint(){
+  if(hintIndex<currentProject.hints.length-1){ hintIndex++; renderHintPopover(); }
+}
+
+// Close popover when clicking outside
+document.addEventListener('click', e => {
+  if(hintPopoverOpen && !e.target.closest('#hint-popover') && !e.target.closest('.ds-hint-btn')){
+    document.getElementById('hint-popover').classList.remove('show');
+    hintPopoverOpen = false;
+  }
+});
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+function resetCode() {
+  editor.setValue(currentProject.starterCode);
+  currentState = JSON.parse(JSON.stringify(currentProject.initialState));
+  currentProject.renderUI(currentState);
+  document.getElementById('test-results').innerHTML =
+    currentProject.tests.map(t=>`<div class="test-item test-pending">⬜ ${t.desc}</div>`).join('');
+  addLog('↺ Code reset to starter template','cl-sys');
+}
+
+let toastEl, toastTimeout;
+function showToast(msg, type='info') {
+  if(!toastEl) toastEl = document.getElementById('toast');
+  clearTimeout(toastTimeout);
+  toastEl.textContent = msg;
+  toastEl.className = 'toast show '+type;
+  toastTimeout = setTimeout(()=>{ toastEl.classList.remove('show'); }, 2200);
+}
+
+function floatEmoji(em) {
+  const el = document.createElement('div');
+  el.className = 'float-emoji';
+  el.textContent = em;
+  el.style.left = (30+Math.random()*40)+'vw';
+  el.style.top = '50vh';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1000);
+}
+
+function confetti() {
+  const emojis = ['🎉','⭐','🌟','✨','🎊','🏆'];
+  for(let i=0;i<8;i++) {
+    setTimeout(()=>floatEmoji(emojis[Math.floor(Math.random()*emojis.length)]),i*120);
+  }
+}
+
+function shakeEditor() {
+  const el = document.querySelector('.editor-wrap');
+  el.classList.add('shake');
+  setTimeout(()=>el.classList.remove('shake'),500);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async () => {
+  // Init CodeMirror
+  editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+    mode: 'python',
+    theme: 'dracula',
+    lineNumbers: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    lineWrapping: false,
+    autofocus: false,
+    extraKeys: {
+      "Tab": cm => { if(cm.somethingSelected()) cm.indentSelection('add'); else cm.replaceSelection('    '); },
+      "Ctrl-Enter": runCode,
+      "Cmd-Enter": runCode,
+    }
+  });
+
+  // Build nav
+  buildNav();
+
+  // Load Pyodide
+  initPyodide();
+});
+</script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+</body>
+</html>

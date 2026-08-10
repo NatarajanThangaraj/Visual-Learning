@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⏱️ Time Decision Lab - Learn Conditional Statements</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            background: rgba(0,0,0,0.3);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Left Sidebar */
+        .sidebar {
+            background: linear-gradient(180deg, #2d3561 0%, #1a1f3a 100%);
+            border-radius: 15px;
+            padding: 20px;
+            height: fit-content;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .sidebar h2 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scenario-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .scenario-btn {
+            background: #3d4570;
+            color: white;
+            border: 2px solid transparent;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .scenario-btn:hover {
+            background: #4d5580;
+            transform: translateX(5px);
+        }
+
+        .scenario-btn.active {
+            background: #667eea;
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Main Content */
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Section */
+        .section {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        .section-header:hover {
+            opacity: 0.9;
+        }
+
+        .section-header.collapsed {
+            background: linear-gradient(135deg, #9bacdb 0%, #9d7bb9 100%);
+        }
+
+        .section-content {
+            padding: 25px;
+            display: none;
+        }
+
+        .section-content.open {
+            display: block;
+        }
+
+        /* Icon */
+        .toggle-icon {
+            transition: transform 0.3s ease;
+            font-size: 1.2em;
+        }
+
+        .toggle-icon.collapsed {
+            transform: rotate(180deg);
+        }
+
+        /* Explanation Box */
+        .explanation-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #1976d2;
+        }
+
+        /* Input Grid */
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .input-group input,
+        .input-group select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+
+        .btn-reveal {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-reveal:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-challenge {
+            background: #9c27b0;
+            color: white;
+        }
+
+        .btn-challenge:hover {
+            background: #7b1fa2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(156, 39, 176, 0.4);
+        }
+
+        .btn-again {
+            background: #666;
+            color: white;
+        }
+
+        .btn-again:hover {
+            background: #555;
+            transform: translateY(-2px);
+        }
+
+        /* Output Card */
+        .output-card {
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+            border: 3px solid;
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        .output-card.urgent {
+            background: linear-gradient(-45deg, #ff6b6b, #ff8787, #ffcdd2, #ff6b6b);
+            border-color: #c62828;
+            color: #c62828;
+        }
+
+        .output-card.warning {
+            background: linear-gradient(-45deg, #ffb74d, #ffa726, #ffe0b2, #ffb74d);
+            border-color: #e65100;
+            color: #e65100;
+        }
+
+        .output-card.info {
+            background: linear-gradient(-45deg, #64b5f6, #42a5f5, #bbdefb, #64b5f6);
+            border-color: #1565c0;
+            color: #1565c0;
+        }
+
+        .output-card.normal {
+            background: linear-gradient(-45deg, #81c784, #66bb6a, #c8e6c9, #81c784);
+            border-color: #2e7d32;
+            color: #2e7d32;
+        }
+
+        .output-card.completed {
+            background: linear-gradient(-45deg, #b0bec5, #90a4ae, #eceff1, #b0bec5);
+            border-color: #455a64;
+            color: #455a64;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .output-message {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .output-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            background: rgba(255,255,255,0.3);
+            margin-bottom: 10px;
+        }
+
+        .output-logic {
+            font-size: 0.85em;
+            font-family: 'Courier New', monospace;
+            background: rgba(255,255,255,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+
+        /* Decision Flow */
+        .decision-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: linear-gradient(90deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .flow-step {
+            text-align: center;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .flow-label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .flow-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .flow-arrow {
+            color: #999;
+            font-size: 1.5em;
+            flex: 0 0 auto;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+
+        .code-highlight {
+            background: #ffff00;
+            color: #000;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        /* Challenge Box */
+        .challenge-box {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .challenge-box h3 {
+            color: #6a1b9a;
+            margin-bottom: 10px;
+        }
+
+        .challenge-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #9c27b0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            margin: 10px 0;
+        }
+
+        /* Comparison Grid */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .comparison-box {
+            padding: 15px;
+            border-radius: 8px;
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+        }
+
+        .comparison-box.correct {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .comparison-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .comparison-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Helpful Text */
+        .hint-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Footer */
+        .footer {
+            background: rgba(0,0,0,0.3);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .footer h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                height: auto;
+                max-height: 300px;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .output-message {
+                font-size: 1.8em;
+            }
+
+            .decision-flow {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        /* Scrollbar */
+        .scenario-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scenario-list::-webkit-scrollbar-track {
+            background: #2d3561;
+            border-radius: 10px;
+        }
+
+        .scenario-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .scenario-list::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⏱️ Time Decision Lab</h1>
+            <p>Learn how apps use IF, ELIF, ELSE to make decisions based on time</p>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h2>🎮 Scenarios</h2>
+                <div class="scenario-list" id="scenarioList"></div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content" id="contentArea"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <h2>✨ Key Insight</h2>
+            <p>Real applications compare data and apply conditional logic (IF, ELIF, ELSE) to decide behavior. This is how apps show notifications, track deadlines, and handle time-based decisions. 🚀</p>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // SCENARIO DEFINITIONS
+        // =====================================================================
+        const scenarios = [
+            {
+                id: 'calendar-reminder',
+                name: '📅 Calendar Reminder',
+                description: 'Apps compare current date and meeting date to decide what message to show.',
+                inputs: ['currentDate', 'meetingDate'],
+                rules: [
+                    'IF days < 0: "Completed"',
+                    'ELIF days == 0: "Today"',
+                    'ELIF days == 1: "Tomorrow"',
+                    'ELIF days <= 7: "This Week"',
+                    'ELSE: "Scheduled"'
+                ],
+                pseudoCode: `
+IF days < 0:
+    Show "Completed"
+ELIF days == 0:
+    Show "Today"
+ELIF days == 1:
+    Show "Tomorrow"
+ELIF days <= 7:
+    Show "This Week (" + days + " days)"
+ELSE:
+    Show "Scheduled (" + days + " days)"
+                `
+            },
+            {
+                id: 'event-countdown',
+                name: '🎉 Event Countdown',
+                description: 'Track days remaining until an event to show urgency.',
+                inputs: ['currentDate', 'eventDate'],
+                rules: [
+                    'IF days < 0: "Expired"',
+                    'ELIF days == 0: "Today!"',
+                    'ELIF days == 1: "Tomorrow"',
+                    'ELIF days <= 7: "{days} Days Left"',
+                    'ELSE: "Scheduled"'
+                ],
+                pseudoCode: `
+IF days < 0:
+    Show "Expired"
+ELIF days == 0:
+    Show "Today!"
+ELIF days == 1:
+    Show "Tomorrow"
+ELIF days <= 7:
+    Show days + " Days Left"
+ELSE:
+    Show "Scheduled"
+                `
+            },
+            {
+                id: 'delivery-update',
+                name: '🚚 Delivery Update',
+                description: 'Show shipping status based on order stage and time passed.',
+                inputs: ['currentDate', 'orderDate', 'status'],
+                rules: [
+                    'IF status == "delivered": "Delivered ✓"',
+                    'ELIF status == "shipped": "Out For Delivery"',
+                    'ELIF status == "ordered" AND hours < 24: "Preparing"',
+                    'ELSE: "In Transit"'
+                ],
+                pseudoCode: `
+IF status == "delivered":
+    Show "Delivered ✓"
+ELIF status == "shipped":
+    Show "Out For Delivery"
+ELIF status == "ordered" AND hours < 24:
+    Show "Preparing (Order Confirmed)"
+ELSE:
+    Show "Preparing"
+                `
+            },
+            {
+                id: 'password-expiry',
+                name: '🔐 Password Expiry Alert',
+                description: 'Warn users when their password will expire.',
+                inputs: ['currentDate', 'expiryDate'],
+                rules: [
+                    'IF days < 0: "Expired"',
+                    'ELIF days >= 0 AND days <= 7: "Expiring Soon"',
+                    'ELSE: "Valid"'
+                ],
+                pseudoCode: `
+IF days < 0:
+    Show "Expired"
+ELIF days >= 0 AND days <= 7:
+    Show "Expiring Soon (" + days + " days)"
+ELSE:
+    Show "Valid"
+                `
+            },
+            {
+                id: 'subscription-renewal',
+                name: '💳 Subscription Renewal',
+                description: 'Remind users to renew their subscription before it expires.',
+                inputs: ['currentDate', 'renewalDate'],
+                rules: [
+                    'IF days < 0: "Expired"',
+                    'ELIF days >= 0 AND days <= 7: "Renew Soon"',
+                    'ELSE: "Active"'
+                ],
+                pseudoCode: `
+IF days < 0:
+    Show "Expired"
+ELIF days >= 0 AND days <= 7:
+    Show "Renew Soon (" + days + " days)"
+ELSE:
+    Show "Active"
+                `
+            },
+            {
+                id: 'meeting-notification',
+                name: '👥 Meeting Notification',
+                description: 'Send notifications about upcoming meetings.',
+                inputs: ['currentDate', 'meetingDate'],
+                rules: [
+                    'IF days < 0: "Completed"',
+                    'ELIF days == 0: "Meeting Today"',
+                    'ELIF days == 1: "Meeting Tomorrow"',
+                    'ELIF days == 2: "Meeting in 2 Days"',
+                    'ELSE: "Scheduled"'
+                ],
+                pseudoCode: `
+IF days < 0:
+    Show "Completed"
+ELIF days == 0:
+    Show "Meeting Today"
+ELIF days == 1:
+    Show "Meeting Tomorrow"
+ELIF days == 2:
+    Show "Meeting in 2 Days"
+ELSE:
+    Show "Scheduled"
+                `
+            },
+            {
+                id: 'assignment-deadline',
+                name: '📝 Assignment Deadline',
+                description: 'Track assignment submission status and show warnings.',
+                inputs: ['currentDate', 'deadlineDate', 'submitted'],
+                rules: [
+                    'IF submitted: "Submitted ✓"',
+                    'ELIF days < 0: "{|days|} Days Late"',
+                    'ELIF days == 0: "Due Today"',
+                    'ELIF days <= 3: "Last {days} Days"',
+                    'ELSE: "Time Left"'
+                ],
+                pseudoCode: `
+IF submitted == true:
+    Show "Submitted ✓"
+ELIF days < 0:
+    Show Math.abs(days) + " Days Late"
+ELIF days == 0:
+    Show "Due Today"
+ELIF days > 0 AND days <= 3:
+    Show "Last " + days + " Days"
+ELSE:
+    Show "Time Left"
+                `
+            },
+            {
+                id: 'flight-countdown',
+                name: '✈️ Flight Countdown',
+                description: 'Show flight status based on hours until departure.',
+                inputs: ['currentDate', 'departureTime'],
+                rules: [
+                    'IF hours < 0: "Departed ✈️"',
+                    'ELIF hours <= 1: "Boarding"',
+                    'ELIF hours <= 3: "Check-in Opens"',
+                    'ELSE: "Prepare"'
+                ],
+                pseudoCode: `
+IF hours < 0:
+    Show "Departed ✈️"
+ELIF hours <= 1:
+    Show "Boarding"
+ELIF hours <= 3:
+    Show "Check-in Opens (" + hours + "h)"
+ELSE:
+    Show "Prepare (" + hours + "h)"
+                `
+            },
+            {
+                id: 'ride-arrival',
+                name: '🚗 Ride Arrival',
+                description: 'Show driver arrival status based on minutes remaining.',
+                inputs: ['currentDate', 'estimatedArrival'],
+                rules: [
+                    'IF minutes <= 0: "Arrived ✓"',
+                    'ELIF minutes <= 2: "Driver Arriving"',
+                    'ELIF minutes <= 5: "Driver Waiting"',
+                    'ELSE: "Estimating"'
+                ],
+                pseudoCode: `
+IF minutes <= 0:
+    Show "Arrived ✓"
+ELIF minutes <= 2:
+    Show "Driver Arriving (" + minutes + "m)"
+ELIF minutes <= 5:
+    Show "Driver Waiting (" + minutes + "m)"
+ELSE:
+    Show minutes + "m Away"
+                `
+            },
+            {
+                id: 'study-planner',
+                name: '📚 Study Planner',
+                description: 'Recommend study intensity based on days until exam.',
+                inputs: ['currentDate', 'examDate'],
+                rules: [
+                    'IF days <= 0: "Exam Time!"',
+                    'ELIF days <= 3: "Final Preparation"',
+                    'ELIF days <= 7: "Revision"',
+                    'ELSE: "Normal Study"'
+                ],
+                pseudoCode: `
+IF days <= 0:
+    Show "Exam Time!"
+ELIF days > 0 AND days <= 3:
+    Show "Final Preparation"
+ELIF days > 3 AND days <= 7:
+    Show "Revision (" + days + " days)"
+ELSE:
+    Show "Normal Study (" + days + " days)"
+                `
+            }
+        ];
+
+        // =====================================================================
+        // DECISION ENGINE
+        // =====================================================================
+        function getDecision(scenario, currentDateTime, inputs) {
+            const current = new Date(currentDateTime);
+            const decision = { message: '', logic: '', status: 'pending' };
+
+            try {
+                switch (scenario.id) {
+                    case 'calendar-reminder': {
+                        const target = new Date(inputs.meetingDate);
+                        const days = Math.floor((target - current) / (1000 * 60 * 60 * 24));
+                        if (days < 0) {
+                            decision.message = 'Completed';
+                            decision.logic = `days = ${days} < 0`;
+                            decision.status = 'completed';
+                        } else if (days === 0) {
+                            decision.message = 'Today';
+                            decision.logic = `days = ${days} === 0`;
+                            decision.status = 'urgent';
+                        } else if (days === 1) {
+                            decision.message = 'Tomorrow';
+                            decision.logic = `days = ${days} === 1`;
+                            decision.status = 'warning';
+                        } else if (days <= 7) {
+                            decision.message = `This Week (${days} days)`;
+                            decision.logic = `days = ${days} <= 7`;
+                            decision.status = 'info';
+                        } else {
+                            decision.message = `Scheduled (${days} days)`;
+                            decision.logic = `days = ${days} > 7`;
+                            decision.status = 'normal';
+                        }
+                        break;
+                    }
+
+                    case 'event-countdown': {
+                        const target = new Date(inputs.eventDate);
+                        const days = Math.floor((target - current) / (1000 * 60 * 60 * 24));
+                        if (days < 0) {
+                            decision.message = 'Expired';
+                            decision.logic = `days = ${days} < 0`;
+                            decision.status = 'completed';
+                        } else if (days === 0) {
+                            decision.message = 'Today!';
+                            decision.logic = `days = ${days} === 0`;
+                            decision.status = 'urgent';
+                        } else if (days === 1) {
+                            decision.message = 'Tomorrow';
+                            decision.logic = `days = ${days} === 1`;
+                            decision.status = 'warning';
+                        } else if (days <= 7) {
+                            decision.message = `${days} Days Left`;
+                            decision.logic = `days = ${days} <= 7`;
+                            decision.status = 'warning';
+                        } else {
+                            decision.message = `Scheduled (${days} days)`;
+                            decision.logic = `days = ${days} > 7`;
+                            decision.status = 'normal';
+                        }
+                        break;
+                    }
+
+                    case 'delivery-update': {
+                        const status = inputs.status || 'ordered';
+                        if (status === 'delivered') {
+                            decision.message = 'Delivered ✓';
+                            decision.logic = `status === "delivered"`;
+                            decision.status = 'completed';
+                        } else if (status === 'shipped') {
+                            decision.message = 'Out For Delivery';
+                            decision.logic = `status === "shipped"`;
+                            decision.status = 'warning';
+                        } else {
+                            decision.message = 'Preparing (Order Confirmed)';
+                            decision.logic = `status === "ordered"`;
+                            decision.status = 'info';
+                        }
+                        break;
+                    }
+
+                    case 'password-expiry': {
+                        const target = new Date(inputs.expiryDate);
+                        const days = Math.floor((target - current) / (1000 * 60 * 60 * 24));
+                        if (days < 0) {
+                            decision.message = 'Expired';
+                            decision.logic = `days = ${days} < 0`;
+                            decision.status = 'urgent';
+                        } else if (days >= 0 && days <= 7) {
+                            decision.message = `Expiring Soon (${days} days)`;
+                            decision.logic = `days = ${days}, 0 <= days <= 7`;
+                            decision.status = 'warning';
+                        } else {
+                            decision.message = 'Valid';
+                            decision.logic = `days = ${days} > 7`;
+                            decision.status = 'normal';
+                        }
+                        break;
+                    }
+
+                    case 'subscription-renewal': {
+                        const target = new Date(inputs.renewalDate);
+                        const days = Math.floor((target - current) / (1000 * 60 * 60 * 24));
+                        if (days < 0) {
+                            decision.message = 'Expired';
+                            decision.logic = `days = ${days} < 0`;
+                            decision.status = 'urgent';
+                        } else if (days >= 0 && days <= 7) {
+                            decision.message = `Renew Soon (${days} days)`;
+                            decision.logic = `days = ${days}, 0 <= days <= 7`;
+                            decision.status = 'warning';
+                        } else {
+                            decision.message = 'Active';
+                            decision.logic = `days = ${days} > 7`;
+                            decision.status = 'normal';
+                        }
+                        break;
+                    }
+
+                    case 'meeting-notification': {
+                        const target = new Date(inputs.meetingDate);
+                        const days = Math.floor((target - current) / (1000 * 60 * 60 * 24));
+                        if (days < 0) {
+                            decision.message = 'Completed';
+                            decision.logic = `days = ${days} < 0`;
+                            decision.status = 'completed';
+                        } else if (days === 0) {
+                            decision.message = 'Meeting Today';
+                            decision.logic = `days = ${days} === 0`;
+                            decision.status = 'urgent';
+                        } else if (days === 1) {
+                            decision.message = 'Meeting Tomorrow';
+                            decision.logic = `days = ${days} === 1`;
+                            decision.status = 'warning';
+                        } else if (days === 2) {
+                            decision.message = 'Meeting in 2 Days';
+                            decision.logic = `days = ${days} === 2`;
+                            decision.status = 'info';
+                        } else {
+                            decision.message = `Meeting in ${days} Days`;
+                            decision.logic = `days = ${days} > 2`;
+                            decision.status = 'normal';
+                        }
+                        break;
+                    }
+
+                    case 'assignment-deadline': {
+                        const target = new Date(inputs.deadlineDate);
+                        const days = Math.floor((target - current) / (1000 * 60 * 60 * 24));
+                        const submitted = inputs.submitted === 'true';
+                        if (submitted) {
+                            decision.message = 'Submitted ✓';
+                            decision.logic = `submitted === true`;
+                            decision.status = 'completed';
+                        } else if (days < 0) {
+                            decision.message = `${Math.abs(days)} Days Late`;
+                            decision.logic = `days = ${days} < 0`;
+                            decision.status = 'urgent';
+                        } else if (days === 0) {
+                            decision.message = 'Due Today';
+                            decision.logic = `days = ${days} === 0`;
+                            decision.status = 'urgent';
+                        } else if (days > 0 && days <= 3) {
+                            decision.message = `Last ${days} Day(s)`;
+                            decision.logic = `days = ${days}, 0 < days <= 3`;
+                            decision.status = 'warning';
+                        } else {
+                            decision.message = `${days} Days Left`;
+                            decision.logic = `days = ${days} > 3`;
+                            decision.status = 'normal';
+                        }
+                        break;
+                    }
+
+                    case 'flight-countdown': {
+                        const target = new Date(inputs.departureTime);
+                        const hours = (target - current) / (1000 * 60 * 60);
+                        const hoursInt = Math.floor(hours);
+                        const minutesInt = Math.floor((hours % 1) * 60);
+                        if (hoursInt < 0) {
+                            decision.message = 'Departed ✈️';
+                            decision.logic = `hours = ${hoursInt} < 0`;
+                            decision.status = 'completed';
+                        } else if (hoursInt === 0 && minutesInt >= 0) {
+                            decision.message = 'Departing Now';
+                            decision.logic = `hours = 0`;
+                            decision.status = 'urgent';
+                        } else if (hoursInt <= 1) {
+                            decision.message = `Boarding (${minutesInt}m)`;
+                            decision.logic = `hours = ${hoursInt}, 0 < hours <= 1`;
+                            decision.status = 'urgent';
+                        } else if (hoursInt <= 3) {
+                            decision.message = `Check-in Opens (${hoursInt}h)`;
+                            decision.logic = `hours = ${hoursInt} <= 3`;
+                            decision.status = 'warning';
+                        } else {
+                            decision.message = `Prepare (${hoursInt}h)`;
+                            decision.logic = `hours = ${hoursInt} > 3`;
+                            decision.status = 'normal';
+                        }
+                        break;
+                    }
+
+                    case 'ride-arrival': {
+                        const target = new Date(inputs.estimatedArrival);
+                        const minutes = Math.floor((target - current) / (1000 * 60));
+                        if (minutes <= 0) {
+                            decision.message = 'Arrived ✓';
+                            decision.logic = `minutes = ${minutes} <= 0`;
+                            decision.status = 'completed';
+                        } else if (minutes <= 2) {
+                            decision.message = `Driver Arriving (${minutes}m)`;
+                            decision.logic = `minutes = ${minutes}, 0 < minutes <= 2`;
+                            decision.status = 'urgent';
+                        } else if (minutes <= 5) {
+                            decision.message = `Driver Waiting (${minutes}m)`;
+                            decision.logic = `minutes = ${minutes}, 2 < minutes <= 5`;
+                            decision.status = 'warning';
+                        } else {
+                            decision.message = `${minutes}m Away`;
+                            decision.logic = `minutes = ${minutes} > 5`;
+                            decision.status = 'info';
+                        }
+                        break;
+                    }
+
+                    case 'study-planner': {
+                        const target = new Date(inputs.examDate);
+                        const days = Math.floor((target - current) / (1000 * 60 * 60 * 24));
+                        if (days <= 0) {
+                            decision.message = 'Exam Time!';
+                            decision.logic = `days = ${days} <= 0`;
+                            decision.status = 'urgent';
+                        } else if (days > 0 && days <= 3) {
+                            decision.message = 'Final Preparation';
+                            decision.logic = `days = ${days}, 0 < days <= 3`;
+                            decision.status = 'warning';
+                        } else if (days > 3 && days <= 7) {
+                            decision.message = `Revision (${days} days)`;
+                            decision.logic = `days = ${days}, 3 < days <= 7`;
+                            decision.status = 'warning';
+                        } else {
+                            decision.message = `Normal Study (${days} days)`;
+                            decision.logic = `days = ${days} > 7`;
+                            decision.status = 'normal';
+                        }
+                        break;
+                    }
+                }
+            } catch (e) {
+                decision.message = 'Error';
+                decision.logic = e.message;
+                decision.status = 'error';
+            }
+
+            return decision;
+        }
+
+        // =====================================================================
+        // UI RENDERING
+        // =====================================================================
+        let currentScenario = scenarios[0];
+        let currentInputs = {};
+        let revealed = false;
+        let challengeMode = false;
+
+        function renderScenarioList() {
+            const list = document.getElementById('scenarioList');
+            list.innerHTML = scenarios.map(s => `
+                <button class="scenario-btn ${s.id === currentScenario.id ? 'active' : ''}" 
+                        onclick="selectScenario('${s.id}')">
+                    ${s.name}
+                </button>
+            `).join('');
+        }
+
+        function selectScenario(id) {
+            currentScenario = scenarios.find(s => s.id === id);
+            currentInputs = {};
+            revealed = false;
+            challengeMode = false;
+            renderScenarioList();
+            renderContent();
+        }
+
+        function renderContent() {
+            const content = document.getElementById('contentArea');
+            const inputFields = currentScenario.inputs
+                .filter(field => field !== 'currentDate')
+                .map(field => {
+                    if (field === 'status') {
+                        return `
+                            <div class="input-group">
+                                <label>Order Status</label>
+                                <select onchange="updateInput('${field}', this.value)">
+                                    <option value="ordered">Ordered</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="delivered">Delivered</option>
+                                </select>
+                            </div>
+                        `;
+                    } else if (field === 'submitted') {
+                        return `
+                            <div class="input-group">
+                                <label>Submitted?</label>
+                                <select onchange="updateInput('${field}', this.value)">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </div>
+                        `;
+                    } else {
+                        const label = field
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^./, str => str.toUpperCase())
+                            .trim();
+                        return `
+                            <div class="input-group">
+                                <label>${label}</label>
+                                <input type="datetime-local" 
+                                       value="${currentInputs[field] || ''}"
+                                       onchange="updateInput('${field}', this.value)">
+                            </div>
+                        `;
+                    }
+                })
+                .join('');
+
+            const currentDateTime = currentInputs.currentDate || new Date().toISOString().slice(0, 16);
+            const decision = getDecision(currentScenario, currentDateTime, currentInputs);
+
+            let outputSection = '';
+            if (revealed && !challengeMode) {
+                outputSection = `
+                    <div class="output-card ${decision.status}">
+                        <div class="output-message">${decision.message}</div>
+                        <div class="output-status">${decision.status.charAt(0).toUpperCase() + decision.status.slice(1)}</div>
+                        <div class="output-logic">${decision.logic}</div>
+                    </div>
+                    <div class="decision-flow">
+                        <div class="flow-step">
+                            <div class="flow-icon">⏰</div>
+                            <div class="flow-label">Current Time</div>
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-step">
+                            <div class="flow-icon">⚙️</div>
+                            <div class="flow-label">Calculate</div>
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-step">
+                            <div class="flow-icon">🔍</div>
+                            <div class="flow-label">Compare</div>
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-step">
+                            <div class="flow-icon">✅</div>
+                            <div class="flow-label">Decide</div>
+                        </div>
+                    </div>
+                    <div class="code-block">
+${currentScenario.pseudoCode}
+                    </div>
+                    <button class="btn btn-again" onclick="tryAgain()">Try Again</button>
+                `;
+            } else if (challengeMode && !revealed) {
+                outputSection = `
+                    <div class="challenge-box">
+                        <h3>🎪 Challenge: Predict the Output</h3>
+                        <p>What message do you think the app will show?</p>
+                        <input type="text" class="challenge-input" id="prediction" placeholder="Your prediction...">
+                        <button class="btn btn-reveal" onclick="revealChallenge()">Reveal Answer</button>
+                    </div>
+                `;
+            } else {
+                outputSection = `
+                    <div class="button-group">
+                        <button class="btn btn-challenge" onclick="startChallenge()">🎪 Challenge Mode</button>
+                        <button class="btn btn-reveal" onclick="revealOutput()">👀 Reveal Output</button>
+                    </div>
+                `;
+            }
+
+            content.innerHTML = `
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <span>${currentScenario.name} - SECTION A: What Problem Are We Solving?</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="section-content open">
+                        <div class="explanation-box">
+                            ${currentScenario.description}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <span>🎮 SECTION B: Set Your Values</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="section-content open">
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label>Current Date & Time</label>
+                                <input type="datetime-local" 
+                                       value="${currentDateTime}"
+                                       onchange="updateInput('currentDate', this.value)">
+                                <p class="hint-text">Change this to see output update instantly</p>
+                            </div>
+                            ${inputFields}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <span>🎯 SECTION C: Output</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="section-content open">
+                        ${outputSection}
+                    </div>
+                </div>
+
+                ${revealed && !challengeMode ? `
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <span>📊 SECTION D: Decision Flow</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="section-content open">
+                        <p>The app calculated the time difference and compared it with conditions. Based on the comparison, it decided to show: <strong>"${decision.message}"</strong></p>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <span>🔍 SECTION E: Reveal the Logic</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <p style="margin-bottom: 15px;"><strong>Pseudo Code Logic (which condition matched is highlighted):</strong></p>
+                        <div class="code-block">
+${currentScenario.rules.map(rule => `<div>${rule}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+            `;
+        }
+
+        function updateInput(field, value) {
+            currentInputs[field] = value;
+            revealed = false;
+            challengeMode = false;
+            renderContent();
+        }
+
+        function revealOutput() {
+            revealed = true;
+            renderContent();
+        }
+
+        function startChallenge() {
+            challengeMode = true;
+            renderContent();
+            setTimeout(() => document.getElementById('prediction')?.focus(), 100);
+        }
+
+        function revealChallenge() {
+            const currentDateTime = currentInputs.currentDate || new Date().toISOString().slice(0, 16);
+            const decision = getDecision(currentScenario, currentDateTime, currentInputs);
+            const prediction = document.getElementById('prediction').value;
+            
+            revealed = true;
+            const content = document.getElementById('contentArea');
+            const card = content.querySelector('.section');
+            
+            // Add comparison after challenge reveal
+            const outputSection = card.querySelector('.section-content');
+            outputSection.innerHTML += `
+                <div class="comparison-grid" style="margin-top: 20px;">
+                    <div class="comparison-box">
+                        <div class="comparison-label">Your Prediction</div>
+                        <div class="comparison-value">${prediction || 'None'}</div>
+                    </div>
+                    <div class="comparison-box correct">
+                        <div class="comparison-label">Actual Output</div>
+                        <div class="comparison-value">${decision.message}</div>
+                    </div>
+                </div>
+                <div class="decision-flow">
+                    <div class="flow-step">
+                        <div class="flow-icon">⏰</div>
+                        <div class="flow-label">Current Time</div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-step">
+                        <div class="flow-icon">⚙️</div>
+                        <div class="flow-label">Calculate</div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-step">
+                        <div class="flow-icon">🔍</div>
+                        <div class="flow-label">Compare</div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-step">
+                        <div class="flow-icon">✅</div>
+                        <div class="flow-label">Decide</div>
+                    </div>
+                </div>
+                <div class="code-block">
+${currentScenario.pseudoCode}
+                </div>
+            `;
+        }
+
+        function tryAgain() {
+            revealed = false;
+            challengeMode = false;
+            currentInputs = {};
+            renderContent();
+        }
+
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            content.classList.toggle('open');
+            header.classList.toggle('collapsed');
+            header.querySelector('.toggle-icon').classList.toggle('collapsed');
+        }
+
+        // Initialize
+        renderScenarioList();
+        renderContent();
+    </script>
+</body>
+</html>
