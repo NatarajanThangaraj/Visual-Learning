@@ -76,7 +76,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Conditionals'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/pystory/thumb.png',
   },
   {
     path: '/python/decision-playground/index.html',
@@ -86,7 +86,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Conditionals'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/decision-playground/thumb.png',
   },
   {
     path: '/python/python-calculator/index.html',
@@ -96,7 +96,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Operators'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/python-calculator/thumb.png',
   },
   {
     path: '/python/pyif-conditionals/index.html',
@@ -106,7 +106,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Conditionals'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/pyif-conditionals/thumb.png',
   },
   {
     path: '/python/python-code-jumble/index.html',
@@ -116,7 +116,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Game'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/python-code-jumble/thumb.png',
   },
   {
     path: '/python/time-decision-lab/index.html',
@@ -126,7 +126,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Conditionals'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/time-decision-lab/thumb.png',
   },
   {
     path: '/python/detective-robot/index.html',
@@ -136,7 +136,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Logic'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/detective-robot/thumb.png',
   },
   {
     path: '/python/logic-step-explorer/index.html',
@@ -146,7 +146,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Logic'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/logic-step-explorer/thumb.png',
   },
   {
     path: '/python/list-integer-lab/index.html',
@@ -156,7 +156,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Lists'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/list-integer-lab/thumb.png',
   },
   {
     path: '/python/code-drop/index.html',
@@ -166,7 +166,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Game'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/code-drop/thumb.png',
   },
   {
     path: '/python/variables-as-jars/index.html',
@@ -176,7 +176,7 @@ export const topics = [
     category: 'Python',
     tags: ['Python', 'Variables'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/python/variables-as-jars/thumb.png',
   },
 
   // ── Others: language-agnostic logic & algorithm explorers (public/others/) ──
@@ -188,7 +188,7 @@ export const topics = [
     category: 'Others',
     tags: ['Logic', 'Design'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/others/calculator-system-design/thumb.png',
   },
   {
     path: '/others/division-remainder/index.html',
@@ -198,7 +198,7 @@ export const topics = [
     category: 'Others',
     tags: ['Logic', 'Math'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/others/division-remainder/thumb.png',
   },
   {
     path: '/others/luhn-algorithm/index.html',
@@ -208,7 +208,7 @@ export const topics = [
     category: 'Others',
     tags: ['Algorithms'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/others/luhn-algorithm/thumb.png',
   },
   {
     path: '/others/max-finder-1/index.html',
@@ -218,7 +218,7 @@ export const topics = [
     category: 'Others',
     tags: ['Algorithms'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/others/max-finder-1/thumb.png',
   },
   {
     path: '/others/max-finder-2/index.html',
@@ -228,6 +228,6 @@ export const topics = [
     category: 'Others',
     tags: ['Algorithms'],
     dateAdded: '2026-08-10',
-    thumbnail: null,
+    thumbnail: '/others/max-finder-2/thumb.png',
   },
 ];

@@ -46,10 +46,27 @@ Pick a category (`java` / `python` / `others`, lowercase) and a slug (e.g. `my-p
      category: 'Java',                      // Java | Python | Others (capitalized) — drives filters
      tags: ['Java', 'Strings'],
      dateAdded: 'YYYY-MM-DD',
-     thumbnail: null,                       // null → per-category thumbnail fallback
+     thumbnail: '/<category>/<slug>/thumb.png', // real card preview — see step 3 (null = plain tile)
    },
    ```
    Do **not** add a `Component` key.
+
+3. **Generate the card thumbnail so the card looks like the real page (the "website view").**
+   Cards show a **1280×800 `thumb.png`** screenshot of the project's own home page — that's how the
+   cards get their distinctive look instead of a plain colored tile. For each new project:
+   - Serve the built site locally: `cd client && python3 -m http.server 4599 &`
+   - Screenshot the page into its own folder with headless Chrome (**use a fresh `--user-data-dir`
+     per run — a shared one deadlocks when generating several**):
+     ```bash
+     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+       --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
+       --user-data-dir="$(mktemp -d)" --window-size=1280,800 --virtual-time-budget=3000 \
+       --screenshot="client-src/public/<category>/<slug>/thumb.png" \
+       "http://localhost:4599/<category>/<slug>/index.html"
+     ```
+   - Set the entry's `thumbnail` to `/<category>/<slug>/thumb.png`.
+   - Skipping this (`thumbnail: null`) is allowed but the card shows only a generic category tile,
+     not the real page.
 
 ### Path B — In-app React page
 
@@ -119,3 +136,6 @@ Then in the **Catalyst console → `visuallearning.onslate.in` Web Client Hostin
    is worth fixing in Catalyst someday, but the new hash covers the common case.)
 7. **`category`** in the entry is capitalized (`Java`/`Python`/`Others`); the `public/` folder is
    lowercase (`java`/`python`/`others`).
+8. **Give every card a real `thumb.png`** (1280×800 screenshot of the page) so it looks like the live
+   site; `thumbnail: null` falls back to a generic category-colored tile. Regenerate the thumbnail if
+   the page's look changes.
