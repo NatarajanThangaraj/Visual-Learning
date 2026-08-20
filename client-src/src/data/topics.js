@@ -66,6 +66,16 @@ export const topics = [
     dateAdded: '2026-08-05',
     thumbnail: '/java/smart-data-guardian/thumb.png',
   },
+  {
+    path: '/java/type-casting-foundry/index.html',
+    external: true,
+    title: 'The Casting Foundry',
+    description: "Pour values between Java's primitive containers — see what fits, what spills, and watch the bits fall away when you cast.",
+    category: 'Java',
+    tags: ['Java', 'Type Casting', 'Primitives'],
+    dateAdded: '2026-08-20',
+    thumbnail: '/java/type-casting-foundry/thumb.png',
+  },
 
   // ── Python assignments (self-contained static pages under public/python/) ──
   {

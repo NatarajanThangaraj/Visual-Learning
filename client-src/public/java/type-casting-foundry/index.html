@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Casting Foundry — Java type casting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F8FAFC;--s1:#FFFFFF;--s2:#F1F5F9;--s3:#E8EDF3;
+  --bd:#E2E8F0;--bdm:#CBD5E1;--bdl:#94A3B8;
+  --tp:#0F172A;--ts:#475569;--tm:#94A3B8;
+  --ac:#2563EB;--ac-bg:#EFF6FF;--ac-bd:#BFDBFE;--ac-t:#1D4ED8;
+  --gn:#059669;--gn-bg:#ECFDF5;--gn-bd:#A7F3D0;--gn-t:#047857;
+  --yw:#D97706;--yw-bg:#FFFBEB;--yw-bd:#FDE68A;--yw-t:#B45309;
+  --rd:#DC2626;--rd-bg:#FEF2F2;--rd-bd:#FECACA;--rd-t:#B91C1C;
+  --r:8px;--rl:12px;--rs:6px;
+  --dur:.8s;--durs:.3s;
+  --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+html,body{height:100%}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tp);
+  display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+
+/* ═══ NAV ═══ */
+.nav{height:52px;flex-shrink:0;background:var(--s1);border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;padding:0 22px;z-index:60}
+.nav-brand{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;
+  display:flex;align-items:center;gap:9px}
+.nav-dot{width:8px;height:8px;border-radius:50%;background:var(--ac)}
+.nav-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;
+  background:var(--ac-bg);color:var(--ac-t);border:1px solid var(--ac-bd)}
+.tabs{display:flex;gap:5px}
+.tab{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:500;padding:6px 14px;
+  border-radius:var(--rs);border:1px solid transparent;background:none;color:var(--tm);cursor:pointer}
+.tab:hover{color:var(--ts)}
+.tab.on{color:var(--ac-t);background:var(--ac-bg);border-color:var(--ac-bd)}
+
+/* ═══ SCREENS ═══ */
+.screen{display:none;flex:1;min-height:0}
+.screen.active{display:grid}
+#s-pour{grid-template-columns:168px minmax(0,1fr) 252px}
+#s-bits{grid-template-columns:minmax(0,1fr)}
+
+/* ═══ RAILS ═══ */
+.rail{background:var(--s1);padding:15px 14px;display:flex;flex-direction:column;gap:12px;
+  overflow-y:auto}
+.rail-l{border-right:1px solid var(--bd)}
+.rail-r{border-left:1px solid var(--bd)}
+.lab{font-size:10px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--tm)}
+
+.type-list{display:flex;flex-direction:column;gap:5px}
+.type-btn{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;
+  border:1px solid var(--bd);background:var(--s1);cursor:pointer;text-align:left;
+  font-family:var(--mono);font-size:12px;color:var(--tp);transition:border-color .15s,background .15s}
+.type-btn:hover{border-color:var(--bdm);background:var(--s2)}
+.type-btn:active{transform:scale(.985)}
+.sw{width:10px;height:10px;border-radius:3px;flex:none}
+.type-bits{margin-left:auto;font-size:10px;color:var(--tm);white-space:nowrap}
+
+.btn{width:100%;padding:8px 10px;border-radius:var(--r);border:1px solid var(--bdm);
+  background:var(--s1);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:500;
+  color:var(--tp);cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--s2)}
+.rail-note{font-size:11px;color:var(--ts);line-height:1.55;padding-top:11px;
+  border-top:1px solid var(--bd);margin-top:auto}
+.rail-note b{font-weight:500;color:var(--tp)}
+
+/* ═══ THE BENCH ═══ */
+.main{padding:16px 20px;display:flex;flex-direction:column;gap:12px;min-width:0;overflow-y:auto}
+.bench{position:relative;display:flex;align-items:flex-end;gap:16px;padding:0 8px 34px;
+  min-height:296px;border-bottom:2px solid var(--bd);flex-shrink:0}
+.bench-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:5px;font-size:13px;color:var(--tm);text-align:center;line-height:1.6}
+.bench-empty span{font-family:var(--mono);font-size:11.5px;color:var(--bdl)}
+
+.cont{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;
+  touch-action:none;transition:rotate .25s ease}
+.cont.lift{z-index:40;pointer-events:none}
+.cont.lift .jar{box-shadow:0 12px 26px rgba(15,23,42,.16)}
+.cont.target .jar{box-shadow:0 0 0 3px currentColor}
+.cont.picked .jar{box-shadow:0 0 0 2px var(--ac)}
+
+/* value plate: resting text, becomes a small input on click */
+.plate{height:25px;display:flex;align-items:center;justify-content:center;position:relative}
+.plate-txt{font-family:var(--mono);font-size:12.5px;color:var(--tp);padding:2px 7px;
+  border-radius:var(--rs);border:1px solid transparent;cursor:pointer;max-width:104px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plate-txt:hover{background:var(--s2);border-color:var(--bd)}
+.plate-txt:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.plate-txt.unset{color:var(--tm);font-size:11px;border-radius:0;
+  border-bottom:1px dashed var(--bdm);padding:1px 3px}
+.plate-in{width:80px;height:25px;text-align:center;font-family:var(--mono);font-size:12.5px;
+  border:1px solid var(--ac-bd);border-radius:var(--rs);background:var(--s1);color:var(--tp);padding:0 5px}
+.plate-in:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 2px var(--ac-bg)}
+.plate-in.bad{border-color:var(--rd);background:var(--rd-bg);color:var(--rd-t);box-shadow:none}
+.plate-err{position:absolute;top:27px;left:50%;translate:-50% 0;white-space:nowrap;z-index:20;
+  font-size:10.5px;color:var(--rd-t);background:var(--rd-bg);border:1px solid var(--rd-bd);
+  border-radius:var(--rs);padding:2px 7px}
+
+.jar{position:relative;border:2px solid;border-top:none;border-radius:0 0 12px 12px;
+  background:var(--s1);cursor:grab;user-select:none;
+  box-shadow:0 1px 2px rgba(15,23,42,.05);transition:box-shadow .18s,border-color .2s}
+.jar:active{cursor:grabbing}
+.jar-rim{position:absolute;top:-4px;left:-7px;right:-7px;height:4px;border-radius:2px;
+  background:currentColor}
+.jar-water{position:absolute;left:0;right:0;bottom:0;height:0;border-top:2.5px solid;
+  border-radius:0 0 10px 10px;transition:height var(--dur) cubic-bezier(.4,0,.2,1)}
+/* A dashed surface means "this level is only approximately the value" — precision
+ * was lost. It is deliberately not a second level line: rounding does not change
+ * how much water there is, only how exactly it can be measured. */
+.jar-water.approx{border-top-style:dashed}
+.jar.ok{animation:pulse .5s ease}
+.jar.spill{border-color:var(--rd)!important;animation:shake .36s 2}
+.jar.lossy{border-style:dashed;border-color:var(--yw)!important}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(37,99,235,.14)}}
+@keyframes shake{0%,100%{translate:0}25%{translate:-3px}75%{translate:3px}}
+
+.cont-name{font-family:var(--mono);font-size:12px;font-weight:500;user-select:none}
+.cont-x{position:absolute;top:-7px;right:-9px;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--bd);background:var(--s1);color:var(--tm);font-size:12px;line-height:1;
+  cursor:pointer;opacity:0;transition:opacity .15s;z-index:12;
+  box-shadow:0 1px 2px rgba(15,23,42,.08)}
+.cont:hover .cont-x{opacity:1}
+.cont-x:hover{color:var(--rd);border-color:var(--rd-bd)}
+
+.drop{position:absolute;width:7px;height:7px;border-radius:50%;pointer-events:none;z-index:35}
+.hint-tip{position:absolute;top:6px;left:50%;translate:-50% 0;z-index:45;
+  font-family:var(--mono);font-size:11px;padding:4px 11px;border-radius:20px;
+  background:var(--s1);border:1px solid var(--bd);color:var(--ts);
+  box-shadow:0 2px 8px rgba(15,23,42,.07);opacity:0;transition:opacity .18s}
+.hint-tip.show{opacity:1}
+
+/* the cast stamp — narrowing needs the student's signature */
+.stamp-wrap{position:absolute;inset:0;z-index:50;display:none;
+  align-items:center;justify-content:center;background:rgba(248,250,252,.72)}
+.stamp-wrap.show{display:flex}
+.stamp{display:flex;flex-direction:column;align-items:center;gap:9px;
+  background:var(--s1);border:1px solid var(--bd);border-radius:var(--rl);padding:16px 20px;
+  box-shadow:0 8px 24px rgba(15,23,42,.12)}
+.stamp-q{font-size:12px;color:var(--ts);text-align:center;line-height:1.5;max-width:250px}
+.stamp-btn{font-family:var(--mono);font-size:16px;font-weight:600;padding:9px 20px;
+  border-radius:var(--r);border:2px dashed var(--rd);background:var(--rd-bg);color:var(--rd-t);
+  cursor:pointer;transition:transform .12s,background .15s}
+.stamp-btn:hover{background:#FEE2E2}
+.stamp-btn:active{transform:scale(.95) rotate(-2deg)}
+.stamp-skip{font-size:11px;color:var(--tm);background:none;border:none;cursor:pointer;
+  text-decoration:underline;font-family:'Inter',sans-serif}
+
+/* ═══ VERDICT + CODE ═══ */
+.verdict{background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--bdm);
+  padding:10px 13px;display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+.verdict.ok{border-left-color:var(--gn)}
+.verdict.lossy{border-left-color:var(--yw)}
+.verdict.bad{border-left-color:var(--rd)}
+.v-head{display:flex;align-items:center;gap:8px}
+.v-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600}
+.v-pill{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:.3px}
+.v-pill.ok{background:var(--gn-bg);color:var(--gn-t);border:1px solid var(--gn-bd)}
+.v-pill.lossy{background:var(--yw-bg);color:var(--yw-t);border:1px solid var(--yw-bd)}
+.v-pill.bad{background:var(--rd-bg);color:var(--rd-t);border:1px solid var(--rd-bd)}
+.v-body{font-size:12px;color:var(--ts);line-height:1.6}
+.v-body code{font-family:var(--mono);font-size:11.5px;background:var(--s2);
+  padding:1px 5px;border-radius:4px;color:var(--tp)}
+.v-body .del{color:var(--rd-t);font-weight:500}
+.v-body .keep{color:var(--gn-t);font-weight:500}
+
+.code{font-family:var(--mono);font-size:12px;line-height:1.75;background:var(--s1);
+  border:1px solid var(--bd);border-radius:var(--r);padding:10px 13px;
+  white-space:pre-wrap;word-break:break-word;flex-shrink:0}
+.code .kw{color:#7C3AED}
+.code .num{color:#0F766E}
+.code .cast{color:var(--rd-t);font-weight:500}
+.code .cm{color:var(--tm)}
+
+/* ═══ WIDENING CHART ═══ */
+.chart{display:flex;flex-direction:column;align-items:center;gap:0;padding:2px 0}
+.chart-row{display:flex;align-items:center;gap:7px;justify-content:center;width:100%}
+.chip{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:20px;
+  border:1px solid var(--bd);background:var(--s1);color:var(--ts);transition:all .25s}
+.chip.from{border-width:2px;font-weight:500;color:var(--tp)}
+.chip.to{border-width:2px;font-weight:500;color:var(--tp)}
+.chart-arrow{font-size:12px;color:var(--bdm);line-height:1;height:15px;
+  display:flex;align-items:center;transition:color .25s}
+.chart-arrow.lit{color:var(--gn)}
+.chart-arrow.back{color:var(--rd)}
+.chart-side{font-size:10px;color:var(--tm);font-family:'Inter',sans-serif;text-align:center;
+  line-height:1.4;margin-top:5px}
+
+.legend{display:flex;flex-direction:column;gap:7px}
+.leg{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:var(--ts);line-height:1.45}
+.leg-key{width:15px;height:15px;border-radius:4px;flex:none;margin-top:1px;border:2px solid}
+.leg-key.ok{border-color:var(--gn);background:var(--gn-bg)}
+.leg-key.lossy{border-color:var(--yw);border-style:dashed;background:var(--yw-bg)}
+.leg-key.bad{border-color:var(--rd);background:var(--rd-bg)}
+.leg-key.cast{border-color:var(--rd);border-style:dashed;background:var(--s1)}
+
+.link-btn{width:100%;padding:8px;border-radius:var(--r);border:1px solid var(--ac-bd);
+  background:var(--ac-bg);color:var(--ac-t);font-family:'Space Grotesk',sans-serif;
+  font-size:12px;font-weight:500;cursor:pointer;display:none}
+.link-btn.show{display:block}
+.link-btn:hover{background:#DBEAFE}
+
+/* ═══ SECTION 2 — BIT LAB ═══ */
+.bits-wrap{display:flex;flex-direction:column;min-height:0;overflow-y:auto}
+.bits-bar{background:var(--s1);border-bottom:1px solid var(--bd);padding:12px 20px;
+  display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;flex-shrink:0}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-lab{font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--tm)}
+select,.bits-val{height:32px;border:1px solid var(--bdm);border-radius:var(--rs);
+  background:var(--s1);color:var(--tp);font-family:var(--mono);font-size:12.5px;padding:0 9px}
+select{cursor:pointer;min-width:96px}
+.bits-val{width:168px}
+.bits-val:focus,select:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 2px var(--ac-bg)}
+.bits-val.bad{border-color:var(--rd);background:var(--rd-bg);color:var(--rd-t)}
+.bar-btns{display:flex;gap:7px;margin-left:auto}
+.bbtn{padding:0 15px;height:32px;border-radius:var(--r);font-family:'Space Grotesk',sans-serif;
+  font-size:12.5px;font-weight:500;cursor:pointer;border:1px solid var(--bdm);
+  background:var(--s1);color:var(--tp)}
+.bbtn:hover{background:var(--s2)}
+.bbtn.primary{background:var(--ac);border-color:var(--ac);color:#fff}
+.bbtn.primary:hover{background:#1D4ED8}
+.bbtn:disabled{opacity:.4;cursor:not-allowed}
+
+.steps{display:flex;gap:0;padding:11px 20px;background:var(--s1);
+  border-bottom:1px solid var(--bd);flex-shrink:0;overflow-x:auto}
+.step{display:flex;align-items:center;gap:8px;padding-right:16px;flex:none}
+.step-n{width:21px;height:21px;border-radius:50%;border:1px solid var(--bd);background:var(--s1);
+  color:var(--tm);font-family:var(--mono);font-size:10.5px;display:flex;align-items:center;
+  justify-content:center;flex:none;transition:all .25s}
+.step.done .step-n{background:var(--gn-bg);border-color:var(--gn-bd);color:var(--gn-t)}
+.step.now .step-n{background:var(--ac);border-color:var(--ac);color:#fff}
+.step-t{font-size:11.5px;color:var(--tm);transition:color .25s}
+.step.now .step-t{color:var(--tp);font-weight:500}
+.step.done .step-t{color:var(--ts)}
+.step-sep{width:16px;height:1px;background:var(--bd);flex:none;align-self:center;margin-right:16px}
+
+.bits-body{padding:18px 20px;display:flex;flex-direction:column;gap:15px;min-width:0}
+.bits-story{background:var(--ac-bg);border:1px solid var(--ac-bd);border-radius:var(--r);
+  padding:10px 13px;font-size:12.5px;color:#1E3A8A;line-height:1.6}
+.bits-story b{font-weight:500}
+.grid-block{display:flex;flex-direction:column;gap:8px}
+.grid-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.grid-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600}
+.grid-meta{font-family:var(--mono);font-size:11px;color:var(--tm)}
+.bit-grid{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.bit{width:22px;height:24px;border-radius:5px;font-family:var(--mono);font-size:11px;
+  display:flex;align-items:center;justify-content:center;background:var(--s2);
+  border:1px solid var(--bd);color:var(--tm);flex:none;
+  transition:opacity .45s ease,translate .45s ease,rotate .45s ease,background .3s,border-color .3s}
+.bit.one{background:var(--ac-bg);border-color:var(--ac-bd);color:var(--ac-t);font-weight:500}
+.bit.doomed{border-color:var(--rd-bd);background:var(--rd-bg);color:var(--rd-t)}
+.bit.gone{opacity:.12;translate:0 -13px;rotate:-16deg}
+.bit.filled{background:var(--yw-bg);border-color:var(--yw-bd);color:var(--yw-t)}
+.bit.signbit{box-shadow:0 0 0 2px var(--rd);position:relative}
+
+/* The bits are split into two blocks — one doomed, one surviving — instead of one
+ * long wrapping run. With 64 bits a single run wraps mid-word and the cut line
+ * lands in the middle of a row, which destroys the whole point of the picture. */
+.split{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.split-col{display:flex;flex-direction:column;gap:6px}
+.split-lab{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--tm);height:12px}
+.split-lab.doom{color:var(--rd-t)}
+.split-lab.add{color:var(--yw-t)}
+.split-lab.keep{color:var(--gn-t)}
+/* exactly one byte per row: 8 × 22px + 7 × 4px gap */
+.bit-grid.by8{width:204px}
+.cut{width:3px;background:var(--rd);border-radius:2px;flex:none;align-self:stretch;
+  min-height:36px;position:relative;margin-top:18px}
+.cut::after{content:'cut';position:absolute;top:-16px;left:50%;translate:-50% 0;font-size:9px;
+  font-family:'Inter',sans-serif;color:var(--rd-t);font-weight:600;letter-spacing:.4px}
+.bit-note{font-size:11.5px;color:var(--ts);line-height:1.55}
+.bit-note .em{color:var(--rd-t);font-weight:500}
+
+.ledger{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px;
+  display:flex;flex-direction:column;gap:7px}
+.ledger-row{font-family:var(--mono);font-size:11.5px;color:var(--ts);line-height:1.7;
+  word-break:break-word}
+.ledger-row .pos{color:var(--ac-t)}
+.ledger-row .neg{color:var(--rd-t);font-weight:500}
+.ledger-sum{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--tp);
+  padding-top:7px;border-top:1px solid var(--bd)}
+
+.ieee{display:flex;gap:0;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd)}
+.ieee-f{padding:8px 6px;display:flex;flex-direction:column;gap:4px;align-items:center;
+  min-width:0;overflow:hidden}
+.ieee-f.sign{background:var(--rd-bg);flex:0 0 62px}
+.ieee-f.exp{background:var(--yw-bg);flex:0 0 118px}
+.ieee-f.man{background:var(--ac-bg);flex:1 1 auto}
+.ieee-lab{font-size:9.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.ieee-f.sign .ieee-lab{color:var(--rd-t)}
+.ieee-f.exp .ieee-lab{color:var(--yw-t)}
+.ieee-f.man .ieee-lab{color:var(--ac-t)}
+.ieee-bits{font-family:var(--mono);font-size:11px;color:var(--tp);word-break:break-all;
+  text-align:center;line-height:1.5}
+.ieee-bits .dropped{color:var(--tm);text-decoration:line-through}
+
+.two-up{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1180px){
+  #s-pour{grid-template-columns:154px minmax(0,1fr)}
+  .rail-r{display:none}
+  .two-up{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  :root{--dur:.01s;--durs:.01s}
+  *,*::before,*::after{animation-duration:.01s!important;transition-duration:.01s!important}
+}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-brand"><span class="nav-dot"></span>The Casting Foundry
+    <span class="nav-badge">Java type casting</span></div>
+  <div class="tabs">
+    <button class="tab on" data-screen="s-pour">Pour lab</button>
+    <button class="tab" data-screen="s-bits">Bit lab</button>
+  </div>
+</div>
+
+<!-- ══════════════ SECTION 1 — POUR LAB ══════════════ -->
+<div class="screen active" id="s-pour">
+
+  <div class="rail rail-l">
+    <div>
+      <div class="lab" style="margin-bottom:8px">Place a container</div>
+      <div class="type-list" id="type-list"></div>
+    </div>
+    <button class="btn" id="btn-reset">Reset bench</button>
+    <div class="rail-note">
+      Click a value to change it. <b>Drag a container over another</b> and let go to pour.
+      Taller vessel means more bits.
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="bench" id="bench">
+      <div class="hint-tip" id="tip"></div>
+      <div class="stamp-wrap" id="stamp-wrap">
+        <div class="stamp">
+          <div class="stamp-q" id="stamp-q"></div>
+          <button class="stamp-btn" id="stamp-btn">(byte)</button>
+          <button class="stamp-skip" id="stamp-skip">cancel the pour</button>
+        </div>
+      </div>
+    </div>
+    <div class="verdict" id="verdict">
+      <div class="v-head"><div class="v-title">Build a bench, then pour</div></div>
+      <div class="v-body">Pick a type on the left to place a container. Water level is
+        <b>log&#8209;scaled</b> inside each vessel, so the same value looks nearly full in a
+        <code>byte</code> and shallow in a <code>long</code>.</div>
+    </div>
+    <div class="code" id="code"><span class="cm">// no containers yet</span></div>
+  </div>
+
+  <div class="rail rail-r">
+    <div>
+      <div class="lab" style="margin-bottom:9px">Safe routes</div>
+      <div class="chart" id="chart"></div>
+      <div class="chart-side">Down these arrows Java converts for you.<br>Going back up needs
+        an explicit cast.</div>
+    </div>
+    <div>
+      <div class="lab" style="margin-bottom:9px">What the rim tells you</div>
+      <div class="legend">
+        <div class="leg"><span class="leg-key ok"></span><span>Fits exactly — nothing lost</span></div>
+        <div class="leg"><span class="leg-key lossy"></span><span>Fits, but digits were rounded away</span></div>
+        <div class="leg"><span class="leg-key bad"></span><span>Overflowed — the value changed</span></div>
+        <div class="leg"><span class="leg-key cast"></span><span>Needs your explicit cast</span></div>
+      </div>
+    </div>
+    <button class="link-btn" id="to-bits">See the bits &rarr;</button>
+  </div>
+</div>
+
+<!-- ══════════════ SECTION 2 — BIT LAB ══════════════ -->
+<div class="screen" id="s-bits">
+  <div class="bits-wrap">
+    <div class="bits-bar">
+      <div class="field"><span class="field-lab">From</span>
+        <select id="b-from"></select></div>
+      <div class="field"><span class="field-lab">Value</span>
+        <input class="bits-val" id="b-val" spellcheck="false"></div>
+      <div class="field"><span class="field-lab">Cast to</span>
+        <select id="b-to"></select></div>
+      <div class="bar-btns">
+        <button class="bbtn" id="b-step">Step</button>
+        <button class="bbtn primary" id="b-play">Play</button>
+        <button class="bbtn" id="b-reset">Reset</button>
+      </div>
+    </div>
+    <div class="steps" id="b-steps"></div>
+    <div class="bits-body" id="b-body"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ══════════════════════════════════════════════════════════════════
+   TYPE TABLE — the single source of truth for both sections.
+   `h` is the on-screen vessel height: compressed, not linear, because a
+   true 8:1 byte-to-long ratio is unusable on a screen.
+   ══════════════════════════════════════════════════════════════════ */
+var TYPES = {
+  byte:   { bits:8,  kind:'int',   signed:true,  h:76,  w:68, water:'#FCD34D', rim:'#D97706' },
+  short:  { bits:16, kind:'int',   signed:true,  h:104, w:74, water:'#6EE7B7', rim:'#059669' },
+  char:   { bits:16, kind:'int',   signed:false, h:104, w:74, water:'#D8B4FE', rim:'#9333EA' },
+  int:    { bits:32, kind:'int',   signed:true,  h:142, w:82, water:'#93C5FD', rim:'#2563EB' },
+  long:   { bits:64, kind:'int',   signed:true,  h:190, w:90, water:'#A5B4FC', rim:'#4F46E5' },
+  float:  { bits:32, kind:'float',               h:162, w:84, water:'#67E8F9', rim:'#0891B2' },
+  double: { bits:64, kind:'float',               h:210, w:94, water:'#FDA4AF', rim:'#E11D48' }
+};
+var ORDER = ['byte','short','char','int','long','float','double'];
+
+/* JLS 5.1.2 — the widening primitive conversions. */
+var WIDENS_TO = {
+  byte:['short','int','long','float','double'],
+  short:['int','long','float','double'],
+  char:['int','long','float','double'],
+  int:['long','float','double'],
+  long:['float','double'],
+  float:['double'],
+  double:[]
+};
+var FLOAT_MAX = { float:3.4028234663852886e38, double:1.7976931348623157e308 };
+
+function $(id){ return document.getElementById(id); }
+function el(tag, cls){ var e = document.createElement(tag); if (cls) e.className = cls; return e; }
+
+/* ── ranges & formatting ─────────────────────────────────────────── */
+function range(t){
+  var c = TYPES[t];
+  if (c.kind === 'float') return null;
+  var n = BigInt(c.bits);
+  return c.signed
+    ? { min:-(1n << (n - 1n)), max:(1n << (n - 1n)) - 1n }
+    : { min:0n, max:(1n << n) - 1n };
+}
+function rangeText(t){
+  if (TYPES[t].kind === 'float')
+    return t === 'float' ? 'about ±3.4e38' : 'about ±1.8e308';
+  var R = range(t);
+  return R.min + ' … ' + R.max;
+}
+function fmt(v, t){
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'bigint'){
+    if (t === 'char'){
+      var n = Number(v);
+      if (n >= 32 && n <= 126) return v + " '" + String.fromCharCode(n) + "'";
+    }
+    return v.toString();
+  }
+  if (Number.isNaN(v)) return 'NaN';
+  if (!Number.isFinite(v)) return v > 0 ? 'Infinity' : '-Infinity';
+  if (Number.isInteger(v) && Math.abs(v) < 1e16) return String(v);
+  return String(Number(v.toPrecision(t === 'float' ? 9 : 17)));
+}
+function plain(v, t){
+  /* same as fmt but without the char quote, for code snippets */
+  if (typeof v === 'bigint') return v.toString();
+  return fmt(v, t);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   THE CAST ENGINE — Java's real narrowing/widening rules.
+   Verified against known Java answers, including the two that most
+   visualizers get wrong: float-to-int *clamps* instead of wrapping,
+   and float-to-byte/short/char goes *through int* first (JLS 5.1.3),
+   so (byte) 1e20 is -1 and not 127.
+   ══════════════════════════════════════════════════════════════════ */
+function truncate(v, t){
+  var c = TYPES[t], n = BigInt(c.bits);
+  var m = v & ((1n << n) - 1n);
+  if (c.signed && (m >> (n - 1n)) === 1n) m -= 1n << n;
+  return m;
+}
+function floatToIntegral(v, t){
+  var first = (t === 'long') ? 'long' : 'int';
+  var R = range(first), mid;
+  if (Number.isNaN(v)) mid = 0n;
+  else if (v >= Number(R.max)) mid = R.max;
+  else if (v <= Number(R.min)) mid = R.min;
+  else mid = BigInt(Math.trunc(v));
+  return first === t ? mid : truncate(mid, t);
+}
+function castValue(from, to, value){
+  var F = TYPES[from], G = TYPES[to];
+
+  if (F.kind === 'int' && G.kind === 'int'){
+    var r = truncate(value, to);
+    return { result:r, status: r === value ? 'exact' : 'overflow' };
+  }
+  if (F.kind === 'int' && G.kind === 'float'){
+    var n = Number(value);
+    if (to === 'float') n = Math.fround(n);
+    var back = (Number.isFinite(n) && Number.isInteger(n)) ? BigInt(n) : null;
+    return { result:n, status:(back !== null && back === value) ? 'exact' : 'lossy' };
+  }
+  if (F.kind === 'float' && G.kind === 'float'){
+    if (to === 'float'){
+      var q = Math.fround(value);
+      return { result:q, status: q === value ? 'exact' : 'lossy' };
+    }
+    return { result:value, status:'exact' };
+  }
+  var out = floatToIntegral(value, to);
+  if (Number.isNaN(value) || !Number.isFinite(value)) return { result:out, status:'overflow' };
+  if (Number.isInteger(value)){
+    var exact = BigInt(value);
+    return { result:out, status: out === exact ? 'exact' : 'overflow' };
+  }
+  var trunc = BigInt(Math.trunc(value));
+  return { result:out, status: out === trunc ? 'lossy' : 'overflow' };
+}
+function castKind(from, to){
+  if (from === to) return 'same';
+  return WIDENS_TO[from].indexOf(to) >= 0 ? 'widening' : 'narrowing';
+}
+
+/* Log-scaled fill, so a small value in a big vessel is still visible. */
+function fillFrac(v, t){
+  if (v === null || v === undefined) return 0;
+  var c = TYPES[t];
+  if (c.kind === 'float'){
+    var m = Math.abs(Number(v));
+    if (!Number.isFinite(m)) return 1;
+    return Math.min(1, Math.log2(1 + m) / Math.log2(1 + FLOAT_MAX[t]));
+  }
+  var R = range(t), a = v < 0n ? -v : v, mx = R.max > 0n ? R.max : 1n;
+  return Math.min(1, Math.log2(1 + Number(a < mx ? a : mx)) / Math.log2(1 + Number(mx)));
+}
+
+/* Parse a typed value for a given type. `char` takes a literal or a code point. */
+function parseValue(t, raw){
+  raw = (raw || '').trim();
+  if (!raw) return { value:null };
+  if (TYPES[t].kind === 'float'){
+    if (/^-?(nan)$/i.test(raw)) return { value:NaN };
+    if (/^-?infinity$/i.test(raw)) return { value: raw[0] === '-' ? -Infinity : Infinity };
+    var n = Number(raw);
+    if (Number.isNaN(n)) return { err:'not a number' };
+    return { value: t === 'float' ? Math.fround(n) : n };
+  }
+  if (t === 'char' && raw.length === 1 && !/[0-9]/.test(raw))
+    return { value: BigInt(raw.codePointAt(0)) };
+  if (!/^-?\d+$/.test(raw)) return { err:'whole numbers only' };
+  var v;
+  try { v = BigInt(raw); } catch (e) { return { err:'not a whole number' }; }
+  var R = range(t);
+  if (v < R.min || v > R.max) return { err: t + ' holds ' + rangeText(t) };
+  return { value:v };
+}
+
+/* Highlight the digits that changed between two rendered values. */
+function diffTail(before, after){
+  var i = 0, n = Math.min(before.length, after.length);
+  while (i < n && before[i] === after[i]) i++;
+  return { head:after.slice(0, i), tail:after.slice(i) };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SECTION 1 — POUR LAB
+   ══════════════════════════════════════════════════════════════════ */
+var bench = [];       /* [{ id, type, value, holds, status }] */
+var nextId = 0;
+var editing = null;   /* id of the container whose plate is open */
+var picked = null;    /* id held by the keyboard pour path */
+var lastPour = null;  /* { from, to, value } for the Bit lab hand-off */
+
+function containerName(i){ return String.fromCharCode(97 + i); }
+
+/* "an int", "a byte" — the only vowel-initial primitive is int. */
+function art(t){ return /^[aeiou]/.test(t) ? 'an' : 'a'; }
+function Art(t){ return /^[aeiou]/.test(t) ? 'An' : 'A'; }
+
+function say(title, bodyHtml, cls, pill){
+  var v = $('verdict');
+  v.className = 'verdict' + (cls ? ' ' + cls : '');
+  v.innerHTML = '';
+  var head = el('div', 'v-head');
+  var t = el('div', 'v-title'); t.textContent = title; head.appendChild(t);
+  if (pill){ var p = el('span', 'v-pill ' + cls); p.textContent = pill; head.appendChild(p); }
+  var b = el('div', 'v-body'); b.innerHTML = bodyHtml;
+  v.appendChild(head); v.appendChild(b);
+}
+
+/* The code panel shows the bench as declarations, except right after a pour,
+ * when it shows the cast statement instead — that snippet has to survive the
+ * re-render that the pour animation triggers. */
+var activeSnippet = null;
+
+function renderCode(lines){
+  var use = activeSnippet || lines;
+  $('code').innerHTML = use.length ? use.join('\n')
+    : '<span class="cm">// no containers yet</span>';
+}
+function declLines(){
+  return bench.map(function(o, i){
+    var kw = '<span class="kw">' + o.type + '</span> ' + containerName(i);
+    if (o.value === null) return kw + ';';
+    var suffix = o.type === 'long' ? 'L' : (o.type === 'float' ? 'f' : '');
+    return kw + ' = <span class="num">' + plain(o.value, o.type) + suffix + '</span>;';
+  });
+}
+
+/* ── one container ───────────────────────────────────────────────── */
+function buildPlate(o, host){
+  host.innerHTML = '';
+  if (editing === o.id){
+    var inp = el('input', 'plate-in');
+    inp.value = o.value === null ? '' : plain(o.value, o.type);
+    inp.placeholder = 'value';
+    inp.spellcheck = false;
+    inp.setAttribute('aria-label', 'value held by this ' + o.type + ' container');
+    host.appendChild(inp);
+    var errBox = null;
+    function clearErr(){ if (errBox){ errBox.remove(); errBox = null; } }
+    function commit(){
+      if (o.bad) return false;
+      editing = null;
+      renderBench();
+      return true;
+    }
+    inp.addEventListener('input', function(){
+      var p = parseValue(o.type, inp.value);
+      if (p.err){
+        inp.classList.add('bad'); o.bad = true; clearErr();
+        errBox = el('div', 'plate-err'); errBox.textContent = p.err; host.appendChild(errBox);
+        return;
+      }
+      inp.classList.remove('bad'); o.bad = false; clearErr();
+      o.value = p.value; o.holds = o.type; o.status = null;
+      relevel(o);
+      activeSnippet = null;
+      renderCode(declLines());
+    });
+    inp.addEventListener('keydown', function(ev){
+      if (ev.key === 'Enter' || ev.key === 'Tab'){ if (commit()) ev.preventDefault(); }
+      else if (ev.key === 'Escape'){ o.bad = false; editing = null; renderBench(); }
+    });
+    inp.addEventListener('blur', function(){ commit(); });
+    setTimeout(function(){ inp.focus(); inp.select(); }, 0);
+    return;
+  }
+  var txt = el('div', 'plate-txt' + (o.value === null ? ' unset' : ''));
+  txt.textContent = o.value === null ? 'set value' : fmt(o.value, o.type);
+  txt.title = 'Click to change this value — ' + o.type + ' holds ' + rangeText(o.type);
+  txt.tabIndex = 0;
+  txt.addEventListener('click', function(){ editing = o.id; renderBench(); });
+  txt.addEventListener('keydown', function(ev){
+    if (ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); editing = o.id; renderBench(); }
+  });
+  host.appendChild(txt);
+}
+
+/* Re-level one container's water without a full re-render. */
+function relevel(o){
+  var node = $('bench').querySelector('[data-id="' + o.id + '"]');
+  if (!node) return;
+  var c = TYPES[o.type], held = TYPES[o.holds || o.type];
+  var water = node.querySelector('.jar-water'), jar = node.querySelector('.jar');
+  water.className = 'jar-water';
+  water.style.background = held.water;
+  water.style.borderTopColor = held.rim;
+  water.style.height = (fillFrac(o.value, o.type) * (c.h - 4)) + 'px';
+  jar.className = 'jar';
+  jar.style.borderColor = c.rim;
+}
+
+function renderBench(){
+  var host = $('bench');
+  /* keep the overlays, replace the containers */
+  Array.prototype.slice.call(host.querySelectorAll('.cont,.bench-empty')).forEach(function(n){ n.remove(); });
+
+  if (!bench.length){
+    var empty = el('div', 'bench-empty');
+    empty.innerHTML = 'The bench is empty.<br><span>pick a type on the left to place a container</span>';
+    host.appendChild(empty);
+    renderCode([]);
+    updateChart(null, null);
+    return;
+  }
+
+  bench.forEach(function(o, idx){
+    var c = TYPES[o.type], held = TYPES[o.holds || o.type];
+    var node = el('div', 'cont');
+    node.dataset.id = o.id;
+    node.style.color = c.rim;
+    if (picked === o.id) node.classList.add('picked');
+
+    var x = el('button', 'cont-x');
+    x.textContent = '×';
+    x.title = 'Remove this container';
+    x.addEventListener('click', function(){
+      bench = bench.filter(function(b){ return b.id !== o.id; });
+      if (editing === o.id) editing = null;
+      if (picked === o.id) picked = null;
+      activeSnippet = null;
+      renderBench();
+    });
+    node.appendChild(x);
+
+    var plate = el('div', 'plate');
+    buildPlate(o, plate);
+    node.appendChild(plate);
+
+    var jar = el('div', 'jar');
+    jar.style.height = c.h + 'px';
+    jar.style.width = c.w + 'px';
+    jar.style.borderColor = c.rim;
+    jar.title = 'Drag onto another container to pour';
+    jar.tabIndex = 0;
+    jar.appendChild(el('div', 'jar-rim'));
+    var water = el('div', 'jar-water' + (o.status === 'lossy' ? ' approx' : ''));
+    water.style.background = held.water;
+    water.style.borderTopColor = held.rim;
+    water.style.height = (fillFrac(o.value, o.type) * (c.h - 4)) + 'px';
+    jar.appendChild(water);
+    if (o.status === 'overflow') jar.style.borderColor = 'var(--rd)';
+    if (o.status === 'lossy'){ jar.style.borderStyle = 'dashed'; jar.style.borderColor = 'var(--yw)'; }
+    jar.addEventListener('pointerdown', onGrab);
+    jar.addEventListener('keydown', function(ev){ onJarKey(ev, o.id); });
+    node.appendChild(jar);
+
+    var name = el('div', 'cont-name');
+    name.style.color = c.rim;
+    name.textContent = o.type + ' ' + containerName(idx);
+    node.appendChild(name);
+
+    host.appendChild(node);
+  });
+  renderCode(declLines());
+}
+
+/* ── drag to pour ────────────────────────────────────────────────── */
+var drag = null;
+
+function onGrab(ev){
+  if (ev.button !== undefined && ev.button !== 0) return;
+  var node = ev.currentTarget.closest('.cont');
+  drag = { node:node, id:+node.dataset.id, x0:ev.clientX, y0:ev.clientY, over:null };
+  node.classList.add('lift');
+  ev.currentTarget.setPointerCapture(ev.pointerId);
+  ev.currentTarget.addEventListener('pointermove', onMove);
+  ev.currentTarget.addEventListener('pointerup', onRelease);
+  ev.currentTarget.addEventListener('pointercancel', onRelease);
+  ev.preventDefault();
+}
+
+function onMove(ev){
+  if (!drag) return;
+  drag.node.style.translate = (ev.clientX - drag.x0) + 'px ' + (ev.clientY - drag.y0) + 'px';
+  var under = document.elementFromPoint(ev.clientX, ev.clientY);
+  var cand = under && under.closest ? under.closest('.cont') : null;
+  if (cand && +cand.dataset.id === drag.id) cand = null;
+  if (drag.over && drag.over !== cand) drag.over.classList.remove('target');
+  drag.over = cand;
+
+  if (cand){
+    cand.classList.add('target');
+    drag.node.style.transformOrigin = '82% 18%';
+    drag.node.style.rotate = '-27deg';
+    var a = findCont(drag.id), b = findCont(+cand.dataset.id);
+    var k = castKind(a.type, b.type);
+    showTip(k === 'same'
+      ? a.type + ' → ' + b.type + '  ·  same type, nothing to convert'
+      : (k === 'narrowing'
+        ? a.type + ' → ' + b.type + '  ·  narrowing, needs (' + b.type + ')'
+        : a.type + ' → ' + b.type + '  ·  widening, implicit'));
+    updateChart(a.type, b.type);
+  } else {
+    drag.node.style.rotate = '0deg';
+    hideTip();
+  }
+}
+
+function onRelease(ev){
+  if (!drag) return;
+  var node = drag.node, over = drag.over, sid = drag.id;
+  ev.currentTarget.removeEventListener('pointermove', onMove);
+  ev.currentTarget.removeEventListener('pointerup', onRelease);
+  ev.currentTarget.removeEventListener('pointercancel', onRelease);
+  drag = null;
+  hideTip();
+  node.classList.remove('lift');
+  node.style.rotate = '0deg';
+  if (over) over.classList.remove('target');
+  node.style.transition = 'translate .3s ease, rotate .25s ease';
+  node.style.translate = '0 0';
+  setTimeout(function(){ node.style.transition = 'rotate .25s ease'; }, 320);
+  if (over) requestPour(sid, +over.dataset.id);
+}
+
+function showTip(text){ var t = $('tip'); t.textContent = text; t.classList.add('show'); }
+function hideTip(){ $('tip').classList.remove('show'); }
+function findCont(id){
+  for (var i = 0; i < bench.length; i++) if (bench[i].id === id) return bench[i];
+  return null;
+}
+
+/* ── keyboard pour path ──────────────────────────────────────────── */
+function onJarKey(ev, id){
+  if (ev.key === 'Enter' || ev.key === ' '){
+    ev.preventDefault();
+    if (picked === null){
+      picked = id;
+      var o = findCont(id);
+      say('Holding the ' + o.type,
+        'Now tab to another container and press <code>Enter</code> to pour into it, or press '
+        + '<code>Esc</code> to put this one down.', '', 'holding');
+      renderBench();
+      focusJar(id);
+    } else if (picked === id){
+      picked = null; renderBench(); focusJar(id);
+    } else {
+      var from = picked; picked = null;
+      renderBench();
+      requestPour(from, id);
+    }
+  } else if (ev.key === 'Escape'){
+    picked = null; renderBench(); focusJar(id);
+  }
+}
+function focusJar(id){
+  var n = $('bench').querySelector('[data-id="' + id + '"] .jar');
+  if (n) n.focus();
+}
+
+/* ── the pour itself ─────────────────────────────────────────────── */
+function requestPour(sid, tid){
+  var a = findCont(sid), b = findCont(tid);
+  if (!a || !b) return;
+  if (a.value === null){
+    say('That container is empty',
+      'Click its value first — an empty vessel has nothing to pour.', '');
+    return;
+  }
+  if (a.type === b.type){
+    say('Same type on both sides',
+      'No conversion happens between two <code>' + a.type + '</code> containers. '
+      + 'Pour into a different type to see a cast.', '');
+    return;
+  }
+  if (castKind(a.type, b.type) === 'narrowing'){
+    askForCast(a, b);
+  } else {
+    doPour(a, b);
+  }
+}
+
+/* Narrowing needs the student's signature before any water moves. */
+function askForCast(a, b){
+  var wrap = $('stamp-wrap');
+  $('stamp-q').innerHTML = Art(a.type) + ' <b>' + a.type + '</b> does not fit inside '
+    + art(b.type) + ' <b>' + b.type + '</b> as far as the compiler is concerned. '
+    + 'Java will not move this water unless you sign for it.';
+  var btn = $('stamp-btn');
+  btn.textContent = '(' + b.type + ')';
+  wrap.classList.add('show');
+  btn.focus();
+  function close(){
+    wrap.classList.remove('show');
+    btn.onclick = null; $('stamp-skip').onclick = null;
+  }
+  btn.onclick = function(){ close(); doPour(a, b); };
+  $('stamp-skip').onclick = function(){
+    close();
+    say('Pour cancelled',
+      'Without the <code>(' + b.type + ')</code> cast this line would not compile at all — '
+      + 'javac stops with <i>incompatible types: possible lossy conversion from '
+      + a.type + ' to ' + b.type + '</i>.', '');
+  };
+}
+
+function doPour(a, b){
+  var r = castValue(a.type, b.type, a.value);
+  var k = castKind(a.type, b.type);
+  var ai = bench.indexOf(a), bi = bench.indexOf(b);
+  var suffix = a.type === 'long' ? 'L' : (a.type === 'float' ? 'f' : '');
+
+  lastPour = { from:a.type, to:b.type, value:a.value };
+  $('to-bits').classList.add('show');
+  updateChart(a.type, b.type);
+
+  activeSnippet = [
+    '<span class="kw">' + a.type + '</span> ' + containerName(ai)
+      + ' = <span class="num">' + plain(a.value, a.type) + suffix + '</span>;',
+    '<span class="kw">' + b.type + '</span> ' + containerName(bi) + ' = '
+      + (k === 'narrowing' ? '<span class="cast">(' + b.type + ')</span> ' : '')
+      + containerName(ai) + ';'
+      + '   <span class="cm">// ' + plain(r.result, b.type) + '</span>'
+  ];
+  renderCode([]);
+
+  b.value = r.result; b.holds = a.type; b.status = r.status; b.bad = false;
+
+  /* droplets from the source lip to the target mouth */
+  var host = $('bench');
+  var sNode = host.querySelector('[data-id="' + a.id + '"]');
+  var tNode = host.querySelector('[data-id="' + b.id + '"]');
+  var sr = sNode.querySelector('.jar').getBoundingClientRect();
+  var tr = tNode.querySelector('.jar').getBoundingClientRect();
+  var br = host.getBoundingClientRect();
+  var srcWater = sNode.querySelector('.jar-water');
+  var srcLevel = srcWater.style.height;
+
+  /* the source dips, then refills — casting copies a value, it does not move it */
+  srcWater.style.height = (parseFloat(srcLevel || 0) * 0.82) + 'px';
+  setTimeout(function(){ srcWater.style.height = srcLevel; }, 620);
+
+  for (var i = 0; i < 7; i++) (function(i){
+    var d = el('div', 'drop');
+    d.style.background = TYPES[a.type].water;
+    d.style.left = (sr.left - br.left + sr.width / 2) + 'px';
+    d.style.top  = (sr.top - br.top - 7) + 'px';
+    d.style.opacity = 0;
+    host.appendChild(d);
+    setTimeout(function(){
+      d.style.transition = 'left .5s ease-in, top .5s ease-in, opacity .12s';
+      d.style.opacity = 1;
+      d.style.left = (tr.left - br.left + tr.width / 2) + 'px';
+      d.style.top  = (tr.top - br.top - 5) + 'px';
+      setTimeout(function(){
+        d.style.opacity = 0;
+        setTimeout(function(){ d.remove(); }, 170);
+      }, 470);
+    }, i * 62);
+  })(i);
+
+  setTimeout(function(){ settle(a, b, r, k, ai, bi); }, 540);
+}
+
+function settle(a, b, r, k, ai, bi){
+  renderBench();
+  var node = $('bench').querySelector('[data-id="' + b.id + '"]');
+  var jar = node.querySelector('.jar');
+  var water = node.querySelector('.jar-water');
+  var H = TYPES[b.type].h - 4;
+  var level = fillFrac(r.result, b.type) * H;
+  var nameA = containerName(ai), nameB = containerName(bi);
+  var beforeTxt = plain(a.value, a.type), afterTxt = plain(r.result, b.type);
+
+  if (r.status === 'overflow'){
+    water.style.height = (H + 16) + 'px';
+    jar.classList.add('spill');
+    for (var j = 0; j < 6; j++) (function(j){
+      var d = el('div', 'drop');
+      d.style.background = 'var(--rd)';
+      d.style.left = (5 + j * (TYPES[b.type].w - 14) / 5) + 'px';
+      d.style.top = '-5px';
+      d.style.opacity = 0;
+      jar.appendChild(d);
+      setTimeout(function(){
+        d.style.transition = 'top .68s ease-in, opacity .2s';
+        d.style.opacity = .95;
+        d.style.top = (H + 40) + 'px';
+        setTimeout(function(){ d.remove(); }, 720);
+      }, 340 + j * 75);
+    })(j);
+    setTimeout(function(){
+      water.style.height = level + 'px';
+      jar.classList.remove('spill');
+    }, 1120);
+
+    var extra = '';
+    if (TYPES[a.type].kind === 'float' && TYPES[b.type].kind === 'int'){
+      extra = ' ' + Art(a.type) + ' <code>' + a.type + '</code> too large for the target does '
+        + 'not wrap — Java <b>clamps</b> it to the limit'
+        + (b.type === 'int' || b.type === 'long' ? '.' : ', then narrows that result again.');
+    } else {
+      extra = ' ' + Art(b.type) + ' <code>' + b.type + '</code> keeps only <b>'
+        + TYPES[b.type].bits + ' bits</b>; everything above them ran over the rim.';
+    }
+    say('Overflowed — the value changed',
+      '<code>' + beforeTxt + '</code> went in, <code class="del">' + afterTxt
+      + '</code> came out.' + extra, 'bad', 'value lost');
+
+  } else if (r.status === 'lossy'){
+    water.style.height = level + 'px';
+    water.classList.add('approx');
+    var d2 = diffTail(beforeTxt, afterTxt);
+    say('It fit — but not every digit did',
+      '<code>' + beforeTxt + '</code> became <code>' + d2.head
+      + '<span class="del">' + d2.tail + '</span></code>. The vessel was large enough; its '
+      + 'markings were not fine enough. ' + Art(b.type) + ' <code>' + b.type
+      + '</code> spends most of its '
+      + TYPES[b.type].bits + ' bits on <i>range</i>, leaving only about '
+      + (b.type === 'float' ? '7' : '16') + ' significant digits of <i>precision</i>. '
+      + 'The level barely moves — rounding changes the last digits, not how much water '
+      + 'there is, and that is what the dashed surface means.',
+      'lossy', 'precision lost');
+
+  } else {
+    water.style.height = level + 'px';
+    jar.classList.add('ok');
+    setTimeout(function(){ jar.classList.remove('ok'); }, 520);
+    if (k === 'widening'){
+      say('Fits exactly — no cast needed',
+        'Java widens <code>' + a.type + '</code> to <code>' + b.type + '</code> on its own, '
+        + 'because every <code>' + a.type + '</code> value is also a legal <code>' + b.type
+        + '</code> value. You write <code>' + b.type + ' ' + nameB + ' = ' + nameA + ';</code> '
+        + 'and the compiler is satisfied.', 'ok', 'lossless');
+    } else {
+      say('It fit — but Java still demanded the cast',
+        '<code>' + beforeTxt + '</code> does fit in ' + art(b.type) + ' <code>' + b.type
+        + '</code>, and nothing '
+        + 'was lost. The compiler cannot prove that ahead of time though — it only sees the '
+        + '<i>type</i>, never the value — so it makes you sign with <code>(' + b.type
+        + ')</code>. That signature is you taking responsibility for the pours that '
+        + '<i>do</i> spill.', 'ok', 'lossless');
+    }
+  }
+  /* the source keeps its value: casting copies, it does not move */
+  relevelSource(a);
+}
+function relevelSource(a){
+  var node = $('bench').querySelector('[data-id="' + a.id + '"]');
+  if (!node) return;
+  var water = node.querySelector('.jar-water');
+  water.style.height = (fillFrac(a.value, a.type) * (TYPES[a.type].h - 4)) + 'px';
+}
+
+/* ── widening chart in the right rail ────────────────────────────── */
+var CHART_ROWS = [['byte'], ['short', 'char'], ['int'], ['long'], ['float'], ['double']];
+
+function buildChart(){
+  var host = $('chart');
+  host.innerHTML = '';
+  CHART_ROWS.forEach(function(row, i){
+    if (i > 0){
+      var arrow = el('div', 'chart-arrow');
+      arrow.dataset.gap = i;
+      arrow.textContent = '↓';
+      host.appendChild(arrow);
+    }
+    var r = el('div', 'chart-row');
+    row.forEach(function(t){
+      var chip = el('div', 'chip');
+      chip.dataset.type = t;
+      chip.textContent = t;
+      chip.style.borderColor = TYPES[t].rim + '55';
+      r.appendChild(chip);
+    });
+    host.appendChild(r);
+  });
+}
+function updateChart(from, to){
+  var host = $('chart');
+  Array.prototype.slice.call(host.querySelectorAll('.chip')).forEach(function(c){
+    var t = c.dataset.type;
+    c.className = 'chip';
+    c.style.borderColor = TYPES[t].rim + '55';
+    c.style.background = 'var(--s1)';
+    if (t === from){
+      c.classList.add('from');
+      c.style.borderColor = TYPES[t].rim;
+      c.style.background = TYPES[t].water + '3A';
+    }
+    if (t === to){
+      c.classList.add('to');
+      c.style.borderColor = TYPES[t].rim;
+      c.style.background = TYPES[t].water + '3A';
+    }
+  });
+  var rowOf = function(t){
+    for (var i = 0; i < CHART_ROWS.length; i++) if (CHART_ROWS[i].indexOf(t) >= 0) return i;
+    return -1;
+  };
+  var a = rowOf(from), b = rowOf(to);
+  Array.prototype.slice.call(host.querySelectorAll('.chart-arrow')).forEach(function(arrow){
+    var gap = +arrow.dataset.gap;
+    arrow.className = 'chart-arrow';
+    arrow.textContent = '↓';
+    if (a < 0 || b < 0 || a === b) return;
+    var lo = Math.min(a, b), hi = Math.max(a, b);
+    if (gap > lo && gap <= hi){
+      if (a < b){ arrow.classList.add('lit'); arrow.textContent = '↓'; }
+      else { arrow.classList.add('back'); arrow.textContent = '↑'; }
+    }
+  });
+}
+
+/* ── rail wiring ─────────────────────────────────────────────────── */
+function buildTypeList(){
+  var host = $('type-list');
+  ORDER.forEach(function(t){
+    var b = el('button', 'type-btn');
+    var sw = el('span', 'sw'); sw.style.background = TYPES[t].rim;
+    var nm = el('span'); nm.textContent = t;
+    var bits = el('span', 'type-bits'); bits.textContent = TYPES[t].bits + ' bit';
+    b.appendChild(sw); b.appendChild(nm); b.appendChild(bits);
+    b.title = t + ' holds ' + rangeText(t);
+    b.addEventListener('click', function(){
+      if (bench.length >= 6){
+        say('The bench is full',
+          'Remove one with its <code>×</code> before placing another.', '');
+        return;
+      }
+      var o = { id:++nextId, type:t, value:null, holds:null, status:null };
+      bench.push(o);
+      editing = o.id;
+      activeSnippet = null;
+      renderBench();
+      say('Placed an empty ' + t,
+        'Type its value, then drag it onto another container to pour. ' + Art(t) + ' <code>' + t
+        + '</code> is ' + TYPES[t].bits + ' bits wide and holds ' + rangeText(t) + '.', '');
+    });
+    host.appendChild(b);
+  });
+}
+
+$('btn-reset').addEventListener('click', function(){
+  bench.forEach(function(o){ o.value = null; o.holds = null; o.status = null; o.bad = false; });
+  editing = null; picked = null; lastPour = null; activeSnippet = null;
+  $('to-bits').classList.remove('show');
+  renderBench();
+  updateChart(null, null);
+  say('Bench reset',
+    'Every container is empty again — but the vessels stay where you put them.', '');
+});
+
+/* ── tabs ────────────────────────────────────────────────────────── */
+Array.prototype.slice.call(document.querySelectorAll('.tab')).forEach(function(tab){
+  tab.addEventListener('click', function(){
+    Array.prototype.slice.call(document.querySelectorAll('.tab')).forEach(function(t){
+      t.classList.toggle('on', t === tab);
+    });
+    Array.prototype.slice.call(document.querySelectorAll('.screen')).forEach(function(s){
+      s.classList.toggle('active', s.id === tab.dataset.screen);
+    });
+  });
+});
+$('to-bits').addEventListener('click', function(){
+  if (!lastPour) return;
+  $('b-from').value = lastPour.from;
+  $('b-to').value = lastPour.to;
+  $('b-val').value = plain(lastPour.value, lastPour.from);
+  document.querySelector('.tab[data-screen="s-bits"]').click();
+  bitsReset();
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   SECTION 2 — BIT LAB
+   Integral casts really are bit surgery, so they are drawn as bits.
+   Anything touching float or double is a *value* re-encoding, not a
+   chop, so it gets an IEEE-754 field diagram and says so plainly.
+   ══════════════════════════════════════════════════════════════════ */
+var STEP_TITLES = ['Read the bits', 'Mark the cut', 'Let them fall', 'Re-read what is left', 'The result'];
+var bitStep = 0;
+var playTimer = null;
+
+function bitsOf(v, n){
+  return (v & ((1n << BigInt(n)) - 1n)).toString(2).padStart(n, '0');
+}
+function hexOf(v, n){
+  var m = v & ((1n << BigInt(n)) - 1n);
+  return '0x' + m.toString(16).toUpperCase().padStart(n / 4, '0');
+}
+function floatFields(v, is64){
+  var buf = new ArrayBuffer(8), dv = new DataView(buf), bits;
+  if (is64){
+    dv.setFloat64(0, v);
+    bits = dv.getUint32(0).toString(2).padStart(32, '0')
+         + dv.getUint32(4).toString(2).padStart(32, '0');
+    return { sign:bits.slice(0, 1), exp:bits.slice(1, 12), man:bits.slice(12) };
+  }
+  dv.setFloat32(0, v);
+  bits = dv.getUint32(0).toString(2).padStart(32, '0');
+  return { sign:bits.slice(0, 1), exp:bits.slice(1, 9), man:bits.slice(9) };
+}
+
+function buildSelects(){
+  ['b-from', 'b-to'].forEach(function(id){
+    var s = $(id);
+    s.innerHTML = '';
+    ORDER.forEach(function(t){
+      var o = el('option'); o.value = t; o.textContent = t; s.appendChild(o);
+    });
+  });
+  $('b-from').value = 'long';
+  $('b-to').value = 'int';
+  $('b-val').value = '4294967297';
+}
+
+function buildSteps(){
+  var host = $('b-steps');
+  host.innerHTML = '';
+  STEP_TITLES.forEach(function(t, i){
+    if (i > 0) host.appendChild(el('div', 'step-sep'));
+    var s = el('div', 'step');
+    s.dataset.i = i;
+    var n = el('div', 'step-n'); n.textContent = i + 1;
+    var lbl = el('div', 'step-t'); lbl.textContent = t;
+    s.appendChild(n); s.appendChild(lbl);
+    host.appendChild(s);
+  });
+}
+function markSteps(){
+  Array.prototype.slice.call($('b-steps').querySelectorAll('.step')).forEach(function(s){
+    var i = +s.dataset.i;
+    s.className = 'step' + (i < bitStep ? ' done' : (i === bitStep ? ' now' : ''));
+  });
+}
+
+function bitsState(){
+  var from = $('b-from').value, to = $('b-to').value;
+  var p = parseValue(from, $('b-val').value);
+  var inp = $('b-val');
+  if (p.err || p.value === null){
+    inp.classList.add('bad');
+    return { err: p.err || 'enter a value', from:from, to:to };
+  }
+  inp.classList.remove('bad');
+  return { from:from, to:to, value:p.value, cast:castValue(from, to, p.value),
+           kind:castKind(from, to) };
+}
+
+function bitsReset(){
+  bitStep = 0;
+  if (playTimer){ clearTimeout(playTimer); playTimer = null; }
+  markSteps();
+  drawBits();
+}
+function bitsAdvance(){
+  var s = bitsState();
+  if (s.err){ drawBits(); return; }
+  if (bitStep < STEP_TITLES.length - 1) bitStep++;
+  markSteps();
+  drawBits();
+}
+function bitsPlay(){
+  var s = bitsState();
+  if (s.err){ drawBits(); return; }
+  if (playTimer){ clearTimeout(playTimer); playTimer = null; }
+  bitStep = 0; markSteps(); drawBits();
+  var tick = function(){
+    if (bitStep >= STEP_TITLES.length - 1){ playTimer = null; return; }
+    bitStep++; markSteps(); drawBits();
+    playTimer = setTimeout(tick, 1250);
+  };
+  playTimer = setTimeout(tick, 900);
+}
+
+function drawBits(){
+  var body = $('b-body');
+  body.innerHTML = '';
+  var s = bitsState();
+
+  if (s.err){
+    var e = el('div', 'bits-story');
+    e.innerHTML = 'Enter a value that fits ' + art(s.from) + ' <b>' + s.from + '</b> — ' + s.err + '.';
+    body.appendChild(e);
+    return;
+  }
+  if (s.from === s.to){
+    var same = el('div', 'bits-story');
+    same.innerHTML = '<b>' + s.from + ' → ' + s.to + '</b> is not a conversion at all. '
+      + 'Pick two different types to watch the bits move.';
+    body.appendChild(same);
+    return;
+  }
+  if (TYPES[s.from].kind === 'float' || TYPES[s.to].kind === 'float'){
+    drawFloatCast(body, s);
+  } else {
+    drawIntegralCast(body, s);
+  }
+}
+
+/* ── integral ↔ integral: real bit surgery ───────────────────────── */
+function drawIntegralCast(body, s){
+  var fromBits = TYPES[s.from].bits, toBits = TYPES[s.to].bits;
+  var narrowing = s.kind === 'narrowing';
+  var cut = narrowing ? fromBits - toBits : toBits - fromBits;
+  var srcPattern = bitsOf(s.value, fromBits);
+  var outPattern = bitsOf(s.cast.result, toBits);
+  var story = el('div', 'bits-story');
+
+  if (narrowing){
+    var msgs = [
+      Art(s.from) + ' <b>' + s.from + '</b> is ' + fromBits + ' bits wide. Here is <b>' + s.value
+        + '</b> written out in full — the leftmost bit is the sign.',
+      Art(s.to) + ' <b>' + s.to + '</b> has room for only ' + toBits + ' bits. The cut falls '
+        + cut + ' bits from the left: everything to the left of the red line has nowhere to go.',
+      'Those ' + cut + ' bits are simply dropped. Java does not round, warn, or clamp here — '
+        + 'it discards them.',
+      'Now re-read the ' + toBits + ' survivors on their own. This is the whole trick: '
+        + 'bit ' + (toBits - 1) + ' used to be an ordinary place value, and now it is the sign bit.',
+      '<b>(' + s.to + ') ' + s.value + '</b> is <b>' + s.cast.result + '</b>'
+        + (s.cast.status === 'exact'
+          ? ' — and because the discarded bits were all just sign padding, nothing was lost.'
+          : ' — a different number entirely. Same bits, new meaning.')
+    ];
+    story.innerHTML = msgs[bitStep];
+  } else {
+    var pad = TYPES[s.from].signed ? 'a copy of the sign bit' : 'a zero';
+    var wmsgs = [
+      Art(s.from) + ' <b>' + s.from + '</b> is ' + fromBits + ' bits wide. Here is <b>' + s.value + '</b>.',
+      Art(s.to) + ' <b>' + s.to + '</b> is ' + toBits + ' bits wide, so there are ' + cut
+        + ' new empty places on the left. Nothing gets cut when you widen.',
+      'Each new place is filled with ' + pad + '. '
+        + (TYPES[s.from].signed
+          ? 'This is <b>sign extension</b>, and it is why a negative number stays negative.'
+          : '<b>char</b> is unsigned, so it zero-extends — no sign to copy.'),
+      'Read all ' + toBits + ' bits together. The value is unchanged.',
+      '<b>' + s.from + ' → ' + s.to + '</b> keeps <b>' + s.cast.result + '</b> exactly. '
+        + 'Java does this on its own, no cast required.'
+    ];
+    story.innerHTML = wmsgs[bitStep];
+  }
+  body.appendChild(story);
+
+  /* the source pattern, with the doomed bits marked and then dropped */
+  var block = el('div', 'grid-block');
+  var head = el('div', 'grid-head');
+  var title = el('div', 'grid-title');
+  /* while widening, step 0 is still showing only the source */
+  var showingSource = narrowing || bitStep === 0;
+  title.textContent = showingSource ? s.from + ' — ' + fromBits + ' bits'
+                                    : s.to + ' — ' + toBits + ' bits';
+  var meta = el('div', 'grid-meta');
+  meta.textContent = showingSource
+    ? hexOf(s.value, fromBits) + '  ·  ' + s.value
+    : hexOf(s.cast.result, toBits) + '  ·  ' + s.cast.result;
+  head.appendChild(title); head.appendChild(meta);
+  block.appendChild(head);
+
+  block.appendChild(buildSplit(s, narrowing, cut, srcPattern, outPattern));
+
+  if (bitStep >= 3){
+    var note = el('div', 'bit-note');
+    var signOn = (narrowing ? srcPattern[cut] : outPattern[0]) === '1';
+    var place = BigInt(2) ** BigInt(toBits - 1);
+    if (TYPES[s.to].signed){
+      note.innerHTML = 'Bit ' + (toBits - 1) + ' is worth <b>' + place
+        + '</b> in an unsigned reading. In a signed <code>' + s.to + '</code> it is worth '
+        + '<span class="em">−' + place + '</span> instead — and here it is '
+        + (signOn ? 'set, so the result is negative.' : 'clear, so the result is positive.');
+    } else {
+      note.innerHTML = '<code>char</code> is unsigned: bit ' + (toBits - 1)
+        + ' is worth a plain <b>' + place + '</b>, never a negative. That is why '
+        + '<code>(char) -1</code> comes out as 65535.';
+    }
+    block.appendChild(note);
+  }
+  body.appendChild(block);
+
+  /* place-value ledger */
+  if (bitStep >= 3){
+    body.appendChild(buildLedger(outPattern, s.to, s.cast.result));
+  }
+  if (bitStep >= 4){
+    body.appendChild(resultCard(s));
+  }
+}
+
+/* One block of bits, one byte per row. `marks` decorates individual boxes. */
+function bitRun(pattern, marks){
+  var grid = el('div', 'bit-grid by8');
+  for (var i = 0; i < pattern.length; i++){
+    var b = el('div', 'bit' + (pattern[i] === '1' ? ' one' : ''));
+    b.textContent = pattern[i];
+    if (marks && marks.cls) b.classList.add(marks.cls);
+    if (marks && marks.signAt === i) b.classList.add('signbit');
+    grid.appendChild(b);
+  }
+  return grid;
+}
+
+/* The two-block picture: what is being dropped (or added) beside what survives. */
+function buildSplit(s, narrowing, cut, srcPattern, outPattern){
+  var wrap = el('div', 'split');
+  var showSplit = bitStep >= 1;
+
+  function col(label, labelCls, grid){
+    var c = el('div', 'split-col');
+    var l = el('div', 'split-lab' + (labelCls ? ' ' + labelCls : ''));
+    l.textContent = showSplit ? label : '';
+    c.appendChild(l);
+    c.appendChild(grid);
+    return c;
+  }
+
+  if (narrowing){
+    var doomed = srcPattern.slice(0, cut);
+    var kept = srcPattern.slice(cut);
+    var doomCls = bitStep >= 2 ? 'gone' : (bitStep >= 1 ? 'doomed' : null);
+    wrap.appendChild(col('dropped · ' + cut + ' bits', 'doom',
+      bitRun(doomed, { cls:doomCls })));
+    if (showSplit) wrap.appendChild(el('div', 'cut'));
+    wrap.appendChild(col('kept · ' + kept.length + ' bits', 'keep',
+      bitRun(kept, { signAt: bitStep >= 3 ? 0 : -1 })));
+  } else {
+    /* widening: the low bits are carried over untouched, the high ones are new */
+    var original = srcPattern;
+    var added = outPattern.slice(0, cut);
+    if (bitStep === 0){
+      wrap.appendChild(col('', null, bitRun(original, null)));
+    } else {
+      var shown = bitStep >= 2 ? added : added.replace(/./g, '·');
+      wrap.appendChild(col('added · ' + cut + ' bits', 'add',
+        bitRun(shown, { cls: bitStep >= 2 ? 'filled' : null,
+                        signAt: bitStep >= 3 ? 0 : -1 })));
+      wrap.appendChild(col('carried over · ' + original.length + ' bits', 'keep',
+        bitRun(original, null)));
+    }
+  }
+  return wrap;
+}
+
+function buildLedger(pattern, type, result){
+  var wrap = el('div', 'ledger');
+  var lab = el('div', 'lab'); lab.textContent = 'Adding up what survived';
+  wrap.appendChild(lab);
+  var n = pattern.length;
+  var terms = [];
+  for (var i = 0; i < n; i++){
+    if (pattern[i] !== '1') continue;
+    var power = n - 1 - i;
+    var isSign = (i === 0 && TYPES[type].signed);
+    var val = BigInt(2) ** BigInt(power);
+    terms.push({ power:power, val:isSign ? -val : val, sign:isSign });
+  }
+  var row = el('div', 'ledger-row');
+  if (!terms.length){
+    row.innerHTML = 'every bit is 0, so the value is <span class="pos">0</span>';
+  } else {
+    row.innerHTML = terms.map(function(t, i){
+      var cls = t.sign ? 'neg' : 'pos';
+      var body = (t.sign ? '−2^' : '2^') + t.power + ' (' + t.val + ')';
+      return (i ? ' + ' : '') + '<span class="' + cls + '">' + body + '</span>';
+    }).join('');
+  }
+  wrap.appendChild(row);
+  var sum = el('div', 'ledger-sum');
+  sum.textContent = '= ' + result;
+  wrap.appendChild(sum);
+  return wrap;
+}
+
+function resultCard(s){
+  var card = el('div', 'verdict ' + (s.cast.status === 'exact' ? 'ok'
+    : (s.cast.status === 'lossy' ? 'lossy' : 'bad')));
+  var head = el('div', 'v-head');
+  var t = el('div', 'v-title');
+  t.textContent = s.cast.status === 'exact' ? 'Nothing was lost'
+    : (s.cast.status === 'lossy' ? 'Precision was lost' : 'The value changed');
+  head.appendChild(t);
+  var pill = el('span', 'v-pill ' + (s.cast.status === 'exact' ? 'ok'
+    : (s.cast.status === 'lossy' ? 'lossy' : 'bad')));
+  pill.textContent = s.kind;
+  head.appendChild(pill);
+  card.appendChild(head);
+  var body = el('div', 'v-body');
+  var suffix = s.from === 'long' ? 'L' : (s.from === 'float' ? 'f' : '');
+  body.innerHTML = '<code>' + s.from + ' a = ' + plain(s.value, s.from) + suffix + '; '
+    + s.to + ' b = ' + (s.kind === 'narrowing' ? '(' + s.to + ') ' : '') + 'a;</code>'
+    + ' leaves <code>b</code> holding <code>' + plain(s.cast.result, s.to) + '</code>.';
+  card.appendChild(body);
+  return card;
+}
+
+/* ── anything involving float/double: re-encoding, not chopping ──── */
+function drawFloatCast(body, s){
+  var fromF = TYPES[s.from].kind === 'float', toF = TYPES[s.to].kind === 'float';
+  var story = el('div', 'bits-story');
+
+  var msgs;
+  if (fromF && toF){
+    msgs = [
+      'Both sides are floating point, so both are stored as <b>sign · exponent · '
+        + 'mantissa</b> — not as a plain run of place values.',
+      Art(s.to) + ' <b>' + s.to + '</b> gives the mantissa only ' + (s.to === 'float' ? 23 : 52)
+        + ' bits, against ' + (s.from === 'float' ? 23 : 52) + ' in ' + art(s.from) + ' <b>' + s.from + '</b>.',
+      'The extra mantissa bits cannot be carried over. They are not chopped off the end of the '
+        + 'number — the value is <b>rounded to the nearest representable ' + s.to + '</b> '
+        + 'and re-encoded from scratch.',
+      'The exponent is re-encoded too, with a different bias. If the value is larger than '
+        + art(s.to) + ' <b>' + s.to + '</b> can express, the result is <b>Infinity</b> '
+        + 'rather than garbage.',
+      '<b>(' + s.to + ') ' + plain(s.value, s.from) + '</b> is <b>'
+        + plain(s.cast.result, s.to) + '</b>.'
+    ];
+  } else if (fromF){
+    msgs = [
+      Art(s.from) + ' <b>' + s.from + '</b> does not store place values — it stores <b>sign · '
+        + 'exponent · mantissa</b>. So this cast cannot be a bit chop.',
+      'Java converts the <i>number</i>, not the bit pattern: it discards the fractional part, '
+        + 'always rounding <b>toward zero</b>.',
+      'If the whole part is too big for the target, the result is <b>clamped</b> to that type’s '
+        + 'limit — it does not wrap around. NaN becomes 0.',
+      s.to === 'int' || s.to === 'long'
+        ? 'That clamped, truncated integer is the answer.'
+        : 'One more step for <b>' + s.to + '</b>: JLS 5.1.3 routes this through <code>int</code> '
+          + 'first, and only then narrows to ' + s.to + '. That second step <i>does</i> chop bits.',
+      '<b>(' + s.to + ') ' + plain(s.value, s.from) + '</b> is <b>'
+        + plain(s.cast.result, s.to) + '</b>.'
+    ];
+  } else {
+    msgs = [
+      'An integer is a plain run of place values. A <b>' + s.to + '</b> is not — so the '
+        + 'number has to be rebuilt as <b>sign · exponent · mantissa</b>.',
+      Art(s.to) + ' <b>' + s.to + '</b> spends its ' + TYPES[s.to].bits + ' bits on range, keeping only '
+        + (s.to === 'float' ? '24' : '53') + ' bits of mantissa for the digits themselves.',
+      'If the integer needs more significant bits than that, the low ones are <b>rounded '
+        + 'away</b> — the value still fits, but it is no longer the same number.',
+      'This is why the conversion is called widening yet can still lose information: range grew, '
+        + 'precision did not.',
+      '<b>' + s.from + ' → ' + s.to + '</b> gives <b>' + plain(s.cast.result, s.to) + '</b>'
+        + (s.cast.status === 'exact' ? ' exactly.' : ' — not the number you started with.')
+    ];
+  }
+  story.innerHTML = msgs[bitStep];
+  body.appendChild(story);
+
+  var two = el('div', 'two-up');
+  if (fromF) two.appendChild(ieeeBlock(s.from, s.value, false, s));
+  else two.appendChild(intBlock(s.from, s.value));
+  if (toF) two.appendChild(ieeeBlock(s.to, s.cast.result, fromF && s.to === 'float', s));
+  else two.appendChild(intBlock(s.to, s.cast.result));
+  body.appendChild(two);
+
+  if (bitStep >= 2 && fromF && !toF){
+    var note = el('div', 'bit-note');
+    var R = range(s.to === 'byte' || s.to === 'short' || s.to === 'char' ? 'int' : s.to);
+    var clamped = !Number.isNaN(s.value)
+      && (s.value >= Number(R.max) || s.value <= Number(R.min));
+    note.innerHTML = Number.isNaN(s.value)
+      ? '<span class="em">NaN</span> has no integer meaning at all, so Java defines the '
+        + 'result as <b>0</b>.'
+      : (clamped
+        ? 'This value is outside <code>' + (s.to === 'byte' || s.to === 'short' || s.to === 'char'
+            ? 'int' : s.to) + '</code>’s range, so it was <span class="em">clamped</span> to '
+          + '<b>' + (s.value > 0 ? R.max : R.min) + '</b> before anything else happened. '
+          + 'This is the step people expect to wrap — it does not.'
+        : 'Whole part <b>' + Math.trunc(s.value) + '</b>, fraction <span class="em">'
+          + (s.value - Math.trunc(s.value) === 0 ? 'none'
+            : String(Math.abs(s.value - Math.trunc(s.value)).toFixed(6)).replace(/0+$/, ''))
+          + '</span> discarded. Rounding is always toward zero, so '
+          + '<code>-3.9</code> becomes <code>-3</code>, not <code>-4</code>.');
+    body.appendChild(note);
+  }
+  if (bitStep >= 4) body.appendChild(resultCard(s));
+}
+
+function ieeeBlock(type, value, showDropped, s){
+  var is64 = type === 'double';
+  var f = floatFields(Number(value), is64);
+  var block = el('div', 'grid-block');
+  var head = el('div', 'grid-head');
+  var title = el('div', 'grid-title');
+  title.textContent = type + ' — IEEE 754';
+  var meta = el('div', 'grid-meta');
+  meta.textContent = plain(value, type);
+  head.appendChild(title); head.appendChild(meta);
+  block.appendChild(head);
+
+  var wrap = el('div', 'ieee');
+  [['sign', 'sign', f.sign], ['exp', 'exponent', f.exp], ['man', 'mantissa', f.man]]
+    .forEach(function(part){
+      var d = el('div', 'ieee-f ' + part[0]);
+      var l = el('div', 'ieee-lab');
+      l.textContent = part[1] + ' · ' + part[2].length;
+      var b = el('div', 'ieee-bits');
+      if (part[0] === 'man' && showDropped && bitStep >= 2 && s
+          && TYPES[s.from].kind === 'float'){
+        /* the mantissa bits a float cannot carry */
+        var srcMan = floatFields(Number(s.value), s.from === 'double').man;
+        b.innerHTML = part[2] + '<span class="dropped">'
+          + srcMan.slice(part[2].length) + '</span>';
+      } else {
+        b.textContent = part[2];
+      }
+      d.appendChild(l); d.appendChild(b);
+      wrap.appendChild(d);
+    });
+  block.appendChild(wrap);
+
+  var note = el('div', 'bit-note');
+  note.innerHTML = 'Value = sign × 1.mantissa × 2<sup>exponent−'
+    + (is64 ? 1023 : 127) + '</sup>. Nothing here lines up with the place values of an integer, '
+    + 'which is exactly why the cast has to rebuild the number.';
+  block.appendChild(note);
+  return block;
+}
+
+function intBlock(type, value){
+  var n = TYPES[type].bits;
+  var pattern = bitsOf(typeof value === 'bigint' ? value : BigInt(Math.trunc(value || 0)), n);
+  var block = el('div', 'grid-block');
+  var head = el('div', 'grid-head');
+  var title = el('div', 'grid-title');
+  title.textContent = type + ' — ' + n + ' bits';
+  var meta = el('div', 'grid-meta');
+  meta.textContent = plain(value, type);
+  head.appendChild(title); head.appendChild(meta);
+  block.appendChild(head);
+  block.appendChild(bitRun(pattern, null));
+  var note = el('div', 'bit-note');
+  note.innerHTML = 'Plain place values: each bit is worth 2<sup>its position</sup>, and the '
+    + 'top bit is ' + (TYPES[type].signed ? 'negative' : 'just another positive place') + '.';
+  block.appendChild(note);
+  return block;
+}
+
+$('b-step').addEventListener('click', bitsAdvance);
+$('b-play').addEventListener('click', bitsPlay);
+$('b-reset').addEventListener('click', bitsReset);
+$('b-from').addEventListener('change', bitsReset);
+$('b-to').addEventListener('change', bitsReset);
+$('b-val').addEventListener('input', bitsReset);
+
+/* ── boot ────────────────────────────────────────────────────────── */
+buildTypeList();
+buildChart();
+renderBench();
+buildSelects();
+buildSteps();
+markSteps();
+drawBits();
+</script>
+</body>
+</html>
