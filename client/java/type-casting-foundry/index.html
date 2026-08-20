@@ -330,7 +330,7 @@ select{cursor:pointer;min-width:96px}
       <div class="lab" style="margin-bottom:8px">Place a container</div>
       <div class="type-list" id="type-list"></div>
     </div>
-    <button class="btn" id="btn-reset">Reset bench</button>
+    <button class="btn" id="btn-reset">Clear</button>
     <div class="rail-note">
       Click a value to change it. <b>Drag a container over another</b> and let go to pour.
       Taller vessel means more bits.
@@ -1121,7 +1121,7 @@ $('btn-reset').addEventListener('click', function(){
   $('to-bits').classList.remove('show');
   renderBench();
   updateChart(null, null);
-  say('Bench reset',
+  say('Bench cleared',
     'Every container is empty again — but the vessels stay where you put them.', '');
 });
 
