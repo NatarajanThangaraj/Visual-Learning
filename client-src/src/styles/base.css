@@ -19,6 +19,21 @@
   --others: #6B7280;
   --others-bg: #EEF0F3;
 
+  /* Course-shell surfaces — plain white, with neutral hairlines doing the
+     separating instead of tinted backgrounds. */
+  --surface-canvas: #FFFFFF;
+  --surface-sidebar: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --surface-subtle: #F7F8FA;
+  --rail: #E5E7EB;
+  --rail-strong: #D3D7DE;
+
+  /* Lesson status */
+  --status-done: #3B82F6;
+  --status-done-bg: #DBEAFE;
+  --status-current: #0F2A5C;
+  --status-locked: #A8A296;
+
   --radius-card: 16px;
   --radius-input: 12px;
   --radius-chip: 6px;
@@ -33,7 +48,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  background: var(--surface-canvas);
   color: var(--text);
   font-family: var(--font);
   font-size: 15px;

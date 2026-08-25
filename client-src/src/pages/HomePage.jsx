@@ -1,71 +1,76 @@
-import { useMemo, useState } from 'react';
-import { topics, CATEGORY_ORDER } from '../data/topics';
-import Header from '../components/Header';
-import CategoryFilter from '../components/CategoryFilter';
-import Toolbar from '../components/Toolbar';
-import TopicGrid from '../components/TopicGrid';
+import { Link } from 'react-router-dom';
+import { courses } from '../data/courses';
+import { useProgress } from '../hooks/useProgress';
+import CourseIcon from '../components/course/CourseIcon';
 
+/* The front door: pick a course. If there is progress, the page opens with a
+   card that resumes it. */
 export default function HomePage() {
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('all');
-  const [tag, setTag] = useState('all');
-  const [view, setView] = useState('grid');
+  const { courseProgress, nextLesson, overall } = useProgress();
+  const total = overall();
 
-  // Category pills with counts, in the configured order, plus any extras.
-  const categories = useMemo(() => {
-    const counts = {};
-    topics.forEach(t => { counts[t.category] = (counts[t.category] || 0) + 1; });
-    const known = CATEGORY_ORDER.filter(c => counts[c]);
-    const extras = Object.keys(counts).filter(c => !CATEGORY_ORDER.includes(c)).sort();
-    return [...known, ...extras].map(name => ({ name, count: counts[name] }));
-  }, []);
-
-  // Union of all tags for the dropdown.
-  const tags = useMemo(() => {
-    const set = new Set();
-    topics.forEach(t => (t.tags || []).forEach(x => set.add(x)));
-    return [...set].sort();
-  }, []);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return topics.filter(t => {
-      if (category !== 'all' && t.category !== category) return false;
-      if (tag !== 'all' && !(t.tags || []).includes(tag)) return false;
-      if (!q) return true;
-      const hay = [t.title, t.description, t.category, ...(t.tags || [])].join(' ').toLowerCase();
-      return hay.includes(q);
-    });
-  }, [query, category, tag]);
+  // The course with progress that isn't finished — what "resume" should mean.
+  const resumeCourse = courses.find(c => {
+    const p = courseProgress(c.id);
+    return p.done > 0 && p.done < p.total;
+  });
+  const resumeLesson = resumeCourse ? nextLesson(resumeCourse.id) : null;
 
   return (
-    <main className="page">
-      <Header />
+    <div className="home">
+      <header className="home-head">
+        <span className="home-eyebrow">Zoho Schools</span>
+        <h1 className="home-title">Learn by building things that behave like the real world.</h1>
+        <p className="home-lead">
+          Three courses, {total.total} interactive pages. Pick a language and work down the path —
+          each page unlocks the next.
+        </p>
+      </header>
 
-      <CategoryFilter
-        categories={categories}
-        total={topics.length}
-        active={category}
-        onSelect={setCategory}
-      />
+      {resumeLesson && (
+        <Link
+          className="resume"
+          to={resumeLesson.route}
+          style={{ '--course-accent': resumeCourse.accent, '--course-accent-bg': resumeCourse.accentBg }}
+        >
+          <span className="resume-eyebrow">Pick up where you left off · {resumeCourse.title}</span>
+          <span className="resume-title">{resumeLesson.title}</span>
+          <span className="resume-blurb">{resumeLesson.blurb}</span>
+          <span className="resume-go">Continue →</span>
+        </Link>
+      )}
 
-      <Toolbar
-        query={query}
-        onQuery={setQuery}
-        tag={tag}
-        onTag={setTag}
-        tags={tags}
-        view={view}
-        onToggleView={() => setView(v => (v === 'grid' ? 'list' : 'grid'))}
-      />
+      <div className="course-cards">
+        {courses.map(course => {
+          const p = courseProgress(course.id);
+          const modules = course.modules.length;
+          return (
+            <Link
+              key={course.id}
+              className="ccard"
+              to={`/learn/${course.id}`}
+              style={{ '--course-accent': course.accent, '--course-accent-bg': course.accentBg }}
+            >
+              <CourseIcon courseId={course.id} size={52} />
+              <span className="ccard-title">{course.title}</span>
+              <span className="ccard-tagline">{course.tagline}</span>
 
-      <p className="result-count" aria-live="polite">
-        {topics.length === 0
-          ? ''
-          : `Showing ${filtered.length} of ${topics.length} assignment${topics.length === 1 ? '' : 's'}`}
+              <span className="ccard-meta">
+                {modules} modules · {p.total} pages
+              </span>
+
+              <span className="ccard-progress">
+                <span className="bar"><span style={{ width: `${p.pct}%` }} /></span>
+                <span className="ccard-pct">{p.done > 0 ? `${p.done}/${p.total}` : 'Start'}</span>
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+
+      <p className="home-foot">
+        Looking for one specific page? <Link to="/browse">Browse all {total.total} pages →</Link>
       </p>
-
-      <TopicGrid items={filtered} view={view} hasTopics={topics.length > 0} />
-    </main>
+    </div>
   );
 }

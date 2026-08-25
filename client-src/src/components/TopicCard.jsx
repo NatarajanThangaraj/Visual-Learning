@@ -1,28 +1,23 @@
 import { Link } from 'react-router-dom';
-import defaultThumb from '../assets/default-thumb.svg';
-import javaThumb from '../assets/thumb-java.svg';
-import pythonThumb from '../assets/thumb-python.svg';
-import othersThumb from '../assets/thumb-others.svg';
+import LessonThumb from './course/LessonThumb';
 
-const THUMBS = { Java: javaThumb, Python: pythonThumb, Others: othersThumb };
-
-export default function TopicCard({ topic }) {
-  const { path, title, category, thumbnail, external } = topic;
-  const thumb = thumbnail || THUMBS[category] || defaultThumb;
-
-  // External topics are standalone static pages (not in-app React routes), so
-  // they use a plain anchor that triggers a real navigation to the file.
-  const CardTag = external ? 'a' : Link;
-  const linkProps = external ? { href: path } : { to: path };
-
+/* One result on the Browse page. Links to the in-app lesson route, so a lab
+   opened from here still arrives inside its course chrome. */
+export default function TopicCard({ lesson }) {
   return (
-    <CardTag className="card" {...linkProps}>
+    <Link className="card" to={lesson.route} style={{ '--course-accent': lesson.accent }}>
       <div className="thumb">
-        <img src={thumb} alt="" loading="lazy" />
+        <LessonThumb lesson={lesson} />
+        <span className="cat-badge" data-cat={lesson.courseId}>{lesson.courseTitle}</span>
       </div>
       <div className="body">
-        <div className="title">{title || path}</div>
+        <div className="title">{lesson.title}</div>
+        <div className="desc">{lesson.blurb}</div>
+        <div className="footer">
+          <span className="updated">{lesson.moduleTitle}</span>
+          {lesson.minutes ? <span className="updated">{lesson.minutes} min</span> : null}
+        </div>
       </div>
-    </CardTag>
+    </Link>
   );
 }
