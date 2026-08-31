@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Assignment: Build the Rapido Backend</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root{
+  --bg:        #0D0D0D;
+  --surface:   #161616;
+  --surface2:  #1E1E1E;
+  --surface3:  #242424;
+  --border:    #2A2A2A;
+  --border2:   #383838;
+  --text:      #F5F5F5;
+  --dim:       #C9C9C9;
+  --muted:     #8A8A8A;
+  --faint:     #6E6E6E;
+  --yellow:    #FFCC00;
+  --yellow-d:  #C9A200;
+  --yellow-bg: rgba(255,204,0,.08);
+  --yellow-bd: rgba(255,204,0,.26);
+  --yellow-tx: #E4CE7E;
+  --type:      #9BD1FF;
+  --danger:    #F09595;
+  --danger-bg: rgba(226,75,74,.10);
+  --danger-bd: rgba(226,75,74,.30);
+  --green:     #8FD9A8;
+  --mono:      'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  --r:  8px;
+  --rl: 12px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  line-height:1.6;
+}
+
+code{font-family:var(--mono);font-size:.92em}
+
+/* ══════════ HEADER ══════════ */
+.hdr{
+  position:sticky;top:0;z-index:50;
+  background:rgba(13,13,13,.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.hdr-in{
+  max-width:900px;margin:0 auto;
+  padding:15px 22px;
+  display:flex;align-items:center;gap:12px;
+}
+.mark{
+  width:30px;height:30px;flex:none;
+  border-radius:7px;background:var(--yellow);
+  color:#0D0D0D;
+  display:flex;align-items:center;justify-content:center;
+}
+.mark svg{width:19px;height:19px;display:block}
+.hdr-t{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:17px;font-weight:500;letter-spacing:-.01em;
+  flex:1;min-width:0;
+}
+.hdr-t b{color:var(--yellow);font-weight:600}
+.hdr-count{
+  font-family:var(--mono);font-size:12px;color:var(--muted);
+  white-space:nowrap;
+}
+.hdr-count b{color:var(--yellow);font-weight:400}
+.bar{height:2px;background:var(--surface3)}
+.bar-fill{height:100%;width:0;background:var(--yellow);transition:width .35s ease}
+
+/* ══════════ SHELL ══════════ */
+.wrap{max-width:900px;margin:0 auto;padding:30px 22px 70px}
+
+/* ══════════ INTRO ══════════ */
+.brief{
+  border:1px solid var(--border);
+  border-radius:var(--rl);
+  background:var(--surface);
+  padding:22px 24px;
+  margin-bottom:14px;
+}
+.brief-tag{
+  font-family:var(--mono);font-size:11px;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--yellow);margin-bottom:10px;
+}
+.brief p{font-size:15px;line-height:1.8;color:var(--dim)}
+.brief p + p{margin-top:12px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.chip{
+  font-family:var(--mono);font-size:12.5px;
+  padding:5px 11px;border-radius:20px;
+  background:var(--yellow-bg);color:var(--yellow);
+  border:1px solid var(--yellow-bd);
+}
+.reset{
+  margin-top:18px;
+  font-family:'Space Grotesk',sans-serif;font-size:12px;
+  background:none;border:1px solid var(--border2);
+  color:var(--muted);border-radius:20px;
+  padding:5px 13px;cursor:pointer;
+}
+.reset:hover{border-color:var(--border2);color:var(--dim);background:var(--surface2)}
+
+/* ══════════ STEP ══════════ */
+.step{
+  border:1px solid var(--border);
+  border-radius:var(--rl);
+  background:var(--surface);
+  margin-bottom:10px;
+  overflow:hidden;
+}
+.step.open{border-color:var(--yellow-bd)}
+.step.done .num{background:var(--green);color:#0D0D0D}
+
+.shead{
+  display:flex;align-items:center;gap:14px;
+  width:100%;padding:16px 18px;
+  background:none;border:none;cursor:pointer;
+  text-align:left;color:inherit;font-family:inherit;
+}
+.shead:hover{background:var(--surface2)}
+.num{
+  width:28px;height:28px;flex:none;
+  border-radius:8px;background:var(--surface3);
+  color:var(--muted);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:13px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+}
+.step.open .num{background:var(--yellow);color:#0D0D0D}
+.stitle{flex:1;min-width:0}
+.stitle-m{
+  display:block;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;font-weight:500;letter-spacing:-.01em;
+}
+.stitle-s{
+  display:block;
+  font-family:var(--mono);font-size:11.5px;
+  color:var(--muted);margin-top:3px;
+}
+.chev{color:var(--muted);flex:none;transition:transform .22s}
+.chev svg{width:16px;height:16px;display:block}
+.step.open .chev{transform:rotate(180deg);color:var(--yellow)}
+
+.panel{padding:0 18px 20px 60px;border-top:1px solid #202020}
+.purpose{
+  margin-top:16px;font-size:14px;color:var(--dim);
+  font-style:italic;
+}
+.what{
+  margin-top:14px;padding-left:16px;
+  border-left:2px solid var(--border2);
+  list-style:none;
+}
+.what li{
+  font-size:14px;line-height:1.75;color:var(--dim);
+  padding-left:14px;position:relative;
+}
+.what li + li{margin-top:7px}
+.what li::before{
+  content:'';position:absolute;left:0;top:.68em;
+  width:5px;height:5px;border-radius:50%;background:var(--yellow-d);
+}
+.what code{color:var(--yellow);background:var(--yellow-bg);padding:1px 5px;border-radius:4px}
+
+.lbl{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin:22px 0 8px;
+}
+.tb{width:100%;border-collapse:collapse;font-size:13.5px}
+.tb td{padding:9px 12px;border-bottom:1px solid #212121;vertical-align:top}
+.tb tr:last-child td{border-bottom:none}
+.tb .k{font-family:var(--mono);color:var(--yellow);width:42%;word-break:break-word}
+.tb .k.plain{font-family:'Inter',sans-serif;color:var(--type)}
+.tb .v{color:var(--dim);line-height:1.65}
+
+.note{
+  margin-top:20px;padding:12px 15px;border-radius:var(--r);
+  background:var(--yellow-bg);border:1px solid var(--yellow-bd);
+  font-size:13.5px;line-height:1.7;color:var(--yellow-tx);
+}
+.note b{color:var(--yellow);font-weight:600}
+
+.flow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:10px}
+.fb{
+  font-family:var(--mono);font-size:12.5px;
+  padding:7px 12px;border-radius:var(--r);
+  background:var(--surface3);border:1px solid var(--border2);
+  color:var(--text);
+}
+.fb.hl{background:var(--yellow-bg);border-color:var(--yellow-bd);color:var(--yellow)}
+.fa{color:var(--yellow);flex:none;display:flex}
+.fa svg{width:15px;height:15px}
+
+.donebtn{
+  margin-top:22px;
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:500;
+  padding:8px 16px;border-radius:20px;cursor:pointer;
+  background:none;border:1px solid var(--border2);color:var(--muted);
+}
+.donebtn:hover{border-color:var(--yellow-bd);color:var(--yellow)}
+.donebtn svg{width:15px;height:15px}
+.step.done .donebtn{background:rgba(143,217,168,.1);border-color:rgba(143,217,168,.35);color:var(--green)}
+
+/* ══════════ STEP 5 : ROLE SWITCHER ══════════ */
+.inputs{display:flex;gap:9px;flex-wrap:wrap}
+.fld{
+  flex:1;min-width:118px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r);padding:9px 12px;
+}
+.fld:focus-within{border-color:var(--yellow-bd)}
+.fld span{
+  display:block;font-size:10.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:4px;
+}
+.fld input{
+  width:100%;background:none;border:none;
+  color:var(--yellow);font-family:var(--mono);font-size:16px;
+}
+.fld input:focus{outline:none}
+
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.role{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:13px 8px;cursor:pointer;
+  color:var(--muted);font-family:'Space Grotesk',sans-serif;
+  font-size:13px;font-weight:500;text-align:center;
+}
+.role:hover{border-color:var(--border2);color:var(--dim)}
+.role svg{width:21px;height:21px;display:block;margin:0 auto 6px}
+.role.on{border-color:var(--yellow);background:var(--yellow-bg);color:var(--yellow)}
+
+.rp{
+  margin-top:14px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;
+}
+.rp-h{
+  padding:11px 15px;border-bottom:1px solid var(--border);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);
+}
+.rp-h b{color:var(--yellow);font-weight:600}
+.rt{width:100%;border-collapse:collapse;font-size:13.5px}
+.rt td{padding:9px 15px;border-bottom:1px solid #202020}
+.rt tr:last-child td{border-bottom:none}
+.rt .rk{color:var(--dim)}
+.rt .rv{font-family:var(--mono);text-align:right;white-space:nowrap;color:var(--text)}
+.rt .rv.y{color:var(--yellow)}
+.rt .rs{
+  font-family:var(--mono);font-size:11px;
+  color:var(--faint);text-align:right;white-space:nowrap;
+}
+.rt .rs.bonus{color:var(--yellow-tx)}
+.warn{
+  margin-top:12px;padding:11px 15px;border-radius:var(--r);
+  background:var(--danger-bg);border:1px solid var(--danger-bd);
+  font-family:var(--mono);font-size:12.5px;color:var(--danger);
+}
+
+/* ══════════ FINAL CHECKLIST ══════════ */
+.final{
+  margin-top:26px;
+  border:1px solid var(--yellow-bd);border-radius:var(--rl);
+  background:var(--yellow-bg);padding:22px 24px;
+}
+.final h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;font-weight:600;color:var(--yellow);
+  margin-bottom:14px;
+}
+.final ul{list-style:none}
+.final li{
+  font-size:13.5px;line-height:1.7;color:var(--dim);
+  padding-left:24px;position:relative;
+}
+.final li + li{margin-top:8px}
+.final li::before{
+  content:'';position:absolute;left:0;top:.42em;
+  width:13px;height:13px;border-radius:3px;
+  border:1px solid var(--yellow-bd);
+}
+.final code{color:var(--yellow)}
+
+/* ══════════ RESPONSIVE ══════════ */
+@media (max-width:640px){
+  .hdr-in{padding:13px 16px;gap:10px}
+  .hdr-t{font-size:15px}
+  .hdr-count{display:none}
+  .wrap{padding:22px 16px 50px}
+  .brief{padding:18px 17px}
+  .panel{padding:0 16px 18px 16px}
+  .shead{padding:14px 15px;gap:11px}
+  .roles{grid-template-columns:1fr}
+  .role{display:flex;align-items:center;justify-content:flex-start;gap:10px;text-align:left}
+  .role svg{margin:0}
+
+  /* stack every two-column table into label-over-value rows */
+  .tb,.tb tbody,.tb tr,.tb td{display:block;width:100%}
+  .tb td{border-bottom:none;padding:0}
+  .tb tr{padding:11px 0;border-bottom:1px solid #212121}
+  .tb tr:last-child{border-bottom:none}
+  .tb .k{margin-bottom:4px}
+  .rt,.rt tbody,.rt tr,.rt td{display:block;width:100%}
+  .rt td{border-bottom:none;padding:0;text-align:left}
+  .rt tr{padding:11px 15px;border-bottom:1px solid #202020;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+  .rt .rk{flex:1 1 100%}
+  .rt .rv{text-align:left}
+  .rt .rs{text-align:left;margin-left:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/>
+        <path d="M6 17h6l4-9h3M9 8h5l2 9"/>
+      </svg>
+    </div>
+    <h1 class="hdr-t">Java Assignment: <b>Build the Rapido Backend</b></h1>
+    <div class="hdr-count"><b id="cDone">0</b> / 6 steps done</div>
+  </div>
+  <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+</header>
+
+<main class="wrap">
+
+  <section class="brief">
+    <div class="brief-tag">Your first day</div>
+    <p>Welcome to your new job at Rapido! Your task is to design the core Java classes that handle
+       ride bookings. You will create normal Java classes to represent real-world things, make
+       sure their data is secure (private), and make them interact with each other.</p>
+    <div class="chips">
+      <span class="chip">Passenger</span>
+      <span class="chip">Vehicle</span>
+      <span class="chip">Rider</span>
+      <span class="chip">Ride</span>
+      <span class="chip">RapidoApp</span>
+      <span class="chip">RapidoCompany</span>
+    </div>
+    <button class="reset" id="resetBtn">Reset my progress</button>
+  </section>
+
+  <div id="steps"></div>
+
+  <section class="final">
+    <h2>Before you submit</h2>
+    <ul>
+      <li>Six classes exist and compile: <code>Passenger</code>, <code>Vehicle</code>,
+          <code>Rider</code>, <code>Ride</code>, <code>RapidoApp</code>, <code>RapidoCompany</code>.</li>
+      <li>Every variable in every class is <code>private</code> — nothing is reachable from
+          outside except through a method you wrote.</li>
+      <li>Running <code>RapidoApp</code> prints a receipt and then the passenger's new balance.</li>
+      <li>With a wallet of Rs. 500, a Bike at Rs. 10 per km and a distance of 15 km, the balance
+          printed at the end is <code>350.0</code>.</li>
+      <li>Lower the wallet below the fare, run it again, and <code>Insufficient funds!</code>
+          appears.</li>
+      <li>You can answer all three role questions from Step 5 by reading your own fields.</li>
+    </ul>
+  </section>
+
+</main>
+
+<script>
+"use strict";
+
+/* ── icons ─────────────────────────────────────────────────────────── */
+const SVG = {
+  chev:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>',
+  user:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>',
+  bike:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M6 17h6l4-9h3M9 8h5l2 9"/></svg>',
+  store: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10V20h18V10M2 7l1.5-4h17L22 7a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0zM9 20v-6h6v6"/></svg>'
+};
+
+/* ── the six steps ─────────────────────────────────────────────────── */
+const STEPS = [
+{
+  title:'Create the Passenger class', sub:'class Passenger',
+  purpose:'One person who books rides and pays for them out of a wallet.',
+  what:[
+    'Create a class named <code>Passenger</code>.',
+    'Add private variables for the name, the phone number and the wallet balance.',
+    'Write a Constructor to set all three variables when a new passenger is created.',
+    'Write a method called <code>deductBalance(double amount)</code> that subtracts money from the wallet. If the amount is greater than their balance, print <code>"Insufficient funds!"</code>.'
+  ],
+  vars:[
+    ['name','The passenger’s full name.'],
+    ['phoneNumber','The number Rapido would call them on.'],
+    ['walletBalance','How much money they have left to spend.']
+  ],
+  meths:[
+    ['Constructor','Takes the name, phone number and wallet balance, and stores all three the moment a passenger is created.'],
+    ['deductBalance','Takes an amount out of the wallet. If the amount is bigger than the balance, it prints <code>Insufficient funds!</code> and takes nothing.']
+  ],
+  note:'Keep all three variables <b>private</b>. That is the whole point of this step — no other class should be able to reach in and change someone’s wallet directly.'
+},
+{
+  title:'Create the Vehicle class', sub:'class Vehicle',
+  purpose:'The bike or auto that shows up — and what it charges per kilometre.',
+  what:[
+    'Create a class named <code>Vehicle</code>.',
+    'Add private variables for the vehicle type (like <code>"Bike"</code> or <code>"Auto"</code>), the licence plate and the price per km.',
+    'Write a Constructor to set all three variables.',
+    'Write Getter methods for these variables so other classes can read them.'
+  ],
+  vars:[
+    ['vehicleType','What kind of vehicle it is — <code>"Bike"</code> or <code>"Auto"</code>.'],
+    ['licensePlate','The registration number on the number plate.'],
+    ['pricePerKm','How much this vehicle charges for one kilometre.']
+  ],
+  meths:[
+    ['Constructor','Takes the vehicle type, licence plate and price per km, and stores all three.'],
+    ['getVehicleType','Hands back the vehicle type to whoever asks.'],
+    ['getLicensePlate','Hands back the licence plate.'],
+    ['getPricePerKm','Hands back the price per km — the <code>Ride</code> class will need this one to work out the fare.']
+  ],
+  note:'The variables stay <b>private</b> and the getters are how the outside world reads them. That is the difference between <i>hidden</i> and <i>unreachable</i>: the data is protected, but still readable on your terms.'
+},
+{
+  title:'Create the Rider (driver) class', sub:'class Rider',
+  purpose:'The driver on the other end of the booking, and whether they are free right now.',
+  what:[
+    'Create a class named <code>Rider</code>.',
+    'Add private variables for the name, the rating and whether the rider is available.',
+    'Write a Constructor to set the name and rating. The <code>isAvailable</code> variable should automatically be set to <code>true</code> inside the constructor.',
+    'Write a method called <code>completeRide()</code> that changes <code>isAvailable</code> back to <code>true</code>.'
+  ],
+  vars:[
+    ['name','The rider’s name.'],
+    ['rating','Their star rating out of 5.'],
+    ['isAvailable','Whether they can take a booking right now. A brand-new rider starts out free.']
+  ],
+  meths:[
+    ['Constructor','Takes only the name and the rating. It sets <code>isAvailable</code> to <code>true</code> by itself — nobody passes that in.'],
+    ['completeRide','Marks the rider free again once a ride finishes.']
+  ],
+  note:'Notice the constructor takes <b>two</b> things but sets <b>three</b> variables. Not every field has to come from outside — some the class decides for itself.'
+},
+{
+  title:'Create the Ride class — the connection', sub:'class Ride',
+  purpose:'One booking. This is the class that ties a passenger, a rider and a vehicle together.',
+  what:[
+    'Create a class named <code>Ride</code>. This class needs the other objects to work!',
+    'Add private variables for the passenger, the rider, the vehicle, the distance in km and the total fare.',
+    'Write a Constructor that accepts the passenger, rider, vehicle and distance. Inside this constructor, calculate the <code>totalFare</code> by multiplying the distance by the vehicle’s price per km.',
+    'Write a method <code>startRide()</code> that changes the Rider’s <code>isAvailable</code> status to <code>false</code>.',
+    'Write a method <code>endRide()</code> that deducts the total fare from the passenger’s wallet, calls the rider’s <code>completeRide()</code> method, and prints a final receipt.'
+  ],
+  vars:[
+    ['passenger','The whole <code>Passenger</code> object — not just their name.'],
+    ['rider','The whole <code>Rider</code> object taking this booking.'],
+    ['vehicle','The whole <code>Vehicle</code> object being ridden.'],
+    ['distanceInKm','How far this ride goes.'],
+    ['totalFare','What the ride costs. Nobody passes this in — the constructor works it out.']
+  ],
+  meths:[
+    ['Constructor','Takes the passenger, the rider, the vehicle and the distance, stores them, then calculates the total fare by multiplying the distance by the vehicle’s price per km.'],
+    ['startRide','Marks the rider as no longer available — they are on this ride now.'],
+    ['endRide','Deducts the total fare from the passenger’s wallet, calls the rider’s complete-ride method to free them up, and prints the final receipt.']
+  ],
+  flowLabel:'One object holding three others',
+  flow:[['Ride',1],['→'],['Passenger',0],['Rider',0],['Vehicle',0]],
+  note:'This is the new idea. The first three variables are not numbers or text — they are <b>whole objects</b>. To get the price per km, <code>Ride</code> has to ask the vehicle for it using the getter you wrote in Step 2.'
+},
+{
+  title:'The Main class — test your code', sub:'class RapidoApp',
+  purpose:'Where it all actually runs. Build the objects, book the ride, prove the money moved.',
+  what:[
+    'Create a class named <code>RapidoApp</code> with a <code>main</code> method.',
+    'Create yourself as a <code>Passenger</code> with Rs. 500 in your wallet.',
+    'Create a <code>Vehicle</code> — for example a Bike charging Rs. 10 per km.',
+    'Create a <code>Rider</code> — for example "Ramesh" with a 4.8 rating.',
+    'Create a <code>Ride</code> object by passing these three objects and a distance of 15 km into it.',
+    'Call <code>startRide()</code>, then call <code>endRide()</code>.',
+    'Print the passenger’s new wallet balance to prove the money was deducted.'
+  ],
+  vars:[
+    ['Passenger','You, with Rs. 500 in your wallet.'],
+    ['Vehicle','A Bike charging Rs. 10 per km.'],
+    ['Rider','"Ramesh", with a 4.8 rating.'],
+    ['Ride','Those three objects, plus a distance of 15 km.']
+  ],
+  varsLabel:'The four objects to create',
+  varsPlain:true,
+  flowLabel:'Then call them in this order',
+  flow:[['startRide()',1],['→'],['endRide()',1],['→'],['print the wallet balance',0]],
+  roles:true,
+  note:'Every number in the panel above lives in exactly one field, in exactly one class — the grey text on the right names it. That is the question to keep asking: <b>whose job is it to know this?</b>'
+},
+{
+  title:'Track the numbers', sub:'class RapidoCompany  ·  and two more fields each',
+  purpose:'Right now nobody remembers yesterday. Give each side a memory so the totals add up.',
+  what:[
+    'Some of the questions in Step 5 cannot be answered yet — a rider does not know how many rides they have done, and Rapido does not know what it earned. Fix that.',
+    'In <code>Rider</code>, add private variables for the number of rides completed and the total earnings. Increase both inside <code>completeRide()</code>.',
+    'In <code>Passenger</code>, add private variables for the number of rides taken and the total amount spent. Increase both whenever money is successfully deducted.',
+    'Create a class named <code>RapidoCompany</code> with private variables for the total rides, the total distance and the total revenue, and a method that records one finished ride.',
+    'Call that method from <code>endRide()</code>, so the company total updates the moment a ride ends.',
+    'Add Getter methods wherever another class needs to read one of these totals.'
+  ],
+  varsLabel:'New variables, by class',
+  vars:[
+    ['Rider · ridesCompleted','How many rides this rider has finished.'],
+    ['Rider · totalEarnings','Everything this rider has earned so far.'],
+    ['Passenger · ridesTaken','How many rides this passenger has booked.'],
+    ['Passenger · totalSpent','Everything this passenger has paid so far.'],
+    ['RapidoCompany · totalRides','How many rides Rapido has completed today.'],
+    ['RapidoCompany · totalDistance','The distance covered across all of them.'],
+    ['RapidoCompany · totalRevenue','The money Rapido has collected today.']
+  ],
+  methsLabel:'What has to change',
+  meths:[
+    ['completeRide','As well as freeing the rider, add one to their completed rides and add this fare to their earnings.'],
+    ['deductBalance','When the money actually comes out, add one to the passenger’s rides taken and add the amount to their total spent. On <code>Insufficient funds!</code>, change nothing.'],
+    ['recordRide','A new method on <code>RapidoCompany</code>. Takes one finished ride’s distance and fare, and adds them to the running totals.'],
+    ['endRide','Calls <code>recordRide</code> too, so the company’s numbers move at the same moment the wallet does.']
+  ],
+  note:'Book a second ride in <code>main</code> and print all three views again. If every total is exactly double, your counters are in the right place. If a total stays at one, something is being reset instead of added to.'
+}
+];
+
+/* ── state ─────────────────────────────────────────────────────────── */
+const KEY  = 'vl:rapido-backend:v1';
+const host = document.getElementById('steps');
+let open = 0;
+let done = loadDone();
+
+function loadDone(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return [];
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v.filter(n => Number.isInteger(n) && n >= 0 && n < STEPS.length) : [];
+  }catch(e){ return [] }
+}
+function saveDone(){
+  try{ localStorage.setItem(KEY, JSON.stringify(done)) }catch(e){}
+}
+
+/* ── build ─────────────────────────────────────────────────────────── */
+const rows = (list, plain) => '<table class="tb"><tbody>' + list.map(r =>
+  '<tr><td class="k' + (plain ? ' plain' : '') + '">' + r[0] + '</td><td class="v">' + r[1] + '</td></tr>'
+).join('') + '</tbody></table>';
+
+function flowHTML(items){
+  return '<div class="flow">' + items.map(it =>
+    it[0] === '→'
+      ? '<span class="fa" aria-hidden="true">' + SVG.arrow + '</span>'
+      : '<span class="fb' + (it[1] ? ' hl' : '') + '">' + it[0] + '</span>'
+  ).join('') + '</div>';
+}
+
+function panelHTML(st, i){
+  let h = '<div class="panel">';
+  h += '<p class="purpose">' + st.purpose + '</p>';
+  h += '<div class="lbl">What to do</div>';
+  h += '<ul class="what">' + st.what.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+
+  if(st.roles) h += rolesHTML();
+
+  if(st.vars)  h += '<div class="lbl">' + (st.varsLabel  || 'Variables') + '</div>' + rows(st.vars, st.varsPlain);
+  if(st.meths) h += '<div class="lbl">' + (st.methsLabel || 'Methods')   + '</div>' + rows(st.meths);
+
+  if(st.flow) h += '<div class="lbl">' + st.flowLabel + '</div>' + flowHTML(st.flow);
+  if(st.note) h += '<div class="note">' + st.note + '</div>';
+
+  h += '<button class="donebtn" data-done="' + i + '">' + SVG.check +
+       (done.includes(i) ? 'Step ' + (i + 1) + ' done' : 'Mark step ' + (i + 1) + ' done') + '</button>';
+  return h + '</div>';
+}
+
+function rolesHTML(){
+  return '<div class="lbl">Change the inputs — every role updates</div>' +
+    '<div class="inputs">' +
+      '<label class="fld"><span>Wallet Rs.</span><input id="in-w" type="number" value="500" step="10" min="0" inputmode="decimal"></label>' +
+      '<label class="fld"><span>Rate Rs. / km</span><input id="in-r" type="number" value="10" step="1" min="0" inputmode="decimal"></label>' +
+      '<label class="fld"><span>Distance km</span><input id="in-d" type="number" value="15" step="1" min="0" inputmode="decimal"></label>' +
+    '</div>' +
+    '<div class="lbl">Who are you?</div>' +
+    '<div class="roles">' +
+      '<button class="role' + (role === 0 ? ' on' : '') + '" data-role="0">' + SVG.user  + 'Passenger</button>' +
+      '<button class="role' + (role === 1 ? ' on' : '') + '" data-role="1">' + SVG.bike  + 'Rider</button>' +
+      '<button class="role' + (role === 2 ? ' on' : '') + '" data-role="2">' + SVG.store + 'Rapido owner</button>' +
+    '</div>' +
+    '<div id="roleOut"></div>';
+}
+
+function render(){
+  host.innerHTML = STEPS.map((st, i) => {
+    const isOpen = i === open;
+    return '<section class="step' + (isOpen ? ' open' : '') + (done.includes(i) ? ' done' : '') + '">' +
+      '<button class="shead" data-step="' + i + '" aria-expanded="' + isOpen + '">' +
+        '<span class="num">' + (i + 1) + '</span>' +
+        '<span class="stitle"><span class="stitle-m">Step ' + (i + 1) + ': ' + st.title + '</span>' +
+        '<span class="stitle-s">' + st.sub + '</span></span>' +
+        '<span class="chev" aria-hidden="true">' + SVG.chev + '</span>' +
+      '</button>' +
+      (isOpen ? panelHTML(st, i) : '') +
+    '</section>';
+  }).join('');
+
+  host.querySelectorAll('.shead').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.step;
+    open = (open === i) ? -1 : i;
+    render();
+  }));
+  host.querySelectorAll('.donebtn').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.done;
+    done = done.includes(i) ? done.filter(x => x !== i) : done.concat(i);
+    saveDone();
+    render();
+  }));
+
+  if(document.getElementById('roleOut')){
+    host.querySelectorAll('.role').forEach(b => b.addEventListener('click', () => {
+      role = +b.dataset.role;
+      host.querySelectorAll('.role').forEach(x => x.classList.toggle('on', x === b));
+      drawRole();
+    }));
+    ['in-w','in-r','in-d'].forEach(id => document.getElementById(id).addEventListener('input', drawRole));
+    drawRole();
+  }
+
+  const n = done.length;
+  document.getElementById('cDone').textContent = n;
+  document.getElementById('barFill').style.width = (n / STEPS.length * 100) + '%';
+}
+
+/* ── the role panel ────────────────────────────────────────────────── */
+let role = 0;
+const ROLE_NAME = ['Passenger','Rider','Rapido owner'];
+const rs = n => 'Rs. ' + n.toFixed(2);
+const num = id => { const v = parseFloat(document.getElementById(id).value); return isFinite(v) && v > 0 ? v : 0; };
+
+function drawRole(){
+  const out = document.getElementById('roleOut');
+  if(!out) return;
+
+  const wallet = num('in-w'), rate = num('in-r'), dist = num('in-d');
+  const fare   = rate * dist;
+  const broke  = fare > wallet;
+  const paid   = broke ? 0 : fare;
+  const after  = wallet - paid;
+
+  let list;
+  if(role === 0){
+    list = [
+      ['Your name','whatever you passed in','Passenger.name'],
+      ['Phone number','whatever you passed in','Passenger.phoneNumber'],
+      ['Wallet before the ride', rs(wallet), 'Passenger.walletBalance'],
+      ['Distance travelled', dist.toFixed(1) + ' km', 'Ride.distanceInKm'],
+      ['Fare charged', (broke ? '' : '− ') + rs(paid), 'Ride.totalFare'],
+      ['Wallet after the ride', rs(after), 'what main() prints', 1],
+      ['Rides you have taken', broke ? '0' : '1', 'step 6', 0, 1],
+      ['Total you have spent', rs(paid), 'step 6', 0, 1]
+    ];
+  } else if(role === 1){
+    list = [
+      ['Rider name','Ramesh','Rider.name'],
+      ['Rating','4.8 ★','Rider.rating'],
+      ['Available right now','true — the ride ended','Rider.isAvailable'],
+      ['Earned from this ride', rs(paid), 'Ride.totalFare', 1],
+      ['Rides completed', broke ? '0' : '1', 'step 6', 0, 1],
+      ['Total earnings', rs(paid), 'step 6', 0, 1]
+    ];
+  } else {
+    list = [
+      ['Vehicle on the road','Bike','Vehicle.vehicleType'],
+      ['Licence plate','KA-01-AB-1234','Vehicle.licensePlate'],
+      ['Rate charged', rs(rate) + ' / km', 'Vehicle.pricePerKm'],
+      ['Rides completed today', broke ? '0' : '1', 'step 6', 0, 1],
+      ['Total distance covered', (broke ? 0 : dist).toFixed(1) + ' km', 'step 6', 0, 1],
+      ['Revenue collected', rs(paid), 'step 6', 1, 1]
+    ];
+  }
+
+  out.innerHTML =
+    '<div class="rp"><div class="rp-h">You are the <b>' + ROLE_NAME[role] + '</b></div>' +
+    '<table class="rt"><tbody>' + list.map(r =>
+      '<tr><td class="rk">' + r[0] + '</td>' +
+      '<td class="rv' + (r[3] ? ' y' : '') + '">' + r[1] + '</td>' +
+      '<td class="rs' + (r[4] ? ' bonus' : '') + '">' + r[2] + '</td></tr>'
+    ).join('') + '</tbody></table></div>' +
+    (broke
+      ? '<div class="warn">Insufficient funds! — the fare is ' + rs(fare) +
+        ', the wallet holds ' + rs(wallet) + ', so nothing is deducted and no ride is counted.</div>'
+      : '');
+}
+
+/* ── boot ──────────────────────────────────────────────────────────── */
+document.getElementById('resetBtn').addEventListener('click', () => {
+  done = [];
+  saveDone();
+  render();
+});
+render();
+</script>
+
+</body>
+</html>
