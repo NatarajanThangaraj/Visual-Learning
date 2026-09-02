@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build the Diary App</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+
+:root{
+  --paper:   #FDFBF6;
+  --card:    #FFFDF8;
+  --card2:   #F7F3EA;
+  --line:    #E6DFD2;
+  --line2:   #DAD1BF;
+  --rule:    #EFE9DC;
+  --ink:     #2E2A24;
+  --ink2:    #6E6659;
+  --muted:   #8B8375;
+  --faint:   #B5AC98;
+  --ac:      #3F6FA8;
+  --ac-d:    #2F5586;
+  --ac-bg:   #EDF1F8;
+  --ac-bd:   #C6D4E8;
+  --idea-bg: #FBF3DE;
+  --idea-bd: #E0C98A;
+  --idea-tx: #5C4610;
+  --idea-h:  #7A5E14;
+  --ok:      #3E7D53;
+  --ok-bg:   #ECF4EE;
+  --err:     #A8412F;
+  --err-bg:  #FBEEE9;
+  --err-bd:  #EBC9BC;
+  --r:  8px;
+  --rl: 12px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.65;
+  min-height:100vh;
+}
+
+button{font-family:inherit}
+
+.wrap{max-width:900px;margin:0 auto;padding:26px 20px 60px}
+
+/* ═════════ STEP RAIL ═════════ */
+.rail{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.rs{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:'Space Grotesk',sans-serif;font-size:13px;
+  padding:6px 14px;border-radius:22px;
+  border:1px solid var(--line);background:transparent;
+  color:var(--faint);cursor:default;
+  transition:background .18s,color .18s,border-color .18s;
+}
+.rs .rn{font-size:11.5px;opacity:.85}
+.rs.dn{background:var(--ac-bg);border-color:var(--ac-bd);color:var(--ac-d);cursor:pointer}
+.rs.dn:hover{border-color:var(--ac)}
+.rs.on{background:var(--ac);border-color:var(--ac);color:#FDFBF6;cursor:pointer}
+.rs svg{width:13px;height:13px;flex:none}
+.rail-hint{
+  font-size:11.5px;color:var(--faint);
+  margin:0 0 18px 2px;
+}
+
+/* ═════════ APP CARD ═════════ */
+.app{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--rl);
+  overflow:hidden;
+}
+.ahead{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 18px;
+  border-bottom:1px solid var(--line);
+  background:var(--card2);
+}
+.av{
+  width:34px;height:34px;flex:none;border-radius:50%;
+  background:var(--ac);color:#FDFBF6;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:500;
+}
+.atitle{flex:1;min-width:0}
+.atitle b{
+  display:block;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;font-weight:500;color:var(--ink);
+  letter-spacing:-.01em;
+}
+.atitle span{display:block;font-size:12.5px;color:var(--muted);line-height:1.45}
+.ahead-act{display:flex;align-items:center;gap:8px;flex:none}
+
+.idea-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Space Grotesk',sans-serif;font-size:12.5px;
+  border:1px solid var(--idea-bd);background:var(--idea-bg);color:var(--idea-h);
+  border-radius:22px;padding:6px 13px;cursor:pointer;
+}
+.idea-btn:hover{background:#F7EBCC}
+.idea-btn svg{width:14px;height:14px}
+
+/* ═════════ SIGN UP ═════════ */
+.signup{padding:32px 20px 40px;max-width:370px;margin:0 auto}
+.signup h2{
+  font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:500;
+  letter-spacing:-.015em;margin-bottom:5px;
+}
+.signup > p{font-size:13.5px;color:var(--muted);margin-bottom:22px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.fld input{
+  width:100%;height:40px;
+  border:1px solid var(--line2);border-radius:var(--r);
+  background:#fff;padding:0 12px;
+  font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);
+  outline:none;
+}
+.fld input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-bg)}
+.fld input::placeholder{color:var(--faint)}
+
+.btn{
+  font-family:'Space Grotesk',sans-serif;font-size:13.5px;
+  background:var(--ac);color:#FDFBF6;
+  border:none;border-radius:var(--r);
+  padding:10px 18px;cursor:pointer;
+}
+.btn:hover{background:var(--ac-d)}
+.btn.wide{width:100%;margin-top:6px}
+.btn.ghost{
+  background:transparent;color:var(--ink2);
+  border:1px solid var(--line2);
+}
+.btn.ghost:hover{background:var(--card2);color:var(--ink)}
+
+.err{
+  display:none;
+  margin-top:12px;
+  border:1px solid var(--err-bd);background:var(--err-bg);
+  color:var(--err);border-radius:var(--r);
+  font-size:12.5px;padding:8px 12px;
+}
+.err.show{display:block}
+
+.known{
+  margin-top:20px;padding-top:16px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--faint);line-height:1.7;
+}
+.known b{color:var(--muted);font-weight:500}
+
+/* ═════════ DESK ═════════ */
+.desk{
+  display:grid;
+  grid-template-columns:minmax(0,240px) minmax(0,1fr);
+  gap:0;
+}
+.cal{padding:18px 18px 20px;border-right:1px solid var(--line)}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-head b{
+  font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:500;color:var(--ink);
+}
+.arw{
+  width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);background:transparent;color:var(--muted);
+  border-radius:7px;cursor:pointer;
+}
+.arw:hover{background:var(--card2);color:var(--ink);border-color:var(--line2)}
+.arw svg{width:13px;height:13px}
+
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.dow{font-size:10.5px;color:var(--faint);text-align:center;padding-bottom:5px}
+.day{
+  height:31px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid transparent;border-radius:7px;
+  background:none;color:var(--ink2);
+  font-family:'Inter',sans-serif;font-size:12.5px;
+  cursor:pointer;
+  transition:background .15s,color .15s;
+}
+.day:hover{background:var(--card2)}
+.day.we{color:var(--faint)}
+.day.today{box-shadow:inset 0 0 0 1px var(--faint)}
+.day.has{background:var(--ac-bg);border-color:var(--ac-bd);color:var(--ac-d)}
+.day.sel{background:var(--ac);border-color:var(--ac);color:#FDFBF6;box-shadow:none}
+.day.pad{visibility:hidden;pointer-events:none}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
+.day.pulse{animation:pop .42s ease}
+
+.legend{
+  margin-top:14px;padding-top:12px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:6px;
+  font-size:11.5px;color:var(--muted);
+}
+.legend span{display:flex;align-items:center;gap:7px}
+.sw{display:inline-block;width:11px;height:11px;border-radius:4px;flex:none}
+.sw.has{background:var(--ac-bg);border:1px solid var(--ac-bd)}
+.sw.tdy{background:transparent;box-shadow:inset 0 0 0 1px var(--faint)}
+
+/* ═════════ PAGE ═════════ */
+.page{padding:18px 20px 20px;min-width:0}
+.page h3{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:17px;font-weight:500;letter-spacing:-.015em;
+  color:var(--ink);
+}
+.page .yr{font-size:12px;color:var(--muted);margin-bottom:13px}
+textarea{
+  display:block;width:100%;min-height:196px;
+  border:1px solid var(--line);border-radius:10px;
+  padding:0 14px;
+  font-family:'Inter',sans-serif;font-size:14px;line-height:28px;
+  color:var(--ink);
+  background-color:#fff;
+  background-image:repeating-linear-gradient(#fff 0 27px, var(--rule) 27px 28px);
+  background-attachment:local;
+  outline:none;resize:vertical;
+}
+textarea:focus{border-color:var(--ac-bd)}
+textarea::placeholder{color:var(--faint)}
+.prow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:13px}
+.status{font-size:12.5px;color:var(--muted)}
+.status.saved{color:var(--ok)}
+.status.dirty{color:var(--idea-h)}
+
+/* ═════════ CLOSED ═════════ */
+.closed{padding:52px 24px 56px;text-align:center}
+.closed .bk{
+  width:52px;height:52px;margin:0 auto 16px;
+  border-radius:10px;border:1px solid var(--line2);background:var(--card2);
+  display:flex;align-items:center;justify-content:center;color:var(--faint);
+}
+.closed .bk svg{width:24px;height:24px}
+.closed h3{
+  font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:500;
+  margin-bottom:6px;letter-spacing:-.015em;
+}
+.closed p{font-size:13.5px;color:var(--muted);max-width:390px;margin:0 auto 20px}
+
+/* ═════════ IDEA PANEL ═════════ */
+.idea{
+  margin-top:14px;
+  border:1px solid var(--idea-bd);background:var(--idea-bg);
+  border-radius:var(--rl);padding:16px 18px 18px;
+}
+.idea-h{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.idea-h svg{width:16px;height:16px;color:var(--idea-h);flex:none}
+.idea-h b{
+  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:500;
+  color:var(--idea-tx);flex:1;letter-spacing:-.01em;
+}
+.idea-x{
+  border:none;background:none;color:var(--idea-h);cursor:pointer;
+  font-size:12.5px;font-family:'Space Grotesk',sans-serif;padding:2px 4px;
+}
+.idea-x:hover{text-decoration:underline}
+.idea-sub{font-size:12px;color:var(--idea-h);margin-bottom:13px;opacity:.85}
+.idea ol{list-style:none;counter-reset:i}
+.idea ol li{
+  counter-increment:i;
+  position:relative;padding-left:30px;
+  font-size:13.5px;line-height:1.75;color:var(--idea-tx);
+}
+.idea ol li + li{margin-top:9px}
+.idea ol li::before{
+  content:counter(i);
+  position:absolute;left:0;top:2px;
+  width:20px;height:20px;border-radius:6px;
+  background:rgba(122,94,20,.12);color:var(--idea-h);
+  font-family:'Space Grotesk',sans-serif;font-size:11.5px;
+  display:flex;align-items:center;justify-content:center;
+}
+.idea-foot{
+  margin-top:14px;padding-top:12px;border-top:1px solid rgba(122,94,20,.2);
+  font-size:11.5px;color:var(--idea-h);opacity:.9;
+}
+
+/* ═════════ FINAL ═════════ */
+.final{
+  margin-top:14px;
+  border:1px solid var(--line);background:var(--card);
+  border-radius:var(--rl);
+}
+.final-h{
+  width:100%;display:flex;align-items:center;gap:10px;
+  padding:14px 18px;background:none;border:none;cursor:pointer;text-align:left;
+}
+.final-h b{
+  flex:1;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:500;color:var(--ink);
+}
+.final-h .cv{color:var(--muted);display:flex;transition:transform .2s}
+.final-h .cv svg{width:15px;height:15px}
+.final.open .cv{transform:rotate(180deg)}
+.final-b{display:none;padding:0 18px 18px}
+.final.open .final-b{display:block}
+.final-b p{font-size:13px;color:var(--muted);margin-bottom:13px}
+.final-b ul{list-style:none}
+.final-b li{
+  position:relative;padding-left:24px;
+  font-size:13.5px;line-height:1.7;color:var(--ink2);
+}
+.final-b li + li{margin-top:8px}
+.final-b li::before{
+  content:'';position:absolute;left:2px;top:9px;
+  width:8px;height:8px;border-radius:3px;
+  border:1px solid var(--line2);background:#fff;
+}
+
+.foot{margin-top:18px;display:flex;justify-content:center}
+.over{
+  background:none;border:1px solid var(--line);color:var(--faint);
+  font-family:'Space Grotesk',sans-serif;font-size:12px;
+  border-radius:22px;padding:6px 15px;cursor:pointer;
+}
+.over:hover{color:var(--muted);border-color:var(--line2);background:var(--card2)}
+
+@media (max-width:720px){
+  .wrap{padding:20px 14px 46px}
+  .desk{grid-template-columns:minmax(0,1fr)}
+  .cal{border-right:none;border-bottom:1px solid var(--line)}
+  .ahead{flex-wrap:wrap}
+  .av{display:none}
+  .atitle{flex:1 1 100%;order:2}
+  .ahead-act{order:1;margin-left:auto}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="rail" id="rail"></div>
+  <p class="rail-hint">Tap a step you have finished to see the idea behind it again.</p>
+
+  <div class="app" id="app"></div>
+  <div id="ideaHost"></div>
+
+  <section class="final" id="final">
+    <button class="final-h" data-act="final">
+      <b>Before you submit</b>
+      <span class="cv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+    </button>
+    <div class="final-b">
+      <p>Your Java program should hold up to every one of these.</p>
+      <ul>
+        <li>The accounts file holds one line per user &mdash; the name, the password and the folder that belongs to them.</li>
+        <li>Every user has their own folder, named after them, holding one file per month.</li>
+        <li>A month file holds one record per written day, and never two records for the same day.</li>
+        <li>Signing up with a name someone already took is refused, not overwritten.</li>
+        <li>An empty page is not saved.</li>
+        <li>A month nobody has written in opens blank instead of failing.</li>
+        <li>Writing that happens to contain your separator mark still comes back whole.</li>
+        <li>Quit the program, run it again &mdash; every page is still there. That is the whole point.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="foot"><button class="over" data-act="over">Start over</button></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+var KEY = 'diaryApp.v1';
+var TODAY = { y:2026, m:8, d:2 };
+var MONTHS = ['January','February','March','April','May','June',
+              'July','August','September','October','November','December'];
+var DOW  = ['M','T','W','T','F','S','S'];
+var FULLDOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+var SVG = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  bulb:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.1 14a5 5 0 1 0-6.2 0c.6.5.9 1.2 1 1.9h4.2c.1-.7.4-1.4 1-1.9z"/></svg>',
+  left:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+  right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+  book:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z"/><path d="M8 3v18"/></svg>'
+};
+
+/* ── The four steps ──────────────────────────────────────────────────── */
+var STEPS = [
+  {
+    label: 'Sign up',
+    say:   'Create your diary — pick a name and a password.',
+    idea: [
+      'Read the accounts file first and turn away a name someone already took.',
+      'If the accounts file is not there yet, this is the first user — create it.',
+      'Make a folder named after the user. That folder is their private space, and nothing else in the app may write into it.',
+      'Add one line to the end of the accounts file holding the name, the password and the folder that belongs to them.',
+      'Split the three parts with a mark a username can never contain, so you can pull them apart again later.'
+    ]
+  },
+  {
+    label: 'Open the diary',
+    say:   'Your diary is open. Move around the calendar and pick a day.',
+    idea: [
+      'When the diary opens, look inside that user’s folder for the file that belongs to the month on screen.',
+      'If that file is not there, create it empty — a month nobody has written in should open blank, not crash.',
+      'One file per month, named after the month, always inside that one user’s folder.',
+      'The date on screen comes from the calendar, never from the file. The file is only storage.',
+      'Moving to another month means closing one file and opening another — the page area follows the month you are looking at.'
+    ]
+  },
+  {
+    label: 'Write',
+    say:   'Write today’s page, then save it.',
+    idea: [
+      'Take the words on the page together with the date shown above them.',
+      'Add them to the end of this month’s file. Opening the file the other way wipes every page written before it.',
+      'Keep one day’s writing on one record, with a mark between the date and the words that the diary text can never contain.',
+      'Turn the line breaks inside a page into something safe first, so one day’s writing cannot become two records.',
+      'If that date already has a record, rewrite that record instead of adding a second one for the same day.',
+      'Close the file when you are done, so the writing actually reaches the disk.'
+    ]
+  },
+  {
+    label: 'Read it back',
+    say:   'Close the diary, then open it again — everything should come back.',
+    idea: [
+      'When a month opens, read its file from the first record to the last.',
+      'Split every record back into its date and its writing, and keep them together so any day can be found without touching the file again.',
+      'Mark every date you found on the calendar, so the user sees at a glance which days have writing.',
+      'When a day is clicked, show what you already have in hand. Only read the file again when the month changes.',
+      'A missing or empty month file is not an error — it simply means every day that month is blank.'
+    ]
+  }
+];
+
+/* ── State ───────────────────────────────────────────────────────────── */
+var S, drafts = {}, pulse = null;
+
+function fresh(){
+  return {
+    user: null,
+    step: 1,
+    y: TODAY.y, m: TODAY.m,
+    sel: key(TODAY.y, TODAY.m, TODAY.d),
+    entries: {},
+    closed: false,
+    idea: 0,
+    finalOpen: false
+  };
+}
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw){
+      var o = JSON.parse(raw);
+      if(o && typeof o === 'object' && o.entries) return o;
+    }
+  }catch(e){}
+  return fresh();
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+}
+
+/* ── Dates ───────────────────────────────────────────────────────────── */
+function pad(n){ return n < 10 ? '0' + n : '' + n; }
+function key(y,m,d){ return y + '-' + pad(m+1) + '-' + pad(d); }
+function daysIn(y,m){ return new Date(y, m+1, 0).getDate(); }
+function leading(y,m){ return (new Date(y, m, 1).getDay() + 6) % 7; }
+function parts(k){ var a = k.split('-'); return { y:+a[0], m:+a[1]-1, d:+a[2] }; }
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Rail ────────────────────────────────────────────────────────────── */
+function renderRail(){
+  var out = '';
+  for(var i = 0; i < STEPS.length; i++){
+    var n = i + 1;
+    var cls = n < S.step ? 'rs dn' : (n === S.step ? 'rs on' : 'rs');
+    var mark = n < S.step ? SVG.check : '<span class="rn">' + n + '</span>';
+    var live = n <= S.step;
+    out += '<button class="' + cls + '"' +
+           (live ? ' data-act="idea" data-n="' + n + '"' : ' disabled') +
+           ' title="' + (live ? 'See what the code must do for this step' : 'Not there yet') + '">' +
+           mark + STEPS[i].label + '</button>';
+  }
+  document.getElementById('rail').innerHTML = out;
+}
+
+/* ── App ─────────────────────────────────────────────────────────────── */
+function head(){
+  var name = S.user ? S.user : 'New diary';
+  var initial = S.user ? S.user.charAt(0).toUpperCase() : '?';
+  var say = S.step >= 4 && S.done4 ? 'Every page you wrote is still here. That is file handling.'
+                                   : STEPS[Math.min(S.step, 4) - 1].say;
+  var extra = '';
+  if(S.user && S.step === 4 && !S.closed){
+    extra = '<button class="btn ghost" data-act="close">Close the diary</button>';
+  }
+  return '<div class="ahead">' +
+           '<div class="av">' + esc(initial) + '</div>' +
+           '<div class="atitle"><b>' + esc(S.user ? S.user + '’s diary' : 'Your diary') + '</b>' +
+           '<span>' + esc(say) + '</span></div>' +
+           '<div class="ahead-act">' + extra +
+             '<button class="idea-btn" data-act="idea" data-n="' + Math.min(S.step,4) + '">' +
+             SVG.bulb + 'Idea</button>' +
+           '</div>' +
+         '</div>';
+}
+
+function signupView(){
+  return '<div class="signup">' +
+    '<h2>Start your diary</h2>' +
+    '<p>Pick a name and a password. The diary keeps a folder of its own for every person who signs up.</p>' +
+    '<div class="fld"><label for="u">Username</label>' +
+      '<input id="u" type="text" autocomplete="off" spellcheck="false" placeholder="riya"></div>' +
+    '<div class="fld"><label for="p">Password</label>' +
+      '<input id="p" type="password" autocomplete="off" placeholder="At least 4 characters"></div>' +
+    '<div class="fld"><label for="p2">Confirm password</label>' +
+      '<input id="p2" type="password" autocomplete="off" placeholder="Type it again"></div>' +
+    '<button class="btn wide" data-act="signup">Create my diary</button>' +
+    '<div class="err" id="serr"></div>' +
+    '<div class="known"><b>Already taken:</b> riya, arjun, meera — try one of them and see what the diary does.</div>' +
+  '</div>';
+}
+
+function closedView(){
+  return '<div class="closed">' +
+    '<div class="bk">' + SVG.book + '</div>' +
+    '<h3>The diary is closed</h3>' +
+    '<p>Nothing is on screen any more — no calendar, no writing, no marked days. Open it again and see what comes back.</p>' +
+    '<button class="btn" data-act="open">Open it again</button>' +
+  '</div>';
+}
+
+function calView(){
+  var lead = leading(S.y, S.m), n = daysIn(S.y, S.m), i;
+  var g = '';
+  for(i = 0; i < 7; i++) g += '<div class="dow">' + DOW[i] + '</div>';
+  for(i = 0; i < lead; i++) g += '<button class="day pad" tabindex="-1"></button>';
+  for(var d = 1; d <= n; d++){
+    var k = key(S.y, S.m, d);
+    var cls = 'day';
+    var wd = (lead + d - 1) % 7;
+    if(wd >= 5) cls += ' we';
+    if(S.y === TODAY.y && S.m === TODAY.m && d === TODAY.d) cls += ' today';
+    if(S.entries[k] !== undefined) cls += ' has';
+    if(k === S.sel) cls += ' sel';
+    if(k === pulse) cls += ' pulse';
+    g += '<button class="' + cls + '" data-act="day" data-k="' + k + '">' + d + '</button>';
+  }
+  pulse = null;
+  return '<div class="cal">' +
+    '<div class="cal-head">' +
+      '<button class="arw" data-act="mv" data-d="-1" aria-label="Previous month">' + SVG.left + '</button>' +
+      '<b>' + MONTHS[S.m] + ' ' + S.y + '</b>' +
+      '<button class="arw" data-act="mv" data-d="1" aria-label="Next month">' + SVG.right + '</button>' +
+    '</div>' +
+    '<div class="grid">' + g + '</div>' +
+    '<div class="legend">' +
+      '<span><i class="sw has"></i>has writing</span>' +
+      '<span><i class="sw tdy"></i>today</span>' +
+    '</div>' +
+  '</div>';
+}
+
+function pageView(){
+  var p = parts(S.sel);
+  var dt = new Date(p.y, p.m, p.d);
+  var stored = S.entries[S.sel];
+  var text = drafts[S.sel] !== undefined ? drafts[S.sel] : (stored !== undefined ? stored : '');
+  var status = '', scls = 'status';
+  if(stored !== undefined && text === stored){ status = 'Saved'; scls += ' saved'; }
+  else if(text.trim() !== ''){ status = 'Not saved yet'; scls += ' dirty'; }
+  else if(stored !== undefined){ status = 'Clearing this page will not remove what is stored'; scls += ' dirty'; }
+
+  return '<div class="page">' +
+    '<h3>' + FULLDOW[dt.getDay()] + ', ' + p.d + ' ' + MONTHS[p.m] + '</h3>' +
+    '<div class="yr">' + p.y + '</div>' +
+    '<textarea id="ta" placeholder="Write about your day…" spellcheck="false">' + esc(text) + '</textarea>' +
+    '<div class="prow">' +
+      '<button class="btn" data-act="save">Save this page</button>' +
+      '<span class="' + scls + '" id="st">' + status + '</span>' +
+    '</div>' +
+    '<div class="err" id="perr"></div>' +
+  '</div>';
+}
+
+function renderApp(){
+  var body;
+  if(!S.user) body = signupView();
+  else if(S.closed) body = closedView();
+  else body = '<div class="desk">' + calView() + pageView() + '</div>';
+  document.getElementById('app').innerHTML = head() + body;
+}
+
+/* ── Idea panel ──────────────────────────────────────────────────────── */
+function renderIdea(){
+  var host = document.getElementById('ideaHost');
+  if(!S.idea){ host.innerHTML = ''; return; }
+  var st = STEPS[S.idea - 1];
+  var li = '';
+  for(var i = 0; i < st.idea.length; i++) li += '<li>' + st.idea[i] + '</li>';
+  host.innerHTML = '<div class="idea">' +
+      '<div class="idea-h">' + SVG.bulb +
+        '<b>What your code has to do for step ' + S.idea + '</b>' +
+        '<button class="idea-x" data-act="idea" data-n="' + S.idea + '">Hide</button>' +
+      '</div>' +
+      '<div class="idea-sub">Step ' + S.idea + ' — ' + st.label + '</div>' +
+      '<ol>' + li + '</ol>' +
+      '<div class="idea-foot">No code here on purpose. This is the plan; the Java is yours to write.</div>' +
+    '</div>';
+}
+
+function renderFinal(){
+  var f = document.getElementById('final');
+  if(S.finalOpen) f.classList.add('open'); else f.classList.remove('open');
+}
+
+function render(){ renderRail(); renderApp(); renderIdea(); renderFinal(); }
+
+/* ── Actions ─────────────────────────────────────────────────────────── */
+function showErr(id, msg){
+  var e = document.getElementById(id);
+  if(!e) return;
+  e.textContent = msg;
+  e.classList.add('show');
+}
+function stash(){
+  var ta = document.getElementById('ta');
+  if(ta) drafts[S.sel] = ta.value;
+}
+
+var TAKEN = ['riya','arjun','meera'];
+
+function doSignup(){
+  var u = (document.getElementById('u').value || '').trim();
+  var p = document.getElementById('p').value || '';
+  var p2 = document.getElementById('p2').value || '';
+  var e = document.getElementById('serr');
+  e.classList.remove('show');
+
+  if(!u || !p || !p2)          return showErr('serr', 'Fill in every field first.');
+  if(!/^[A-Za-z0-9_]+$/.test(u)) return showErr('serr', 'Use letters, numbers or underscores only — the accounts file has to be able to split this name back out.');
+  if(TAKEN.indexOf(u.toLowerCase()) !== -1)
+    return showErr('serr', 'That name is already in the accounts file. Pick another one.');
+  if(p.length < 4)             return showErr('serr', 'The password needs at least 4 characters.');
+  if(p !== p2)                 return showErr('serr', 'The two passwords do not match.');
+
+  S.user = u;
+  S.step = 2;
+  save(); render();
+}
+
+function doSave(){
+  var ta = document.getElementById('ta');
+  var text = (ta.value || '');
+  var pe = document.getElementById('perr');
+  pe.classList.remove('show');
+  if(text.trim() === ''){
+    return showErr('perr', 'There is nothing on the page yet. Write something, then save it.');
+  }
+  var was = S.entries[S.sel] !== undefined;
+  S.entries[S.sel] = text;
+  delete drafts[S.sel];
+  if(!was) pulse = S.sel;
+  if(S.step === 3) S.step = 4;
+  save(); render();
+  var st = document.getElementById('st');
+  if(st){ st.textContent = was ? 'Saved — that day’s page was replaced, not doubled' : 'Saved'; }
+}
+
+document.addEventListener('click', function(ev){
+  var t = ev.target.closest('[data-act]');
+  if(!t) return;
+  var a = t.getAttribute('data-act');
+
+  if(a === 'signup'){ doSignup(); return; }
+
+  if(a === 'idea'){
+    var n = +t.getAttribute('data-n');
+    stash();
+    S.idea = (S.idea === n) ? 0 : n;
+    save(); render();
+    return;
+  }
+
+  if(a === 'day'){
+    stash();
+    S.sel = t.getAttribute('data-k');
+    if(S.step === 2) S.step = 3;
+    save(); render();
+    return;
+  }
+
+  if(a === 'mv'){
+    stash();
+    var d = +t.getAttribute('data-d');
+    S.m += d;
+    if(S.m > 11){ S.m = 0; S.y++; }
+    if(S.m < 0){ S.m = 11; S.y--; }
+    var dim = daysIn(S.y, S.m);
+    var cur = parts(S.sel).d;
+    S.sel = key(S.y, S.m, Math.min(cur, dim));
+    if(S.step === 2) S.step = 3;
+    save(); render();
+    return;
+  }
+
+  if(a === 'save'){ doSave(); return; }
+
+  if(a === 'close'){
+    stash();
+    S.closed = true;
+    save(); render();
+    return;
+  }
+
+  if(a === 'open'){
+    S.closed = false;
+    S.done4 = true;
+    drafts = {};
+    S.y = TODAY.y; S.m = TODAY.m;
+    S.sel = key(TODAY.y, TODAY.m, TODAY.d);
+    save(); render();
+    return;
+  }
+
+  if(a === 'final'){ S.finalOpen = !S.finalOpen; save(); renderFinal(); return; }
+
+  if(a === 'over'){
+    drafts = {};
+    S = fresh();
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    render();
+    return;
+  }
+});
+
+document.addEventListener('input', function(ev){
+  if(ev.target.id !== 'ta') return;
+  drafts[S.sel] = ev.target.value;
+  var st = document.getElementById('st');
+  if(!st) return;
+  var stored = S.entries[S.sel];
+  st.className = 'status';
+  if(stored !== undefined && ev.target.value === stored){ st.textContent = 'Saved'; st.className = 'status saved'; }
+  else if(ev.target.value.trim() !== ''){ st.textContent = 'Not saved yet'; st.className = 'status dirty'; }
+  else st.textContent = '';
+});
+
+document.addEventListener('keydown', function(ev){
+  if(ev.key !== 'Enter') return;
+  var id = ev.target.id;
+  if(id === 'u' || id === 'p' || id === 'p2'){ ev.preventDefault(); doSignup(); }
+});
+
+S = load();
+render();
+})();
+</script>
+</body>
+</html>
