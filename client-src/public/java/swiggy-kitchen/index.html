@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build the Swiggy Backend</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root{
+  --bg:        #0D0D0D;
+  --surface:   #161616;
+  --surface2:  #1E1E1E;
+  --surface3:  #242424;
+  --border:    #2A2A2A;
+  --border2:   #383838;
+  --text:      #F5F5F5;
+  --dim:       #C9C9C9;
+  --muted:     #8A8A8A;
+  --faint:     #6E6E6E;
+  --or:        #FC8019;
+  --or-d:      #B35D12;
+  --or-bg:     rgba(252,128,25,.08);
+  --or-bd:     rgba(252,128,25,.26);
+  --or-tx:     #E8B888;
+  --green:     #6CBF6C;
+  --green-bd:  #2E5E2E;
+  --danger:    #F09595;
+  --danger-bg: rgba(226,75,74,.10);
+  --danger-bd: rgba(226,75,74,.30);
+  --mono:      'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  --r:  8px;
+  --rl: 12px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  line-height:1.6;
+}
+code{font-family:var(--mono);font-size:.92em}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:50;background:rgba(13,13,13,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.hdr-in{max-width:900px;margin:0 auto;padding:15px 22px;display:flex;align-items:center;gap:12px}
+.mark{width:30px;height:30px;flex:none;border-radius:7px;background:var(--or);color:#0D0D0D;display:flex;align-items:center;justify-content:center}
+.mark svg{width:19px;height:19px;display:block}
+.hdr-t{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:500;letter-spacing:-.01em;flex:1;min-width:0}
+.hdr-t b{color:var(--or);font-weight:600}
+.hdr-count{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.hdr-count b{color:var(--or);font-weight:400}
+.bar{height:2px;background:var(--surface3)}
+.bar-fill{height:100%;width:0;background:var(--or);transition:width .35s ease}
+
+.wrap{max-width:900px;margin:0 auto;padding:30px 22px 70px}
+
+/* INTRO */
+.brief{border:1px solid var(--border);border-radius:var(--rl);background:var(--surface);padding:22px 24px;margin-bottom:14px}
+.brief-tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--or);margin-bottom:10px}
+.brief p{font-size:15px;line-height:1.8;color:var(--dim)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.chip{font-family:var(--mono);font-size:12.5px;padding:5px 11px;border-radius:20px;background:var(--or-bg);color:var(--or);border:1px solid var(--or-bd)}
+.reset{margin-top:18px;font-family:'Space Grotesk',sans-serif;font-size:12px;background:none;border:1px solid var(--border2);color:var(--muted);border-radius:20px;padding:5px 13px;cursor:pointer}
+.reset:hover{color:var(--dim);background:var(--surface2)}
+
+/* STEP */
+.step{border:1px solid var(--border);border-radius:var(--rl);background:var(--surface);margin-bottom:10px;overflow:hidden}
+.step.open{border-color:var(--or-bd)}
+.step.done .num{background:var(--green);color:#0D0D0D}
+.shead{display:flex;align-items:center;gap:14px;width:100%;padding:16px 18px;background:none;border:none;cursor:pointer;text-align:left;color:inherit;font-family:inherit}
+.shead:hover{background:var(--surface2)}
+.num{width:28px;height:28px;flex:none;border-radius:8px;background:var(--surface3);color:var(--muted);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.step.open .num{background:var(--or);color:#0D0D0D}
+.stitle{flex:1;min-width:0}
+.stitle-m{display:block;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:500;letter-spacing:-.01em}
+.stitle-s{display:block;font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px}
+.chev{color:var(--muted);flex:none;transition:transform .22s}
+.chev svg{width:16px;height:16px;display:block}
+.step.open .chev{transform:rotate(180deg);color:var(--or)}
+
+.panel{padding:0 18px 20px 60px;border-top:1px solid #202020}
+.purpose{margin-top:16px;font-size:14px;color:var(--dim);font-style:italic}
+.what{margin-top:14px;padding-left:16px;border-left:2px solid var(--border2);list-style:none}
+.what li{font-size:14px;line-height:1.75;color:var(--dim);padding-left:14px;position:relative}
+.what li + li{margin-top:7px}
+.what li::before{content:'';position:absolute;left:0;top:.68em;width:5px;height:5px;border-radius:50%;background:var(--or-d)}
+.what code,.note code{color:var(--or);background:var(--or-bg);padding:1px 5px;border-radius:4px}
+
+.lbl{font-family:'Space Grotesk',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px}
+.tb{width:100%;border-collapse:collapse;font-size:13.5px}
+.tb td{padding:9px 12px;border-bottom:1px solid #212121;vertical-align:top}
+.tb tr:last-child td{border-bottom:none}
+.tb .k{font-family:var(--mono);color:var(--or);width:40%;word-break:break-word}
+.tb .k.plain{font-family:'Inter',sans-serif;color:var(--text)}
+.tb .v{color:var(--dim);line-height:1.65}
+
+.note{margin-top:20px;padding:12px 15px;border-radius:var(--r);background:var(--or-bg);border:1px solid var(--or-bd);font-size:13.5px;line-height:1.7;color:var(--or-tx)}
+.note b{color:var(--or);font-weight:600}
+
+.flow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:10px}
+.fb{font-family:var(--mono);font-size:12.5px;padding:7px 12px;border-radius:var(--r);background:var(--surface3);border:1px solid var(--border2);color:var(--text)}
+.fb.hl{background:var(--or-bg);border-color:var(--or-bd);color:var(--or)}
+.fa{color:var(--or);flex:none;display:flex}
+.fa svg{width:15px;height:15px}
+
+.donebtn{margin-top:22px;display:inline-flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:500;padding:8px 16px;border-radius:20px;cursor:pointer;background:none;border:1px solid var(--border2);color:var(--muted)}
+.donebtn:hover{border-color:var(--or-bd);color:var(--or)}
+.donebtn svg{width:15px;height:15px}
+.step.done .donebtn{background:rgba(108,191,108,.1);border-color:rgba(108,191,108,.35);color:var(--green)}
+
+/* STEP 6 — ROLE SWITCHER */
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.mitem{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;font-family:inherit;font-size:13.5px;color:var(--dim);text-align:left}
+.mitem:hover{border-color:var(--border2)}
+.mitem.on{border-color:var(--or);background:var(--or-bg);color:var(--text)}
+.mbox{width:16px;height:16px;flex:none;border-radius:4px;border:1px solid #444;display:flex;align-items:center;justify-content:center;color:#0D0D0D}
+.mbox svg{width:11px;height:11px;display:none}
+.mitem.on .mbox{background:var(--or);border-color:var(--or)}
+.mitem.on .mbox svg{display:block}
+.mname{flex:1}
+.veg{font-size:9px;color:var(--green);border:1px solid var(--green-bd);border-radius:3px;padding:1px 3px;vertical-align:middle}
+.mprice{font-family:var(--mono);font-size:13px;color:var(--or)}
+
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.fld{flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px}
+.fld:focus-within{border-color:var(--or-bd)}
+.fld span{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.fld input{width:100%;background:none;border:none;color:var(--or);font-family:var(--mono);font-size:16px}
+.fld input:focus{outline:none}
+.meter{flex:2;min-width:220px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px}
+.mtop{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-bottom:7px}
+.mtop b{font-family:var(--mono);font-weight:400;color:var(--text)}
+.mbar{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.mfill{height:100%;width:0;background:var(--or);border-radius:3px;transition:width .25s ease}
+.mfill.done{background:var(--green)}
+
+.roles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.role{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 6px;cursor:pointer;color:var(--muted);font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:500;text-align:center}
+.role:hover{border-color:var(--border2);color:var(--dim)}
+.role svg{width:20px;height:20px;display:block;margin:0 auto 6px}
+.role.on{border-color:var(--or);background:var(--or-bg);color:var(--or)}
+
+.rp{margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.rp-h{padding:11px 15px;border-bottom:1px solid var(--border);font-family:'Space Grotesk',sans-serif;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rp-h b{color:var(--or);font-weight:600}
+.rt{width:100%;border-collapse:collapse;font-size:13.5px}
+.rt td{padding:9px 15px;border-bottom:1px solid #202020}
+.rt tr:last-child td{border-bottom:none}
+.rt .rk{color:var(--dim)}
+.rt .rv{font-family:var(--mono);text-align:right;white-space:nowrap;color:var(--text)}
+.rt .rv.hl{color:var(--or)}
+.rt .rv.gd{color:var(--green)}
+.rt .rs{font-family:var(--mono);font-size:11px;color:var(--faint);text-align:right;white-space:nowrap}
+.rt .rs.b{color:var(--or-tx)}
+.warn{margin-top:12px;padding:11px 15px;border-radius:var(--r);background:var(--danger-bg);border:1px solid var(--danger-bd);font-family:var(--mono);font-size:12.5px;color:var(--danger)}
+.ask{margin-top:12px;padding:11px 15px;border-radius:var(--r);background:var(--or-bg);border:1px solid var(--or-bd);font-size:13px;line-height:1.65;color:var(--or-tx)}
+
+/* FINAL */
+.final{margin-top:26px;border:1px solid var(--or-bd);border-radius:var(--rl);background:var(--or-bg);padding:22px 24px}
+.final h2{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:var(--or);margin-bottom:14px}
+.final ul{list-style:none}
+.final li{font-size:13.5px;line-height:1.7;color:var(--dim);padding-left:24px;position:relative}
+.final li + li{margin-top:8px}
+.final li::before{content:'';position:absolute;left:0;top:.42em;width:13px;height:13px;border-radius:3px;border:1px solid var(--or-bd)}
+.final code{color:var(--or)}
+
+@media (max-width:640px){
+  .hdr-in{padding:13px 16px;gap:10px}
+  .hdr-t{font-size:15px}
+  .hdr-count{display:none}
+  .wrap{padding:22px 16px 50px}
+  .brief{padding:18px 17px}
+  .panel{padding:0 16px 18px 16px}
+  .shead{padding:14px 15px;gap:11px}
+  .roles{grid-template-columns:1fr 1fr}
+  .tb,.tb tbody,.tb tr,.tb td{display:block;width:100%}
+  .tb td{border-bottom:none;padding:0}
+  .tb tr{padding:11px 0;border-bottom:1px solid #212121}
+  .tb tr:last-child{border-bottom:none}
+  .tb .k{margin-bottom:4px}
+  .rt,.rt tbody,.rt tr,.rt td{display:block;width:100%}
+  .rt td{border-bottom:none;padding:0;text-align:left}
+  .rt tr{padding:11px 15px;border-bottom:1px solid #202020;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+  .rt .rk{flex:1 1 100%}
+  .rt .rv{text-align:left}
+  .rt .rs{text-align:left;margin-left:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 3v7a3 3 0 0 0 6 0V3M7 10v11M17 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4 2.5-1 2.5-4-1-5-2.5-5zM17 12v9"/>
+      </svg>
+    </div>
+    <h1 class="hdr-t">Build the <b>Swiggy Backend</b></h1>
+    <div class="hdr-count"><b id="cDone">0</b> / 7 steps done</div>
+  </div>
+  <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+</header>
+
+<main class="wrap">
+  <section class="brief">
+    <div class="brief-tag">Your next shift</div>
+    <p>Welcome to your new job at Swiggy! Your task is to design the core Java classes behind a food
+       order. You already know how to make one object hold another — now you will make one object
+       hold a whole list of them, and add up a bill by walking that list one dish at a time.</p>
+    <div class="chips">
+      <span class="chip">Customer</span>
+      <span class="chip">MenuItem</span>
+      <span class="chip">Restaurant</span>
+      <span class="chip">DeliveryPartner</span>
+      <span class="chip">Order</span>
+      <span class="chip">SwiggyApp</span>
+      <span class="chip">SwiggyCompany</span>
+    </div>
+    <button class="reset" id="resetBtn">Reset my progress</button>
+  </section>
+
+  <div id="steps"></div>
+
+  <section class="final">
+    <h2>Before you submit</h2>
+    <ul>
+      <li>Seven classes exist and compile: <code>Customer</code>, <code>MenuItem</code>,
+          <code>Restaurant</code>, <code>DeliveryPartner</code>, <code>Order</code>,
+          <code>SwiggyApp</code>, <code>SwiggyCompany</code>.</li>
+      <li>Every variable in every class is <code>private</code> — nothing is reachable from outside
+          except through a method you wrote.</li>
+      <li><code>Order</code> reaches its item total by <b>looping the items</b>, not by being handed
+          a number.</li>
+      <li>Running <code>SwiggyApp</code> prints a bill and then the customer's new balance.</li>
+      <li>With a wallet of Rs. 1000 and the three dishes listed in Step 6, the balance printed at
+          the end is <code>508.5</code>.</li>
+      <li>Add a fourth dish to cross Rs. 500 and the delivery fee becomes <code>0.0</code>.</li>
+      <li>Lower the wallet below the bill, run it again, and <code>Insufficient balance!</code>
+          appears.</li>
+      <li>You can answer all four role questions from Step 6 by reading your own fields.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+const SVG = {
+  chev:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>',
+  user:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>',
+  kitchen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v7a3 3 0 0 0 6 0V3M7 10v11M17 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4 2.5-1 2.5-4-1-5-2.5-5zM17 12v9"/></svg>',
+  bike:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M6 17h6l4-9h3M9 8h5l2 9"/></svg>',
+  store: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10V20h18V10M2 7l1.5-4h17L22 7a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0zM9 20v-6h6v6"/></svg>'
+};
+
+/* ── the seven steps ───────────────────────────────────────────────── */
+const STEPS = [
+{
+  title:'Create the Customer class', sub:'class Customer',
+  purpose:'One hungry person, with a wallet that has to cover the bill.',
+  what:[
+    'Create a class named <code>Customer</code>.',
+    'Add private variables for the name, the phone number and the wallet balance.',
+    'Write a Constructor to set all three when a new customer is created.',
+    'Write a method called <code>payBill(double amount)</code> that takes money out of the wallet. If the amount is greater than their balance, print <code>"Insufficient balance!"</code>.'
+  ],
+  vars:[
+    ['name','The customer&rsquo;s full name.'],
+    ['phoneNumber','The number the delivery partner would call.'],
+    ['walletBalance','Money available to pay with.']
+  ],
+  meths:[
+    ['Constructor','Takes the name, phone number and wallet balance, and stores all three the moment a customer is created.'],
+    ['payBill','Takes the bill amount out of the wallet. If the amount is bigger than the balance, it prints <code>Insufficient balance!</code> and takes nothing.']
+  ],
+  note:'This is the same shape as the <b>Passenger</b> you wrote for Rapido. Start here on purpose &mdash; it means the genuinely new idea in Step 5 is the only new thing you have to think about.'
+},
+{
+  title:'Create the MenuItem class', sub:'class MenuItem',
+  purpose:'One dish on a menu. The smallest object on this page &mdash; and the one you will end up holding a whole list of.',
+  what:[
+    'Create a class named <code>MenuItem</code>.',
+    'Add private variables for the item name, the price and whether it is vegetarian.',
+    'Write a Constructor to set all three.',
+    'Write Getter methods for these variables so other classes can read them.'
+  ],
+  vars:[
+    ['itemName','What the dish is called.'],
+    ['price','What one of them costs.'],
+    ['isVeg','Whether it is vegetarian.']
+  ],
+  meths:[
+    ['Constructor','Takes the item name, price and veg flag, and stores all three.'],
+    ['getItemName','Hands back the dish name.'],
+    ['getPrice','Hands back the price &mdash; <code>Order</code> will need this one to add up the bill.'],
+    ['getIsVeg','Hands back whether the dish is vegetarian.']
+  ],
+  note:'Keep this class small. Its whole job is to answer two questions: <b>what are you, and what do you cost?</b>'
+},
+{
+  title:'Create the Restaurant class', sub:'class Restaurant',
+  purpose:'The kitchen &mdash; and the first object you write that holds a list of other objects.',
+  what:[
+    'Create a class named <code>Restaurant</code>.',
+    'Add private variables for the name, the area, the rating and the menu.',
+    'The menu is not one <code>MenuItem</code>. It is an <b>array of MenuItem</b> &mdash; every slot holds a whole dish object.',
+    'Write a Constructor that sets the name, area and rating, and starts the menu off empty.',
+    'Write a method called <code>addItem(MenuItem item)</code> that puts one more dish onto the menu.',
+    'Write Getter methods for the name, the area, the rating and the menu.'
+  ],
+  vars:[
+    ['name','The restaurant&rsquo;s name.'],
+    ['area','Which part of the city it is in.'],
+    ['rating','Its star rating out of 5.'],
+    ['menu','Every dish it sells. An <b>array</b> of MenuItem, not a single one.']
+  ],
+  meths:[
+    ['Constructor','Takes the name, area and rating, and creates the menu empty &mdash; nobody passes the dishes in.'],
+    ['addItem','Puts one more MenuItem onto the menu.'],
+    ['getName','Hands back the restaurant name.'],
+    ['getArea','Hands back the area.'],
+    ['getRating','Hands back the rating.'],
+    ['getMenu','Hands back the whole menu.']
+  ],
+  note:'This is your <b>first array of objects</b>, and a gentle one. Each slot in <code>menu</code> holds a whole MenuItem &mdash; not a number, not a word. Get comfortable here; Step 5 leans on it.'
+},
+{
+  title:'Create the DeliveryPartner class', sub:'class DeliveryPartner',
+  purpose:'The rider on the bike, and whether they are free to take this order.',
+  what:[
+    'Create a class named <code>DeliveryPartner</code>.',
+    'Add private variables for the name, the vehicle number and whether they are free.',
+    'Write a Constructor to set the name and vehicle number. The free flag should automatically be set to <code>true</code> inside the constructor.',
+    'Write a method called <code>completeDelivery()</code> that marks them free again once a delivery is finished.'
+  ],
+  vars:[
+    ['name','The delivery partner&rsquo;s name.'],
+    ['vehicleNumber','The number on the bike.'],
+    ['isFree','Whether they can take an order right now. A brand-new partner starts out free.']
+  ],
+  meths:[
+    ['Constructor','Takes only the name and the vehicle number. It sets <code>isFree</code> to <code>true</code> by itself &mdash; nobody passes that in.'],
+    ['completeDelivery','Marks the partner free again.']
+  ],
+  note:'The constructor takes <b>two</b> things but sets <b>three</b> variables &mdash; the same trick as the Rapido <code>Rider</code>. Not every field has to come from outside.'
+},
+{
+  title:'Create the Order class &mdash; the connection', sub:'class Order',
+  purpose:'One food order, from cart to doorstep. This is the class that ties everything together.',
+  what:[
+    'Create a class named <code>Order</code>. This class needs the other objects to work!',
+    'Add private variables for the customer, the restaurant, the delivery partner, the items ordered, the item total, the delivery fee, the GST and the grand total.',
+    'Write a Constructor that accepts the customer, the restaurant, the partner and the items. Inside it, <b>walk the items one by one, ask each for its price, and add them up</b> to get the item total.',
+    'Still inside the constructor, work out the delivery fee: <code>40</code>, but <code>0</code> once the item total reaches <code>500</code>.',
+    'Work out the GST as 5% of the item total, then add the three amounts into the grand total.',
+    'Write a method <code>placeOrder()</code> that changes the delivery partner&rsquo;s free status to <code>false</code>.',
+    'Write a method <code>deliverOrder()</code> that takes the grand total from the customer&rsquo;s wallet, calls the partner&rsquo;s <code>completeDelivery()</code> method, and prints a final bill.'
+  ],
+  vars:[
+    ['customer','The whole <code>Customer</code> object who placed it.'],
+    ['restaurant','The whole <code>Restaurant</code> object cooking it.'],
+    ['partner','The whole <code>DeliveryPartner</code> object carrying it.'],
+    ['items','Every dish in this order. Not one object &mdash; a <b>whole list</b> of them.'],
+    ['itemTotal','The food cost, added up from that list. Nobody passes it in.'],
+    ['deliveryFee','Rs. 40, or nothing once the food crosses Rs. 500.'],
+    ['gst','5% of the food cost.'],
+    ['grandTotal','What the customer actually pays.']
+  ],
+  meths:[
+    ['Constructor','Takes the customer, restaurant, partner and items, stores them, loops the items to reach the item total, then works out the delivery fee, the GST and the grand total.'],
+    ['placeOrder','Marks the delivery partner as no longer free &mdash; they are on this drop now.'],
+    ['deliverOrder','Takes the grand total from the customer&rsquo;s wallet, calls the partner&rsquo;s complete-delivery method to free them up, and prints the final bill.']
+  ],
+  flowLabel:'What one Order holds',
+  flow:[['Order',1],['&rarr;'],['Customer',0],['Restaurant',0],['DeliveryPartner',0],['MenuItem[ ]',1]],
+  note:'Here is the new idea. In Rapido, <code>Ride</code> held <b>one</b> of each thing, so every value was a question away. Here <code>items</code> holds <b>many</b> &mdash; you cannot just read a total off it. You have to walk the list, ask every MenuItem for its price, and add as you go.'
+},
+{
+  title:'The Main class &mdash; test your code', sub:'class SwiggyApp',
+  purpose:'Where it all actually runs. Build the objects, place the order, prove the money moved.',
+  what:[
+    'Create a class named <code>SwiggyApp</code> with a <code>main</code> method.',
+    'Create yourself as a <code>Customer</code> with Rs. 1000 in your wallet.',
+    'Create a <code>Restaurant</code> &mdash; for example Anjappar in Velachery, rated 4.3.',
+    'Create three <code>MenuItem</code> objects and add them to the restaurant&rsquo;s menu: Chicken Biryani at Rs. 280, Butter Naan at Rs. 60, Gulab Jamun at Rs. 90.',
+    'Create a <code>DeliveryPartner</code> &mdash; for example "Suresh" on TN-01-AB-1234.',
+    'Create an <code>Order</code> by passing these objects and the list of items into it.',
+    'Call <code>placeOrder()</code>, then call <code>deliverOrder()</code>.',
+    'Print the customer&rsquo;s new wallet balance to prove the money was deducted.'
+  ],
+  varsLabel:'The objects to create',
+  varsPlain:true,
+  vars:[
+    ['Customer','You, with Rs. 1000 in your wallet.'],
+    ['Restaurant','Anjappar, Velachery, rated 4.3.'],
+    ['MenuItem &times; 3','Chicken Biryani 280, Butter Naan 60, Gulab Jamun 90.'],
+    ['DeliveryPartner','"Suresh", on TN-01-AB-1234.'],
+    ['Order','All of the above, plus the list of items.']
+  ],
+  roles:true,
+  flowLabel:'Then call them in this order',
+  flow:[['placeOrder()',1],['&rarr;'],['deliverOrder()',1],['&rarr;'],['print the wallet balance',0]],
+  note:'Your three dishes come to <b>Rs. 430</b> &mdash; just under the Rs. 500 free-delivery line, on purpose. Tick a fourth dish above and watch the delivery fee disappear. Every number in that panel lives in exactly one field, in exactly one class: the grey text names it.'
+},
+{
+  title:'Track the numbers', sub:'class SwiggyCompany  &middot;  and counters on the rest',
+  purpose:'Right now nobody remembers yesterday. Give every side a memory so the totals add up.',
+  what:[
+    'Some of the questions in Step 6 cannot be answered yet &mdash; a restaurant does not know how many orders it has served, and Swiggy does not know what it collected. Fix that.',
+    'In <code>Customer</code>, add private variables for the orders placed and the total spent. Raise both whenever money is successfully taken.',
+    'In <code>Restaurant</code>, add private variables for the orders served and the total earned.',
+    'In <code>DeliveryPartner</code>, add private variables for the deliveries completed and the total earnings. Raise both inside <code>completeDelivery()</code>.',
+    'Create a class named <code>SwiggyCompany</code> with private variables for the total orders, the total order value and the total delivery fees, and a method that records one finished order.',
+    'Call that method from <code>deliverOrder()</code>, so the platform totals move the moment the wallet does.',
+    'Add Getter methods wherever another class needs to read one of these totals.'
+  ],
+  varsLabel:'New variables, by class',
+  vars:[
+    ['Customer &middot; ordersPlaced','How many orders this customer has placed.'],
+    ['Customer &middot; totalSpent','Everything this customer has paid so far.'],
+    ['Restaurant &middot; ordersServed','How many orders this kitchen has cooked.'],
+    ['Restaurant &middot; totalEarned','The food money it has taken.'],
+    ['DeliveryPartner &middot; deliveriesCompleted','How many drops this partner has finished.'],
+    ['DeliveryPartner &middot; totalEarnings','What this partner has earned so far.'],
+    ['SwiggyCompany &middot; totalOrders','Orders across the platform today.'],
+    ['SwiggyCompany &middot; totalOrderValue','What all of them came to.'],
+    ['SwiggyCompany &middot; totalDeliveryFees','Delivery money collected today.']
+  ],
+  methsLabel:'What has to change',
+  meths:[
+    ['payBill','When the money actually comes out, add one to the orders placed and add the amount to the total spent. On <code>Insufficient balance!</code>, change nothing.'],
+    ['completeDelivery','As well as freeing the partner, add one to their deliveries completed and add this delivery fee to their earnings.'],
+    ['recordOrder','A new method on <code>SwiggyCompany</code>. Takes one finished order&rsquo;s value and delivery fee, and adds them to the running totals.'],
+    ['deliverOrder','Calls <code>recordOrder</code> too, so the platform&rsquo;s numbers move at the same moment the wallet does.']
+  ],
+  note:'<b>Think about it:</b> once an order crosses Rs. 500 the delivery is free &mdash; so as this is written, the partner earns nothing for that trip. Is that fair? What would you change, and whose money would cover it? There is no single right answer; write down the one you would defend.'
+}
+];
+
+/* ── state ─────────────────────────────────────────────────────────── */
+const KEY  = 'vl:swiggy-kitchen:v1';
+const host = document.getElementById('steps');
+let open = 0;
+let done = loadDone();
+
+function loadDone(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return [];
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v.filter(n => Number.isInteger(n) && n >= 0 && n < STEPS.length) : [];
+  }catch(e){ return [] }
+}
+function saveDone(){
+  try{ localStorage.setItem(KEY, JSON.stringify(done)) }catch(e){}
+}
+
+/* ── build ─────────────────────────────────────────────────────────── */
+const rows = (list, plain) => '<table class="tb"><tbody>' + list.map(r =>
+  '<tr><td class="k' + (plain ? ' plain' : '') + '">' + r[0] + '</td><td class="v">' + r[1] + '</td></tr>'
+).join('') + '</tbody></table>';
+
+function flowHTML(items){
+  return '<div class="flow">' + items.map(it =>
+    it[0] === '&rarr;'
+      ? '<span class="fa" aria-hidden="true">' + SVG.arrow + '</span>'
+      : '<span class="fb' + (it[1] ? ' hl' : '') + '">' + it[0] + '</span>'
+  ).join('') + '</div>';
+}
+
+function panelHTML(st, i){
+  let h = '<div class="panel">';
+  h += '<p class="purpose">' + st.purpose + '</p>';
+  h += '<div class="lbl">What to do</div>';
+  h += '<ul class="what">' + st.what.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+
+  if(st.roles) h += rolesHTML();
+
+  if(st.vars)  h += '<div class="lbl">' + (st.varsLabel  || 'Variables') + '</div>' + rows(st.vars, st.varsPlain);
+  if(st.meths) h += '<div class="lbl">' + (st.methsLabel || 'Methods')   + '</div>' + rows(st.meths);
+
+  if(st.flow) h += '<div class="lbl">' + st.flowLabel + '</div>' + flowHTML(st.flow);
+  if(st.note) h += '<div class="note">' + st.note + '</div>';
+
+  h += '<button class="donebtn" data-done="' + i + '">' + SVG.check +
+       (done.includes(i) ? 'Step ' + (i + 1) + ' done' : 'Mark step ' + (i + 1) + ' done') + '</button>';
+  return h + '</div>';
+}
+
+function render(){
+  host.innerHTML = STEPS.map((st, i) => {
+    const isOpen = i === open;
+    return '<section class="step' + (isOpen ? ' open' : '') + (done.includes(i) ? ' done' : '') + '">' +
+      '<button class="shead" data-step="' + i + '" aria-expanded="' + isOpen + '">' +
+        '<span class="num">' + (i + 1) + '</span>' +
+        '<span class="stitle"><span class="stitle-m">Step ' + (i + 1) + ': ' + st.title + '</span>' +
+        '<span class="stitle-s">' + st.sub + '</span></span>' +
+        '<span class="chev" aria-hidden="true">' + SVG.chev + '</span>' +
+      '</button>' +
+      (isOpen ? panelHTML(st, i) : '') +
+    '</section>';
+  }).join('');
+
+  host.querySelectorAll('.shead').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.step;
+    open = (open === i) ? -1 : i;
+    render();
+  }));
+  host.querySelectorAll('.donebtn').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.done;
+    done = done.includes(i) ? done.filter(x => x !== i) : done.concat(i);
+    saveDone();
+    render();
+  }));
+
+  if(document.getElementById('roleOut')){
+    drawMenu();
+    host.querySelectorAll('.role').forEach(b => b.addEventListener('click', () => {
+      role = +b.dataset.role;
+      host.querySelectorAll('.role').forEach(x => x.classList.toggle('on', x === b));
+      drawRole();
+    }));
+    document.getElementById('in-w').addEventListener('input', drawRole);
+    drawRole();
+  }
+
+  const n = done.length;
+  document.getElementById('cDone').textContent = n;
+  document.getElementById('barFill').style.width = (n / STEPS.length * 100) + '%';
+}
+
+/* ── the role panel ────────────────────────────────────────────────── */
+const MENU = [
+  { name:'Chicken Biryani', price:280, veg:false, on:true },
+  { name:'Butter Naan',     price:60,  veg:true,  on:true },
+  { name:'Gulab Jamun',     price:90,  veg:true,  on:true },
+  { name:'Paneer Tikka',    price:240, veg:true,  on:false },
+  { name:'Filter Coffee',   price:50,  veg:true,  on:false },
+  { name:'Mutton Chukka',   price:320, veg:false, on:false }
+];
+const FREE_FROM = 500;
+const ROLE_NAME = ['Customer','Restaurant','Delivery partner','Swiggy'];
+let role = 0;
+
+const rs = n => 'Rs. ' + n.toFixed(2);
+
+function rolesHTML(){
+  return '<div class="lbl">Tick dishes to build the MenuItem[ ]</div>' +
+    '<div class="menu" id="menuBox"></div>' +
+    '<div class="row">' +
+      '<label class="fld"><span>Wallet Rs.</span><input id="in-w" type="number" value="1000" step="50" min="0" inputmode="decimal"></label>' +
+      '<div class="meter">' +
+        '<div class="mtop"><span>Free delivery at Rs. ' + FREE_FROM + '</span><span><b id="mProg">0</b> / ' + FREE_FROM + '</span></div>' +
+        '<div class="mbar"><div class="mfill" id="mFill"></div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="lbl">Who are you?</div>' +
+    '<div class="roles">' +
+      '<button class="role' + (role === 0 ? ' on' : '') + '" data-role="0">' + SVG.user    + 'Customer</button>' +
+      '<button class="role' + (role === 1 ? ' on' : '') + '" data-role="1">' + SVG.kitchen + 'Restaurant</button>' +
+      '<button class="role' + (role === 2 ? ' on' : '') + '" data-role="2">' + SVG.bike    + 'Partner</button>' +
+      '<button class="role' + (role === 3 ? ' on' : '') + '" data-role="3">' + SVG.store   + 'Swiggy</button>' +
+    '</div>' +
+    '<div id="roleOut"></div>';
+}
+
+function drawMenu(){
+  const box = document.getElementById('menuBox');
+  if(!box) return;
+  box.innerHTML = MENU.map((m, i) =>
+    '<button class="mitem' + (m.on ? ' on' : '') + '" data-m="' + i + '" aria-pressed="' + m.on + '">' +
+      '<span class="mbox" aria-hidden="true">' + SVG.check + '</span>' +
+      '<span class="mname">' + m.name + (m.veg ? ' <span class="veg">VEG</span>' : '') + '</span>' +
+      '<span class="mprice">' + m.price + '</span>' +
+    '</button>'
+  ).join('');
+  box.querySelectorAll('.mitem').forEach(b => b.addEventListener('click', () => {
+    MENU[+b.dataset.m].on = !MENU[+b.dataset.m].on;
+    drawMenu();
+    drawRole();
+  }));
+}
+
+function drawRole(){
+  const out = document.getElementById('roleOut');
+  if(!out) return;
+
+  const picked      = MENU.filter(m => m.on);
+  const itemTotal   = picked.reduce((s, m) => s + m.price, 0);
+  const free        = itemTotal >= FREE_FROM;
+  const deliveryFee = free ? 0 : 40;
+  const gst         = itemTotal * 0.05;
+  const grandTotal  = itemTotal + deliveryFee + gst;
+
+  const rawWallet = parseFloat(document.getElementById('in-w').value);
+  const wallet    = isFinite(rawWallet) && rawWallet > 0 ? rawWallet : 0;
+  const broke     = grandTotal > wallet;
+  const paid      = broke ? 0 : grandTotal;
+  const partnerGot = broke || free ? 0 : deliveryFee;
+
+  const prog = document.getElementById('mProg');
+  const fill = document.getElementById('mFill');
+  if(prog) prog.textContent = itemTotal;
+  if(fill){
+    fill.style.width = Math.min(100, itemTotal / FREE_FROM * 100) + '%';
+    fill.classList.toggle('done', free);
+  }
+
+  let list;
+  if(role === 0){
+    list = [
+      ['Your name','whatever you passed in','Customer.name'],
+      ['Phone number','whatever you passed in','Customer.phoneNumber'],
+      ['Wallet before the order', rs(wallet), 'Customer.walletBalance'],
+      ['Dishes ordered', picked.length, 'Order.items.length'],
+      ['Food total', rs(itemTotal), 'Order.itemTotal', 1],
+      ['Delivery fee', free ? 'FREE' : rs(deliveryFee), 'Order.deliveryFee', 0, 0, free],
+      ['GST (5%)', rs(gst), 'Order.gst'],
+      ['Grand total', rs(grandTotal), 'Order.grandTotal', 1],
+      ['Wallet after the order', rs(wallet - paid), 'what main() prints', 1],
+      ['Orders placed', broke ? '0' : '1', 'step 7', 0, 1],
+      ['Total spent', rs(paid), 'step 7', 0, 1]
+    ];
+  } else if(role === 1){
+    list = [
+      ['Restaurant name','Anjappar','Restaurant.name'],
+      ['Area','Velachery','Restaurant.area'],
+      ['Rating','4.3 &#9733;','Restaurant.rating'],
+      ['Dishes on the menu', MENU.length, 'Restaurant.menu.length'],
+      ['Dishes in this order', picked.length, 'Order.items.length'],
+      ['Food money earned', rs(broke ? 0 : itemTotal), 'Order.itemTotal', 1],
+      ['Orders served', broke ? '0' : '1', 'step 7', 0, 1],
+      ['Total earned', rs(broke ? 0 : itemTotal), 'step 7', 0, 1]
+    ];
+  } else if(role === 2){
+    list = [
+      ['Partner name','Suresh','DeliveryPartner.name'],
+      ['Vehicle number','TN-01-AB-1234','DeliveryPartner.vehicleNumber'],
+      ['Free right now','true &mdash; the drop is done','DeliveryPartner.isFree'],
+      ['Earned this delivery', rs(partnerGot), 'Order.deliveryFee', 1],
+      ['Deliveries completed', broke ? '0' : '1', 'step 7', 0, 1],
+      ['Total earnings', rs(partnerGot), 'step 7', 0, 1]
+    ];
+  } else {
+    list = [
+      ['Orders today', broke ? '0' : '1', 'step 7', 0, 1],
+      ['Order value', rs(paid), 'step 7', 0, 1],
+      ['Delivery fees collected', rs(broke ? 0 : deliveryFee), 'step 7', 0, 1],
+      ['GST collected (goes to the government)', rs(broke ? 0 : gst), 'Order.gst'],
+      ['Restaurant was paid', rs(broke ? 0 : itemTotal), 'Order.itemTotal'],
+      ['Partner was paid', rs(partnerGot), 'Order.deliveryFee']
+    ];
+  }
+
+  out.innerHTML =
+    '<div class="rp"><div class="rp-h">You are the <b>' + ROLE_NAME[role] + '</b></div>' +
+    '<table class="rt"><tbody>' + list.map(r =>
+      '<tr><td class="rk">' + r[0] + '</td>' +
+      '<td class="rv' + (r[3] ? ' hl' : '') + (r[5] ? ' gd' : '') + '">' + r[1] + '</td>' +
+      '<td class="rs' + (r[4] ? ' b' : '') + '">' + r[2] + '</td></tr>'
+    ).join('') + '</tbody></table></div>' +
+    (broke
+      ? '<div class="warn">Insufficient balance! &mdash; the bill is ' + rs(grandTotal) +
+        ', the wallet holds ' + rs(wallet) + ', so nothing is deducted and no order is counted.</div>'
+      : '') +
+    (!broke && free && role === 2
+      ? '<div class="ask">Delivery was free on this order, so as the assignment is written this partner earned nothing for the trip. Step 7 asks you what you would do about that.</div>'
+      : '');
+}
+
+/* ── boot ──────────────────────────────────────────────────────────── */
+document.getElementById('resetBtn').addEventListener('click', () => {
+  done = [];
+  saveDone();
+  render();
+});
+render();
+</script>
+
+</body>
+</html>
