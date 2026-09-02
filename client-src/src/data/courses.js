@@ -61,6 +61,17 @@ export const courses = [
         ],
       },
       {
+        id: 'arrays',
+        title: 'Arrays',
+        summary: 'Many values under one name — and what happens when you give that idea rows and columns.',
+        lessons: [
+          { id: 'grid-world', title: 'GridWorld', minutes: 35,
+            blurb: 'Nine worlds and three playgrounds — a cineplex, a farm, a wildfire, a chessboard, a dungeon crawl and more — all the same int[][] underneath. Flip Matrix X-ray for the raw numbers, and the Code Mirror echoes the Java behind every move.',
+            src: '/java/grid-world/index.html',
+            thumbnail: '/java/grid-world/thumb.png' },
+        ],
+      },
+      {
         id: 'objects',
         title: 'Classes and Objects',
         summary: 'Describe the thing once, then build as many as you need.',
