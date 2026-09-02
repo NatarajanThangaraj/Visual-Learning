@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build the Quiz App</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+
+:root{
+  --bg:       #F6F5FB;
+  --card:     #FFFFFF;
+  --card2:    #F6F5FB;
+  --line:     #E4E2F0;
+  --line2:    #D6D2E6;
+  --ink:      #1F1B33;
+  --ink2:     #4A4462;
+  --muted:    #6E6885;
+  --faint:    #A29CB8;
+  --ac:       #5B4BC4;
+  --ac-d:     #3A2E8F;
+  --ac-bg:    #F4F2FD;
+  --ac-bd:    #CFC7F0;
+  --ac-chip:  #EEEBFA;
+  --warn:     #8A5A08;
+  --warn-bg:  #FDF3E0;
+  --warn-bd:  #EAD3A4;
+  --warn-bar: #C9A227;
+  --ok:       #2F7D51;
+  --ok-bg:    #E9F4ED;
+  --ok-bd:    #BFDCC9;
+  --err:      #B3392B;
+  --err-bg:   #FBECEA;
+  --err-bd:   #EFC9C2;
+  --idea-bg:  #FBF3DE;
+  --idea-bd:  #E0C98A;
+  --idea-tx:  #5C4610;
+  --idea-h:   #7A5E14;
+  --r:  8px;
+  --rl: 12px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--ink);
+  line-height:1.6;min-height:100vh;
+}
+button{font-family:inherit}
+.wrap{max-width:900px;margin:0 auto;padding:26px 20px 60px}
+
+/* ═════════ STEP RAIL ═════════ */
+.rail{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+.rs{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:'Space Grotesk',sans-serif;font-size:12.5px;
+  padding:6px 13px;border-radius:22px;
+  border:1px solid var(--line);background:transparent;color:var(--faint);
+  cursor:default;transition:background .18s,color .18s,border-color .18s;
+}
+.rs .rn{font-size:11px;opacity:.85}
+.rs.dn{background:var(--ac-chip);border-color:var(--ac-bd);color:var(--ac-d);cursor:pointer}
+.rs.dn:hover{border-color:var(--ac)}
+.rs.on{background:var(--ac);border-color:var(--ac);color:#fff;cursor:pointer}
+.rs svg{width:13px;height:13px;flex:none}
+.rail-hint{font-size:11.5px;color:var(--faint);margin:0 0 18px 2px}
+
+/* ═════════ APP ═════════ */
+.app{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);overflow:hidden}
+.ahead{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;border-bottom:1px solid var(--line);background:var(--card2);
+}
+.mark{
+  width:26px;height:26px;flex:none;border-radius:7px;
+  background:var(--ac);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+.mark svg{width:15px;height:15px;display:block}
+.who{flex:1;min-width:0;font-size:13.5px;color:var(--ink);
+     font-family:'Space Grotesk',sans-serif;
+     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who span{color:var(--muted)}
+.clock{
+  display:flex;align-items:center;gap:6px;flex:none;
+  background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--warn);
+  font-family:'Space Grotesk',sans-serif;font-size:14px;
+  padding:3px 12px;border-radius:20px;
+  font-variant-numeric:tabular-nums;
+}
+.clock svg{width:14px;height:14px}
+.clock.low{background:var(--err-bg);border-color:var(--err-bd);color:var(--err)}
+.idea-btn{
+  display:inline-flex;align-items:center;gap:6px;flex:none;
+  font-family:'Space Grotesk',sans-serif;font-size:12px;
+  border:1px solid var(--idea-bd);background:var(--idea-bg);color:var(--idea-h);
+  border-radius:20px;padding:5px 12px;cursor:pointer;
+}
+.idea-btn:hover{background:#F7EBCC}
+.idea-btn svg{width:14px;height:14px}
+.clockbar{height:3px;background:var(--line)}
+.clockbar-fill{height:100%;background:var(--warn-bar);transition:width .3s linear}
+.clockbar-fill.low{background:var(--err)}
+
+.pad{padding:20px}
+.pad-c{padding:26px 20px 28px;max-width:340px;margin:0 auto}
+.h{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:500;
+   letter-spacing:-.01em;color:var(--ink);margin-bottom:4px}
+.sub{font-size:12.5px;color:var(--muted);margin-bottom:16px}
+
+input{
+  width:100%;height:40px;border:1px solid var(--line2);border-radius:var(--r);
+  background:#fff;padding:0 12px;font-family:'Inter',sans-serif;font-size:14px;
+  color:var(--ink);outline:none;
+}
+input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-bg)}
+input::placeholder{color:var(--faint)}
+
+.btn{
+  font-family:'Space Grotesk',sans-serif;font-size:13px;
+  background:var(--ac);color:#fff;border:none;border-radius:var(--r);
+  padding:9px 17px;cursor:pointer;
+}
+.btn:hover{background:var(--ac-d)}
+.btn.wide{width:100%;margin-top:10px}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line2)}
+.btn.ghost:hover{background:var(--card2);color:var(--ink)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn[disabled]:hover{background:var(--ac)}
+
+.err{
+  display:none;margin-top:12px;
+  border:1px solid var(--err-bd);background:var(--err-bg);color:var(--err);
+  border-radius:var(--r);font-size:12.5px;padding:8px 12px;
+}
+.err.show{display:block}
+.note{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);
+      font-size:11.5px;color:var(--faint);line-height:1.7}
+
+/* ═════════ CHOICE GRIDS ═════════ */
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pick{
+  border:1px solid var(--line2);border-radius:9px;background:#fff;
+  padding:13px 12px;cursor:pointer;text-align:left;
+  transition:border-color .15s,background .15s;
+}
+.pick:hover{border-color:var(--ac-bd);background:var(--ac-bg)}
+.pick.on{border:2px solid var(--ac);background:var(--ac-bg);padding:12px 11px}
+.pick-t{display:block;font-family:'Space Grotesk',sans-serif;font-size:14px;color:var(--ink);margin-bottom:3px}
+.pick.on .pick-t{color:var(--ac-d)}
+.pick-s{display:block;font-size:11.5px;color:var(--muted);line-height:1.6}
+.pick.on .pick-s{color:var(--ac)}
+.pick.topic{display:flex;align-items:center;gap:11px}
+.pick.topic > span{min-width:0}
+.pick.topic svg{width:19px;height:19px;color:var(--ac);flex:none}
+.pick.off{opacity:.5;cursor:not-allowed}
+.pick.off:hover{border-color:var(--line2);background:#fff}
+.row{margin-top:14px;display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.row .tip{font-size:11.5px;color:var(--faint)}
+
+/* ═════════ QUIZ ═════════ */
+.qtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px}
+.qn{font-size:11.5px;color:var(--faint);letter-spacing:.05em}
+.qs{font-size:11.5px;color:var(--muted)}
+.qs b{color:var(--ac);font-weight:500}
+.q{font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:15px}
+.opts{display:grid;gap:8px}
+.opt{
+  border:1px solid var(--line2);border-radius:var(--r);background:#fff;
+  padding:10px 13px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);
+  cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.opt:hover{border-color:var(--ac-bd);background:var(--ac-bg)}
+.opt svg{width:16px;height:16px;flex:none}
+.opt.sel{border:2px solid var(--ac);background:var(--ac-bg);color:var(--ac-d);padding:9px 12px}
+.opt.right{border:2px solid var(--ok);background:var(--ok-bg);color:var(--ok);padding:9px 12px}
+.opt.wrong{border:2px solid var(--err);background:var(--err-bg);color:var(--err);padding:9px 12px}
+.opt[disabled]{cursor:default}
+.opt[disabled]:hover{background:#fff;border-color:var(--line2)}
+.opt.sel[disabled]:hover,.opt.right[disabled]:hover{background:var(--ok-bg);border-color:var(--ok)}
+.opt.wrong[disabled]:hover{background:var(--err-bg);border-color:var(--err)}
+.dots{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--line);display:inline-block}
+.dot.r{background:var(--ok)}
+.dot.w{background:var(--err)}
+.dot.c{background:var(--ac)}
+
+/* ═════════ SCORE ═════════ */
+.score{padding:24px 20px 20px;text-align:center}
+.score .cap{font-size:11.5px;color:var(--faint);letter-spacing:.05em;margin-bottom:6px}
+.score .big{font-family:'Space Grotesk',sans-serif;font-size:42px;color:var(--ac);line-height:1.1}
+.score .sum{font-size:13px;color:var(--muted);margin-top:7px}
+.score .sum b{color:var(--warn);font-weight:500}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:18px;text-align:left}
+.tile{background:var(--card2);border-radius:var(--r);padding:11px 12px}
+.tile-l{font-size:11.5px;color:var(--muted)}
+.tile-v{font-family:'Space Grotesk',sans-serif;font-size:19px}
+.explain{
+  margin-top:14px;background:var(--warn-bg);border:1px solid var(--warn-bd);
+  border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--warn);text-align:left;
+}
+.timesup{
+  margin-top:14px;background:var(--err-bg);border:1px solid var(--err-bd);
+  border-radius:var(--r);padding:9px 12px;font-size:12.5px;color:var(--err);text-align:left;
+}
+
+/* ═════════ BOARD ═════════ */
+.board-h{font-size:11.5px;color:var(--faint);letter-spacing:.05em;margin-bottom:14px}
+.lb{display:grid;grid-template-columns:26px minmax(0,1fr) 58px 58px;gap:0 10px}
+.lb-hd{font-size:11px;color:var(--faint);padding:0 4px 7px;border-bottom:1px solid var(--line)}
+.lb-hd.r,.lb-c.r{text-align:right}
+.lb-c{font-size:13.5px;color:var(--ink);padding:9px 4px 0;align-items:center;min-width:0}
+.lb-c.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-c.dim{color:var(--muted)}
+.lb-c.gold{color:var(--warn)}
+.lb-c.me{color:var(--ac-d)}
+.lb-c.mev{color:var(--ac)}
+.youchip{
+  background:var(--ac-chip);color:var(--ac);font-size:10.5px;
+  padding:2px 7px;border-radius:20px;margin-left:6px;white-space:nowrap;
+}
+.empty{padding:22px 4px;text-align:center;font-size:13px;color:var(--muted)}
+
+/* ═════════ IDEA ═════════ */
+.idea{margin-top:14px;border:1px solid var(--idea-bd);background:var(--idea-bg);
+      border-radius:var(--rl);padding:16px 18px 18px}
+.idea-h{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.idea-h svg{width:16px;height:16px;color:var(--idea-h);flex:none}
+.idea-h b{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:500;
+          color:var(--idea-tx);flex:1;letter-spacing:-.01em}
+.idea-x{border:none;background:none;color:var(--idea-h);cursor:pointer;
+        font-size:12.5px;font-family:'Space Grotesk',sans-serif;padding:2px 4px}
+.idea-x:hover{text-decoration:underline}
+.idea-sub{font-size:12px;color:var(--idea-h);margin-bottom:13px;opacity:.85}
+.idea ol{list-style:none;counter-reset:i}
+.idea ol li{counter-increment:i;position:relative;padding-left:30px;
+            font-size:13.5px;line-height:1.75;color:var(--idea-tx)}
+.idea ol li + li{margin-top:9px}
+.idea ol li::before{
+  content:counter(i);position:absolute;left:0;top:2px;
+  width:20px;height:20px;border-radius:6px;
+  background:rgba(122,94,20,.12);color:var(--idea-h);
+  font-family:'Space Grotesk',sans-serif;font-size:11.5px;
+  display:flex;align-items:center;justify-content:center;
+}
+.idea-foot{margin-top:14px;padding-top:12px;border-top:1px solid rgba(122,94,20,.2);
+           font-size:11.5px;color:var(--idea-h);opacity:.9}
+
+/* ═════════ FINAL ═════════ */
+.final{margin-top:14px;border:1px solid var(--line);background:var(--card);border-radius:var(--rl)}
+.final-h{width:100%;display:flex;align-items:center;gap:10px;padding:14px 18px;
+         background:none;border:none;cursor:pointer;text-align:left}
+.final-h b{flex:1;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:500;color:var(--ink)}
+.final-h .cv{color:var(--muted);display:flex;transition:transform .2s}
+.final-h .cv svg{width:15px;height:15px}
+.final.open .cv{transform:rotate(180deg)}
+.final-b{display:none;padding:0 18px 18px}
+.final.open .final-b{display:block}
+.final-b p{font-size:13px;color:var(--muted);margin-bottom:13px}
+.final-b ul{list-style:none}
+.final-b li{position:relative;padding-left:24px;font-size:13.5px;line-height:1.7;color:var(--ink2)}
+.final-b li + li{margin-top:8px}
+.final-b li::before{
+  content:'';position:absolute;left:2px;top:9px;width:8px;height:8px;
+  border-radius:3px;border:1px solid var(--line2);background:#fff;
+}
+.foot{margin-top:18px;display:flex;justify-content:center}
+.over{background:none;border:1px solid var(--line);color:var(--faint);
+      font-family:'Space Grotesk',sans-serif;font-size:12px;
+      border-radius:22px;padding:6px 15px;cursor:pointer}
+.over:hover{color:var(--muted);border-color:var(--line2);background:var(--card2)}
+
+@media (max-width:720px){
+  .wrap{padding:20px 14px 46px}
+  .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:460px){
+  .grid3{grid-template-columns:minmax(0,1fr)}
+  .tiles{grid-template-columns:minmax(0,1fr)}
+  .lb{grid-template-columns:22px minmax(0,1fr) 48px 46px;gap:0 7px}
+  .lb-c{font-size:13px}
+  .who{font-size:12.5px}
+  .ahead{flex-wrap:wrap;gap:8px}
+  .who{flex:1 1 100%;order:3}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="rail" id="rail"></div>
+  <p class="rail-hint">Tap a step you have finished to see the idea behind it again.</p>
+
+  <div class="app" id="app"></div>
+  <div id="ideaHost"></div>
+
+  <section class="final" id="final">
+    <button class="final-h" data-act="final">
+      <b>Before you submit</b>
+      <span class="cv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+    </button>
+    <div class="final-b">
+      <p>Three kinds of file, and every case your Java program has to survive.</p>
+      <ul>
+        <li>A players file holding one line per person who has ever played.</li>
+        <li>A question file for every topic and level pairing, which the program only ever reads.</li>
+        <li>A results file for every topic and level pairing, which the program only ever adds to.</li>
+        <li>A name that has played before is recognised, not added twice.</li>
+        <li>A name carrying your separator mark is refused before it can corrupt a record.</li>
+        <li>A topic file with fewer than ten questions is reported, not padded with repeats.</li>
+        <li>A broken record in the middle of a question file is skipped, and the quiz still runs.</li>
+        <li>The clock running out ends the quiz and still saves the marks earned.</li>
+        <li>The first score for a pairing creates the results file instead of failing to open it.</li>
+        <li>Quit the program, run it again &mdash; every leaderboard is still there. That is the point.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="foot"><button class="over" data-act="over">Start over</button></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════ QUESTION BANK ══════════════════
+ * key: 'Topic|Level' → [ question, a, b, c, d, indexOfCorrect ] */
+var BANK = {
+
+'Movies|Easy': [
+['Which film features a young lion named Simba?','The Lion King','Madagascar','Zootopia','Tarzan',0],
+['In Titanic, what does the ship strike?','An iceberg','A reef','Another ship','A whale',0],
+['Which school does Harry Potter attend?','Hogwarts','Durmstrang','Beauxbatons','Ilvermorny',0],
+['What colour is Shrek?','Green','Blue','Purple','Grey',0],
+['Which toy leads the others in Toy Story?','Woody','Rex','Hamm','Slinky',0],
+['In Finding Nemo, what kind of fish is Nemo?','A clownfish','An angelfish','A goldfish','A pufferfish',0],
+['What is the name of the snowman in Frozen?','Olaf','Sven','Kristoff','Hans',0],
+['In Jurassic Park, which animals are brought back to life?','Dinosaurs','Mammoths','Dragons','Dodos',0],
+['Which superhero is known as the Dark Knight?','Batman','Superman','Spider-Man','The Flash',0],
+['In Up, what lifts the house into the sky?','Balloons','A tornado','Rockets','A crane',0],
+['Which film features a shark terrorising a beach town?','Jaws','Deep Blue Sea','The Meg','Open Water',0],
+['What kind of animal is Dumbo?','An elephant','A donkey','A bear','A giraffe',0]
+],
+
+'Movies|Medium': [
+['Who directed Inception?','Christopher Nolan','Steven Spielberg','Ridley Scott','James Cameron',0],
+['Which film won the Academy Award for Best Picture in 2020?','Parasite','1917','Joker','Ford v Ferrari',0],
+['In The Matrix, which pill does Neo take?','The red one','The blue one','The green one','Neither',0],
+['Who played Captain Jack Sparrow?','Johnny Depp','Orlando Bloom','Geoffrey Rush','Javier Bardem',0],
+['Which studio made Spirited Away?','Studio Ghibli','Toei Animation','Madhouse','Kyoto Animation',0],
+['In Star Wars, who is revealed as Luke Skywalker’s father?','Darth Vader','Obi-Wan Kenobi','Emperor Palpatine','Han Solo',0],
+['Which actor played the Joker in The Dark Knight?','Heath Ledger','Joaquin Phoenix','Jared Leto','Jack Nicholson',0],
+['What is the fictional nation in Black Panther called?','Wakanda','Zamunda','Genosha','Latveria',0],
+['Who composed the scores for Jaws and Star Wars?','John Williams','Hans Zimmer','Ennio Morricone','Danny Elfman',0],
+['In Forrest Gump, what does Forrest compare life to?','A box of chocolates','A long road','A river','A feather',0],
+['Which film features the character Ellen Ripley?','Alien','Predator','Blade Runner','The Thing',0],
+['Who directed E.T. the Extra-Terrestrial?','Steven Spielberg','George Lucas','Robert Zemeckis','John Carpenter',0]
+],
+
+'Movies|Hard': [
+['Which was the first feature-length animated film?','Snow White and the Seven Dwarfs','Fantasia','Pinocchio','Bambi',0],
+['Who directed Seven Samurai?','Akira Kurosawa','Yasujiro Ozu','Kenji Mizoguchi','Nagisa Oshima',0],
+['Which film won the very first Best Picture Oscar?','Wings','Sunrise','The Jazz Singer','Metropolis',0],
+['In Citizen Kane, what is Rosebud?','A sled','A horse','A painting','A newspaper',0],
+['Who directed Vertigo, Psycho and Rear Window?','Alfred Hitchcock','Billy Wilder','John Ford','Orson Welles',0],
+['In which year was the first Toy Story released?','1995','1993','1997','1999',0],
+['Which film is famous for its Odessa Steps sequence?','Battleship Potemkin','Metropolis','Nosferatu','Man with a Movie Camera',0],
+['Who directed Pulp Fiction?','Quentin Tarantino','Martin Scorsese','Paul Thomas Anderson','Guy Ritchie',0],
+['Which country produced the film Amélie?','France','Belgium','Italy','Spain',0],
+['Which 1927 film is credited as the first feature-length talkie?','The Jazz Singer','Wings','Sunrise','The General',0],
+['Which film features the character Travis Bickle?','Taxi Driver','Raging Bull','Mean Streets','The King of Comedy',0],
+['Who directed Bicycle Thieves?','Vittorio De Sica','Federico Fellini','Roberto Rossellini','Luchino Visconti',0]
+],
+
+'Sport|Easy': [
+['How many players are on the field per side in football?','11','9','10','12',0],
+['In tennis, what is a score of zero called?','Love','Nil','Duck','Blank',0],
+['How many rings are on the Olympic flag?','Five','Four','Six','Three',0],
+['In cricket, how many balls are in one over?','Six','Four','Five','Eight',0],
+['Which sport uses a shuttlecock?','Badminton','Squash','Table tennis','Hockey',0],
+['How many points is a basketball free throw worth?','One','Two','Three','Four',0],
+['What colour card sends a footballer off?','Red','Yellow','Blue','Black',0],
+['How often are the Summer Olympic Games held?','Every four years','Every two years','Every year','Every five years',0],
+['In which sport would you perform a slam dunk?','Basketball','Volleyball','Handball','Netball',0],
+['How many holes are played in a full round of golf?','18','9','12','24',0],
+['Which sport is played at Wimbledon?','Tennis','Cricket','Rugby','Golf',0],
+['In swimming, which stroke is swum on the back?','Backstroke','Butterfly','Breaststroke','Freestyle',0]
+],
+
+'Sport|Medium': [
+['Which country has won the most FIFA World Cups?','Brazil','Germany','Italy','Argentina',0],
+['In cricket, what is a score of zero by a batter called?','A duck','A love','A blank','A nil',0],
+['How long is a marathon, to the nearest kilometre?','42 km','40 km','45 km','38 km',0],
+['Which country hosted the 2016 Summer Olympics?','Brazil','China','Britain','Greece',0],
+['In rugby union, how many points is a try worth?','Five','Three','Four','Six',0],
+['Which sport does the Ryder Cup belong to?','Golf','Sailing','Rowing','Cycling',0],
+['How many players are on a volleyball team on court?','Six','Five','Seven','Eight',0],
+['In Formula One, what flag signals the end of a race?','A chequered flag','A red flag','A yellow flag','A blue flag',0],
+['Which athlete holds the men’s 100 m world record set in 2009?','Usain Bolt','Tyson Gay','Yohan Blake','Asafa Powell',0],
+['In basketball, how long is an NBA shot clock?','24 seconds','30 seconds','35 seconds','20 seconds',0],
+['Which country invented judo?','Japan','China','Korea','Thailand',0],
+['How many Grand Slam tournaments are there in tennis each year?','Four','Three','Five','Six',0]
+],
+
+'Sport|Hard': [
+['Which country won the first FIFA World Cup, in 1930?','Uruguay','Brazil','Argentina','Italy',0],
+['In cricket, what is the term for three wickets in three balls?','A hat-trick','A treble','A triple','A trifecta',0],
+['Which city hosted the first modern Olympic Games?','Athens','Paris','London','Rome',0],
+['What is the maximum break in snooker without free balls?','147','155','144','150',0],
+['Which boxer was known as the Greatest and lit the 1996 Olympic flame?','Muhammad Ali','Joe Frazier','George Foreman','Sugar Ray Leonard',0],
+['In golf, what is a score of three under par on one hole called?','An albatross','An eagle','A birdie','A condor',0],
+['Which nation has won the most Olympic gold medals in field hockey?','India','Australia','Netherlands','Pakistan',0],
+['How many players are in a kabaddi team on the court?','Seven','Five','Nine','Eleven',0],
+['Which Formula One driver won seven world championships by 2004?','Michael Schumacher','Ayrton Senna','Alain Prost','Niki Lauda',0],
+['In the decathlon, how many events does an athlete compete in?','Ten','Seven','Twelve','Eight',0],
+['Which trophy is contested by England and Australia in cricket?','The Ashes','The Wisden Trophy','The Border-Gavaskar Trophy','The Frank Worrell Trophy',0],
+['What is the length of an Olympic swimming pool?','50 metres','25 metres','100 metres','75 metres',0]
+],
+
+'Games|Easy': [
+['How many squares are on a chessboard?','64','81','100','49',0],
+['In Monopoly, what do you collect when you pass Go?','Money','A property','A card','A token',0],
+['Which game uses red and yellow discs dropped into a grid?','Connect Four','Draughts','Ludo','Reversi',0],
+['In Pac-Man, what chases Pac-Man around the maze?','Ghosts','Robots','Spiders','Dogs',0],
+['How many dice are usually used in Ludo?','One','Two','Three','Four',0],
+['Which Nintendo character is a plumber in red?','Mario','Luigi','Link','Kirby',0],
+['In Snakes and Ladders, what does landing on a snake do?','Sends you down','Sends you up','Ends your turn','Doubles your roll',0],
+['What shape are the falling pieces in Tetris made of?','Four squares','Three squares','Five squares','Circles',0],
+['In Angry Birds, what are the birds launched at?','Pigs','Cows','Wolves','Robots',0],
+['Which game asks you to mine blocks and build in a cube world?','Minecraft','Roblox','Terraria','Fortnite',0],
+['How many pieces does each player start with in chess?','16','12','18','20',0],
+['In Rock Paper Scissors, what beats rock?','Paper','Scissors','Nothing','Both',0]
+],
+
+'Games|Medium': [
+['Which company created the PlayStation?','Sony','Nintendo','Microsoft','Sega',0],
+['In chess, which piece can move in an L shape?','The knight','The bishop','The rook','The queen',0],
+['Which game popularised the battle royale format in 2017?','PlayerUnknown’s Battlegrounds','Overwatch','Apex Legends','Valorant',0],
+['What is the best-selling video game of all time?','Minecraft','Tetris','Grand Theft Auto V','Wii Sports',0],
+['In Scrabble, how many tiles does a player hold?','Seven','Six','Eight','Five',0],
+['Which country invented the board game Go?','China','Japan','Korea','India',0],
+['Who is the main character of The Legend of Zelda?','Link','Zelda','Ganon','Navi',0],
+['In poker, which hand beats a flush?','A full house','A straight','Three of a kind','Two pair',0],
+['Which console did Nintendo release in 2017?','The Switch','The Wii U','The GameCube','The 3DS',0],
+['In chess, what is it called when a king cannot move and is not in check?','Stalemate','Checkmate','Castling','En passant',0],
+['Which puzzle game requires filling a nine by nine grid with digits?','Sudoku','Kakuro','Nonogram','Minesweeper',0],
+['What is the maximum number of players in a standard game of Ludo?','Four','Two','Six','Three',0]
+],
+
+'Games|Hard': [
+['Which 1972 game is often called the first commercially successful video game?','Pong','Spacewar','Computer Space','Asteroids',0],
+['In chess, what is the move called when a pawn captures a passing pawn?','En passant','Castling','Promotion','Zugzwang',0],
+['Which chess player lost a match to Deep Blue in 1997?','Garry Kasparov','Anatoly Karpov','Bobby Fischer','Magnus Carlsen',0],
+['Who designed the game Tetris?','Alexey Pajitnov','Shigeru Miyamoto','Hideo Kojima','Will Wright',0],
+['In Go, what is an empty point next to a stone called?','A liberty','A ko','An eye','A seki',0],
+['Which company made the Dreamcast?','Sega','Atari','Sony','Nintendo',0],
+['What is the highest possible score in a single game of ten-pin bowling?','300','250','280','200',0],
+['In Dungeons and Dragons, how many sides does the main dice have?','Twenty','Twelve','Ten','Six',0],
+['Which video game series features the character Solid Snake?','Metal Gear','Resident Evil','Splinter Cell','Hitman',0],
+['In backgammon, how many points are on the board?','24','20','18','30',0],
+['Which arcade game introduced the character Donkey Kong in 1981?','Donkey Kong','Mario Bros','Popeye','Radar Scope',0],
+['Which chess opening begins with the moves e4, e5, Nf3, Nc6, Bb5?','The Ruy Lopez','The Italian Game','The Sicilian Defence','The French Defence',0]
+],
+
+'Science|Easy': [
+['How many planets are in the Solar System?','Eight','Nine','Seven','Ten',0],
+['Which gas do humans need to breathe in to survive?','Oxygen','Nitrogen','Carbon dioxide','Hydrogen',0],
+['What is H2O commonly known as?','Water','Salt','Sugar','Acid',0],
+['Which organ pumps blood around the body?','The heart','The lungs','The liver','The brain',0],
+['Which force pulls objects towards the Earth?','Gravity','Magnetism','Friction','Pressure',0],
+['Which planet is known as the Red Planet?','Mars','Venus','Jupiter','Mercury',0],
+['How many legs does an insect have?','Six','Eight','Four','Ten',0],
+['What is the largest mammal?','The blue whale','The elephant','The giraffe','The hippopotamus',0],
+['Which part of a plant makes food using sunlight?','The leaf','The root','The stem','The flower',0],
+['What is the centre of an atom called?','The nucleus','The electron','The shell','The orbit',0],
+['At what temperature in Celsius does water freeze?','Zero','Ten','Minus ten','One hundred',0],
+['Which star is closest to the Earth?','The Sun','Proxima Centauri','Sirius','Polaris',0]
+],
+
+'Science|Medium': [
+['What is the chemical symbol for gold?','Au','Ag','Gd','Go',0],
+['How many bones are in the adult human body?','206','201','212','195',0],
+['Which gas makes up about 78 per cent of the atmosphere?','Nitrogen','Oxygen','Argon','Carbon dioxide',0],
+['Roughly how fast does light travel in a vacuum?','300,000 km per second','30,000 km per second','3,000,000 km per second','150,000 km per second',0],
+['Who proposed the theory of general relativity?','Albert Einstein','Isaac Newton','Niels Bohr','Max Planck',0],
+['Which part of the cell releases most of its energy?','The mitochondrion','The nucleus','The ribosome','The vacuole',0],
+['Which blood cells carry oxygen?','Red blood cells','White blood cells','Platelets','Plasma cells',0],
+['What is the hardest naturally occurring substance?','Diamond','Quartz','Granite','Corundum',0],
+['How many chromosomes does a normal human cell have?','46','23','48','44',0],
+['Which planet has the Great Red Spot?','Jupiter','Saturn','Mars','Neptune',0],
+['What does DNA stand for?','Deoxyribonucleic acid','Dinucleic acid','Double nuclear acid','Deoxyribose nitrate',0],
+['What is the pH of pure water at 25 degrees Celsius?','Seven','One','Fourteen','Zero',0]
+],
+
+'Science|Hard': [
+['Which subatomic particle carries a negative charge?','The electron','The proton','The neutron','The positron',0],
+['What is Avogadro’s number, to three figures?','6.02 times ten to the 23rd','6.02 times ten to the minus 23rd','3.14 times ten to the 23rd','9.81 times ten to the 23rd',0],
+['Which element has atomic number one?','Hydrogen','Helium','Lithium','Carbon',0],
+['Who discovered penicillin?','Alexander Fleming','Louis Pasteur','Joseph Lister','Robert Koch',0],
+['Which quantity always increases in an isolated system?','Entropy','Momentum','Charge','Mass',0],
+['Which acid is found in the human stomach?','Hydrochloric acid','Sulfuric acid','Nitric acid','Acetic acid',0],
+['What is the SI unit of force?','The newton','The joule','The watt','The pascal',0],
+['Which organelle assembles proteins?','The ribosome','The lysosome','The nucleolus','The vacuole',0],
+['Roughly what is the half-life of carbon-14?','5,730 years','1,600 years','12,000 years','50,000 years',0],
+['Which law says pressure and volume are inversely related at fixed temperature?','Boyle’s law','Charles’s law','Avogadro’s law','Dalton’s law',0],
+['What is the most abundant element in the universe?','Hydrogen','Helium','Oxygen','Carbon',0],
+['Who formulated the three laws of motion?','Isaac Newton','Galileo Galilei','Johannes Kepler','Christiaan Huygens',0]
+],
+
+'History|Easy': [
+['Who was the first President of the United States?','George Washington','Abraham Lincoln','Thomas Jefferson','John Adams',0],
+['In which country are the pyramids of Giza?','Egypt','Mexico','Sudan','Iraq',0],
+['Who led India’s non-violent independence movement?','Mahatma Gandhi','Jawaharlal Nehru','Vallabhbhai Patel','Subhas Chandra Bose',0],
+['Which ship sank on its maiden voyage in 1912?','The Titanic','The Lusitania','The Britannic','The Olympic',0],
+['Which empire built the Colosseum?','The Roman Empire','The Greek Empire','The Ottoman Empire','The Persian Empire',0],
+['In which year did the Second World War end?','1945','1939','1918','1950',0],
+['Who was the first person to walk on the Moon?','Neil Armstrong','Buzz Aldrin','Yuri Gagarin','Michael Collins',0],
+['Which country gave the Statue of Liberty to the United States?','France','Britain','Spain','Italy',0],
+['What was the name of the first artificial satellite?','Sputnik','Explorer','Vostok','Apollo',0],
+['Which civilisation built Machu Picchu?','The Inca','The Maya','The Aztec','The Olmec',0],
+['Who wrote India’s national anthem?','Rabindranath Tagore','Bankim Chandra Chatterjee','Sarojini Naidu','Muhammad Iqbal',0],
+['Which wall divided a German city until 1989?','The Berlin Wall','Hadrian’s Wall','The Great Wall','The Western Wall',0]
+],
+
+'History|Medium': [
+['In which year did India gain independence?','1947','1945','1950','1930',0],
+['Which war was fought between 1914 and 1918?','The First World War','The Second World War','The Crimean War','The Boer War',0],
+['Who was the first emperor of a unified China?','Qin Shi Huang','Han Wudi','Kublai Khan','Sun Yat-sen',0],
+['Which charter did King John seal in 1215?','Magna Carta','The Bill of Rights','The Domesday Book','The Petition of Right',0],
+['Which city was buried by Vesuvius in AD 79?','Pompeii','Rome','Naples','Ostia',0],
+['Who was the first woman to win a Nobel Prize?','Marie Curie','Rosalind Franklin','Dorothy Hodgkin','Irene Joliot-Curie',0],
+['Which revolution began in 1789?','The French Revolution','The American Revolution','The Russian Revolution','The Industrial Revolution',0],
+['Who founded the Maurya Empire?','Chandragupta Maurya','Ashoka','Bindusara','Harsha',0],
+['Whose expedition first sailed around the world?','Ferdinand Magellan’s','Christopher Columbus’s','Vasco da Gama’s','Marco Polo’s',0],
+['Which treaty formally ended the First World War with Germany?','The Treaty of Versailles','The Treaty of Utrecht','The Treaty of Vienna','The Treaty of Paris',0],
+['In which year did the Berlin Wall fall?','1989','1991','1985','1979',0],
+['Who is the longest-reigning British monarch?','Elizabeth the Second','Victoria','George the Third','Henry the Eighth',0]
+],
+
+'History|Hard': [
+['Which battle in 1066 changed the rule of England?','The Battle of Hastings','The Battle of Agincourt','The Battle of Bosworth','The Battle of Towton',0],
+['Which Mughal emperor built the Taj Mahal?','Shah Jahan','Akbar','Aurangzeb','Babur',0],
+['In which year is the fall of the western Roman Empire usually dated?','476','410','395','527',0],
+['Which treaty divided the New World between Spain and Portugal?','The Treaty of Tordesillas','The Treaty of Utrecht','The Treaty of Madrid','The Treaty of Lisbon',0],
+['Who wrote The Communist Manifesto with Friedrich Engels?','Karl Marx','Vladimir Lenin','Leon Trotsky','Mikhail Bakunin',0],
+['Which dynasty built most of the surviving Great Wall of China?','The Ming','The Qin','The Han','The Tang',0],
+['Which empire did Suleiman the Magnificent rule?','The Ottoman Empire','The Safavid Empire','The Mughal Empire','The Byzantine Empire',0],
+['Who was the first Prime Minister of independent India?','Jawaharlal Nehru','Mahatma Gandhi','Vallabhbhai Patel','Rajendra Prasad',0],
+['In which year was the Bastille stormed?','1789','1792','1776','1804',0],
+['Which ancient civilisation wrote in cuneiform?','Sumer','Egypt','The Indus Valley','Shang China',0],
+['Who led a Carthaginian army across the Alps?','Hannibal','Hasdrubal','Hamilcar','Scipio',0],
+['In which year was the Soviet Union dissolved?','1991','1989','1993','1985',0]
+],
+
+'Java|Easy': [
+['Which keyword declares a class in Java?','class','struct','define','object',0],
+['Which method is the entry point of a Java program?','main','start','run','init',0],
+['Which symbol ends a Java statement?','A semicolon','A colon','A full stop','A comma',0],
+['Which type stores a whole number?','int','double','char','boolean',0],
+['Which type holds only true or false?','boolean','bit','flag','binary',0],
+['How do you begin a single-line comment?','With two slashes','With a hash','With two dashes','With an apostrophe',0],
+['Which keyword creates a new object?','new','create','make','alloc',0],
+['What is the file extension of Java source code?','.java','.class','.jar','.jv',0],
+['Which type stores a single character?','char','String','letter','byte',0],
+['Which loop is the natural choice for a fixed number of passes?','for','while','do-while','switch',0],
+['Which keyword leaves a loop early?','break','stop','exit','skip',0],
+['Which keyword skips to the next pass of a loop?','continue','next','skip','pass',0]
+],
+
+'Java|Medium': [
+['Which collection stores only unique elements?','A Set','A List','A Map','An array',0],
+['What does JVM stand for?','Java Virtual Machine','Java Variable Manager','Java Version Model','Java Vector Machine',0],
+['Which keyword stops a class from being extended?','final','static','private','abstract',0],
+['Which class is the ancestor of every Java class?','Object','Class','Base','Super',0],
+['Which comparison checks whether two references point to the same object?','The double equals operator','The equals method','The compareTo method','The hashCode method',0],
+['What is the default value of an int field?','Zero','Null','One','Undefined',0],
+['Which interface gives a class a natural ordering?','Comparable','Comparator','Iterable','Serializable',0],
+['What does a static member belong to?','The class itself','Each instance','The package','The thread',0],
+['Which exception comes from dividing an integer by zero?','ArithmeticException','NullPointerException','NumberFormatException','IllegalStateException',0],
+['Which keyword begins the block that handles an exception?','catch','throw','throws','finally',0],
+['Can the contents of a Java String be changed after it is made?','No, strings are immutable','Yes, always','Only inside a loop','Only with a cast',0],
+['Which class is built for assembling text piece by piece?','StringBuilder','String','StringTokenizer','Character',0]
+],
+
+'Java|Hard': [
+['Which method should be overridden alongside equals for hash-based collections?','hashCode','toString','compareTo','clone',0],
+['Which collection keeps insertion order and allows duplicates?','ArrayList','HashSet','TreeSet','HashMap',0],
+['Which block runs whether or not an exception was thrown?','finally','catch','throws','static',0],
+['What does marking a field transient do?','Leaves it out of serialisation','Makes it constant','Makes it thread-local','Makes it visible across threads',0],
+['Which memory area holds objects at run time?','The heap','The stack','The registers','The constant pool only',0],
+['Which of these is a checked exception?','IOException','NullPointerException','ArithmeticException','ClassCastException',0],
+['What does the volatile keyword guarantee?','Visibility of a field across threads','Atomic increments','Immutability','Exclusive locking',0],
+['Which access level makes a member visible only inside its own package?','The default, with no modifier','private','protected','public',0],
+['Which class is the superclass of both Exception and Error?','Throwable','Object only','RuntimeException','Serializable',0],
+['What is autoboxing?','Turning a primitive into its wrapper object','Turning a wrapper into a primitive','Casting between number types','Wrapping an array in a list',0],
+['Which loop always runs its body at least once?','do-while','while','for','for-each',0],
+['What does the just-in-time compiler do?','Turns bytecode into native code while running','Turns source into bytecode','Rewrites the source file','Links external libraries',0]
+]
+
+};
+
+/* ══════════════════ CONSTANTS ══════════════════ */
+var KEY = 'quizApp.v1';
+var SEP = '|';
+var TOPICS = ['Movies','Sport','Games','Science','History','Java'];
+var LEVELS = [
+  { id:'Easy',   secs:300, sub:'5:00 for all ten<br>gentle questions' },
+  { id:'Medium', secs:200, sub:'3:20 for all ten<br>a real test' },
+  { id:'Hard',   secs:150, sub:'2:30 for all ten<br>no time to think' }
+];
+var SEED_NAMES = ['Arjun','Meera','Riya','Karthik','Divya','Vikram'];
+
+var S_ = 'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+var SVG = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  bulb:  '<svg viewBox="0 0 24 24" fill="none" ' + S_ + '><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.1 14a5 5 0 1 0-6.2 0c.6.5.9 1.2 1 1.9h4.2c.1-.7.4-1.4 1-1.9z"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" ' + S_ + '><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  help:  '<svg viewBox="0 0 24 24" fill="none" ' + S_ + '><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4"/><path d="M12 17h.01"/></svg>',
+  cup:   '<svg viewBox="0 0 24 24" fill="none" ' + S_ + '><path d="M16 6H4v7a5 5 0 0 0 5 5h2a5 5 0 0 0 5-5z"/><path d="M16 8h2a3 3 0 0 1 0 6h-2"/></svg>',
+  right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8.5 12.2 11 14.7 15.5 9.7"/></svg>',
+  wrong: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>'
+};
+var ICON = {
+  Movies:  '<svg viewBox="0 0 24 24" fill="none" ' + S_ + '><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7.5 4v16M16.5 4v16M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21"/></svg>',
+  Sport:   '<svg viewBox="0 0 24 24" fill="none" ' + S_ + '><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>',
+  Games:   '<svg viewBox="0 0 24 24" fill="none" ' + S_ + '><rect x="2" y="7" width="20" height="10" rx="5"/><path d="M7 12h3M8.5 10.5v3M16 11.5h.01M18 13.5h.01"/></svg>',
+  Science: '<svg viewBox="0 0 24 24" fill="none" ' + S_ + '><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7 16h10"/></svg>',
+  History: '<svg viewBox="0 0 24 24" fill="none" ' + S_ + '><path d="M4 21h16M6 21V9.5M18 21V9.5M3.5 9.5h17L12 3.5 3.5 9.5M10 21v-5.5h4V21"/></svg>',
+  Java:    '<svg viewBox="0 0 24 24" fill="none" ' + S_ + '><path d="M16 8H4v6a5 5 0 0 0 5 5h2a5 5 0 0 0 5-5z"/><path d="M16 9.5h2a2.5 2.5 0 0 1 0 5h-2"/><path d="M7 3.5v2M11 3.5v2"/></svg>'
+};
+
+/* ══════════════════ THE SIX STEPS ══════════════════ */
+var STEPS = [
+  { label:'Who is playing', idea:[
+    'Read the players file and look for this name before doing anything else.',
+    'If the name is new, add one line to the end of that file so it is remembered next time.',
+    'If the players file is not there at all, this is the first person ever — create it.',
+    'Trim the blanks off the name, and refuse one carrying the mark you split fields on.',
+    'Never rewrite the whole file to add one player. You would lose everyone else.'
+  ]},
+  { label:'How hard', idea:[
+    'The level stores nothing yet — it decides which question file you are about to open and how long the clock runs.',
+    'Keep the three clock lengths in one place, so changing them later means changing one thing.',
+    'Remember the choice: both the question file and the results file are named after it.',
+    'A level the user has not picked yet must not leave you guessing at a file name later.'
+  ]},
+  { label:'Which topic', idea:[
+    'Every topic and level pair is its own question file, named after both of them.',
+    'Before offering a topic, check its file is really there and holds at least ten questions — offering one you cannot fill is worse than hiding it.',
+    'Count the records by walking the file, not by holding the whole thing in memory.',
+    'A topic whose file is missing shows as unavailable. It does not crash the menu.',
+    'Close every file you opened just to count it.'
+  ]},
+  { label:'The quiz', idea:[
+    'Read the question file once, at the start, and turn each record into a question with its options and its right answer.',
+    'Split each record on the separator. A record with the wrong number of parts is a broken question — skip it rather than let it stop the quiz.',
+    'Shuffle what you read and take ten. If the file holds fewer than ten, say so instead of repeating questions.',
+    'Never write to a question file. To this program it is read-only.',
+    'Hold the clock and the answers in memory while playing. The disk is not touched again until the run ends.'
+  ]},
+  { label:'Your mark', idea:[
+    'Add up the marks, work out the bonus from the clock left, and only then write anything.',
+    'Add one record to the end of the results file for this topic and level: the name, the score, the seconds taken.',
+    'Open it in the mode that adds to the end. The other mode wipes every score anyone has ever set.',
+    'Create the results file if this is the first score for that pairing.',
+    'Close the file, so the score reaches the disk before the leaderboard reads it back.'
+  ]},
+  { label:'The leaderboard', idea:[
+    'Read the whole results file back, one record at a time.',
+    'Split each record into the name, the score and the seconds, and skip any line that does not split cleanly.',
+    'Keep only the records for the topic and level just played.',
+    'Order them by score, highest first, and break a tie with the smaller number of seconds.',
+    'Show the first five and no more, even if the file holds a thousand.',
+    'A results file that is not there yet means an empty board, not an error.'
+  ]}
+];
+
+/* ══════════════════ STATE ══════════════════ */
+var S, run = null;
+
+function boardKey(t, l){ return t + SEP + l; }
+function levelSecs(id){
+  for(var i = 0; i < LEVELS.length; i++) if(LEVELS[i].id === id) return LEVELS[i].secs;
+  return 200;
+}
+
+function seedAll(){
+  var out = {};
+  for(var a = 0; a < TOPICS.length; a++){
+    for(var b = 0; b < LEVELS.length; b++){
+      var k = boardKey(TOPICS[a], LEVELS[b].id), h = 0, i;
+      for(i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) % 9973;
+      var rows = [];
+      for(i = 0; i < 4; i++){
+        rows.push({
+          name:  SEED_NAMES[(h + i) % SEED_NAMES.length],
+          score: 50 + ((h + i * 13) % 8) * 8,
+          secs:  55 + ((h + i * 29) % 70)
+        });
+      }
+      out[k] = rows;
+    }
+  }
+  return out;
+}
+
+function fresh(){
+  return {
+    step:1, view:1,
+    name:null, level:null, topic:null,
+    players:SEED_NAMES.slice(),
+    results:seedAll(),
+    last:null, idea:0, finalOpen:false
+  };
+}
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw){
+      var o = JSON.parse(raw);
+      if(o && typeof o === 'object' && o.results && o.players){
+        if(o.view === 4) o.view = 3;   /* a run cannot survive a reload */
+        return o;
+      }
+    }
+  }catch(e){}
+  return fresh();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ══════════════════ HELPERS ══════════════════ */
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmt(sec){
+  sec = Math.max(0, sec);
+  return Math.floor(sec / 60) + ':' + (sec % 60 < 10 ? '0' : '') + (sec % 60);
+}
+function shuffle(a){
+  for(var i = a.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1)), t = a[i];
+    a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function prep(row){
+  var opts = [row[1], row[2], row[3], row[4]];
+  var correctText = opts[row[5]];
+  shuffle(opts);
+  return { q:row[0], opts:opts, correct:opts.indexOf(correctText) };
+}
+function top5(k){
+  var rows = (S.results[k] || []).slice();
+  rows.sort(function(a, b){ return (b.score - a.score) || (a.secs - b.secs); });
+  return rows.slice(0, 5);
+}
+function leftNow(){
+  if(!run) return 0;
+  return Math.max(0, Math.ceil((run.endsAt - Date.now()) / 1000));
+}
+
+/* ══════════════════ RAIL ══════════════════ */
+function renderRail(){
+  var out = '';
+  for(var i = 0; i < STEPS.length; i++){
+    var n = i + 1;
+    var cls = n < S.step ? 'rs dn' : (n === S.step ? 'rs on' : 'rs');
+    var mark = n < S.step ? SVG.check : '<span class="rn">' + n + '</span>';
+    var live = n <= S.step;
+    out += '<button class="' + cls + '"' +
+           (live ? ' data-act="idea" data-n="' + n + '"' : ' disabled') +
+           ' title="' + (live ? 'See what the code must do for this step' : 'Not there yet') + '">' +
+           mark + STEPS[i].label + '</button>';
+  }
+  document.getElementById('rail').innerHTML = out;
+}
+
+/* ══════════════════ APP ══════════════════ */
+function ctxLine(){
+  if(!S.name) return 'Quiz lab';
+  var rest = [];
+  if(S.topic) rest.push(S.topic);
+  if(S.level) rest.push(S.level);
+  return esc(S.name) + (rest.length ? ' <span>\u00b7 ' + esc(rest.join(' \u00b7 ')) + '</span>' : '');
+}
+function head(){
+  var clock = '';
+  if(S.view === 4 && run){
+    var l = leftNow();
+    var low = l <= Math.max(20, Math.round(run.budget * 0.2));
+    clock = '<div class="clock' + (low ? ' low' : '') + '" id="clk">' + SVG.clock + fmt(l) + '</div>';
+  }
+  return '<div class="ahead">' +
+      '<div class="mark">' + (S.view === 6 ? SVG.check : SVG.help) + '</div>' +
+      '<div class="who">' + ctxLine() + '</div>' +
+      clock +
+      '<button class="idea-btn" data-act="idea" data-n="' + Math.min(S.step, 6) + '">' +
+        SVG.bulb + 'Idea</button>' +
+    '</div>' + (S.view === 4 && run ? bar() : '');
+}
+function bar(){
+  var l = leftNow(), pct = Math.round(l / run.budget * 100);
+  var low = l <= Math.max(20, Math.round(run.budget * 0.2));
+  return '<div class="clockbar"><div class="clockbar-fill' + (low ? ' low' : '') +
+         '" id="clkbar" style="width:' + pct + '%"></div></div>';
+}
+
+function vName(){
+  return '<div class="pad-c">' +
+    '<div class="h">What should we call you?</div>' +
+    '<div class="sub">Your name goes on the leaderboard, so pick one you will recognise.</div>' +
+    '<input id="nm" type="text" autocomplete="off" spellcheck="false" placeholder="Nila" maxlength="20">' +
+    '<button class="btn wide" data-act="name">Start</button>' +
+    '<div class="err" id="nerr"></div>' +
+    '<div class="note">Played before? We will find your old scores and keep them. ' +
+    'Names already known: ' + esc(SEED_NAMES.join(', ')) + '.</div>' +
+  '</div>';
+}
+
+function vLevel(){
+  var g = '';
+  for(var i = 0; i < LEVELS.length; i++){
+    var L = LEVELS[i], on = S.level === L.id;
+    g += '<button class="pick' + (on ? ' on' : '') + '" data-act="lvl" data-v="' + L.id + '">' +
+           '<div class="pick-t">' + L.id + '</div>' +
+           '<div class="pick-s">' + L.sub + '</div>' +
+         '</button>';
+  }
+  return '<div class="pad">' +
+    '<div class="h">Pick your level</div>' +
+    '<div class="sub">One clock runs from the first question to the last.</div>' +
+    '<div class="grid3">' + g + '</div>' +
+    '<div class="row">' +
+      '<button class="btn" data-act="toTopic"' + (S.level ? '' : ' disabled') + '>Next</button>' +
+      '<span class="tip">Run out of time and the quiz ends there, with the marks you earned.</span>' +
+    '</div>' +
+  '</div>';
+}
+
+function vTopic(){
+  var g = '';
+  for(var i = 0; i < TOPICS.length; i++){
+    var t = TOPICS[i];
+    var n = (BANK[boardKey(t, S.level)] || []).length;
+    var ok = n >= 10, on = S.topic === t;
+    g += '<button class="pick topic' + (on ? ' on' : '') + (ok ? '' : ' off') + '"' +
+           (ok ? ' data-act="top" data-v="' + t + '"' : ' disabled') + '>' +
+           ICON[t] +
+           '<span><span class="pick-t">' + t + '</span>' +
+           '<span class="pick-s">' + (ok ? n + ' questions' : 'not enough yet') + '</span></span>' +
+         '</button>';
+  }
+  return '<div class="pad">' +
+    '<div class="h">Pick a topic</div>' +
+    '<div class="sub">Ten of these questions will be drawn at random.</div>' +
+    '<div class="grid3">' + g + '</div>' +
+    '<div class="row">' +
+      '<button class="btn" data-act="start"' + (S.topic ? '' : ' disabled') + '>Start the quiz</button>' +
+      '<button class="btn ghost" data-act="toLevel">Back</button>' +
+      '<span class="tip">Each topic and level is its own question file.</span>' +
+    '</div>' +
+  '</div>';
+}
+
+function vQuiz(){
+  var q = run.qs[run.i], o = '', i;
+  for(i = 0; i < q.opts.length; i++){
+    var cls = 'opt', tail = '';
+    if(run.phase === 'answering'){
+      if(run.sel === i) cls += ' sel';
+    }else{
+      if(i === q.correct){ cls += ' right'; tail = SVG.right; }
+      else if(run.sel === i){ cls += ' wrong'; tail = SVG.wrong; }
+    }
+    o += '<button class="' + cls + '"' +
+         (run.phase === 'answering' ? ' data-act="pick" data-v="' + i + '"' : ' disabled') + '>' +
+         '<span>' + esc(q.opts[i]) + '</span>' + tail + '</button>';
+  }
+  var dots = '';
+  for(i = 0; i < 10; i++){
+    var d = 'dot';
+    if(i < run.marked.length) d += run.marked[i] ? ' r' : ' w';
+    else if(i === run.i) d += ' c';
+    dots += '<span class="' + d + '"></span>';
+  }
+  var last = run.i === run.qs.length - 1;
+  var next = run.phase === 'answering'
+    ? '<button class="btn" data-act="lock"' + (run.sel === null ? ' disabled' : '') + '>Lock it in</button>'
+    : '<button class="btn" data-act="next">' + (last ? 'See my mark' : 'Next question') + '</button>';
+  return '<div class="pad">' +
+    '<div class="qtop">' +
+      '<span class="qn">QUESTION ' + (run.i + 1) + ' OF ' + run.qs.length + '</span>' +
+      '<span class="qs">Marks so far <b>' + (run.correct * 10) + '</b></span>' +
+    '</div>' +
+    '<div class="q">' + esc(q.q) + '</div>' +
+    '<div class="opts">' + o + '</div>' +
+    '<div class="row">' + next + '<div class="dots">' + dots + '</div></div>' +
+  '</div>';
+}
+
+function vScore(){
+  var r = S.last;
+  var timesup = r.timedOut
+    ? '<div class="timesup">The clock beat you with ' + r.unanswered +
+      ' question' + (r.unanswered === 1 ? '' : 's') +
+      ' unanswered, so there is no speed bonus. The marks you earned still count.</div>'
+    : '';
+  var saveBtn = r.saved
+    ? '<button class="btn" data-act="board">See the leaderboard</button>'
+    : '<button class="btn" data-act="save">Save my score</button>';
+  return '<div class="score">' +
+    '<div class="cap">YOU SCORED</div>' +
+    '<div class="big">' + r.score + '</div>' +
+    '<div class="sum">' + r.marks + ' marks &nbsp;+&nbsp; <b>' + r.bonus + ' speed bonus</b></div>' +
+    '<div class="tiles">' +
+      '<div class="tile"><div class="tile-l">Right</div><div class="tile-v" style="color:var(--ok)">' + r.correct + '</div></div>' +
+      '<div class="tile"><div class="tile-l">Wrong</div><div class="tile-v" style="color:var(--err)">' + r.wrong + '</div></div>' +
+      '<div class="tile"><div class="tile-l">Clock left</div><div class="tile-v" style="color:var(--warn)">' + fmt(r.left) + '</div></div>' +
+    '</div>' +
+    '<div class="explain">Ten marks for every right answer, then one bonus point for every ' +
+      'ten seconds you left on the clock. Run out of time and the bonus is nil.</div>' +
+    timesup +
+    '<div class="row" style="justify-content:center">' + saveBtn +
+      '<button class="btn ghost" data-act="again">Play again</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function vBoard(){
+  var r = S.last, k = boardKey(r.topic, r.level), rows = top5(k), body = '';
+  if(!rows.length){
+    body = '<div class="empty">No scores on this board yet. Yours will be the first.</div>';
+  }else{
+    body = '<div class="lb">' +
+      '<div class="lb-hd">#</div><div class="lb-hd">Player</div>' +
+      '<div class="lb-hd r">Score</div><div class="lb-hd r">Time</div>';
+    for(var i = 0; i < rows.length; i++){
+      var w = rows[i];
+      var me = r.saved && w.name === S.name && w.score === r.score && w.secs === r.taken;
+      var rk = me ? 'lb-c me' : (i === 0 ? 'lb-c gold' : 'lb-c dim');
+      body += '<div class="' + rk + '">' + (i + 1) + '</div>' +
+        '<div class="lb-c n' + (me ? ' me' : '') + '">' + esc(w.name) +
+          (me ? '<span class="youchip">you</span>' : '') + '</div>' +
+        '<div class="lb-c r' + (me ? ' me' : '') + '">' + w.score + '</div>' +
+        '<div class="lb-c r ' + (me ? 'mev' : 'dim') + '">' + w.secs + ' s</div>';
+    }
+    body += '</div>';
+  }
+  return '<div class="pad">' +
+    '<div class="board-h">' + esc(r.topic.toUpperCase()) + ' &middot; ' + esc(r.level.toUpperCase()) + '</div>' +
+    body +
+    '<div class="note">An exact tie is broken by the faster run. To see another board, play that topic and level.</div>' +
+    '<div class="row">' +
+      '<button class="btn" data-act="again">Play again</button>' +
+      '<button class="btn ghost" data-act="toLevel">Change topic or level</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderApp(){
+  var body;
+  if(S.view === 1) body = vName();
+  else if(S.view === 2) body = vLevel();
+  else if(S.view === 3) body = vTopic();
+  else if(S.view === 4) body = run ? vQuiz() : vTopic();
+  else if(S.view === 5) body = S.last ? vScore() : vTopic();
+  else body = S.last ? vBoard() : vTopic();
+  document.getElementById('app').innerHTML = head() + body;
+  var nm = document.getElementById('nm');
+  if(nm && S.name) nm.value = S.name;
+}
+
+function renderIdea(){
+  var host = document.getElementById('ideaHost');
+  if(!S.idea){ host.innerHTML = ''; return; }
+  var st = STEPS[S.idea - 1], li = '';
+  for(var i = 0; i < st.idea.length; i++) li += '<li>' + st.idea[i] + '</li>';
+  host.innerHTML = '<div class="idea">' +
+      '<div class="idea-h">' + SVG.bulb +
+        '<b>What your code has to do for step ' + S.idea + '</b>' +
+        '<button class="idea-x" data-act="idea" data-n="' + S.idea + '">Hide</button>' +
+      '</div>' +
+      '<div class="idea-sub">Step ' + S.idea + ' &mdash; ' + st.label + '</div>' +
+      '<ol>' + li + '</ol>' +
+      '<div class="idea-foot">No code here on purpose. This is the plan; the Java is yours to write.</div>' +
+    '</div>';
+}
+function renderFinal(){
+  var f = document.getElementById('final');
+  if(S.finalOpen) f.classList.add('open'); else f.classList.remove('open');
+}
+function render(){ renderRail(); renderApp(); renderIdea(); renderFinal(); }
+
+/* ══════════════════ THE RUN ══════════════════ */
+function tick(){
+  if(!run) return;
+  var l = leftNow();
+  var low = l <= Math.max(20, Math.round(run.budget * 0.2));
+  var c = document.getElementById('clk');
+  if(c){
+    c.innerHTML = SVG.clock + fmt(l);
+    c.className = 'clock' + (low ? ' low' : '');
+  }
+  var b = document.getElementById('clkbar');
+  if(b){
+    b.style.width = Math.round(l / run.budget * 100) + '%';
+    b.className = 'clockbar-fill' + (low ? ' low' : '');
+  }
+  if(l <= 0) endRun(true);
+}
+function startRun(){
+  var pool = (BANK[boardKey(S.topic, S.level)] || []).slice();
+  if(pool.length < 10) return;
+  shuffle(pool);
+  var qs = [];
+  for(var i = 0; i < 10; i++) qs.push(prep(pool[i]));
+  run = { qs:qs, i:0, sel:null, phase:'answering', correct:0, marked:[],
+          budget:levelSecs(S.level) };
+  run.endsAt = Date.now() + run.budget * 1000;
+  run.timer = setInterval(tick, 250);
+  S.view = 4;
+  if(S.step < 4) S.step = 4;
+  save(); render();
+}
+function endRun(timedOut){
+  if(!run) return;
+  clearInterval(run.timer);
+  var left = timedOut ? 0 : leftNow();
+  var answered = run.marked.length;
+  var marks = run.correct * 10;
+  var bonus = timedOut ? 0 : Math.floor(left / 10);
+  S.last = {
+    topic:S.topic, level:S.level,
+    correct:run.correct, wrong:answered - run.correct,
+    unanswered:run.qs.length - answered,
+    taken:run.budget - left, left:left,
+    marks:marks, bonus:bonus, score:marks + bonus,
+    timedOut:!!timedOut, saved:false
+  };
+  run = null;
+  S.view = 5;
+  if(S.step < 5) S.step = 5;
+  save(); render();
+}
+
+/* ══════════════════ ACTIONS ══════════════════ */
+function showErr(id, msg){
+  var e = document.getElementById(id);
+  if(!e) return;
+  e.textContent = msg;
+  e.classList.add('show');
+}
+function doName(){
+  var el = document.getElementById('nm');
+  var v = (el.value || '').trim();
+  document.getElementById('nerr').classList.remove('show');
+  if(!v)                 return showErr('nerr', 'Type a name first — the leaderboard needs something to show.');
+  if(v.indexOf(SEP) >= 0) return showErr('nerr', 'A name cannot contain the ' + SEP + ' mark. That is what splits the fields inside a record.');
+  if(v.length > 16)      return showErr('nerr', 'Keep it to 16 characters or fewer so it fits on the board.');
+  S.name = v;
+  var known = false;
+  for(var i = 0; i < S.players.length; i++)
+    if(S.players[i].toLowerCase() === v.toLowerCase()) known = true;
+  if(!known) S.players.push(v);
+  S.view = 2;
+  if(S.step < 2) S.step = 2;
+  save(); render();
+}
+function saveScore(){
+  var k = boardKey(S.last.topic, S.last.level);
+  if(!S.results[k]) S.results[k] = [];
+  S.results[k].push({ name:S.name, score:S.last.score, secs:S.last.taken });
+  S.last.saved = true;
+  S.view = 6;
+  if(S.step < 6) S.step = 6;
+  save(); render();
+}
+
+document.addEventListener('click', function(ev){
+  var t = ev.target.closest('[data-act]');
+  if(!t || t.disabled) return;
+  var a = t.getAttribute('data-act');
+
+  if(a === 'idea'){
+    var n = +t.getAttribute('data-n');
+    S.idea = (S.idea === n) ? 0 : n;
+    save(); renderRail(); renderIdea();
+    return;
+  }
+  if(a === 'name'){ doName(); return; }
+  if(a === 'lvl'){ S.level = t.getAttribute('data-v'); save(); render(); return; }
+  if(a === 'toTopic'){ S.view = 3; if(S.step < 3) S.step = 3; save(); render(); return; }
+  if(a === 'toLevel'){ S.view = 2; save(); render(); return; }
+  if(a === 'top'){ S.topic = t.getAttribute('data-v'); save(); render(); return; }
+  if(a === 'start' || a === 'again'){
+    if(a === 'again'){ S.topic = S.last ? S.last.topic : S.topic; S.level = S.last ? S.last.level : S.level; }
+    startRun();
+    return;
+  }
+  if(a === 'pick'){ run.sel = +t.getAttribute('data-v'); render(); return; }
+  if(a === 'lock'){
+    var q = run.qs[run.i], ok = run.sel === q.correct;
+    if(ok) run.correct++;
+    run.marked.push(ok);
+    run.phase = 'revealed';
+    render();
+    return;
+  }
+  if(a === 'next'){
+    if(run.i === run.qs.length - 1){ endRun(false); return; }
+    run.i++; run.sel = null; run.phase = 'answering';
+    render();
+    return;
+  }
+  if(a === 'save'){ saveScore(); return; }
+  if(a === 'board'){ S.view = 6; save(); render(); return; }
+  if(a === 'final'){ S.finalOpen = !S.finalOpen; save(); renderFinal(); return; }
+  if(a === 'over'){
+    if(run){ clearInterval(run.timer); run = null; }
+    S = fresh();
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    render();
+    return;
+  }
+});
+
+document.addEventListener('keydown', function(ev){
+  if(ev.key === 'Enter' && ev.target.id === 'nm'){ ev.preventDefault(); doName(); }
+});
+
+document.addEventListener('input', function(ev){
+  if(ev.target.id !== 'nm') return;
+  var e = document.getElementById('nerr');
+  if(e) e.classList.remove('show');
+});
+
+S = load();
+render();
+})();
+</script>
+</body>
+</html>
