@@ -90,6 +90,17 @@ export const courses = [
             thumbnail: '/java/swiggy-kitchen/thumb.png' },
         ],
       },
+      {
+        id: 'file-handling',
+        title: 'File Handling',
+        summary: 'Making what a program writes survive after it stops running.',
+        lessons: [
+          { id: 'diary-app', title: 'Build the Diary App', minutes: 35,
+            blurb: 'A four-step assignment: sign up, open a calendar on a blank page, write the day down, then close the diary and open it again to find every written day still there.',
+            src: '/java/diary-app/index.html',
+            thumbnail: '/java/diary-app/thumb.png' },
+        ],
+      },
     ],
   },
 
