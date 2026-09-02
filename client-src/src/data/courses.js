@@ -22,7 +22,7 @@ export const courses = [
     modules: [
       {
         id: 'types-and-casting',
-        title: 'Types & Casting',
+        title: 'Data types',
         summary: 'What a value is, how much room it takes, and what is lost when it moves.',
         lessons: [
           { id: 'type-casting-foundry', title: 'The Casting Foundry', minutes: 20,
@@ -33,7 +33,7 @@ export const courses = [
       },
       {
         id: 'decisions',
-        title: 'Decisions & Loops',
+        title: 'Loops and Conditional Statement',
         summary: 'Branching, priority, and repeating work without copy-paste.',
         lessons: [
           { id: 'smart-data-guardian', title: 'Smart Data Guardian', minutes: 25,
@@ -44,7 +44,7 @@ export const courses = [
       },
       {
         id: 'strings',
-        title: 'Strings',
+        title: 'Strings and String Methods',
         summary: 'The methods that turn fiddly text handling into one readable line.',
         lessons: [
           { id: 'riya-job-hunt', title: "Riya's Job Hunt", minutes: 20,
@@ -62,7 +62,7 @@ export const courses = [
       },
       {
         id: 'objects',
-        title: 'Objects',
+        title: 'Classes and Objects',
         summary: 'Describe the thing once, then build as many as you need.',
         lessons: [
           { id: 'monster-battle', title: 'Monster Battle Academy', minutes: 25,
@@ -89,7 +89,7 @@ export const courses = [
     modules: [
       {
         id: 'getting-started',
-        title: 'Getting Started',
+        title: 'Variables and Data types',
         summary: 'Storing a value and getting it back out again.',
         lessons: [
           { id: 'variables-as-jars', title: 'Variables as Jars', minutes: 15,
@@ -100,7 +100,7 @@ export const courses = [
       },
       {
         id: 'operators',
-        title: 'Operators & Expressions',
+        title: 'Operators and Expressions',
         summary: 'Doing the maths, and what the program does with the result.',
         lessons: [
           { id: 'python-calculator', title: 'Python Calculator Demo', minutes: 15,
@@ -111,7 +111,7 @@ export const courses = [
       },
       {
         id: 'decisions',
-        title: 'Decisions',
+        title: 'Conditional Statements',
         summary: 'if / elif / else, five different ways of making the branching physical.',
         lessons: [
           { id: 'pyif-conditionals', title: 'PyIf: Python Conditionals', minutes: 15,
@@ -137,7 +137,7 @@ export const courses = [
       },
       {
         id: 'logic-and-data',
-        title: 'Logic & Data',
+        title: 'Lists and Logic',
         summary: 'Holding many values at once, and following a program one line at a time.',
         lessons: [
           { id: 'list-integer-lab', title: 'List Integer Lab', minutes: 15,
@@ -171,7 +171,7 @@ export const courses = [
     modules: [
       {
         id: 'thinking-in-systems',
-        title: 'Thinking in Systems',
+        title: 'System Design',
         summary: 'Breaking a problem down before a single line is written.',
         lessons: [
           { id: 'calculator-system-design', title: 'System Design: Calculator', minutes: 20,
