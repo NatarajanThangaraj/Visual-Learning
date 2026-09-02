@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
@@ -9,10 +9,19 @@ export default function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
 
-  // Any navigation closes the mobile drawer and returns you to the top.
+  /* A lesson is a lab in a frame, so its page is sized to the viewport rather
+     than left to grow — see the lab block in lesson.css. Read off the route
+     because the shell renders the lesson through <Outlet>. */
+  const isLesson = /^\/learn\/[^/]+\/[^/]+\/[^/]+/.test(pathname);
+
+  /* Any navigation closes the mobile drawer and returns you to the top. A
+     viewport-fitted lesson scrolls the <main> instead of the window, and the
+     shell outlives the route, so reset both. */
+  const mainRef = useRef(null);
   useEffect(() => {
     setMobileOpen(false);
     window.scrollTo({ top: 0 });
+    if (mainRef.current) mainRef.current.scrollTop = 0;
   }, [pathname]);
 
   useEffect(() => {
@@ -35,7 +44,7 @@ export default function AppShell() {
 
       <div className="shell-scrim" onClick={() => setMobileOpen(false)} aria-hidden="true" />
 
-      <main className="shell-main">
+      <main ref={mainRef} className={'shell-main' + (isLesson ? ' is-lesson' : '')}>
         <Outlet />
       </main>
     </div>

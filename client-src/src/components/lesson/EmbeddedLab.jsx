@@ -75,6 +75,16 @@ function useFullscreen(ref) {
   return [native, pinned, toggle];
 }
 
+const iconProps = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: '2',
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  'aria-hidden': 'true',
+};
+
 export default function EmbeddedLab({ lesson }) {
   const narrow = useMediaQuery('(max-width: 900px)');
   const frameRef = useRef(null);
@@ -116,8 +126,45 @@ export default function EmbeddedLab({ lesson }) {
       className={`lab-frame${native ? ' is-full' : ''}${pinned ? ' is-pinned' : ''}`}
       ref={frameRef}
     >
+      {/* Both controls live in the bar rather than floating over the lab: a lab
+          fills the frame edge to edge, so anything overlaying it sits on top of
+          the lab's own UI. */}
       <div className="lab-frame-bar">
         <span className="lab-frame-title">{lesson.title}</span>
+
+        <div className="lab-tools">
+          <a
+            className="lab-tool"
+            href={lesson.src}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open this lab in a new tab"
+          >
+            <svg {...iconProps}>
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <path d="M15 3h6v6M10 14 21 3" />
+            </svg>
+            <span>New tab</span>
+          </a>
+
+          <button
+            type="button"
+            className="lab-tool lab-tool-icon"
+            onClick={toggleFull}
+            aria-label={full ? 'Exit full screen' : 'View full screen'}
+            title={full ? 'Exit full screen' : 'View full screen'}
+          >
+            {full ? (
+              <svg {...iconProps}>
+                <path d="M9 3v6H3M15 3v6h6M9 21v-6H3M15 21v-6h6" />
+              </svg>
+            ) : (
+              <svg {...iconProps}>
+                <path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
       {failed ? (
@@ -135,26 +182,6 @@ export default function EmbeddedLab({ lesson }) {
           allow="fullscreen"
         />
       )}
-
-      <button
-        type="button"
-        className="lab-full-btn"
-        onClick={toggleFull}
-        aria-label={full ? 'Exit full screen' : 'View full screen'}
-        title={full ? 'Exit full screen' : 'View full screen'}
-      >
-        {full ? (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-               strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M9 3v6H3M15 3v6h6M9 21v-6H3M15 21v-6h6" />
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-               strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6" />
-          </svg>
-        )}
-      </button>
     </div>
   );
 }
