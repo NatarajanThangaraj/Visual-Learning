@@ -26,6 +26,9 @@
 /* ── Embedded lab ───────────────────────────────────────────────────────── */
 .lab-frame {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   border: 1px solid var(--rail-strong);
   border-radius: 14px;
   overflow: hidden;
@@ -33,15 +36,44 @@
   box-shadow: var(--shadow-card);
 }
 .lab-frame-bar {
+  flex: none;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 9px 14px;
+  padding: 7px 8px 7px 14px;
   background: var(--surface-subtle);
   border-bottom: 1px solid var(--rail);
 }
-.lab-frame-title { font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
+.lab-frame-title {
+  font-size: 12.5px; font-weight: 700; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Frame controls — open the lab elsewhere, or let it take the whole screen.
+   They sit in the bar rather than floating over the lab, because a lab fills
+   the frame edge to edge and an overlay would cover its own UI. */
+.lab-tools { display: flex; align-items: center; gap: 6px; flex: none; }
+.lab-tool {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 28px; padding: 0 10px;
+  border: 1px solid var(--rail-strong);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.lab-tool:hover,
+.lab-tool:focus-visible { color: var(--navy-900); border-color: var(--navy-700); }
+.lab-tool svg { width: 14px; height: 14px; display: block; }
+.lab-tool-icon { width: 28px; padding: 0; justify-content: center; }
+
 .lab-iframe {
   display: block;
+  flex: 1;
   width: 100%;
+  min-height: 0;
+  /* Only used where the page is not viewport-fitted (see the block below). */
   height: min(78vh, 900px);
   border: 0;
   background: #fff;
@@ -54,33 +86,12 @@
 }
 .lab-frame-fallback p { margin: 0; }
 
-/* Full-screen control, bottom-right of the frame. */
-.lab-full-btn {
-  position: absolute;
-  right: 14px; bottom: 14px;
-  z-index: 2;
-  display: grid; place-items: center;
-  width: 38px; height: 38px;
-  padding: 0;
-  border: 1px solid var(--rail-strong);
-  border-radius: 10px;
-  background: var(--surface-raised);
-  color: var(--text-muted);
-  box-shadow: var(--shadow-card);
-  cursor: pointer;
-  opacity: 0.55;
-  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-.lab-frame:hover .lab-full-btn,
-.lab-full-btn:focus-visible { opacity: 1; }
-.lab-full-btn:hover { color: var(--navy-900); border-color: var(--navy-700); opacity: 1; }
-.lab-full-btn svg { width: 18px; height: 18px; display: block; }
-
-/* Fullscreen — native, and the pinned fallback when the API is unavailable. */
+/* Fullscreen — native, and the pinned fallback when the API is unavailable.
+   Either way the frame owns the screen, so the iframe just flexes into it. */
 .lab-frame.is-full,
-.lab-frame.is-pinned { border-radius: 0; border: 0; }
+.lab-frame.is-pinned { border-radius: 0; border: 0; height: 100%; }
 .lab-frame.is-full .lab-iframe,
-.lab-frame.is-pinned .lab-iframe { height: calc(100vh - 39px); }
+.lab-frame.is-pinned .lab-iframe { height: auto; }
 .lab-frame.is-pinned {
   position: fixed; inset: 0; z-index: 900;
   background: var(--surface-raised);
@@ -153,5 +164,50 @@
   .lesson-nav { grid-template-columns: minmax(0, 1fr); }
   .ln-next { text-align: left; justify-items: start; }
   .ln-complete { order: -1; width: 100%; }
-  .lab-iframe { height: 70vh; }
+}
+
+/* ── A lab page fits the screen ─────────────────────────────────────────────
+   A lab is an application, not an article. On a desktop the lesson lays out as
+   header / lab / nav inside a single viewport, so the only thing that scrolls
+   is the lab's own content. Without this the frame hangs off the bottom of the
+   page: you scroll the course chrome to reach the lab, then scroll the lab —
+   two scrollbars for one thing, and the lab never lines up with the screen.
+
+   `overflow: auto` rather than `hidden`, and a floor under the lab, so a short
+   window degrades into a normal scrolling page instead of crushing the lab. */
+@media (min-width: 901px) {
+  .shell-main.is-lesson {
+    height: 100vh;
+    height: 100dvh;
+    padding-bottom: 24px;
+    overflow: auto;
+  }
+  .shell-main.is-lesson .lesson-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding-bottom: 0;
+  }
+
+  /* A compact header: every pixel it takes is a pixel off the lab. */
+  .shell-main.is-lesson .crumbs { margin-bottom: 10px; }
+  .shell-main.is-lesson .lesson-head { margin-bottom: 14px; }
+  .shell-main.is-lesson .lesson-head-meta { margin-bottom: 6px; }
+  .shell-main.is-lesson .lesson-title { font-size: 23px; margin-bottom: 5px; }
+  .shell-main.is-lesson .lesson-blurb {
+    font-size: 14px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .shell-main.is-lesson .lesson-body {
+    flex: 1;
+    display: flex;
+    min-height: 340px;
+  }
+  .shell-main.is-lesson .lab-frame { flex: 1; min-height: 0; }
+  .shell-main.is-lesson .lab-iframe { height: auto; }
+  .shell-main.is-lesson .lesson-nav { flex: none; margin-top: 16px; padding-top: 14px; }
 }
