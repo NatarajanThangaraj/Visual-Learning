@@ -1,0 +1,60 @@
+Rolling in the Deep|Adele|Pop|2010|228
+Someone Like You|Adele|Pop|2011|285
+Hello|Adele|Pop|2015|296
+Levels|Avicii|Dance|2011|339
+Wake Me Up|Avicii|Dance|2013|250
+Hey Brother|Avicii|Dance|2013|254
+Crazy in Love (feat. JAY-Z)|Beyoncé|R&B/Soul|2003|236
+Halo|Beyoncé|R&B/Soul|2008|262
+Single Ladies (Put a Ring on It)|Beyoncé|R&B/Soul|2008|193
+ocean eyes|Billie Eilish|Alternative|2016|200
+bad guy|Billie Eilish|Alternative|2019|194
+Happier Than Ever|Billie Eilish|Alternative|2021|299
+Just the Way You Are|Bruno Mars|Pop|2010|221
+Locked Out of Heaven|Bruno Mars|Pop|2012|233
+24K Magic|Bruno Mars|Pop|2016|227
+Yellow|Coldplay|Alternative|2000|269
+Fix You|Coldplay|Alternative|2005|295
+Viva La Vida|Coldplay|Alternative|2008|241
+New Rules|Dua Lipa|Pop|2017|209
+Don't Start Now|Dua Lipa|Pop|2019|183
+Levitating|Dua Lipa|Pop|2020|204
+Photograph|Ed Sheeran|Pop|2014|259
+Shape of You|Ed Sheeran|Pop|2017|234
+Perfect|Ed Sheeran|Pop|2017|263
+The Real Slim Shady|Eminem|Hip-Hop/Rap|2000|284
+Lose Yourself|Eminem|Hip-Hop/Rap|2002|322
+Not Afraid|Eminem|Hip-Hop/Rap|2010|248
+Go Your Own Way|Fleetwood Mac|Rock|1977|224
+The Chain|Fleetwood Mac|Rock|1977|270
+Dreams|Fleetwood Mac|Rock|1987|254
+Radioactive|Imagine Dragons|Alternative|2012|187
+Believer|Imagine Dragons|Alternative|2017|204
+Thunder|Imagine Dragons|Alternative|2017|187
+Folsom Prison Blues|Johnny Cash|Country|1955|167
+Ring of Fire|Johnny Cash|Country|1963|156
+Hurt|Johnny Cash|Country|2002|217
+Firework|Katy Perry|Pop|2010|228
+Roar|Katy Perry|Pop|2013|224
+Dark Horse (feat. Juicy J)|Katy Perry|Pop|2013|216
+Money Trees (feat. Jay Rock)|Kendrick Lamar|Hip-Hop/Rap|2012|387
+Alright|Kendrick Lamar|Hip-Hop/Rap|2015|219
+HUMBLE.|Kendrick Lamar|Hip-Hop/Rap|2017|177
+In the End|Linkin Park|Rock|2000|216
+Numb|Linkin Park|Rock|2003|188
+Somewhere I Belong|Linkin Park|Rock|2003|214
+Sugar|Maroon 5|Pop|2014|236
+Girls Like You|Maroon 5|Pop|2017|214
+Memories|Maroon 5|Pop|2019|189
+Bohemian Rhapsody|Queen|Rock|1975|355
+Somebody to Love|Queen|Rock|1976|297
+Don't Stop Me Now|Queen|Rock|1978|210
+Umbrella (feat. JAY-Z)|Rihanna|R&B/Soul|2007|276
+We Found Love (feat. Calvin Harris)|Rihanna|R&B/Soul|2011|215
+Diamonds|Rihanna|R&B/Soul|2012|225
+Shake It Off|Taylor Swift|Pop|2014|219
+Blank Space|Taylor Swift|Pop|2014|232
+Anti-Hero|Taylor Swift|Pop|2022|201
+Starboy (feat. Daft Punk)|The Weeknd|R&B/Soul|2016|230
+Blinding Lights|The Weeknd|R&B/Soul|2019|202
+Save Your Tears|The Weeknd|R&B/Soul|2020|216

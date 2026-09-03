@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SongBox — The Library Is Just a File</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:        #0a0f0c;
+  --panel:     #101812;
+  --card:      #15201a;
+  --bord:      #1e2f24;
+  --green:     #1ed760;
+  --green-dim: #14883e;
+  --green-glow:rgba(30,215,96,.13);
+  --text:      #d6e4da;
+  --mid:       #9ab3a4;
+  --dim:       #5c7566;
+  --bright:    #f2fbf5;
+  --amber:     #e8b93c;
+  --red:       #e5544b;
+  --mono:      'Space Mono','Courier New',monospace;
+  --sans:      'Inter',system-ui,sans-serif;
+}
+
+body{background:var(--bg);color:var(--text);font-family:var(--sans);
+  min-height:100vh;font-size:15px;line-height:1.6}
+
+/* ── Top bar ─────────────────────────────────────── */
+#topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;
+  justify-content:space-between;gap:16px;padding:12px 22px;
+  background:rgba(10,15,12,.94);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--bord)}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--mono);
+  font-weight:700;font-size:13px;letter-spacing:1.5px;color:var(--green)}
+#rail{display:flex;gap:5px}
+.rs{width:26px;height:26px;border:1px solid var(--bord);background:transparent;
+  color:var(--dim);font-family:var(--mono);font-size:11px;border-radius:6px;
+  cursor:not-allowed;transition:all .18s}
+.rs.dn{color:var(--green-dim);border-color:var(--green-dim);cursor:pointer}
+.rs.dn:hover{background:var(--green-glow)}
+.rs.on{background:var(--green);border-color:var(--green);color:#06210f;font-weight:700}
+
+/* ── Layout ──────────────────────────────────────── */
+.wrap{max-width:1000px;margin:0 auto;padding:30px 20px 90px}
+.screen{display:none;animation:fade .4s ease}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:3px;
+  color:var(--dim);text-transform:uppercase;margin-bottom:7px}
+h1{font-family:var(--mono);font-size:30px;letter-spacing:-.5px;color:var(--bright);
+  font-weight:700;line-height:1.2}
+h2{font-size:22px;color:var(--bright);font-weight:600;letter-spacing:-.3px}
+.lede{color:var(--mid);margin-top:9px;max-width:62ch}
+
+.panel{background:var(--panel);border:1px solid var(--bord);border-radius:12px;
+  padding:20px 22px;margin-top:20px}
+.panel-h{display:flex;align-items:center;gap:9px;padding-bottom:13px;
+  margin-bottom:15px;border-bottom:1px solid var(--bord)}
+.panel-h .fname{font-family:var(--mono);font-size:13px;color:var(--green);font-weight:700}
+.panel-h .meta{font-family:var(--mono);font-size:11px;color:var(--dim);margin-left:auto}
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn{font-family:var(--mono);font-size:12.5px;letter-spacing:1px;padding:11px 22px;
+  border-radius:8px;border:1px solid var(--green);background:transparent;
+  color:var(--green);cursor:pointer;transition:all .16s;font-weight:700}
+a.btn{display:inline-block;text-decoration:none;line-height:normal}
+.btn:hover:not(:disabled){background:var(--green);color:#06210f}
+.btn:disabled{opacity:.32;cursor:not-allowed}
+.btn-fill{background:var(--green);color:#06210f}
+.btn-fill:hover:not(:disabled){background:#3bea78;border-color:#3bea78}
+.btn-ghost{border-color:var(--bord);color:var(--mid)}
+.btn-ghost:hover:not(:disabled){background:var(--card);color:var(--text);border-color:var(--dim)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:22px}
+
+.note{font-size:13px;color:var(--dim);margin-top:12px}
+.hl{color:var(--green)}
+.mono{font-family:var(--mono)}
+
+/* ── Screen 1: landing ───────────────────────────── */
+#s1{text-align:center;padding-top:38px}
+.logo-big{font-size:54px;line-height:1}
+.stat-row{display:flex;gap:0;justify-content:center;margin:26px auto 0;
+  border:1px solid var(--bord);border-radius:12px;overflow:hidden;
+  background:var(--panel);max-width:520px}
+.stat{flex:1;padding:16px 10px;border-right:1px solid var(--bord)}
+.stat:last-child{border-right:0}
+.stat b{display:block;font-family:var(--mono);font-size:22px;color:var(--green)}
+.stat span{font-size:11px;color:var(--dim);letter-spacing:1.5px;font-family:var(--mono)}
+
+/* ── Screen 2: the file ──────────────────────────── */
+#lines{max-height:300px;overflow-y:auto;border:1px solid var(--bord);
+  border-radius:8px;background:#0c130f}
+.line{font-family:var(--mono);font-size:12.5px;padding:6px 12px;color:var(--mid);
+  cursor:pointer;border-bottom:1px solid rgba(30,47,36,.5);white-space:nowrap;
+  overflow-x:auto;transition:background .14s}
+.line:last-child{border-bottom:0}
+.line:hover{background:var(--card);color:var(--text)}
+.line.active{background:var(--green-glow);color:var(--bright);
+  box-shadow:inset 3px 0 0 var(--green)}
+.line .n{color:var(--dim);margin-right:12px;user-select:none}
+.line .pipe{color:var(--green);font-weight:700}
+
+#split{margin-top:16px;min-height:96px}
+.fields{display:flex;gap:9px;flex-wrap:wrap}
+.field{flex:1;min-width:104px;border:1px solid var(--bord);border-radius:8px;
+  padding:11px 13px;background:var(--card)}
+.field .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:2px;
+  color:var(--dim);margin-bottom:4px}
+.field .val{font-family:var(--mono);font-size:13.5px;color:var(--green);
+  word-break:break-word}
+.split-idle{font-size:13.5px;color:var(--dim);text-align:center;padding:30px 10px;
+  border:1px dashed var(--bord);border-radius:8px}
+
+/* ── Screen 3: filters ──────────────────────────── */
+.group{margin-top:20px}
+.group-h{display:flex;align-items:baseline;gap:10px;margin-bottom:11px}
+.group-h b{font-size:14px;color:var(--bright);font-weight:600}
+.group-h span{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:20px;
+  border:1px solid var(--bord);background:var(--card);color:var(--mid);
+  cursor:pointer;transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--dim);color:var(--text)}
+.chip.on{background:var(--green);border-color:var(--green);color:#06210f;font-weight:700}
+.chip .c{opacity:.6;margin-left:6px;font-size:10.5px}
+
+#tally{margin-top:24px;padding:15px 18px;border-radius:10px;
+  border:1px solid var(--bord);background:var(--panel);
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#tally .big{font-family:var(--mono);font-size:26px;color:var(--green);font-weight:700}
+#tally .txt{font-size:13.5px;color:var(--mid)}
+#tally.none{border-color:var(--red)}
+#tally.none .big{color:var(--red)}
+
+/* ── Screen 4: results + player ─────────────────── */
+.filter-summary{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.fs-tag{font-family:var(--mono);font-size:10.5px;padding:4px 10px;border-radius:14px;
+  background:var(--green-glow);color:var(--green);border:1px solid var(--green-dim)}
+/* position:relative so a row's offsetTop is measured against this scroll
+   box — the auto-scroll in paintRows() depends on it. */
+#results{max-height:326px;overflow-y:auto;border:1px solid var(--bord);
+  border-radius:10px;background:#0c130f;position:relative}
+.row{display:flex;align-items:center;gap:13px;padding:10px 14px;cursor:pointer;
+  border-bottom:1px solid rgba(30,47,36,.5);transition:background .14s}
+.row:last-child{border-bottom:0}
+.row:hover{background:var(--card)}
+.row.playing{background:var(--green-glow);box-shadow:inset 3px 0 0 var(--green)}
+.row .idx{font-family:var(--mono);font-size:11px;color:var(--dim);width:22px;
+  text-align:right;flex-shrink:0}
+.row.playing .idx{color:var(--green)}
+.row .tt{flex:1;min-width:0}
+.row .tt b{display:block;font-size:13.5px;color:var(--text);font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.playing .tt b{color:var(--bright);font-weight:600}
+.row .tt span{font-size:11.5px;color:var(--dim)}
+.row .gnr{font-family:var(--mono);font-size:10px;color:var(--mid);padding:3px 9px;
+  border:1px solid var(--bord);border-radius:12px;flex-shrink:0}
+.row .dur{font-family:var(--mono);font-size:11.5px;color:var(--dim);flex-shrink:0}
+
+#player{margin-top:18px;border:1px solid var(--bord);border-radius:12px;
+  background:linear-gradient(180deg,var(--card),var(--panel));padding:16px 18px}
+.np{display:flex;align-items:center;gap:14px}
+.art{width:52px;height:52px;border-radius:8px;flex-shrink:0;display:grid;
+  place-items:center;font-family:var(--mono);font-weight:700;font-size:21px;
+  background:linear-gradient(135deg,var(--green-dim),#0d5c2a);color:#eafff0}
+.np-t{flex:1;min-width:0}
+.np-t b{display:block;font-size:15px;color:var(--bright);font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np-t span{font-size:12.5px;color:var(--mid)}
+.ctrls{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.cbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--bord);
+  background:var(--card);color:var(--text);cursor:pointer;font-size:14px;
+  display:grid;place-items:center;transition:all .15s}
+.cbtn:hover{border-color:var(--green);color:var(--green)}
+.cbtn.main{width:46px;height:46px;background:var(--green);border-color:var(--green);
+  color:#06210f;font-size:17px}
+.cbtn.main:hover{background:#3bea78}
+.seek-row{display:flex;align-items:center;gap:11px;margin-top:13px}
+.seek-row .t{font-family:var(--mono);font-size:11px;color:var(--dim);width:36px;
+  flex-shrink:0;text-align:center}
+#seek{flex:1;height:5px;border-radius:3px;background:var(--bord);cursor:pointer;
+  position:relative;overflow:hidden}
+#seek-fill{height:100%;width:0;background:var(--green);transition:width .2s linear}
+.prev-tag{font-family:var(--mono);font-size:10px;color:var(--dim);
+  margin-top:11px;text-align:center;letter-spacing:.5px}
+#audio-err{display:none;margin-top:11px;padding:9px 13px;border-radius:7px;
+  border:1px solid var(--red);background:rgba(229,84,75,.1);color:var(--red);
+  font-size:12.5px;text-align:center}
+
+/* ── Screen 5: the assignment ───────────────────── */
+.done-badge{display:inline-block;font-family:var(--mono);font-size:11px;
+  letter-spacing:2px;color:var(--green);border:1px solid var(--green-dim);
+  border-radius:20px;padding:6px 15px;background:var(--green-glow)}
+.reframe{margin-top:18px;font-size:15.5px;color:var(--text);line-height:1.85;
+  max-width:66ch}
+.spec-h{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;color:var(--amber);
+  margin:24px 0 13px;padding-bottom:9px;border-bottom:1px solid var(--bord)}
+.task{display:flex;gap:13px;padding:9px 0;align-items:baseline}
+.task .tn{font-family:var(--mono);font-size:12px;color:var(--green);
+  flex-shrink:0;width:20px}
+.task .tx{font-size:14px;color:var(--mid);line-height:1.65}
+.task .tx strong{color:var(--text);font-family:var(--mono);font-size:13px;font-weight:700}
+.general{margin-top:22px;padding:15px 18px;border-radius:10px;
+  border:1px solid var(--bord);border-left:3px solid var(--amber);
+  background:var(--panel);font-size:13.5px;color:var(--mid);line-height:1.75}
+
+@media(max-width:640px){
+  .wrap{padding:22px 15px 70px}
+  h1{font-size:24px}
+  .np{flex-wrap:wrap}
+  .ctrls{margin-left:auto}
+  #rail{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="brand">◉ SONGBOX</div>
+  <div id="rail"></div>
+</div>
+
+<div class="wrap">
+
+  <!-- ══ 1 · LANDING ══ -->
+  <section class="screen active" id="s1">
+    <div class="logo-big">🎧</div>
+    <h1 style="margin-top:14px">SongBox</h1>
+    <p class="lede" style="margin:12px auto 0">
+      A music app looks like artwork and buttons. Underneath, the whole library is
+      one plain text file — and every genre list, every search, every playlist is
+      just that file, read one line at a time.
+    </p>
+    <div class="stat-row">
+      <div class="stat"><b id="st-songs">0</b><span>SONGS</span></div>
+      <div class="stat"><b id="st-artists">0</b><span>ARTISTS</span></div>
+      <div class="stat"><b id="st-genres">0</b><span>GENRES</span></div>
+      <div class="stat"><b>1</b><span>TEXT FILE</span></div>
+    </div>
+    <div class="btn-row" style="justify-content:center">
+      <button class="btn btn-fill" onclick="go(2)">OPEN THE LIBRARY →</button>
+    </div>
+  </section>
+
+  <!-- ══ 2 · THE FILE ══ -->
+  <section class="screen" id="s2">
+    <div class="eyebrow">Step 01 — the library</div>
+    <h2>One line is one song</h2>
+    <p class="lede">
+      This is the file the app reads. Nothing else. Click any line to pull it apart.
+    </p>
+
+    <div class="panel">
+      <div class="panel-h">
+        <span>📄</span><span class="fname">songs.txt</span>
+        <span class="meta" id="f-meta"></span>
+      </div>
+      <div id="lines"></div>
+      <div id="split"></div>
+      <p class="note">
+        The fields are separated by a <span class="hl mono">|</span> — chosen because no
+        song title or artist name contains one. Split a line on that mark and you get
+        the five values back, always in the same order.
+      </p>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="go(1)">← Back</button>
+      <button class="btn btn-fill" id="s2-next" disabled onclick="go(3)">
+        CHOOSE WHAT TO HEAR →
+      </button>
+      <span class="note" style="margin:0" id="s2-hint">Open a line first.</span>
+    </div>
+  </section>
+
+  <!-- ══ 3 · FILTERS ══ -->
+  <section class="screen" id="s3">
+    <div class="eyebrow">Step 02 — the search</div>
+    <h2>What do you want to hear?</h2>
+    <p class="lede">
+      Pick one, pick several, or pick none. Nothing chosen in a group means that group
+      doesn't narrow anything — and several chosen means <em>any of them</em> will do.
+    </p>
+
+    <div class="panel">
+      <div class="group">
+        <div class="group-h"><b>Genre</b><span id="g-sel">none selected — all genres</span></div>
+        <div class="chips" id="g-chips"></div>
+      </div>
+      <div class="group">
+        <div class="group-h"><b>Artist</b><span id="a-sel">none selected — all artists</span></div>
+        <div class="chips" id="a-chips"></div>
+      </div>
+
+      <div id="tally">
+        <span class="big" id="t-n">0</span>
+        <span class="txt" id="t-txt"></span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="go(2)">← The file</button>
+      <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+      <button class="btn btn-fill" id="s3-next" onclick="go(4)">PLAY THESE →</button>
+    </div>
+  </section>
+
+  <!-- ══ 4 · RESULTS + PLAYER ══ -->
+  <section class="screen" id="s4">
+    <div class="eyebrow">Step 03 — the playlist</div>
+    <h2 id="s4-h">Your playlist</h2>
+    <p class="lede" id="s4-lede"></p>
+
+    <div class="panel">
+      <div class="filter-summary" id="fs"></div>
+      <div id="results"></div>
+
+      <div id="player">
+        <div class="np">
+          <div class="art" id="np-art">–</div>
+          <div class="np-t">
+            <b id="np-title">Nothing playing</b>
+            <span id="np-sub">Pick a song from the list</span>
+          </div>
+          <div class="ctrls">
+            <button class="cbtn"      id="b-prev" onclick="prev()"       title="Previous">⏮</button>
+            <button class="cbtn main" id="b-play" onclick="toggle()"     title="Play / pause">▶</button>
+            <button class="cbtn"      id="b-next" onclick="next()"       title="Next">⏭</button>
+          </div>
+        </div>
+        <div class="seek-row">
+          <span class="t" id="t-cur">0:00</span>
+          <div id="seek"><div id="seek-fill"></div></div>
+          <span class="t" id="t-tot">0:30</span>
+        </div>
+        <div class="prev-tag" id="prev-tag">30-SECOND PREVIEW · STREAMED, SO THIS NEEDS INTERNET</div>
+        <div id="audio-err">Preview couldn't load. Check your internet connection, then press play again.</div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="go(3)">← Change the search</button>
+      <button class="btn btn-fill" onclick="go(5)">NOW WRITE IT IN JAVA →</button>
+    </div>
+  </section>
+
+  <!-- ══ 5 · THE ASSIGNMENT ══ -->
+  <section class="screen" id="s5">
+    <div class="eyebrow">Step 04 — your turn</div>
+    <span class="done-badge">✓ YOU BUILT A MUSIC APP BY HAND</span>
+
+    <p class="reframe">
+      You read a file, understood its shape, kept only the records that matched what
+      you asked for, and walked that shortlist forwards and backwards.
+      <br><br>
+      Now do it with no chips to click and no list to scroll — only
+      <span class="mono hl">songs.txt</span> and a keyboard.
+    </p>
+
+    <div class="spec-h">PROGRAMMING ASSIGNMENT — THE SONGBOX ENGINE</div>
+    <div id="tasks"></div>
+
+    <div class="general">
+      Your program should work for <em>any</em> <span class="mono">songs.txt</span> with these
+      five fields — more songs, different artists, genres you have never heard of.
+      Nothing about your code should assume this particular library. Read the genre and
+      artist menus <em>out of the file</em>; never hard-code the lists you saw here.
+    </div>
+
+    <div class="btn-row">
+      <a class="btn btn-fill" href="songs.txt" download target="_blank" rel="noopener">
+        ⬇ GET songs.txt
+      </a>
+      <button class="btn btn-ghost" onclick="go(4)">← Back to the player</button>
+      <button class="btn btn-ghost" onclick="restart()">↺ Start over</button>
+    </div>
+    <p class="note">
+      That is the real file — the same 60 records you just searched. Put it beside your
+      <span class="mono">.java</span> file and read it from there.
+    </p>
+  </section>
+
+</div>
+
+<audio id="au" preload="none"></audio>
+
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════════
+ * The library. `RAW` is songs.txt, verbatim — one string per line, five
+ * fields separated by '|'. The page parses RAW rather than reading a
+ * prettier structure, because that parse IS the lesson.
+ *
+ * PREVIEW[i] is the audio for record i. It is deliberately NOT in the
+ * file: the file describes the music, the web player is what fetches it.
+ * ════════════════════════════════════════════════════════════════════ */
+const RAW     = [
+  "Rolling in the Deep|Adele|Pop|2010|228",
+  "Someone Like You|Adele|Pop|2011|285",
+  "Hello|Adele|Pop|2015|296",
+  "Levels|Avicii|Dance|2011|339",
+  "Wake Me Up|Avicii|Dance|2013|250",
+  "Hey Brother|Avicii|Dance|2013|254",
+  "Crazy in Love (feat. JAY-Z)|Beyoncé|R&B/Soul|2003|236",
+  "Halo|Beyoncé|R&B/Soul|2008|262",
+  "Single Ladies (Put a Ring on It)|Beyoncé|R&B/Soul|2008|193",
+  "ocean eyes|Billie Eilish|Alternative|2016|200",
+  "bad guy|Billie Eilish|Alternative|2019|194",
+  "Happier Than Ever|Billie Eilish|Alternative|2021|299",
+  "Just the Way You Are|Bruno Mars|Pop|2010|221",
+  "Locked Out of Heaven|Bruno Mars|Pop|2012|233",
+  "24K Magic|Bruno Mars|Pop|2016|227",
+  "Yellow|Coldplay|Alternative|2000|269",
+  "Fix You|Coldplay|Alternative|2005|295",
+  "Viva La Vida|Coldplay|Alternative|2008|241",
+  "New Rules|Dua Lipa|Pop|2017|209",
+  "Don't Start Now|Dua Lipa|Pop|2019|183",
+  "Levitating|Dua Lipa|Pop|2020|204",
+  "Photograph|Ed Sheeran|Pop|2014|259",
+  "Shape of You|Ed Sheeran|Pop|2017|234",
+  "Perfect|Ed Sheeran|Pop|2017|263",
+  "The Real Slim Shady|Eminem|Hip-Hop/Rap|2000|284",
+  "Lose Yourself|Eminem|Hip-Hop/Rap|2002|322",
+  "Not Afraid|Eminem|Hip-Hop/Rap|2010|248",
+  "Go Your Own Way|Fleetwood Mac|Rock|1977|224",
+  "The Chain|Fleetwood Mac|Rock|1977|270",
+  "Dreams|Fleetwood Mac|Rock|1987|254",
+  "Radioactive|Imagine Dragons|Alternative|2012|187",
+  "Believer|Imagine Dragons|Alternative|2017|204",
+  "Thunder|Imagine Dragons|Alternative|2017|187",
+  "Folsom Prison Blues|Johnny Cash|Country|1955|167",
+  "Ring of Fire|Johnny Cash|Country|1963|156",
+  "Hurt|Johnny Cash|Country|2002|217",
+  "Firework|Katy Perry|Pop|2010|228",
+  "Roar|Katy Perry|Pop|2013|224",
+  "Dark Horse (feat. Juicy J)|Katy Perry|Pop|2013|216",
+  "Money Trees (feat. Jay Rock)|Kendrick Lamar|Hip-Hop/Rap|2012|387",
+  "Alright|Kendrick Lamar|Hip-Hop/Rap|2015|219",
+  "HUMBLE.|Kendrick Lamar|Hip-Hop/Rap|2017|177",
+  "In the End|Linkin Park|Rock|2000|216",
+  "Numb|Linkin Park|Rock|2003|188",
+  "Somewhere I Belong|Linkin Park|Rock|2003|214",
+  "Sugar|Maroon 5|Pop|2014|236",
+  "Girls Like You|Maroon 5|Pop|2017|214",
+  "Memories|Maroon 5|Pop|2019|189",
+  "Bohemian Rhapsody|Queen|Rock|1975|355",
+  "Somebody to Love|Queen|Rock|1976|297",
+  "Don't Stop Me Now|Queen|Rock|1978|210",
+  "Umbrella (feat. JAY-Z)|Rihanna|R&B/Soul|2007|276",
+  "We Found Love (feat. Calvin Harris)|Rihanna|R&B/Soul|2011|215",
+  "Diamonds|Rihanna|R&B/Soul|2012|225",
+  "Shake It Off|Taylor Swift|Pop|2014|219",
+  "Blank Space|Taylor Swift|Pop|2014|232",
+  "Anti-Hero|Taylor Swift|Pop|2022|201",
+  "Starboy (feat. Daft Punk)|The Weeknd|R&B/Soul|2016|230",
+  "Blinding Lights|The Weeknd|R&B/Soul|2019|202",
+  "Save Your Tears|The Weeknd|R&B/Soul|2020|216",
+];
+const PREVIEW = [
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/4c/4f/03/4c4f032a-3d2b-853d-da81-996602355b42/mzaf_11625850023134180491.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/08/22/2e/08222e25-43f5-20e6-a442-b8127ac83368/mzaf_1689070223363740216.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/10/7e/9d/107e9dc0-c13b-eace-2486-84a3c694b075/mzaf_6267923862748965591.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/66/dc/bd/66dcbd68-b557-bdfd-f2c2-a05491758783/mzaf_13654489760720011690.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/68/1e/60/681e601f-e1f2-4ebb-37de-adf00bdf57b6/mzaf_8266263075137964740.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/69/f4/22/69f422d0-b3ee-e445-b9ae-643962b5b438/mzaf_6581792403519577985.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview126/v4/b5/2a/4f/b52a4fcd-0628-cb38-c8ab-a697c11a9175/mzaf_1541321636664021445.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/fb/4a/62/fb4a622f-727e-21f2-5d0b-078205d3b16a/mzaf_13032644911525500388.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/52/45/d4/5245d453-4ccf-5632-05d2-bbb04ff287b4/mzaf_9969296866038379217.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/d6/59/2b/d6592b0b-1e7e-4743-b2e4-f2af038fd783/mzaf_7697277787797935735.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/c3/87/1f/c3871f7e-3260-d615-1c66-5fdca2c3a48f/mzaf_10721331211699880949.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/0a/57/c9/0a57c9db-8368-ad4b-1648-49a621650822/mzaf_6359646670728179887.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview116/v4/cb/2f/e8/cb2fe83a-2676-0cb6-0eb9-aeefe1347a8d/mzaf_8776765404617928155.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/f4/37/44/f4374481-e6e8-54d1-32ad-893ec2f4d495/mzaf_3915415747653767603.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/72/77/cd/7277cdca-1387-1c7a-529e-72f3c2ed070d/mzaf_3495320363426981496.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/66/f3/1a/66f31a76-a6ed-cb4c-f353-23310a7ae9a8/mzaf_10593596652344378873.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/e5/42/e3/e542e340-a45c-695e-e0b8-6155e222ebc0/mzaf_14955746616030397665.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/b0/19/60/b0196060-7786-24c0-8c56-8f628fe89f52/mzaf_12479456646715449366.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/6e/19/d9/6e19d9ca-1321-1eea-e797-51d7ab5b56c2/mzaf_5898999508314966855.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/3d/34/243d3413-a0fc-b229-f54a-1715ebd3a9ca/mzaf_11578996572221800393.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/59/dc/4d/59dc4dda-93ff-8f1c-c536-f005f6ea6af5/mzaf_3066686759813252385.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/11/4f/6a/114f6ad0-165c-1e3c-8fbd-df4707d7ae26/mzaf_12480083080052535279.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/44/c7/4f/44c74f0d-72dc-6143-d4d0-ba14d661ca0d/mzaf_9566898362556366703.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/c7/ba/bc/c7babc66-f598-aaa6-bcf6-307281795817/mzaf_16337361235117168274.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/24/46/4b/24464b23-3549-34d6-d6a0-8ccd366ec46d/mzaf_7734851299967221725.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/13/5a/61/135a6154-8ca2-0523-1fa2-f4ac0ea9e1e7/mzaf_13242749689945681184.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/b6/21/78/b621784d-2e8c-66a7-faa0-82ab4c710cf8/mzaf_14978944816671452874.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/4d/e7/93/4de79341-dec4-1beb-55c3-fd8286397135/mzaf_2240684441350405624.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/15/9f/31/159f3139-16ab-6ccf-813f-86d4adffcf61/mzaf_17361308171774933378.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/7f/24/1e/7f241e94-b9bc-d288-9e6b-be6b71a21b93/mzaf_15483149253884242101.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/77/70/88/777088e9-60a1-c459-bfa5-6e66f2fd2695/mzaf_7685408661765681881.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/c0/3f/36/c03f367a-b66b-fd0a-a54c-30f8250c4410/mzaf_12768434238801682952.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/78/7d/8b/787d8b89-7b57-d3bc-1f9d-6378fad1b4f5/mzaf_5131352572683029126.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/72/75/fa/7275fa78-6e00-d8b2-2585-645fddc42a1c/mzaf_1028859183059309755.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/2c/12/68/2c126894-fd6b-b37c-d556-6d91bd8c0875/mzaf_17832761364720403968.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/86/46/be/8646be2a-5dcb-006d-5089-68c21bef47b6/mzaf_10451687168982882356.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/ce/d6/4f/ced64f1f-e337-c22c-2d50-ff8db94b751a/mzaf_1642858872167639890.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/21/a8/76/21a87607-1fe3-2bd2-753c-0b4b73c22b90/mzaf_9666996724668759977.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/c7/80/b7/c780b757-f2e8-9e40-c5b9-dd28b5fe1296/mzaf_9911645771464051186.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/be/7f/2f/be7f2fe2-41dd-6b9a-4957-a10ac5c62989/mzaf_17460900856492630846.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/3b/27/4e/3b274eab-c2de-84c5-a68d-4f78f3269bac/mzaf_16117050990489545534.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/1f/2e/37/1f2e37be-bdd0-d770-6ea4-091011a6aade/mzaf_2360827885900940865.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/d9/33/34/d933341d-ba95-dc3b-11a3-34d6632dd62e/mzaf_10942671303595386057.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/93/dc/45/93dc455c-483f-8931-ef2e-cec30e2ed4bb/mzaf_3013383482601094146.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/e9/ca/eb/e9caeb68-483d-b108-7898-25073e24566a/mzaf_1183955807160648053.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/1b/3f/68/1b3f68e0-3c42-f367-cd0f-e46c746e0668/mzaf_15052021441666328650.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/16/0e/6a/160e6a89-543a-e4bf-2e9b-0c125df71f93/mzaf_2355588020367881678.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/48/db/6b/48db6b78-cdb7-5b3f-1b4d-dfec435a513d/mzaf_11078616836226327327.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/8f/11/52/8f1152a9-fd5f-0021-f546-b97579c22ec3/mzaf_3962258993076347789.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/0e/07/3a/0e073a5c-bf2b-cab0-c914-d36dea8169f1/mzaf_16606363410381177407.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/6a/ec/92/6aec920f-5a05-d93b-ceaa-7de19cdbae88/mzaf_6658285650704260274.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/7b/45/22/7b452241-882c-409b-3a9b-23306b14286a/mzaf_8588243939716013218.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/f9/8d/b0/f98db06b-9f0d-d33f-b419-26311d21c73d/mzaf_3832003371073578790.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/26/97/fb/2697fb36-8ef2-9d18-0a2e-6545947b4445/mzaf_9032202105098805603.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/04/86/32/048632f7-a5c5-0f5d-6213-a9e89c3a99b3/mzaf_8458239339293825693.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/97/b4/f6/97b4f65f-f334-771c-a4f5-5e7b9b42634f/mzaf_17056874752218225925.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/e4/fb/8d/e4fb8d01-6ae3-c2af-4d1a-73ec21533336/mzaf_13870831216693120811.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/11/71/d6/1171d6ad-3c96-e027-2af6-58028426588c/mzaf_15137631797407745471.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/17/b4/8f/17b48f9a-0b93-6bb8-fe1d-3a16623c2cfb/mzaf_9560252727299052414.plus.aac.p.m4a",
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/09/0d/dc/090ddcdb-d1f2-7dea-4c85-6b9c6f98e4e5/mzaf_10081960992656977424.plus.aac.p.m4a",
+];
+
+/* One record, parsed out of one line. */
+function parse(line, i) {
+  const f = line.split('|');
+  return { title:f[0], artist:f[1], genre:f[2], year:f[3],
+           secs:+f[4], preview:PREVIEW[i], line, i };
+}
+const SONGS  = RAW.map(parse);
+const GENRES = [...new Set(SONGS.map(s => s.genre))].sort();
+const ARTISTS= [...new Set(SONGS.map(s => s.artist))].sort();
+
+const gSel = new Set(), aSel = new Set();
+let playlist = [], cur = -1, step = 1, maxStep = 1;
+
+const $  = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mmss = n => (n = Math.max(0, Math.round(n) || 0),
+  Math.floor(n/60) + ':' + String(n%60).padStart(2,'0'));
+
+/* ── Screens ─────────────────────────────────────── */
+function go(n) {
+  step = n; maxStep = Math.max(maxStep, n);
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $('s'+n).classList.add('active');
+  rail();
+  if (n === 4) openPlaylist();
+  window.scrollTo(0, 0);
+}
+function rail() {
+  $('rail').innerHTML = [1,2,3,4,5].map(n =>
+    `<button class="rs ${n===step?'on':n<=maxStep?'dn':''}"
+      ${n<=maxStep?`onclick="go(${n})"`:'disabled'}>${n}</button>`).join('');
+}
+
+/* ── Screen 2: the file ──────────────────────────── */
+function paintFile() {
+  $('f-meta').textContent = SONGS.length + ' records · 5 fields each';
+  $('lines').innerHTML = SONGS.map(s =>
+    `<div class="line" id="ln${s.i}" onclick="openLine(${s.i})">` +
+    `<span class="n">${String(s.i+1).padStart(2,'0')}</span>` +
+    esc(s.line).replace(/\|/g, '<span class="pipe">|</span>') + `</div>`).join('');
+  $('split').innerHTML = `<div class="split-idle">Click a line above to split it into its five fields.</div>`;
+}
+function openLine(i) {
+  const s = SONGS[i];
+  document.querySelectorAll('.line').forEach(l => l.classList.remove('active'));
+  $('ln'+i).classList.add('active');
+  const F = [['TITLE',s.title],['ARTIST',s.artist],['GENRE',s.genre],
+             ['YEAR',s.year],['SECONDS',s.secs + '  → ' + mmss(s.secs)]];
+  $('split').innerHTML = `<div class="fields">` + F.map(([l,v]) =>
+    `<div class="field"><div class="lbl">${l}</div><div class="val">${esc(v)}</div></div>`
+  ).join('') + `</div>`;
+  $('s2-next').disabled = false;
+  $('s2-hint').textContent = 'Five fields, every time.';
+}
+
+/* ── Screen 3: filters ───────────────────────────── */
+function countBy(key, val) {
+  return SONGS.filter(s => s[key] === val).length;
+}
+function paintFilters() {
+  $('g-chips').innerHTML = GENRES.map(g =>
+    `<div class="chip" id="gc-${slug(g)}" onclick="tog('g','${esc(g)}')">${esc(g)}
+       <span class="c">${countBy('genre',g)}</span></div>`).join('');
+  $('a-chips').innerHTML = ARTISTS.map(a =>
+    `<div class="chip" id="ac-${slug(a)}" onclick="tog('a','${esc(a)}')">${esc(a)}
+       <span class="c">${countBy('artist',a)}</span></div>`).join('');
+  tally();
+}
+const slug = s => s.replace(/[^a-z0-9]/gi,'').toLowerCase();
+
+function tog(which, val) {
+  const set = which === 'g' ? gSel : aSel;
+  set.has(val) ? set.delete(val) : set.add(val);
+  $((which==='g'?'gc-':'ac-') + slug(val)).classList.toggle('on', set.has(val));
+  tally();
+}
+function clearAll() {
+  gSel.clear(); aSel.clear();
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  tally();
+}
+
+/* The whole search, in one line — this is what the Java has to do. */
+const matches = s =>
+  (gSel.size === 0 || gSel.has(s.genre)) &&
+  (aSel.size === 0 || aSel.has(s.artist));
+
+function tally() {
+  const hits = SONGS.filter(matches);
+  $('t-n').textContent = hits.length;
+  $('tally').classList.toggle('none', hits.length === 0);
+  $('g-sel').textContent = gSel.size ? [...gSel].join(', ') : 'none selected — all genres';
+  $('a-sel').textContent = aSel.size ? [...aSel].join(', ') : 'none selected — all artists';
+  $('t-txt').innerHTML = hits.length === 0
+    ? `records match. Nothing in the file satisfies <em>both</em> of those groups — loosen one.`
+    : `of ${SONGS.length} records match. Every other line in the file is skipped.`;
+  $('s3-next').disabled = hits.length === 0;
+}
+
+/* ── Screen 4: results + player ──────────────────── */
+function openPlaylist() {
+  playlist = SONGS.filter(matches);
+  const tags = [...gSel, ...aSel];
+  $('fs').innerHTML = tags.length
+    ? tags.map(t => `<span class="fs-tag">${esc(t)}</span>`).join('')
+    : `<span class="fs-tag">everything in the file</span>`;
+  $('s4-h').textContent = playlist.length + (playlist.length === 1 ? ' song' : ' songs');
+  $('s4-lede').innerHTML =
+    `Kept ${playlist.length} of ${SONGS.length} records. The list is in file order — ` +
+    `<span class="hl mono">next</span> and <span class="hl mono">previous</span> just ` +
+    `move a position up or down it, and wrap around at the ends.`;
+  paintRows();
+  if (cur >= playlist.length) stop();
+}
+function paintRows() {
+  $('results').innerHTML = playlist.map((s, n) =>
+    `<div class="row ${n===cur?'playing':''}" onclick="playAt(${n})">
+       <span class="idx">${n===cur?'▶':n+1}</span>
+       <span class="tt"><b>${esc(s.title)}</b><span>${esc(s.artist)} · ${esc(s.year)}</span></span>
+       <span class="gnr">${esc(s.genre)}</span>
+       <span class="dur">${mmss(s.secs)}</span>
+     </div>`).join('');
+  /* Keep the playing row visible without scrolling the page itself. */
+  const el = $('results').querySelector('.row.playing');
+  if (el) {
+    const box = $('results'), t = el.offsetTop, h = el.offsetHeight;
+    if (t < box.scrollTop) box.scrollTop = t;
+    else if (t + h > box.scrollTop + box.clientHeight)
+      box.scrollTop = t + h - box.clientHeight;
+  }
+}
+
+const au = $('au');
+
+function playAt(n) {
+  if (!playlist.length) return;
+  cur = (n + playlist.length) % playlist.length;
+  const s = playlist[cur];
+  $('np-art').textContent  = s.title[0].toUpperCase();
+  $('np-title').textContent= s.title;
+  $('np-sub').textContent  = `${s.artist} · ${s.genre} · ${s.year} · ${mmss(s.secs)} on the record`;
+  $('audio-err').style.display = 'none';
+  au.src = s.preview;
+  au.play().catch(() => {});
+  paintRows();
+}
+function toggle() {
+  if (cur < 0) return playAt(0);
+  au.paused ? au.play().catch(()=>{}) : au.pause();
+}
+function next() { playlist.length && playAt(cur + 1); }
+function prev() { playlist.length && playAt(cur - 1); }
+function stop() {
+  au.pause(); au.removeAttribute('src'); cur = -1;
+  $('np-art').textContent = '–';
+  $('np-title').textContent = 'Nothing playing';
+  $('np-sub').textContent = 'Pick a song from the list';
+  $('b-play').textContent = '▶';
+  $('seek-fill').style.width = '0';
+  paintRows();
+}
+
+au.addEventListener('play',  () => $('b-play').textContent = '⏸');
+au.addEventListener('pause', () => $('b-play').textContent = '▶');
+au.addEventListener('ended', next);
+au.addEventListener('error', () => {
+  if (au.getAttribute('src')) $('audio-err').style.display = 'block';
+});
+au.addEventListener('loadedmetadata', () => {
+  $('t-tot').textContent = mmss(au.duration);
+});
+au.addEventListener('timeupdate', () => {
+  $('t-cur').textContent = mmss(au.currentTime);
+  if (au.duration) $('seek-fill').style.width = (au.currentTime/au.duration*100) + '%';
+});
+$('seek').addEventListener('click', e => {
+  if (!au.duration) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  au.currentTime = (e.clientX - r.left) / r.width * au.duration;
+});
+
+/* ── Screen 5: the assignment ────────────────────── */
+const TASKS = [
+  'Read <strong>songs.txt</strong> and turn every line into one song record.',
+  'Split each line on <strong>|</strong> and keep the five fields apart: title, artist, genre, year, seconds.',
+  'Collect the distinct genres and the distinct artists that actually occur in the file — that is your menu.',
+  'Show both menus and let the user choose <em>any number</em> from each, including none.',
+  'Keep a record only if its genre is among the chosen genres <strong>and</strong> its artist is among the chosen artists — where an empty choice means "no restriction".',
+  'Put the records that survive into a playlist, in file order.',
+  'Say how many of the total records matched, and handle the case where nothing did.',
+  'Hold a position in that playlist and print the song there.',
+  'On <strong>next</strong> move the position forward, on <strong>previous</strong> move it back, and wrap around at both ends.',
+  'Let the user search again with different choices without restarting the program.',
+];
+$('tasks').innerHTML = TASKS.map((t,i) =>
+  `<div class="task"><span class="tn">${i+1}.</span><span class="tx">${t}</span></div>`).join('');
+
+function restart() {
+  clearAll(); stop(); maxStep = 1; paintFile(); go(1);
+}
+
+/* ── Boot ────────────────────────────────────────── */
+$('st-songs').textContent   = SONGS.length;
+$('st-artists').textContent = ARTISTS.length;
+$('st-genres').textContent  = GENRES.length;
+paintFile();
+paintFilters();
+rail();
+</script>
+</body>
+</html>
