@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛸 Alien Decoder — How Does the Computer Decode?</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #080c14;
+    --panel:      #0d1424;
+    --border:     #1a2840;
+    --accent:     #3b82f6;
+    --accent-glow:rgba(59,130,246,0.18);
+    --green:      #22d3a0;
+    --green-glow: rgba(34,211,160,0.18);
+    --red:        #f43f5e;
+    --red-glow:   rgba(244,63,94,0.18);
+    --yellow:     #fbbf24;
+    --text:       #c8d8f0;
+    --dim:        #4a6080;
+    --bright:     #e8f0ff;
+    --map-bg:     #0a1628;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Progress bar ── */
+  #progress-bar {
+    position: fixed; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--border); z-index: 200; display: none;
+  }
+  #progress-fill {
+    height: 100%; background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    transition: width 0.4s;
+  }
+
+  /* ── Header ── */
+  #header {
+    display: none;
+    justify-content: space-between; align-items: center;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    position: sticky; top: 0; z-index: 100;
+  }
+  #header .logo { display:flex; align-items:center; gap:10px; }
+  #header .logo span { font-family:monospace; color:var(--dim); font-size:13px; font-weight:700; }
+  #header .right { display:flex; gap:10px; align-items:center; }
+  #phase-label { color:var(--dim); font-size:12px; }
+
+  /* ── Screens ── */
+  .screen { display:none; }
+  .screen.active { display:block; }
+
+  /* ── Start screen ── */
+  #screen-start {
+    display:none; flex-direction:column; align-items:center;
+    justify-content:center; min-height:100vh; gap:32px; padding:32px;
+    background:
+      radial-gradient(1px 1px at 10% 20%, #ffffff22 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 50%, #ffffff18 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 60% 10%, #ffffff15 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 70%, #ffffff20 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 85%, #ffffff12 0%, transparent 100%);
+  }
+  #screen-start.active { display:flex; }
+  .start-title { text-align:center; }
+  .start-title .ufo { font-size:64px; margin-bottom:8px; }
+  .start-title h1 {
+    font-family:'Trebuchet MS', sans-serif;
+    font-size:clamp(32px,6vw,52px); font-weight:900;
+    color:var(--bright); letter-spacing:-1px;
+  }
+  .start-title p { font-family:monospace; color:var(--dim); font-size:15px; margin-top:10px; }
+  .file-cards { display:flex; gap:24px; flex-wrap:wrap; justify-content:center; }
+  .file-card {
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:20px 28px; min-width:180px; text-align:center;
+  }
+  .file-card .icon { font-size:32px; margin-bottom:8px; }
+  .file-card .name { font-family:monospace; font-weight:700; font-size:15px; }
+  .file-card .desc { color:var(--dim); font-size:12px; margin-top:6px; }
+
+  /* ── Generic layout ── */
+  .phase-wrap {
+    max-width:800px; margin:0 auto; padding:40px 24px;
+    display:flex; flex-direction:column; gap:24px;
+  }
+  .phase-wrap.narrow { max-width:580px; }
+
+  /* ── Panels ── */
+  .panel {
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:12px; padding:20px 24px;
+  }
+  .panel.glow { border-color:var(--accent); box-shadow:0 0 24px var(--accent-glow); }
+  .panel.green-glow { border-color:var(--green); box-shadow:0 0 24px var(--green-glow); }
+
+  /* ── Tag badge ── */
+  .tag {
+    display:inline-block; font-family:monospace; font-size:11px;
+    letter-spacing:1.5px; border-radius:4px; padding:2px 8px; opacity:.85;
+    border:1px solid var(--accent); color:var(--accent);
+  }
+  .tag.yellow { border-color:var(--yellow); color:var(--yellow); }
+  .tag.green  { border-color:var(--green);  color:var(--green); }
+  .tag.red    { border-color:var(--red);    color:var(--red); }
+
+  /* ── Buttons ── */
+  .btn {
+    background:rgba(59,130,246,.13); border:1px solid var(--accent);
+    border-radius:8px; color:var(--accent); font-family:inherit;
+    font-size:15px; font-weight:700; padding:11px 28px;
+    cursor:pointer; letter-spacing:.5px; transition:all .2s;
+  }
+  .btn:hover { background:rgba(59,130,246,.22); }
+  .btn.dim { background:transparent; border-color:var(--border); color:var(--dim); font-size:13px; padding:7px 18px; }
+  .btn.dim:hover { border-color:var(--dim); }
+  .btn.green { background:var(--green-glow); border-color:var(--green); color:var(--green); }
+  .btn.green:hover { background:rgba(34,211,160,.28); }
+  .btn:disabled { background:transparent; border-color:var(--border); color:var(--dim); cursor:not-allowed; }
+  .btn-row { display:flex; gap:12px; margin-top:8px; }
+
+  /* ── Dict file lines ── */
+  .dict-line {
+    font-family:monospace; font-size:17px; padding:6px 10px;
+    border-radius:6px; border:1px solid transparent;
+    color:var(--dim); transition:all .25s; margin-bottom:2px;
+  }
+  .dict-line.active {
+    background:var(--accent-glow); border-color:var(--accent); color:var(--bright);
+  }
+  .dict-line .reader-label { color:var(--accent); font-size:11px; margin-left:16px; }
+
+  /* ── Code boxes ── */
+  .code-box-wrap { text-align:center; }
+  .code-box {
+    display:inline-block; font-family:monospace; font-size:28px; font-weight:700;
+    color:var(--bright); background:var(--map-bg); border:2px solid var(--border);
+    border-radius:8px; padding:10px 22px; min-width:64px;
+    transition:all .3s;
+  }
+  .code-box.glow-accent { color:var(--accent); background:rgba(59,130,246,.09); border-color:var(--accent); box-shadow:0 0 18px rgba(59,130,246,.33); }
+  .code-box.glow-green  { color:var(--green);  background:rgba(34,211,160,.09); border-color:var(--green);  box-shadow:0 0 18px rgba(34,211,160,.33); }
+  .code-box.glow-red    { color:var(--red);    background:rgba(244,63,94,.09);  border-color:var(--red);    box-shadow:0 0 18px rgba(244,63,94,.33); }
+  .code-box-label { color:var(--dim); font-size:11px; margin-top:6px; letter-spacing:1px; }
+
+  /* ── Split row ── */
+  .split-row { display:flex; align-items:center; gap:20px; justify-content:center; }
+  .split-arrow { color:var(--dim); font-size:24px; }
+
+  /* ── Memory table ── */
+  .map-table {
+    background:var(--map-bg); border:1px solid var(--border);
+    border-radius:10px; overflow:hidden; min-width:220px;
+  }
+  .map-header {
+    background:#0a1e38; border-bottom:1px solid var(--border);
+    padding:8px 16px; display:flex; justify-content:space-between;
+    font-family:monospace; font-size:11px; color:var(--dim); letter-spacing:1.2px;
+  }
+  .map-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:9px 16px; border-bottom:1px solid var(--border);
+    transition:background .3s;
+  }
+  .map-row:last-child { border-bottom:none; }
+  .map-row .mc  { font-family:monospace; font-weight:700; font-size:15px; color:var(--bright); }
+  .map-row .arr { font-family:monospace; font-size:13px; color:var(--dim); }
+  .map-row .mm  { font-family:monospace; font-weight:700; font-size:15px; color:var(--bright); }
+  .map-row .found-badge { font-size:11px; color:var(--green); margin-left:8px; }
+  .map-row.hl-green { background:var(--green-glow); }
+  .map-row.hl-green .mc, .map-row.hl-green .mm { color:var(--green); }
+  .map-row.hl-new { background:var(--accent-glow); }
+  .map-row.hl-new .mc, .map-row.hl-new .mm { color:var(--accent); }
+
+  /* ── Decoded display ── */
+  .decoded-label { color:var(--dim); font-size:11px; margin-bottom:8px; letter-spacing:1.5px; text-align:center; }
+  .decoded-text {
+    font-family:monospace; font-size:32px; font-weight:900;
+    letter-spacing:8px; color:var(--green); min-height:48px;
+    text-shadow:0 0 20px var(--green-glow); text-align:center;
+  }
+
+  /* ── Transmission chips ── */
+  .tx-row { display:flex; gap:10px; flex-wrap:wrap; }
+  .tx-chip {
+    font-family:monospace; font-size:18px; font-weight:700;
+    padding:7px 14px; border-radius:7px; border:2px solid var(--border);
+    color:var(--dim); transition:all .25s; position:relative;
+  }
+  .tx-chip .chip-arrow { font-size:10px; color:var(--accent); text-align:center; margin-top:2px; }
+  .tx-chip.active { background:var(--accent-glow); border-color:var(--accent); color:var(--bright); }
+  .tx-chip.done   { background:rgba(34,211,160,.06); border-color:rgba(34,211,160,.27); color:var(--green); }
+
+  /* ── Not found badge ── */
+  .not-found-badge {
+    margin-top:8px; padding:8px 14px; border-radius:8px;
+    background:var(--red-glow); border:1px solid var(--red);
+    color:var(--red); font-family:monospace; font-size:14px; font-weight:700;
+  }
+
+  /* ── Two-col layout ── */
+  .two-col { display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start; }
+  .two-col .col-mem { flex:1; min-width:220px; }
+  .two-col .col-right { flex:1; min-width:200px; display:flex; flex-direction:column; gap:16px; }
+
+  /* ── Prediction buttons ── */
+  .pred-options { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .pred-btn {
+    background:var(--panel); border:2px solid var(--border);
+    border-radius:10px; color:var(--bright); font-family:monospace;
+    font-size:22px; font-weight:900; padding:14px 28px;
+    cursor:pointer; transition:all .2s; min-width:72px;
+  }
+  .pred-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
+  .pred-btn:disabled { cursor:default; }
+  .pred-btn.correct { background:var(--green-glow); border-color:var(--green); color:var(--green); }
+  .pred-btn.wrong   { background:var(--red-glow);   border-color:var(--red);   color:var(--red); }
+  .pred-feedback { text-align:center; font-family:monospace; font-size:18px; font-weight:700; }
+
+  /* ── Model flowchart ── */
+  .flow-col { display:flex; flex-direction:column; align-items:center; gap:0; }
+  .flow-node {
+    padding:8px 20px; border-radius:8px; border:1.5px solid var(--border);
+    font-family:monospace; font-size:14px; font-weight:600; text-align:center;
+    color:var(--dim); background:rgba(255,255,255,.03); margin-bottom:2px;
+    opacity:0; transition:opacity .35s;
+  }
+  .flow-node.shown { opacity:1; }
+  .flow-node.accent { border-color:var(--accent); color:var(--accent); background:var(--accent-glow); }
+  .flow-node.green  { border-color:var(--green);  color:var(--green);  background:var(--green-glow); letter-spacing:4px; font-size:22px; font-weight:900; padding:10px 28px; }
+  .flow-node.yellow { border-color:var(--yellow); color:var(--yellow); background:rgba(251,191,36,.08); }
+  .flow-arrow { color:var(--dim); font-size:18px; line-height:1; margin:2px 0; opacity:0; transition:opacity .35s; }
+  .flow-arrow.shown { opacity:1; }
+  .flow-split { display:flex; gap:24px; margin:6px 0; opacity:0; transition:opacity .35s; }
+  .flow-split.shown { opacity:1; }
+  .flow-split .fs-found { padding:6px 16px; border-radius:6px; background:var(--green-glow); border:1px solid var(--green); color:var(--green); font-family:monospace; font-size:13px; }
+  .flow-split .fs-miss  { padding:6px 16px; border-radius:6px; background:var(--red-glow);   border:1px solid var(--red);   color:var(--red);   font-family:monospace; font-size:13px; }
+
+  /* ── Java cards ── */
+  .java-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(165px,1fr)); gap:14px; }
+  .java-card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; text-align:center; }
+  .java-card .jicon { font-size:28px; margin-bottom:6px; }
+  .java-card .jtitle { font-family:monospace; color:var(--accent); font-weight:700; font-size:15px; margin-bottom:4px; }
+  .java-card .jdesc { color:var(--dim); font-size:12px; }
+  .java-finale {
+    text-align:center; color:var(--green); font-family:'Trebuchet MS',sans-serif;
+    font-size:20px; font-weight:700; padding:20px 24px;
+    border:1px solid var(--green); border-radius:12px; background:var(--green-glow);
+  }
+
+  /* ── Misc helpers ── */
+  .row { display:flex; align-items:center; gap:12px; }
+  .small-label { color:var(--dim); font-size:11px; letter-spacing:1.2px; margin-bottom:8px; }
+  .subtext { color:var(--dim); font-size:12px; margin-top:10px; }
+  .current-meaning { margin-top:12px; font-family:monospace; font-size:18px; font-weight:700; text-align:center; }
+  .java-hint { color:var(--dim); font-size:13px; }
+  .java-hint span { font-family:monospace; color:var(--accent); font-size:15px; font-weight:700; }
+
+  @media(max-width:520px){
+    .phase-wrap { padding:20px 14px; }
+    .two-col { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div id="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+
+<!-- Header -->
+<div id="header">
+  <div class="logo">🛸 <span>ALIEN DECODER</span></div>
+  <div class="right">
+    <span id="phase-label"></span>
+    <button class="btn dim" onclick="resetApp()">↺ RESET</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ START ═══ -->
+<div id="screen-start" class="screen active">
+  <div class="start-title">
+    <div class="ufo">🛸</div>
+    <h1>ALIEN DECODER</h1>
+    <p>You are the computer. Decode the alien transmission.</p>
+  </div>
+  <div class="file-cards">
+    <div class="file-card">
+      <div class="icon">📄</div>
+      <div class="name" style="color:var(--accent)">dictionary.txt</div>
+      <div class="desc">Codes and their meanings</div>
+    </div>
+    <div class="file-card">
+      <div class="icon">📡</div>
+      <div class="name" style="color:var(--yellow)">message.txt</div>
+      <div class="desc">The alien transmission</div>
+    </div>
+  </div>
+  <button class="btn" onclick="goPhase('dict')">START DECODING →</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ DICT ═══ -->
+<div id="screen-dict" class="screen">
+  <div class="phase-wrap">
+    <div class="row"><span class="tag">STEP 1–3</span><span style="color:var(--dim);font-size:13px">Reading the dictionary</span></div>
+
+    <!-- File panel -->
+    <div class="panel" id="dict-file-panel">
+      <div class="row" style="margin-bottom:16px">
+        <span style="font-size:20px">📄</span>
+        <span style="font-family:monospace;color:var(--accent);font-weight:700;font-size:15px">dictionary.txt</span>
+        <span id="dict-hint" style="color:var(--dim);font-size:12px;margin-left:8px">— Click NEXT STEP to start reading</span>
+      </div>
+      <div id="dict-lines"></div>
+    </div>
+
+    <!-- Split panel -->
+    <div class="panel glow" id="dict-split-panel" style="display:none">
+      <div class="small-label" style="margin-bottom:16px">ONE LINE CONTAINS ONE RELATIONSHIP</div>
+      <div class="split-row">
+        <div class="code-box-wrap">
+          <div class="code-box glow-accent">A2</div>
+          <div class="code-box-label">CODE</div>
+        </div>
+        <div class="split-arrow">→</div>
+        <div class="code-box-wrap">
+          <div class="code-box glow-green">H</div>
+          <div class="code-box-label">MEANING</div>
+        </div>
+      </div>
+      <div class="subtext" style="text-align:center;margin-top:16px">The = sign separates the code from its meaning</div>
+    </div>
+
+    <!-- Memory panel -->
+    <div id="dict-mem-panel" style="display:none;flex-direction:column;gap:16px">
+      <div class="panel">
+        <div class="small-label" style="margin-bottom:16px">COMPUTER MEMORY — being built</div>
+        <div class="map-table">
+          <div class="map-header"><span>CODE</span><span>MEANING</span></div>
+          <div id="dict-mem-rows"></div>
+        </div>
+      </div>
+      <div class="panel" id="dict-hashmap-hint" style="display:none">
+        <div class="java-hint">In Java, we can represent this kind of lookup using a <span>HashMap</span> — a structure that stores key → value pairs.</div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn dim" onclick="goPhase('start')">← BACK</button>
+      <button class="btn" id="dict-next-btn" onclick="dictNext()">NEXT STEP →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ MESSAGE 1 ═══ -->
+<div id="screen-message1" class="screen">
+  <div class="phase-wrap">
+    <div class="row"><span class="tag">STEP 4–6</span><span style="color:var(--dim);font-size:13px">Reading the transmission</span></div>
+    <div class="panel" id="m1-tx-panel">
+      <div class="row" style="margin-bottom:14px">
+        <span style="font-size:18px">📡</span>
+        <span style="font-family:monospace;color:var(--yellow);font-weight:700;font-size:14px">message.txt</span>
+      </div>
+      <div class="tx-row" id="m1-chips"></div>
+      <div class="subtext" id="m1-hint">The computer received a transmission. Click NEXT STEP to process one code at a time.</div>
+    </div>
+    <div class="two-col" id="m1-work" style="display:none">
+      <div class="col-mem">
+        <div class="small-label">COMPUTER MEMORY</div>
+        <div class="map-table">
+          <div class="map-header"><span>CODE</span><span>MEANING</span></div>
+          <div id="m1-map-rows"></div>
+        </div>
+        <div class="not-found-badge" id="m1-not-found" style="display:none">❌ NOT FOUND</div>
+      </div>
+      <div class="col-right">
+        <div class="panel">
+          <div class="small-label">CURRENT CODE</div>
+          <div class="code-box-wrap">
+            <div class="code-box" id="m1-cur-code">—</div>
+          </div>
+          <div class="current-meaning" id="m1-cur-meaning" style="display:none"></div>
+        </div>
+        <div class="panel">
+          <div class="decoded-label">DECODED SO FAR</div>
+          <div class="decoded-text" id="m1-decoded">&nbsp;</div>
+        </div>
+        <div class="panel" id="m1-done-hint" style="display:none">
+          <div style="color:var(--dim);font-size:13px;margin-bottom:6px">The computer repeated the same action for every code.</div>
+          <div class="java-hint">In Java, we can use a <span>loop</span> to perform this repetition.</div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn dim" onclick="goPhase('dict')">← BACK</button>
+      <button class="btn" id="m1-btn" onclick="m1Step()">NEXT STEP →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ PREDICTION ═══ -->
+<div id="screen-prediction" class="screen">
+  <div class="phase-wrap narrow">
+    <div class="row"><span class="tag yellow">🤔 YOU ARE THE COMPUTER</span></div>
+    <div class="panel">
+      <div class="small-label">TRANSMISSION</div>
+      <div class="tx-row" id="pred-chips"></div>
+    </div>
+    <div id="pred-active">
+      <div class="panel glow" style="margin-bottom:16px">
+        <div class="small-label">CURRENT CODE</div>
+        <div class="code-box-wrap" style="margin-bottom:16px">
+          <div class="code-box glow-accent" id="pred-code">—</div>
+        </div>
+        <div style="color:var(--bright);font-size:15px;text-align:center">What will the computer find?</div>
+      </div>
+      <div class="pred-options" id="pred-options"></div>
+      <div class="pred-feedback" id="pred-feedback" style="margin-top:14px;min-height:28px"></div>
+    </div>
+    <div class="panel" id="pred-done" style="display:none">
+      <div class="decoded-label">DECODED SO FAR</div>
+      <div class="decoded-text" id="pred-decoded">&nbsp;</div>
+      <div style="color:var(--green);text-align:center;margin-top:12px;font-weight:700">🎉 You decoded the entire transmission!</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn dim" onclick="goPhase('message1')">← BACK</button>
+      <button class="btn green" id="pred-continue" style="display:none" onclick="goPhase('message2')">CONTINUE →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ MESSAGE 2 ═══ -->
+<div id="screen-message2" class="screen">
+  <div class="phase-wrap">
+    <div class="row"><span class="tag red">UNKNOWN CODE</span><span style="color:var(--dim);font-size:13px">What happens with an unknown code?</span></div>
+    <div class="panel" id="m2-tx-panel">
+      <div class="row" style="margin-bottom:14px">
+        <span style="font-size:18px">📡</span>
+        <span style="font-family:monospace;color:var(--yellow);font-weight:700;font-size:14px">message_2.txt</span>
+      </div>
+      <div class="tx-row" id="m2-chips"></div>
+      <div class="subtext" id="m2-hint">A new transmission arrived — this one contains an unknown code. Click NEXT STEP to begin.</div>
+    </div>
+    <div class="two-col" id="m2-work" style="display:none">
+      <div class="col-mem">
+        <div class="small-label">COMPUTER MEMORY</div>
+        <div class="map-table">
+          <div class="map-header"><span>CODE</span><span>MEANING</span></div>
+          <div id="m2-map-rows"></div>
+        </div>
+        <div class="not-found-badge" id="m2-not-found" style="display:none">❌ NOT FOUND</div>
+      </div>
+      <div class="col-right">
+        <div class="panel">
+          <div class="small-label">CURRENT CODE</div>
+          <div class="code-box-wrap">
+            <div class="code-box" id="m2-cur-code">—</div>
+          </div>
+          <div class="current-meaning" id="m2-cur-meaning" style="display:none"></div>
+        </div>
+        <div class="panel">
+          <div class="decoded-label">DECODED SO FAR</div>
+          <div class="decoded-text" id="m2-decoded">&nbsp;</div>
+        </div>
+        <div class="panel" id="m2-done-hint" style="display:none">
+          <div style="color:var(--dim);font-size:13px;margin-bottom:6px">The computer must decide what to do when the code is not found.</div>
+          <div class="java-hint">In Java, this is handled using a <span>condition</span>.</div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn dim" onclick="goPhase('prediction')">← BACK</button>
+      <button class="btn" id="m2-btn" onclick="m2Step()">NEXT STEP →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ MODEL ═══ -->
+<div id="screen-model" class="screen">
+  <div class="phase-wrap narrow">
+    <div class="row"><span class="tag green">COMPLETE MODEL</span><span style="color:var(--dim);font-size:13px">How it all fits together</span></div>
+    <div class="panel">
+      <div class="flow-col" id="flow-col"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn dim" onclick="goPhase('message2')">← BACK</button>
+      <button class="btn" id="model-btn" onclick="modelNext()">SHOW NEXT →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ JAVA ═══ -->
+<div id="screen-java" class="screen">
+  <div class="phase-wrap">
+    <div style="text-align:center">
+      <div style="color:var(--dim);font-size:12px;letter-spacing:2px;margin-bottom:8px">WHAT YOU JUST EXPERIENCED</div>
+      <h2 style="font-family:'Trebuchet MS',sans-serif;color:var(--bright);font-size:28px">Each concept has a Java name</h2>
+    </div>
+    <div class="java-grid">
+      <div class="java-card"><div class="jicon">📄</div><div class="jtitle">File</div><div class="jdesc">Read external data</div></div>
+      <div class="java-card"><div class="jicon">🔤</div><div class="jtitle">String</div><div class="jdesc">Work with each line or code</div></div>
+      <div class="java-card"><div class="jicon">🗂</div><div class="jtitle">HashMap</div><div class="jdesc">Store Code → Meaning</div></div>
+      <div class="java-card"><div class="jicon">🔁</div><div class="jtitle">Loop</div><div class="jdesc">Process every code</div></div>
+      <div class="java-card"><div class="jicon">❓</div><div class="jtitle">Condition</div><div class="jdesc">Handle found / not found</div></div>
+      <div class="java-card"><div class="jicon">⌨️</div><div class="jtitle">User Input</div><div class="jdesc">Choose what to do</div></div>
+      <div class="java-card"><div class="jicon">🖥</div><div class="jtitle">Output</div><div class="jdesc">Show the decoded message</div></div>
+    </div>
+    <div class="java-finale">Now you are ready to write the Java program.</div>
+    <div style="text-align:center">
+      <button class="btn dim" onclick="resetApp()">↺ RESET — START OVER</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const DICT = [
+  {code:'A2', meaning:'H'},
+  {code:'B9', meaning:'E'},
+  {code:'C1', meaning:'L'},
+  {code:'D4', meaning:'O'},
+  {code:'X0', meaning:'SPACE'},
+];
+const MSG1 = ['A2','B9','C1','C1','D4','X0'];
+const MSG2 = ['A2','B9','Z9','C1'];
+
+const PHASES = ['start','dict','message1','prediction','message2','model','java'];
+const PHASE_LABELS = {
+  dict:'Building memory', message1:'Decoding: HELLO',
+  prediction:'Predict mode', message2:'Unknown code',
+  model:'Complete model', java:'Java concepts'
+};
+
+let currentPhase = 'start';
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function goPhase(name) {
+  document.getElementById('screen-'+currentPhase).classList.remove('active');
+  currentPhase = name;
+  const scr = document.getElementById('screen-'+name);
+  scr.classList.add('active');
+
+  const showChrome = name !== 'start';
+  document.getElementById('progress-bar').style.display = showChrome ? 'block' : 'none';
+  document.getElementById('header').style.display = showChrome ? 'flex' : 'none';
+
+  if (showChrome) {
+    const idx = PHASES.indexOf(name);
+    const pct = Math.round(idx / (PHASES.length - 1) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('phase-label').textContent = PHASE_LABELS[name] || '';
+  }
+
+  // Init screens on first visit
+  if (name === 'dict')       initDict();
+  if (name === 'message1')   initMessage(1);
+  if (name === 'prediction') initPrediction();
+  if (name === 'message2')   initMessage(2);
+  if (name === 'model')      initModel();
+
+  window.scrollTo(0,0);
+}
+
+function resetApp() { goPhase('start'); }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function mapRowHTML(e, hlClass='') {
+  return `<div class="map-row ${hlClass}">
+    <span class="mc">${e.code}</span>
+    <span class="arr">→</span>
+    <span class="mm">${e.meaning}</span>
+    ${hlClass==='hl-green' ? '<span class="found-badge">← FOUND</span>' : ''}
+  </div>`;
+}
+
+function allMapRows(hlKey=null) {
+  return DICT.map(e => mapRowHTML(e, e.code===hlKey ? 'hl-green' : '')).join('');
+}
+
+function decodedDisplay(chars) {
+  return chars.map(c => c==='SPACE' ? '\u00a0' : c==='?' ? '?' : c).join('') || '\u00a0';
+}
+
+function chipHTML(code, state) {
+  // state: 'pending' | 'active' | 'done'
+  const cls = state==='active' ? 'active' : state==='done' ? 'done' : '';
+  const arrow = state==='active' ? '<div class="chip-arrow">▲</div>' : '';
+  return `<div class="tx-chip ${cls}">${code}${arrow}</div>`;
+}
+
+// ── DICT phase ────────────────────────────────────────────────────────────────
+let dictSub = 0;
+const DICT_LINES = DICT.map(d => `${d.code}=${d.meaning}`);
+// sub: 0=file shown, 1..5=highlight line, 6=split, 7=mem start, 8..12=add entries
+
+function initDict() {
+  dictSub = 0;
+  document.getElementById('dict-file-panel').style.display = 'block';
+  document.getElementById('dict-split-panel').style.display = 'none';
+  const mp = document.getElementById('dict-mem-panel');
+  mp.style.display = 'none';
+  document.getElementById('dict-mem-rows').innerHTML = '';
+  document.getElementById('dict-hashmap-hint').style.display = 'none';
+  document.getElementById('dict-hint').style.display = 'inline';
+
+  // Build line divs
+  const container = document.getElementById('dict-lines');
+  container.innerHTML = DICT_LINES.map((l,i) =>
+    `<div class="dict-line" id="dline-${i}">${l}</div>`
+  ).join('');
+}
+
+function dictNext() {
+  if (dictSub < DICT_LINES.length) {
+    // highlight line
+    document.getElementById('dict-hint').style.display = 'none';
+    DICT_LINES.forEach((_,i) => {
+      const el = document.getElementById('dline-'+i);
+      el.className = 'dict-line' + (i===dictSub ? ' active' : '');
+      el.innerHTML = DICT_LINES[i] + (i===dictSub
+        ? '<span class="reader-label">← reading this line</span>' : '');
+    });
+    dictSub++;
+  } else if (dictSub === DICT_LINES.length) {
+    // show split
+    document.getElementById('dict-file-panel').style.display = 'none';
+    document.getElementById('dict-split-panel').style.display = 'block';
+    dictSub++;
+  } else if (dictSub === DICT_LINES.length + 1) {
+    // begin memory
+    document.getElementById('dict-split-panel').style.display = 'none';
+    const mp = document.getElementById('dict-mem-panel');
+    mp.style.display = 'flex';
+    addDictMem(0);
+    dictSub++;
+  } else {
+    const memIdx = dictSub - DICT_LINES.length - 2;
+    if (memIdx < DICT.length - 1) {
+      addDictMem(memIdx + 1);
+      dictSub++;
+    } else {
+      // done — show hashmap hint then advance
+      document.getElementById('dict-hashmap-hint').style.display = 'block';
+      // clear new highlight
+      document.getElementById('dict-mem-rows').querySelectorAll('.map-row').forEach(r => r.classList.remove('hl-new'));
+      // change button
+      document.getElementById('dict-next-btn').textContent = 'NEXT STEP →';
+      document.getElementById('dict-next-btn').onclick = () => goPhase('message1');
+    }
+  }
+}
+
+function addDictMem(idx) {
+  const e = DICT[idx];
+  // clear previous new highlight
+  document.getElementById('dict-mem-rows').querySelectorAll('.map-row').forEach(r => r.classList.remove('hl-new'));
+  const row = document.createElement('div');
+  row.className = 'map-row hl-new';
+  row.innerHTML = `<span class="mc">${e.code}</span><span class="arr">→</span><span class="mm">${e.meaning}</span>`;
+  document.getElementById('dict-mem-rows').appendChild(row);
+}
+
+// ── MESSAGE phase (shared for msg1 and msg2) ─────────────────────────────────
+let mState = {};
+
+function initMessage(which) {
+  const msg = which===1 ? MSG1 : MSG2;
+  const prefix = 'm' + which;
+  mState[which] = { codeIdx: -1, decoded: [], busy: false, done: false };
+
+  // chips
+  document.getElementById(prefix+'-chips').innerHTML =
+    msg.map(c => chipHTML(c,'pending')).join('');
+  document.getElementById(prefix+'-hint').style.display = 'block';
+  document.getElementById(prefix+'-work').style.display = 'none';
+  document.getElementById(prefix+'-not-found').style.display = 'none';
+  document.getElementById(prefix+'-done-hint').style.display = 'none';
+  document.getElementById(prefix+'-cur-meaning').style.display = 'none';
+  document.getElementById(prefix+'-decoded').textContent = '\u00a0';
+
+  // full map rows (no highlight)
+  document.getElementById(prefix+'-map-rows').innerHTML = allMapRows();
+
+  // code box
+  const cb = document.getElementById(prefix+'-cur-code');
+  cb.className = 'code-box';
+  cb.textContent = '—';
+
+  // button
+  const btn = document.getElementById(prefix+'-btn');
+  btn.textContent = 'NEXT STEP →';
+  btn.className = 'btn';
+  btn.onclick = which===1 ? m1Step : m2Step;
+}
+
+function msgStep(which) {
+  const msg = which===1 ? MSG1 : MSG2;
+  const prefix = 'm' + which;
+  const st = mState[which];
+  if (st.busy || st.done) return;
+
+  if (st.codeIdx === -1) {
+    st.codeIdx = 0;
+    document.getElementById(prefix+'-hint').style.display = 'none';
+    document.getElementById(prefix+'-work').style.display = 'flex';
+    refreshChips(prefix, msg, st.codeIdx, st.decoded.length);
+    refreshCodeBox(prefix, msg[0], null);
+    return;
+  }
+
+  st.busy = true;
+  const code = msg[st.codeIdx];
+  const entry = DICT.find(d => d.code === code);
+
+  // highlight map row
+  document.getElementById(prefix+'-map-rows').innerHTML = allMapRows(entry ? code : null);
+  if (!entry) {
+    document.getElementById(prefix+'-not-found').style.display = 'block';
+    refreshCodeBox(prefix, code, 'red');
+  } else {
+    document.getElementById(prefix+'-not-found').style.display = 'none';
+    refreshCodeBox(prefix, code, 'green');
+  }
+
+  setTimeout(() => {
+    const meaning = entry ? entry.meaning : '?';
+    st.decoded.push(meaning);
+
+    // show meaning arrow
+    const cm = document.getElementById(prefix+'-cur-meaning');
+    cm.style.display = 'block';
+    cm.style.color = entry ? 'var(--green)' : 'var(--red)';
+    cm.textContent = '→ ' + (meaning==='SPACE' ? 'SPACE' : meaning);
+
+    // update decoded
+    document.getElementById(prefix+'-decoded').textContent = decodedDisplay(st.decoded);
+
+    setTimeout(() => {
+      document.getElementById(prefix+'-map-rows').innerHTML = allMapRows();
+      document.getElementById(prefix+'-not-found').style.display = 'none';
+      document.getElementById(prefix+'-cur-meaning').style.display = 'none';
+
+      if (st.codeIdx < msg.length - 1) {
+        st.codeIdx++;
+        refreshChips(prefix, msg, st.codeIdx, st.decoded.length);
+        refreshCodeBox(prefix, msg[st.codeIdx], null);
+        st.busy = false;
+      } else {
+        st.done = true;
+        st.busy = false;
+        refreshChips(prefix, msg, -1, st.decoded.length);
+        document.getElementById(prefix+'-done-hint').style.display = 'block';
+        const btn = document.getElementById(prefix+'-btn');
+        btn.textContent = 'CONTINUE →';
+        btn.className = 'btn green';
+        btn.onclick = () => goPhase(which===1 ? 'prediction' : 'model');
+      }
+    }, 700);
+  }, 400);
+}
+
+function m1Step() { msgStep(1); }
+function m2Step() { msgStep(2); }
+
+function refreshChips(prefix, msg, activeIdx, doneCount) {
+  document.getElementById(prefix+'-chips').innerHTML = msg.map((c,i) => {
+    const state = i === activeIdx ? 'active' : i < doneCount ? 'done' : 'pending';
+    return chipHTML(c, state);
+  }).join('');
+}
+
+function refreshCodeBox(prefix, code, glow) {
+  const cb = document.getElementById(prefix+'-cur-code');
+  cb.textContent = code;
+  cb.className = 'code-box' + (glow ? ' glow-'+glow : '');
+}
+
+// ── PREDICTION phase ──────────────────────────────────────────────────────────
+let predState = {};
+
+function initPrediction() {
+  predState = { codeIdx: 0, decoded: [], answered: false, done: false };
+
+  // chips
+  document.getElementById('pred-chips').innerHTML =
+    MSG1.map(c => chipHTML(c,'pending')).join('');
+
+  document.getElementById('pred-active').style.display = 'block';
+  document.getElementById('pred-done').style.display = 'none';
+  document.getElementById('pred-continue').style.display = 'none';
+  document.getElementById('pred-feedback').textContent = '';
+
+  renderPredQuestion();
+}
+
+function renderPredQuestion() {
+  const st = predState;
+  const code = MSG1[st.codeIdx];
+  document.getElementById('pred-code').textContent = code;
+
+  // refresh chips
+  document.getElementById('pred-chips').innerHTML =
+    MSG1.map((c,i) => chipHTML(c, i===st.codeIdx ? 'active' : i < st.codeIdx ? 'done' : 'pending')).join('');
+
+  // options
+  const opts = DICT.map(d => d.meaning);
+  const correct = DICT.find(d => d.code === code)?.meaning;
+  document.getElementById('pred-options').innerHTML = opts.map(m =>
+    `<button class="pred-btn" onclick="predAnswer('${m}')">${m==='SPACE' ? '␣' : m}</button>`
+  ).join('');
+  document.getElementById('pred-feedback').textContent = '';
+}
+
+function predAnswer(meaning) {
+  const st = predState;
+  if (st.answered) return;
+  st.answered = true;
+
+  const code = MSG1[st.codeIdx];
+  const correct = DICT.find(d => d.code === code)?.meaning;
+  const isRight = meaning === correct;
+
+  // style buttons
+  document.getElementById('pred-options').querySelectorAll('.pred-btn').forEach(btn => {
+    btn.disabled = true;
+    const m = btn.textContent === '␣' ? 'SPACE' : btn.textContent;
+    if (m === correct) btn.classList.add('correct');
+    else if (m === meaning && !isRight) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('pred-feedback');
+  if (isRight) {
+    fb.style.color = 'var(--green)';
+    fb.textContent = `✓ Correct!  ${code} → ${correct}`;
+    setTimeout(() => {
+      st.decoded.push(correct);
+      if (st.codeIdx < MSG1.length - 1) {
+        st.codeIdx++;
+        st.answered = false;
+        renderPredQuestion();
+      } else {
+        // done
+        st.done = true;
+        document.getElementById('pred-active').style.display = 'none';
+        document.getElementById('pred-done').style.display = 'block';
+        document.getElementById('pred-decoded').textContent = decodedDisplay(st.decoded);
+        document.getElementById('pred-continue').style.display = 'inline-block';
+        document.getElementById('pred-chips').innerHTML =
+          MSG1.map(c => chipHTML(c,'done')).join('');
+      }
+    }, 900);
+  } else {
+    fb.style.color = 'var(--red)';
+    fb.textContent = `Not quite — ${code} → ${correct}`;
+    setTimeout(() => {
+      // reset for retry on same code
+      st.answered = false;
+      document.getElementById('pred-options').querySelectorAll('.pred-btn').forEach(btn => {
+        btn.disabled = false;
+        btn.classList.remove('correct','wrong');
+      });
+      fb.textContent = '';
+    }, 1100);
+  }
+}
+
+// ── MODEL phase ───────────────────────────────────────────────────────────────
+const FLOW_NODES = [
+  {type:'node', label:'📄 dictionary.txt', cls:'accent'},
+  {type:'node', label:'Read file',         cls:''},
+  {type:'node', label:'Read one line',     cls:''},
+  {type:'node', label:'Separate data',     cls:''},
+  {type:'node', label:'Code → Meaning',    cls:'accent'},
+  {type:'node', label:'Store in Map',      cls:'accent'},
+  {type:'node', label:'📡 message.txt',   cls:'yellow'},
+  {type:'node', label:'Read one code',     cls:''},
+  {type:'node', label:'Search the Map',    cls:''},
+  {type:'split'},
+  {type:'node', label:'Build message',     cls:''},
+  {type:'node', label:'H E L L O',         cls:'green'},
+];
+
+let modelRevealed = 0;
+
+function initModel() {
+  modelRevealed = 0;
+  const col = document.getElementById('flow-col');
+  col.innerHTML = '';
+
+  FLOW_NODES.forEach((n, i) => {
+    if (n.type === 'split') {
+      const arrow = document.createElement('div');
+      arrow.className = 'flow-arrow';
+      arrow.id = 'farrow-'+i;
+      arrow.textContent = '↓';
+      col.appendChild(arrow);
+
+      const split = document.createElement('div');
+      split.className = 'flow-split';
+      split.id = 'fnode-'+i;
+      split.innerHTML = `<div class="fs-found">Meaning</div><div class="fs-miss">?</div>`;
+      col.appendChild(split);
+    } else {
+      if (i > 0) {
+        const arrow = document.createElement('div');
+        arrow.className = 'flow-arrow';
+        arrow.id = 'farrow-'+i;
+        arrow.textContent = '↓';
+        col.appendChild(arrow);
+      }
+      const node = document.createElement('div');
+      node.className = 'flow-node' + (n.cls ? ' '+n.cls : '');
+      node.id = 'fnode-'+i;
+      node.textContent = n.label;
+      col.appendChild(node);
+    }
+  });
+
+  // Show first node
+  document.getElementById('fnode-0').classList.add('shown');
+  document.getElementById('model-btn').textContent = 'SHOW NEXT →';
+  document.getElementById('model-btn').className = 'btn';
+  document.getElementById('model-btn').onclick = modelNext;
+}
+
+function modelNext() {
+  modelRevealed++;
+  if (modelRevealed < FLOW_NODES.length) {
+    const arrow = document.getElementById('farrow-'+modelRevealed);
+    const node  = document.getElementById('fnode-'+modelRevealed);
+    if (arrow) arrow.classList.add('shown');
+    if (node)  node.classList.add('shown');
+
+    if (modelRevealed === FLOW_NODES.length - 1) {
+      document.getElementById('model-btn').textContent = 'CONTINUE →';
+      document.getElementById('model-btn').className = 'btn green';
+      document.getElementById('model-btn').onclick = () => goPhase('java');
+    }
+  }
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+goPhase('start');
+</script>
+</body>
+</html>
