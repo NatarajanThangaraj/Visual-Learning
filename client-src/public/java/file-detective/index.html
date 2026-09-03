@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FILE DETECTIVE — THE MISSING EVIDENCE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#060a0f;--surf:#0d1820;--card:#111d2b;--bord:#1a3040;
+  --text:#c5d8e2;--dim:#486070;--acc:#3a9fc0;--ok:#4caf82;
+  --warn:#c89030;--err:#c04040;--mono:'Courier New',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;font-size:14px;}
+.screen{display:none;flex-direction:column;height:100vh;width:100%;}
+.screen.active{display:flex;}
+/* Topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surf);border-bottom:1px solid var(--bord);flex-shrink:0;gap:16px;}
+.tb-left{display:flex;flex-direction:column;}
+.tb-case{font-size:9px;letter-spacing:3px;color:var(--dim);}
+.tb-title{font-size:12px;color:var(--acc);font-weight:600;letter-spacing:1px;}
+.tb-right{display:flex;align-items:center;gap:16px;}
+.tb-score{font-size:11px;color:var(--warn);letter-spacing:1px;}
+.tb-score span{font-size:15px;font-weight:700;}
+/* Content */
+.content{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;align-items:center;}
+/* Footer */
+.footer{padding:10px 20px;background:var(--surf);border-top:1px solid var(--bord);display:flex;gap:10px;flex-shrink:0;flex-wrap:wrap;}
+/* Buttons */
+.btn{padding:8px 18px;border:1px solid var(--acc);background:transparent;color:var(--acc);cursor:pointer;font-size:12px;letter-spacing:1px;transition:all .15s;font-family:system-ui,sans-serif;}
+.btn:hover{background:var(--acc);color:var(--bg);}
+.btn-ok{border-color:var(--ok);color:var(--ok);}
+.btn-ok:hover{background:var(--ok);color:var(--bg);}
+.btn-warn{border-color:var(--warn);color:var(--warn);}
+.btn-warn:hover{background:var(--warn);color:var(--bg);}
+.btn-err{border-color:var(--err);color:var(--err);}
+.btn-err:hover{background:var(--err);color:var(--bg);}
+.btn-dim{border-color:var(--bord);color:var(--dim);}
+.btn-dim:hover{background:var(--bord);color:var(--text);}
+.btn-sm{padding:4px 12px;font-size:10px;}
+/* Landing */
+#screen-landing{justify-content:center;align-items:center;text-align:center;}
+.land-badge{font-size:9px;letter-spacing:4px;color:var(--dim);border:1px solid var(--bord);padding:5px 14px;display:inline-block;margin-bottom:24px;}
+.land-title{font-size:52px;font-weight:800;color:var(--text);letter-spacing:-2px;line-height:1;}
+.land-sub{font-size:12px;letter-spacing:8px;color:var(--acc);margin:10px 0 40px;}
+.incident-card{border:1px solid var(--bord);padding:28px 40px;margin:0 auto 28px;max-width:380px;text-align:left;background:var(--surf);}
+.ic-label{font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:4px;}
+.ic-case{font-size:11px;letter-spacing:2px;color:var(--dim);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--bord);}
+.ic-row{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(26,48,64,.5);}
+.ic-row:last-child{border:none;}
+.ic-key{font-size:11px;color:var(--dim);}
+.ic-val{font-size:13px;color:var(--warn);font-family:var(--mono);}
+.land-desc{font-size:13px;color:var(--dim);max-width:420px;line-height:1.8;margin:0 auto 28px;}
+/* Case select */
+#screen-cases{justify-content:center;align-items:center;}
+.cases-title{font-size:11px;letter-spacing:4px;color:var(--dim);margin-bottom:24px;}
+.case-grid{display:flex;gap:14px;max-width:820px;width:100%;padding:0 20px;}
+.case-card{flex:1;border:1px solid var(--bord);padding:24px;cursor:pointer;transition:all .2s;background:var(--surf);}
+.case-card:hover{border-color:var(--acc);background:var(--card);}
+.case-diff{font-size:9px;letter-spacing:3px;margin-bottom:10px;}
+.diff-beginner{color:var(--ok);}
+.diff-intermediate{color:var(--warn);}
+.diff-expert{color:var(--err);}
+.case-num{font-size:32px;font-weight:700;color:var(--text);margin-bottom:10px;}
+.case-title{font-size:12px;color:var(--acc);margin-bottom:10px;}
+.case-details{font-size:11px;color:var(--dim);line-height:2;}
+/* Case file */
+.cf-header{text-align:center;margin-bottom:28px;}
+.cf-case{font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:8px;}
+.cf-title{font-size:20px;font-weight:700;color:var(--text);letter-spacing:1px;}
+.cf-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:620px;width:100%;margin-bottom:28px;}
+.cf-item{border:1px solid var(--bord);padding:14px;background:var(--surf);}
+.cf-item-label{font-size:9px;letter-spacing:2px;color:var(--dim);margin-bottom:6px;}
+.cf-item-val{font-size:14px;color:var(--warn);font-family:var(--mono);}
+.files-section{max-width:720px;width:100%;}
+.files-heading{font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:14px;}
+.files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;}
+.file-card{border:1px solid var(--bord);padding:16px 14px;cursor:pointer;transition:all .2s;background:var(--surf);position:relative;}
+.file-card:hover{border-color:var(--acc);background:var(--card);}
+.file-card.opened{border-color:rgba(76,175,130,.4);}
+.file-icon{font-size:22px;margin-bottom:8px;}
+.file-name{font-size:11px;font-family:var(--mono);color:var(--acc);margin-bottom:4px;}
+.file-info{font-size:10px;color:var(--dim);}
+.opened-mark{position:absolute;top:6px;right:8px;font-size:9px;color:var(--ok);}
+/* Viewer */
+.viewer-wrap{max-width:820px;width:100%;display:flex;flex-direction:column;gap:14px;}
+.viewer-header{display:flex;align-items:center;justify-content:space-between;}
+.vhdr-left{display:flex;flex-direction:column;gap:2px;}
+.vhdr-filename{font-size:15px;font-family:var(--mono);color:var(--acc);}
+.vhdr-meta{font-size:10px;color:var(--dim);}
+.search-row{display:flex;gap:8px;}
+.search-inp{flex:1;background:var(--surf);border:1px solid var(--bord);color:var(--text);padding:7px 12px;font-size:12px;font-family:var(--mono);}
+.search-inp:focus{outline:none;border-color:var(--acc);}
+.search-inp::placeholder{color:var(--dim);}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;}
+.fbtn{padding:3px 10px;border:1px solid var(--bord);background:transparent;color:var(--dim);cursor:pointer;font-size:10px;letter-spacing:1px;}
+.fbtn.active{border-color:var(--acc);color:var(--acc);}
+/* Log table */
+.log-tbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+.log-tbl th{text-align:left;padding:8px 10px;color:var(--dim);font-size:9px;letter-spacing:2px;border-bottom:1px solid var(--bord);}
+.log-tbl td{padding:7px 10px;border-bottom:1px solid rgba(26,48,64,.4);cursor:pointer;transition:background .1s;}
+.log-tbl tbody tr:hover td{background:rgba(58,159,192,.07);}
+.log-tbl tbody tr.pinned-row td{background:rgba(76,175,130,.07);}
+.tag{display:inline-block;padding:1px 7px;font-size:9px;border-radius:1px;}
+.tag-ok{color:var(--ok);border:1px solid rgba(76,175,130,.3);}
+.tag-warn{color:var(--warn);border:1px solid rgba(200,144,48,.3);}
+.tag-err{color:var(--err);border:1px solid rgba(192,64,64,.3);}
+.tag-dim{color:var(--dim);border:1px solid var(--bord);}
+/* Suspects table */
+.sus-tbl{width:100%;border-collapse:collapse;}
+.sus-tbl th{text-align:left;padding:10px 14px;background:var(--surf);color:var(--dim);font-size:9px;letter-spacing:2px;border-bottom:1px solid var(--bord);}
+.sus-tbl td{padding:10px 14px;border-bottom:1px solid var(--bord);cursor:pointer;}
+.sus-tbl tbody tr:hover td{background:rgba(58,159,192,.06);}
+.sus-tbl tbody tr.selected-row td{background:rgba(58,159,192,.12);}
+.profile-panel{border:1px solid var(--bord);padding:16px;background:var(--surf);display:none;}
+.profile-panel.show{display:block;}
+.pp-id{font-size:9px;letter-spacing:2px;color:var(--dim);margin-bottom:4px;}
+.pp-name{font-size:18px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.pp-role{font-size:12px;color:var(--acc);margin-bottom:8px;}
+.pp-desc{font-size:12px;color:var(--dim);line-height:1.6;}
+/* Messages */
+.msg-list{display:flex;flex-direction:column;gap:10px;}
+.msg-bubble{border:1px solid var(--bord);padding:14px 16px;background:var(--surf);cursor:pointer;transition:all .15s;}
+.msg-bubble:hover{border-color:var(--acc);}
+.msg-bubble.selected-msg{border-color:var(--warn);background:rgba(200,144,48,.06);}
+.msg-top{display:flex;gap:16px;margin-bottom:6px;font-size:10px;color:var(--dim);}
+.msg-name{color:var(--acc);}
+.msg-t{font-family:var(--mono);}
+.msg-text{font-size:13px;color:var(--text);line-height:1.6;font-style:italic;}
+/* Evidence */
+.ev-list{display:flex;flex-direction:column;gap:8px;}
+.ev-item{border-left:3px solid var(--warn);padding:12px 16px;background:var(--surf);}
+.ev-key{font-size:9px;letter-spacing:2px;color:var(--dim);margin-bottom:4px;}
+.ev-val{font-size:15px;font-family:var(--mono);color:var(--warn);}
+/* Board */
+.board-wrap{max-width:820px;width:100%;flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.board-incident{display:flex;gap:10px;margin-bottom:14px;padding:12px 16px;border:1px solid rgba(192,64,64,.3);background:rgba(192,64,64,.05);}
+.bi-label{font-size:9px;letter-spacing:2px;color:var(--err);}
+.bi-val{font-size:13px;color:var(--text);font-family:var(--mono);}
+.board-grid{display:flex;flex-wrap:wrap;gap:8px;min-height:160px;padding:14px;border:1px dashed var(--bord);flex:1;overflow-y:auto;align-content:flex-start;}
+.board-empty-msg{color:var(--dim);font-size:12px;}
+.board-pin{border:1px solid var(--bord);padding:10px 12px;background:var(--card);width:180px;position:relative;}
+.board-pin.imp{border-color:var(--warn);}
+.board-pin.irr{opacity:.35;}
+.bp-src{font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:3px;}
+.bp-text{font-size:11px;font-family:var(--mono);color:var(--text);line-height:1.5;word-break:break-all;}
+.bp-actions{display:flex;gap:6px;margin-top:8px;}
+.bp-btn{padding:2px 7px;border:1px solid var(--bord);background:transparent;color:var(--dim);cursor:pointer;font-size:9px;}
+.bp-btn:hover{color:var(--text);}
+.bp-btn.imp-btn:hover{border-color:var(--warn);color:var(--warn);}
+.bp-btn.irr-btn:hover{border-color:var(--err);color:var(--err);}
+/* Contradiction */
+.contra-wrap{max-width:720px;width:100%;display:flex;flex-direction:column;gap:16px;}
+.contra-section{display:flex;flex-direction:column;gap:8px;}
+.cs-label{font-size:9px;letter-spacing:2px;color:var(--dim);}
+.cs-select{background:var(--surf);border:1px solid var(--bord);color:var(--text);padding:8px 12px;font-size:12px;width:100%;cursor:pointer;}
+.cs-select:focus{outline:none;border-color:var(--acc);}
+.msg-pick-list{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;}
+.ev-pick-list{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;}
+.ev-pick-item{padding:6px 10px;border:1px solid var(--bord);cursor:pointer;font-family:var(--mono);font-size:11px;background:var(--surf);}
+.ev-pick-item:hover{border-color:var(--acc);}
+.ev-pick-item.sel-ev{border-color:var(--warn);background:rgba(200,144,48,.08);}
+.contra-result{border:1px solid var(--bord);padding:18px;background:var(--surf);display:none;}
+.contra-result.found{border-color:var(--warn);background:rgba(200,144,48,.05);}
+.cr-title{font-size:11px;letter-spacing:2px;margin-bottom:12px;}
+.cr-row{margin-bottom:10px;}
+.cr-label{font-size:9px;letter-spacing:2px;color:var(--dim);margin-bottom:3px;}
+.cr-text{font-size:12px;color:var(--text);font-family:var(--mono);}
+.cr-explain{font-size:12px;color:var(--ok);line-height:1.6;}
+/* Timeline */
+.tl-wrap{max-width:820px;width:100%;display:flex;gap:16px;height:100%;}
+.tl-events-panel{flex:1;display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+.tl-ep-title{font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:4px;}
+.tl-ep-search{background:var(--surf);border:1px solid var(--bord);color:var(--text);padding:6px 10px;font-size:11px;font-family:var(--mono);width:100%;}
+.tl-ep-search:focus{outline:none;border-color:var(--acc);}
+.tl-ep-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;}
+.tl-ev{display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--bord);cursor:pointer;background:var(--surf);font-size:11px;transition:all .1s;}
+.tl-ev:hover{border-color:var(--acc);}
+.tl-ev.tl-added{border-color:var(--ok);opacity:.5;}
+.tl-ev-time{font-family:var(--mono);color:var(--acc);min-width:44px;flex-shrink:0;}
+.tl-ev-who{color:var(--warn);min-width:70px;flex-shrink:0;}
+.tl-ev-what{color:var(--dim);flex:1;}
+.tl-ev-src{font-size:9px;color:var(--dim);margin-left:auto;flex-shrink:0;}
+.tl-view{width:240px;border:1px solid var(--bord);padding:14px;background:var(--surf);overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.tl-view-title{font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:6px;}
+.tl-entry{display:flex;gap:8px;align-items:flex-start;}
+.tl-dot{width:7px;height:7px;border-radius:50%;background:var(--acc);margin-top:3px;flex-shrink:0;}
+.tl-dot.incident-dot{background:var(--err);}
+.tl-entry-text{font-size:10px;font-family:var(--mono);line-height:1.5;}
+.tl-entry-time{color:var(--acc);}
+.tl-entry-who{color:var(--warn);}
+.tl-entry-act{color:var(--dim);}
+/* Accusation */
+.accuse-wrap{max-width:600px;width:100%;display:flex;flex-direction:column;gap:20px;}
+.accuse-section{display:flex;flex-direction:column;gap:8px;}
+.as-label{font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:4px;}
+.suspect-opts{display:flex;flex-direction:column;gap:6px;}
+.sus-opt{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--bord);cursor:pointer;background:var(--surf);transition:all .15s;}
+.sus-opt:hover{border-color:var(--acc);}
+.sus-opt.sel-sus{border-color:var(--acc);background:rgba(58,159,192,.08);}
+.so-name{font-size:14px;color:var(--text);}
+.so-id{font-size:10px;color:var(--dim);font-family:var(--mono);}
+.reason-checks{display:flex;flex-direction:column;gap:7px;}
+.rc-item{display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 0;}
+.rc-item input{cursor:pointer;accent-color:var(--acc);}
+.rc-label{font-size:13px;color:var(--text);}
+/* Report */
+.report-wrap{max-width:580px;width:100%;}
+.report-box{border:1px solid var(--bord);background:var(--surf);padding:32px;}
+.rb-case{font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:14px;}
+.rb-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:24px;border-bottom:1px solid var(--bord);padding-bottom:14px;}
+.rb-section{margin-bottom:20px;}
+.rb-label{font-size:9px;letter-spacing:2px;color:var(--dim);margin-bottom:6px;}
+.rb-name{font-size:24px;font-weight:700;color:var(--warn);}
+.rb-ev-list{display:flex;flex-direction:column;gap:5px;}
+.rb-ev{display:flex;gap:8px;font-size:12px;line-height:1.5;}
+.rb-ev-tick{color:var(--ok);}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px;}
+.stat-box{border:1px solid var(--bord);padding:10px;text-align:center;}
+.stat-num{font-size:20px;font-weight:700;color:var(--acc);}
+.stat-lbl{font-size:9px;letter-spacing:1px;color:var(--dim);margin-top:3px;}
+.case-status{font-size:10px;letter-spacing:3px;padding:10px;text-align:center;margin-top:14px;}
+.cs-solved{color:var(--ok);border:1px solid var(--ok);}
+.cs-unsolved{color:var(--err);border:1px solid var(--err);}
+/* Score float */
+.sf{position:fixed;font-size:16px;font-weight:700;pointer-events:none;z-index:999;animation:sfUp .9s ease-out forwards;}
+@keyframes sfUp{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-70px);}}
+/* Notification */
+#notif{position:fixed;top:64px;right:20px;padding:10px 18px;border:1px solid var(--acc);background:var(--card);font-size:12px;z-index:200;transform:translateX(140%);transition:transform .25s;}
+#notif.show{transform:translateX(0);}
+#notif.n-ok{border-color:var(--ok);color:var(--ok);}
+#notif.n-warn{border-color:var(--warn);color:var(--warn);}
+#notif.n-err{border-color:var(--err);color:var(--err);}
+/* Hint panel */
+#hint-panel{position:fixed;bottom:75px;right:20px;background:var(--card);border:1px solid var(--warn);padding:16px;max-width:270px;z-index:100;display:none;}
+#hint-panel.show{display:block;}
+.hp-title{font-size:9px;letter-spacing:2px;color:var(--warn);margin-bottom:8px;}
+.hp-text{font-size:12px;color:var(--text);line-height:1.6;}
+.hp-close{position:absolute;top:8px;right:10px;cursor:pointer;color:var(--dim);font-size:13px;background:none;border:none;}
+/* Build it */
+.buildit-wrap{max-width:680px;width:100%;display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center;}
+.bi-solved{font-size:22px;font-weight:700;color:var(--ok);letter-spacing:1px;}
+.bi-desc{font-size:13px;color:var(--dim);line-height:1.8;max-width:500px;}
+.bi-req{border:1px solid var(--bord);padding:24px;background:var(--surf);text-align:left;width:100%;}
+.bi-req-title{font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:16px;}
+.bi-step{display:flex;gap:12px;margin-bottom:8px;font-size:12px;color:var(--text);}
+.bi-step-n{color:var(--acc);font-family:var(--mono);min-width:18px;}
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--bord);}
+.section-lbl{font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:10px;align-self:flex-start;max-width:820px;width:100%;}
+</style>
+</head>
+<body>
+
+<div id="notif"></div>
+<div id="hint-panel">
+  <button class="hp-close" onclick="closeHint()">✕</button>
+  <div class="hp-title">INVESTIGATOR HINT</div>
+  <div class="hp-text" id="hint-text">Start with the incident time.</div>
+</div>
+
+<!-- LANDING -->
+<div id="screen-landing" class="screen active">
+  <div class="content" style="justify-content:center;">
+    <div class="land-badge">DIGITAL INVESTIGATION SYSTEM</div>
+    <div class="land-title">FILE DETECTIVE</div>
+    <div class="land-sub">THE MISSING EVIDENCE</div>
+    <div class="incident-card">
+      <div class="ic-case">CASE #017</div>
+      <div class="ic-row"><span class="ic-key">TIME</span><span class="ic-val">22:10</span></div>
+      <div class="ic-row"><span class="ic-key">LOCATION</span><span class="ic-val">Server Room</span></div>
+      <div class="ic-row"><span class="ic-key">MISSING</span><span class="ic-val">Access Token</span></div>
+      <div class="ic-row"><span class="ic-key">STATUS</span><span class="ic-val" style="color:var(--err);">OPEN</span></div>
+    </div>
+    <div class="land-desc">Four employees were inside the building.<br>One of their stories doesn't match the evidence.<br>Investigate the files. Find the truth.</div>
+    <button class="btn btn-ok" style="font-size:14px;padding:12px 32px;letter-spacing:2px;" onclick="show('screen-cases')">OPEN CASE</button>
+  </div>
+</div>
+
+<!-- CASE SELECT -->
+<div id="screen-cases" class="screen">
+  <div class="content" style="justify-content:center;">
+    <div class="cases-title">SELECT CASE FILE</div>
+    <div class="case-grid" id="case-grid"></div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-dim" onclick="show('screen-landing')">← BACK</button>
+  </div>
+</div>
+
+<!-- CASE FILE -->
+<div id="screen-casefile" class="screen">
+  <div class="topbar">
+    <div class="tb-left"><div class="tb-case" id="cf-case-num"></div><div class="tb-title">CASE FILE</div></div>
+    <div class="tb-right">
+      <div class="tb-score">SCORE <span id="cf-score">0</span></div>
+      <button class="btn btn-dim btn-sm" onclick="showHint()">HINT</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="cf-header"><div class="cf-case" id="cf-badge"></div><div class="cf-title" id="cf-heading"></div></div>
+    <div class="cf-meta" id="cf-meta"></div>
+    <div class="files-section">
+      <div class="files-heading">EVIDENCE FILES</div>
+      <div class="files-grid" id="files-grid"></div>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-dim" onclick="show('screen-cases')">← CASES</button>
+    <button class="btn" onclick="show('screen-board')">📌 BOARD</button>
+    <button class="btn" onclick="show('screen-contra')">⚠ COMPARE</button>
+    <button class="btn" onclick="show('screen-timeline')">⏱ TIMELINE</button>
+    <button class="btn btn-warn" onclick="show('screen-accuse')">CLOSE CASE</button>
+  </div>
+</div>
+
+<!-- FILE VIEWER -->
+<div id="screen-viewer" class="screen">
+  <div class="topbar">
+    <div class="tb-left"><div class="tb-case" id="vw-case-num"></div><div class="tb-title" id="vw-title">VIEWING FILE</div></div>
+    <div class="tb-right">
+      <div class="tb-score">SCORE <span id="vw-score">0</span></div>
+      <button class="btn btn-dim btn-sm" onclick="showHint()">HINT</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="viewer-wrap">
+      <div class="viewer-header">
+        <div class="vhdr-left"><div class="vhdr-filename" id="vw-filename"></div><div class="vhdr-meta" id="vw-meta"></div></div>
+        <button class="btn btn-sm" onclick="pinCurrentView()">📌 PIN VIEW</button>
+      </div>
+      <div class="search-row"><input class="search-inp" id="vw-search" placeholder="Search records…" oninput="doSearch(this.value)"></div>
+      <div class="filter-row" id="vw-filters"></div>
+      <div id="vw-content"></div>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-dim" onclick="show('screen-casefile')">← FILES</button>
+    <button class="btn btn-dim" onclick="show('screen-board')">📌 BOARD</button>
+    <button class="btn btn-dim" onclick="show('screen-contra')">⚠ COMPARE</button>
+    <button class="btn btn-dim" onclick="show('screen-timeline')">⏱ TIMELINE</button>
+  </div>
+</div>
+
+<!-- BOARD -->
+<div id="screen-board" class="screen">
+  <div class="topbar">
+    <div class="tb-left"><div class="tb-case" id="bd-case-num"></div><div class="tb-title">CASE BOARD</div></div>
+    <div class="tb-right"><div class="tb-score">SCORE <span id="bd-score">0</span></div></div>
+  </div>
+  <div class="content" style="align-items:stretch;">
+    <div class="board-wrap">
+      <div class="board-incident" id="board-incident"></div>
+      <div class="section-lbl">PINNED EVIDENCE — open files and click PIN to add items here</div>
+      <div class="board-grid" id="board-grid">
+        <span class="board-empty-msg">No evidence pinned yet. Open a file and pin records.</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-dim" onclick="show('screen-casefile')">← FILES</button>
+    <button class="btn btn-dim" onclick="clearBoard()">CLEAR BOARD</button>
+    <button class="btn btn-warn" onclick="show('screen-accuse')">CLOSE CASE</button>
+  </div>
+</div>
+
+<!-- CONTRADICTION DETECTOR -->
+<div id="screen-contra" class="screen">
+  <div class="topbar">
+    <div class="tb-left"><div class="tb-case" id="ct-case-num"></div><div class="tb-title">CONTRADICTION DETECTOR</div></div>
+    <div class="tb-right"><div class="tb-score">SCORE <span id="ct-score">0</span></div></div>
+  </div>
+  <div class="content">
+    <div class="contra-wrap">
+      <div class="section-lbl">SELECT A SUSPECT — CHOOSE A STATEMENT — COMPARE WITH EVIDENCE</div>
+      <div class="contra-section">
+        <div class="cs-label">SUSPECT</div>
+        <select class="cs-select" id="ct-suspect" onchange="ctLoadSuspect()">
+          <option value="">— Select a suspect —</option>
+        </select>
+      </div>
+      <div class="contra-section" id="ct-msg-section" style="display:none;">
+        <div class="cs-label">THEIR STATEMENTS (select one)</div>
+        <div class="msg-pick-list" id="ct-msg-list"></div>
+      </div>
+      <div class="contra-section" id="ct-ev-section" style="display:none;">
+        <div class="cs-label">LOCATION / ACCESS RECORDS (select one)</div>
+        <div class="ev-pick-list" id="ct-ev-list"></div>
+      </div>
+      <button class="btn btn-warn" onclick="checkContra()" id="ct-compare-btn" style="display:none;">COMPARE ▶</button>
+      <div class="contra-result" id="ct-result"></div>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-dim" onclick="show('screen-casefile')">← FILES</button>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div id="screen-timeline" class="screen">
+  <div class="topbar">
+    <div class="tb-left"><div class="tb-case" id="tl-case-num"></div><div class="tb-title">TIMELINE BUILDER</div></div>
+    <div class="tb-right"><div class="tb-score">SCORE <span id="tl-score">0</span></div></div>
+  </div>
+  <div class="content" style="align-items:stretch;overflow:hidden;">
+    <div class="tl-wrap">
+      <div class="tl-events-panel">
+        <div class="tl-ep-title">ALL EVENTS — click to add to your timeline</div>
+        <input class="tl-ep-search" id="tl-search" placeholder="Filter by ID, location, action…" oninput="filterTlEvents(this.value)">
+        <div class="tl-ep-list" id="tl-event-list"></div>
+      </div>
+      <div class="tl-view">
+        <div class="tl-view-title">YOUR TIMELINE</div>
+        <div id="tl-entries"></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-dim" onclick="show('screen-casefile')">← FILES</button>
+    <button class="btn btn-dim" onclick="clearTimeline()">CLEAR</button>
+  </div>
+</div>
+
+<!-- ACCUSATION -->
+<div id="screen-accuse" class="screen">
+  <div class="topbar">
+    <div class="tb-left"><div class="tb-case" id="ac-case-num"></div><div class="tb-title">CLOSE THE CASE</div></div>
+    <div class="tb-right"><div class="tb-score">SCORE <span id="ac-score">0</span></div></div>
+  </div>
+  <div class="content">
+    <div class="accuse-wrap">
+      <div class="section-lbl">WHO IS RESPONSIBLE?</div>
+      <div class="accuse-section">
+        <div class="as-label">SELECT THE RESPONSIBLE PERSON</div>
+        <div class="suspect-opts" id="accuse-suspects"></div>
+      </div>
+      <div class="accuse-section">
+        <div class="as-label">SUPPORTING EVIDENCE (select all that apply)</div>
+        <div class="reason-checks">
+          <label class="rc-item"><input type="checkbox" value="location"> <span class="rc-label">Was present at incident location</span></label>
+          <label class="rc-item"><input type="checkbox" value="time"> <span class="rc-label">Was present at the incident time</span></label>
+          <label class="rc-item"><input type="checkbox" value="access"> <span class="rc-label">Accessed the system at incident time</span></label>
+          <label class="rc-item"><input type="checkbox" value="statement"> <span class="rc-label">Statement conflicts with evidence</span></label>
+          <label class="rc-item"><input type="checkbox" value="clearance"> <span class="rc-label">Had the required access clearance</span></label>
+        </div>
+      </div>
+      <button class="btn btn-warn" style="font-size:14px;padding:12px 28px;" onclick="submitAccusation()">SUBMIT CONCLUSION</button>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-dim" onclick="show('screen-casefile')">← CONTINUE INVESTIGATING</button>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div id="screen-report" class="screen">
+  <div class="topbar">
+    <div class="tb-left"><div class="tb-case" id="rp-case-num"></div><div class="tb-title">INVESTIGATION REPORT</div></div>
+    <div class="tb-right"><div class="tb-score">FINAL SCORE <span id="rp-score">0</span></div></div>
+  </div>
+  <div class="content">
+    <div class="report-wrap">
+      <div class="report-box" id="report-box"></div>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn" onclick="show('screen-buildit')">BUILD THE PROGRAM →</button>
+    <button class="btn btn-dim" onclick="reopenCase()" id="reopen-btn" style="display:none;">REOPEN CASE</button>
+    <button class="btn btn-dim" onclick="show('screen-cases')">NEW CASE</button>
+  </div>
+</div>
+
+<!-- BUILD IT -->
+<div id="screen-buildit" class="screen">
+  <div class="content" style="justify-content:center;">
+    <div class="buildit-wrap">
+      <div class="bi-solved">✓ CASE SOLVED</div>
+      <div style="font-size:13px;color:var(--dim);line-height:1.8;max-width:520px;">
+        You solved this by investigating files, searching records, and connecting evidence.<br>
+        Now imagine the detective had no graphical system — only raw files.<br>
+        Could you write a program that investigates those files automatically?
+      </div>
+      <div class="bi-req">
+        <div class="bi-req-title">PROGRAMMING ASSIGNMENT — INVESTIGATION ENGINE</div>
+        <div class="bi-step"><span class="bi-step-n">1.</span><span>Read <strong>suspects.txt</strong> and build an employee database</span></div>
+        <div class="bi-step"><span class="bi-step-n">2.</span><span>Read <strong>access.log</strong> and process each access record</span></div>
+        <div class="bi-step"><span class="bi-step-n">3.</span><span>Read <strong>locations.txt</strong> and map who was where at each timestamp</span></div>
+        <div class="bi-step"><span class="bi-step-n">4.</span><span>Read <strong>messages.txt</strong> and extract each person's statements</span></div>
+        <div class="bi-step"><span class="bi-step-n">5.</span><span>Read <strong>evidence.txt</strong> to get the incident time, location, and missing item</span></div>
+        <div class="bi-step"><span class="bi-step-n">6.</span><span>Find which employee was at the incident location at the incident time</span></div>
+        <div class="bi-step"><span class="bi-step-n">7.</span><span>Compare that person's statements against the location records</span></div>
+        <div class="bi-step"><span class="bi-step-n">8.</span><span>Identify any contradictions between statements and evidence</span></div>
+        <div class="bi-step"><span class="bi-step-n">9.</span><span>Generate a final investigation report naming the suspect</span></div>
+      </div>
+      <div style="font-size:11px;color:var(--dim);text-align:center;max-width:480px;line-height:1.8;">
+        Your program should work with any valid set of input files —<br>not just this specific case. Design for the general problem.
+      </div>
+      <button class="btn btn-ok" style="padding:12px 28px;font-size:13px;" onclick="show('screen-cases')">INVESTIGATE NEXT CASE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+const CASES = {
+  '017': {
+    num:'017', diff:'BEGINNER', diffClass:'diff-beginner',
+    title:'Unauthorized Server Access',
+    incTime:'22:10', incLoc:'Server Room', missing:'Access Token',
+    suspects:[
+      {id:'101',name:'Ravi',role:'Developer',desc:'Works on core application logic. Has been with the company for 3 years. Specialises in backend services.'},
+      {id:'102',name:'Meena',role:'Tester',desc:'QA specialist responsible for system testing. Known for running late-night test suites against the staging environment.'},
+      {id:'103',name:'Arun',role:'Administrator',desc:'System Administrator with full access to server infrastructure, credentials, and access tokens. Joined 18 months ago.'},
+      {id:'104',name:'Kiran',role:'Designer',desc:'UI/UX Designer. Was reviewing presentation decks that evening for a morning client meeting.'},
+    ],
+    answer:'103',
+    answerName:'Arun',
+    files:{
+      'suspects.txt':{type:'suspects',desc:'4 suspects',
+        cols:['ID','NAME','ROLE'],
+        rows:[['101','Ravi','Developer'],['102','Meena','Tester'],['103','Arun','Administrator'],['104','Kiran','Designer']]
+      },
+      'access.log':{type:'log',desc:'30 records',
+        cols:['TIME','ID','ACTION'],
+        rows:[
+          ['21:45','101','SESSION_START'],['21:50','102','SESSION_START'],['21:58','103','SESSION_START'],['22:00','104','SESSION_START'],
+          ['22:01','101','FILE_READ'],['22:03','103','ADMIN_LOGIN'],['22:04','102','ACCESS_DENIED'],['22:05','101','FILE_READ'],
+          ['22:06','102','LOGIN_RETRY'],['22:07','102','LOGIN_SUCCESS'],['22:08','103','ADMIN_PANEL_ACCESS'],['22:09','104','CALENDAR_ACCESS'],
+          ['22:10','103','TOKEN_QUERY'],['22:11','101','CODE_REVIEW'],['22:12','104','SLIDE_ACCESS'],['22:13','102','TEST_SUITE_RUN'],
+          ['22:14','103','SYSTEM_LOGOUT'],['22:15','101','CODE_COMMIT'],['22:16','102','TEST_PASS'],['22:17','104','DOC_VIEW'],
+          ['22:19','103','SESSION_START'],['22:20','101','GIT_PUSH'],['22:21','103','ADMIN_QUERY'],['22:23','102','SESSION_LOGOUT'],
+          ['22:25','104','SLIDE_EXPORT'],['22:27','103','FILE_ACCESS'],['22:29','101','SESSION_LOGOUT'],['22:31','104','SESSION_LOGOUT'],
+          ['22:35','103','SESSION_LOGOUT'],['22:40','101','SESSION_END']
+        ]
+      },
+      'locations.txt':{type:'log',desc:'28 records',
+        cols:['TIME','ID','LOCATION'],
+        rows:[
+          ['21:45','101','MainEntrance'],['21:50','102','MainEntrance'],['21:55','101','Office-B2'],['21:58','103','MainEntrance'],
+          ['22:00','104','MainEntrance'],['22:01','101','Office-B2'],['22:03','103','Corridor-L1'],['22:04','103','ServerRoom'],
+          ['22:05','102','Cafeteria'],['22:07','101','Office-B2'],['22:08','103','ServerRoom'],['22:09','104','MeetingRoom-3A'],
+          ['22:10','103','ServerRoom'],['22:11','101','Office-B2'],['22:12','104','MeetingRoom-3A'],['22:13','102','Cafeteria'],
+          ['22:14','103','Corridor-L1'],['22:15','103','ServerRoom'],['22:17','101','Office-B2'],['22:18','102','Cafeteria'],
+          ['22:20','104','MeetingRoom-3A'],['22:21','101','Corridor-L1'],['22:22','102','Corridor-L1'],['22:24','103','ServerRoom'],
+          ['22:26','101','MainEntrance'],['22:28','104','MainEntrance'],['22:30','102','MainEntrance'],['22:36','103','MainEntrance']
+        ]
+      },
+      'messages.txt':{type:'messages',desc:'8 messages',
+        rows:[
+          {id:'101',name:'Ravi',time:'22:06',text:'Working late on the code review. Have not left my desk all evening.'},
+          {id:'102',name:'Meena',time:'22:08',text:'Had some trouble logging in earlier — connection issues. Been in the cafeteria since 22:05.'},
+          {id:'103',name:'Arun',time:'22:08',text:'Finished my work in the server room. Left around 22:05. Heading home soon.'},
+          {id:'104',name:'Kiran',time:'22:09',text:'Still in meeting room 3A. Design review is running long. Been here since before 22:00.'},
+          {id:'101',name:'Ravi',time:'22:20',text:'Just pushed the latest build. Still at my desk. Long night.'},
+          {id:'102',name:'Meena',time:'22:22',text:'Coffee run done. Heading back up now.'},
+          {id:'103',name:'Arun',time:'22:18',text:'Already left the building. At the parking lot now. Nothing more to do tonight.'},
+          {id:'104',name:'Kiran',time:'22:25',text:'Presentation review finally wrapped. What a night. Heading out.'}
+        ]
+      },
+      'evidence.txt':{type:'evidence',desc:'5 clues',
+        rows:[
+          {key:'INCIDENT_TIME',val:'22:10'},
+          {key:'INCIDENT_LOCATION',val:'ServerRoom'},
+          {key:'MISSING_ITEM',val:'ACCESS_TOKEN'},
+          {key:'TOKEN_TYPE',val:'MASTER_ACCESS_KEY'},
+          {key:'REQUIRED_CLEARANCE',val:'ADMINISTRATOR'}
+        ]
+      }
+    },
+    hints:[
+      'Start with the incident time: 22:10. Open evidence.txt to confirm the location.',
+      'Search locations.txt for "ServerRoom". Who appears there at exactly 22:10?',
+      'Open messages.txt and find that person\'s statement. Compare their claimed departure time with the location records.'
+    ],
+    contradictions:[
+      {suspect:'103',msgIdx:2,evStr:'22:10,103,ServerRoom',evFile:'locations.txt',
+       explain:'Arun claimed to have left the server room around 22:05. But location records show ID 103 in ServerRoom at 22:10 — the exact time of the incident. His message at 22:18 claiming to be in the parking lot also conflicts with the ServerRoom record at 22:24.'}
+    ],
+    redHerrings:[
+      {id:'102',detail:'Meena had ACCESS_DENIED at 22:04. Suspicious — but location records show her in the Cafeteria at 22:10, not the Server Room.'}
+    ]
+  },
+  '018': {
+    num:'018', diff:'INTERMEDIATE', diffClass:'diff-intermediate',
+    title:'Encrypted Key Backup Missing',
+    incTime:'23:15', incLoc:'Network Hub', missing:'Encrypted Key Backup',
+    suspects:[
+      {id:'201',name:'Raj',role:'Senior Developer',desc:'Lead developer on the authentication system. Has codebase access but limited infrastructure rights.'},
+      {id:'202',name:'Priya',role:'Network Admin',desc:'Manages network infrastructure including the hub room. Has full access to network equipment and stored configurations.'},
+      {id:'203',name:'Siva',role:'Security Officer',desc:'Responsible for nightly security audits. Frequently accesses logs and monitoring systems after hours.'},
+      {id:'204',name:'Nisha',role:'Database Admin',desc:'DBA with access to production databases. Occasionally works late to run maintenance windows.'},
+      {id:'205',name:'Dev',role:'IT Manager',desc:'IT Manager with elevated PERMISSION_OVERRIDE capability for emergency situations. Uses it under documented approval.'}
+    ],
+    answer:'202',
+    answerName:'Priya',
+    files:{
+      'suspects.txt':{type:'suspects',desc:'5 suspects',
+        cols:['ID','NAME','ROLE'],
+        rows:[['201','Raj','Senior Developer'],['202','Priya','Network Admin'],['203','Siva','Security Officer'],['204','Nisha','Database Admin'],['205','Dev','IT Manager']]
+      },
+      'access.log':{type:'log',desc:'45 records',
+        cols:['TIME','ID','ACTION'],
+        rows:[
+          ['22:30','201','SESSION_START'],['22:35','203','SESSION_START'],['22:40','204','SESSION_START'],['22:41','205','SESSION_START'],
+          ['22:42','202','SESSION_START'],['22:45','201','CODE_DEPLOY'],['22:47','203','AUDIT_LOG_ACCESS'],['22:50','204','DB_MAINTENANCE'],
+          ['22:52','205','PERMISSION_OVERRIDE'],['22:53','202','NETWORK_CONFIG_READ'],['22:55','201','BUILD_CHECK'],['22:56','203','SECURITY_SCAN'],
+          ['22:58','204','DB_BACKUP'],['23:00','202','SESSION_END_SIGNAL'],['23:01','205','SYSTEM_CHECK'],['23:03','203','AUDIT_COMPLETE'],
+          ['23:05','201','SESSION_LOGOUT'],['23:06','204','DB_LOGOUT'],['23:07','203','SESSION_LOGOUT'],['23:08','205','SESSION_LOGOUT'],
+          ['23:10','202','SESSION_START'],['23:11','202','NETWORK_HUB_ACCESS'],['23:13','202','CONFIG_DOWNLOAD'],['23:15','202','KEY_BACKUP_QUERY'],
+          ['23:16','202','FILE_COPY'],['23:20','202','SESSION_LOGOUT'],['23:25','201','SESSION_START'],['23:26','201','CODE_REVIEW'],
+          ['23:28','205','SESSION_START'],['23:29','205','INCIDENT_REPORT_FILED'],['23:30','201','GIT_PUSH'],['23:32','203','SESSION_START'],
+          ['23:33','203','INCIDENT_LOG_ACCESS'],['23:35','201','SESSION_LOGOUT'],['23:36','203','SESSION_LOGOUT'],['23:40','202','SESSION_START'],
+          ['23:41','202','DAMAGE_ASSESSMENT'],['23:43','202','SESSION_LOGOUT'],['23:50','204','SESSION_START'],['23:51','204','DB_INTEGRITY_CHECK'],
+          ['23:53','204','REPORT_GENERATE'],['23:55','204','SESSION_LOGOUT'],['00:00','205','SECURITY_BRIEF'],['00:02','205','SESSION_LOGOUT'],
+          ['00:05','201','SESSION_END']
+        ]
+      },
+      'locations.txt':{type:'log',desc:'38 records',
+        cols:['TIME','ID','LOCATION'],
+        rows:[
+          ['22:30','201','Office-A3'],['22:35','203','SecurityDesk'],['22:40','204','DataCentre'],['22:41','205','ManagerOffice'],
+          ['22:42','202','NetworkRoom'],['22:45','201','Office-A3'],['22:47','203','SecurityDesk'],['22:50','204','DataCentre'],
+          ['22:52','205','ManagerOffice'],['22:55','202','Corridor-B'],['22:58','204','DataCentre'],['23:00','202','MainEntrance'],
+          ['23:01','201','Office-A3'],['23:03','203','SecurityDesk'],['23:05','201','MainEntrance'],['23:06','204','MainEntrance'],
+          ['23:07','203','MainEntrance'],['23:08','205','ManagerOffice'],['23:10','202','Corridor-B'],['23:11','202','NetworkHub'],
+          ['23:12','205','ManagerOffice'],['23:13','202','NetworkHub'],['23:15','202','NetworkHub'],['23:16','202','NetworkHub'],
+          ['23:18','205','MainEntrance'],['23:20','202','Corridor-B'],['23:22','202','MainEntrance'],['23:25','201','Office-A3'],
+          ['23:28','205','Office-A3'],['23:30','201','Office-A3'],['23:32','203','SecurityDesk'],['23:35','201','MainEntrance'],
+          ['23:36','203','MainEntrance'],['23:40','202','NetworkRoom'],['23:43','202','NetworkRoom'],['23:50','204','DataCentre'],
+          ['23:55','204','DataCentre'],['00:02','205','MainEntrance']
+        ]
+      },
+      'messages.txt':{type:'messages',desc:'10 messages',
+        rows:[
+          {id:'201',name:'Raj',time:'22:55',text:'Deployment is looking good. Should wrap up by 23:00.'},
+          {id:'203',name:'Siva',time:'22:56',text:'Running the nightly security audit. All looks normal so far.'},
+          {id:'202',name:'Priya',time:'23:00',text:'Done for the night. Heading home now. Leaving the building.'},
+          {id:'204',name:'Nisha',time:'23:01',text:'DB maintenance complete. Heading out. Good night everyone.'},
+          {id:'205',name:'Dev',time:'23:02',text:'Staying a bit longer to file a configuration report. Nothing unusual.'},
+          {id:'201',name:'Raj',time:'23:08',text:'Found a small issue. Going to fix it quickly then leave.'},
+          {id:'205',name:'Dev',time:'23:29',text:'Something is wrong. The key backup from Network Hub is missing. Filing an incident report now.'},
+          {id:'202',name:'Priya',time:'23:42',text:'Just heard about the incident. I came back in to help. Terrible situation.'},
+          {id:'203',name:'Siva',time:'23:34',text:'Back in to check the security logs. I want to know what happened.'},
+          {id:'201',name:'Raj',time:'23:36',text:'Completely unaware this was happening. I was focused on the code fix.'}
+        ]
+      },
+      'evidence.txt':{type:'evidence',desc:'5 clues',
+        rows:[
+          {key:'INCIDENT_TIME',val:'23:15'},
+          {key:'INCIDENT_LOCATION',val:'NetworkHub'},
+          {key:'MISSING_ITEM',val:'ENCRYPTED_KEY_BACKUP'},
+          {key:'ACCESS_REQUIREMENT',val:'NETWORK_ADMIN_CLEARANCE'},
+          {key:'LAST_KNOWN_BACKUP_STATUS',val:'INTACT_AT_23:00'}
+        ]
+      },
+      'network.log':{type:'log',desc:'20 records',
+        cols:['TIME','ID','EVENT'],
+        rows:[
+          ['22:42','202','HUB_CONFIG_AUTHENTICATED'],['22:53','202','CONFIG_READ_OK'],['23:10','202','HUB_RECONNECT'],
+          ['23:11','202','HUB_AUTH_SUCCESS'],['23:13','202','CONFIG_DOWNLOAD_INITIATED'],['23:14','202','TRANSFER_PROGRESS_50PCT'],
+          ['23:15','202','KEY_BACKUP_ACCESSED'],['23:16','202','FILE_TRANSFER_COMPLETE'],['23:17','202','SESSION_CLOSE'],
+          ['23:20','SYSTEM','BACKUP_FILE_MISSING_DETECTED'],['23:21','SYSTEM','ALERT_GENERATED'],['23:25','201','HUB_CONNECT_ATTEMPT'],
+          ['23:25','201','HUB_ACCESS_DENIED'],['23:28','205','INCIDENT_ALERT_ACKNOWLEDGED'],['23:32','203','AUDIT_TRAIL_PULL'],
+          ['23:33','203','EVENT_LOG_EXPORTED'],['23:40','202','HUB_RECONNECT'],['23:41','202','HUB_AUTH_SUCCESS'],
+          ['23:42','202','DAMAGE_ASSESSMENT_ACCESS'],['23:43','202','SESSION_CLOSE']
+        ]
+      }
+    },
+    hints:[
+      'Check the incident time (23:15) and location (NetworkHub) in evidence.txt first.',
+      'Search locations.txt for "NetworkHub". Only one person appears there at 23:15.',
+      'Priya sent a message at 23:00 saying she was leaving. But compare that with her location and access records after 23:10.'
+    ],
+    contradictions:[
+      {suspect:'202',msgIdx:2,evStr:'23:15,202,NetworkHub',evFile:'locations.txt',
+       explain:'Priya sent a message at 23:00 saying she was "done for the night" and "heading home." But location records show her returning to the NetworkHub at 23:11-23:16 — exactly when the key backup went missing. She also accessed the hub at 23:15 per network.log.'}
+    ],
+    redHerrings:[
+      {id:'205',detail:'Dev used PERMISSION_OVERRIDE at 22:52. This looks suspicious but it was a routine emergency override — and his location never shows him in the NetworkHub.'},
+      {id:'203',detail:'Siva accessed audit logs repeatedly. This is normal for a Security Officer doing nightly audits.'}
+    ]
+  },
+  '019': {
+    num:'019', diff:'EXPERT', diffClass:'diff-expert',
+    title:'Root Credentials File Compromised',
+    incTime:'01:20', incLoc:'Data Centre', missing:'Root Credentials File',
+    suspects:[
+      {id:'301',name:'Arjun',role:'Dev Lead',desc:'Leads the development team. Has repository access and staging server rights but no production data centre access.'},
+      {id:'302',name:'Kavya',role:'Sys Admin',desc:'Systems Administrator with full data centre access including root-level credentials management. On-call rotation member.'},
+      {id:'303',name:'Balaji',role:'Infrastructure',desc:'Infrastructure engineer. Manages hardware provisioning. Physically accesses the data centre for equipment changes.'},
+      {id:'304',name:'Deepa',role:'QA Lead',desc:'Quality assurance lead. Runs overnight regression tests. Has read-only production access for log analysis.'},
+      {id:'305',name:'Elan',role:'DevOps',desc:'DevOps engineer running a critical deployment pipeline that night. Elevated system access for the deployment window only.'},
+      {id:'306',name:'Farida',role:'CTO',desc:'Chief Technology Officer. Has override access to all systems. Was on a late strategy call and not physically in the building.'}
+    ],
+    answer:'302',
+    answerName:'Kavya',
+    files:{
+      'suspects.txt':{type:'suspects',desc:'6 suspects',
+        cols:['ID','NAME','ROLE'],
+        rows:[['301','Arjun','Dev Lead'],['302','Kavya','Sys Admin'],['303','Balaji','Infrastructure'],['304','Deepa','QA Lead'],['305','Elan','DevOps'],['306','Farida','CTO']]
+      },
+      'access.log':{type:'log',desc:'55 records',
+        cols:['TIME','ID','ACTION'],
+        rows:[
+          ['00:30','305','DEPLOYMENT_PIPELINE_START'],['00:31','304','QA_TEST_SUITE_RUN'],['00:32','303','HW_CHECK'],['00:35','301','CODE_REVIEW'],
+          ['00:36','302','SYSTEM_MONITOR'],['00:38','305','BUILD_DEPLOY'],['00:40','304','LOG_READ'],['00:42','303','RACK_INVENTORY'],
+          ['00:43','301','GIT_MERGE'],['00:45','302','HEALTH_CHECK'],['00:48','305','SERVICE_RESTART'],['00:50','304','ERROR_LOG_READ'],
+          ['00:52','303','CABLE_MANAGEMENT'],['00:53','301','CODE_REVIEW'],['00:55','302','SYSLOG_READ'],['00:57','305','PIPELINE_CHECKPOINT'],
+          ['01:00','304','TEST_SUITE_COMPLETE'],['01:01','303','HW_VERIFY'],['01:02','301','BRANCH_MERGE'],['01:03','302','ADMIN_PANEL'],
+          ['01:05','301','AUTH_FAIL'],['01:06','301','AUTH_FAIL'],['01:07','301','CODE_REVIEW'],['01:08','305','DEPLOYMENT_CHECKPOINT'],
+          ['01:10','304','SESSION_LOGOUT'],['01:11','303','SESSION_LOGOUT'],['01:13','302','ROOT_ACCESS_ATTEMPT'],['01:14','302','ROOT_ACCESS_FAIL'],
+          ['01:15','302','ROOT_AUTH_SUCCESS'],['01:16','302','CREDENTIALS_FILE_ACCESS'],['01:18','305','FINAL_DEPLOY_CHECK'],['01:19','302','FILE_READ'],
+          ['01:20','302','CREDENTIALS_COPY'],['01:21','302','SESSION_MASK'],['01:22','302','SESSION_CLEAR'],['01:25','305','DEPLOYMENT_COMPLETE'],
+          ['01:26','301','GIT_PUSH'],['01:28','302','SESSION_START'],['01:29','302','DAMAGE_REPORT_READ'],['01:30','305','PIPELINE_CLOSE'],
+          ['01:31','301','SESSION_LOGOUT'],['01:33','302','SYSTEM_STATUS'],['01:35','305','SESSION_LOGOUT'],['01:36','306','REMOTE_CONNECT'],
+          ['01:37','306','INCIDENT_ACKNOWLEDGED'],['01:38','306','REMOTE_DISCONNECT'],['01:40','302','INCIDENT_RESPONSE'],['01:42','302','LOG_ACCESS'],
+          ['01:44','302','SESSION_LOGOUT'],['01:50','301','SESSION_START'],['01:51','301','INCIDENT_BRIEF'],['01:52','301','SESSION_LOGOUT'],
+          ['01:55','305','SESSION_START'],['01:56','305','INCIDENT_BRIEF'],['01:57','305','SESSION_LOGOUT']
+        ]
+      },
+      'locations.txt':{type:'log',desc:'45 records',
+        cols:['TIME','ID','LOCATION'],
+        rows:[
+          ['00:30','305','ServerRoom-B'],['00:31','304','MonitoringDesk'],['00:32','303','DataCentre'],['00:35','301','Office-C1'],
+          ['00:36','302','SysAdminDesk'],['00:38','305','ServerRoom-B'],['00:40','304','MonitoringDesk'],['00:42','303','DataCentre'],
+          ['00:43','301','Office-C1'],['00:45','302','SysAdminDesk'],['00:48','305','ServerRoom-B'],['00:50','304','MonitoringDesk'],
+          ['00:52','303','DataCentre'],['00:53','301','Office-C1'],['00:55','302','Corridor-C'],['00:57','305','ServerRoom-B'],
+          ['01:00','304','MonitoringDesk'],['01:01','303','DataCentre'],['01:02','301','Office-C1'],['01:03','302','SysAdminDesk'],
+          ['01:05','301','Corridor-C'],['01:07','301','Office-C1'],['01:08','305','ServerRoom-B'],['01:10','304','MainEntrance'],
+          ['01:11','303','MainEntrance'],['01:13','302','Corridor-C'],['01:14','302','DataCentre'],['01:15','302','DataCentre'],
+          ['01:16','302','DataCentre'],['01:18','305','ServerRoom-B'],['01:19','302','DataCentre'],['01:20','302','DataCentre'],
+          ['01:21','302','DataCentre'],['01:22','302','Corridor-C'],['01:24','302','SysAdminDesk'],['01:25','305','ServerRoom-B'],
+          ['01:26','301','Office-C1'],['01:28','302','SysAdminDesk'],['01:30','305','MainEntrance'],['01:31','301','MainEntrance'],
+          ['01:33','302','SysAdminDesk'],['01:35','305','MainEntrance'],['01:40','302','IncidentRoom'],['01:44','302','IncidentRoom'],
+          ['01:55','301','IncidentRoom']
+        ]
+      },
+      'messages.txt':{type:'messages',desc:'12 messages',
+        rows:[
+          {id:'305',name:'Elan',time:'00:30',text:'Deployment pipeline is live. This will take about an hour. I will be in Server Room B the whole time.'},
+          {id:'304',name:'Deepa',time:'00:35',text:'Running overnight regression suite from the monitoring desk. Should finish by 01:00.'},
+          {id:'302',name:'Kavya',time:'00:40',text:'On call tonight. Monitoring system health from my desk. Everything looks stable.'},
+          {id:'303',name:'Balaji',time:'00:45',text:'Finishing up the hardware inventory in the data centre. Almost done.'},
+          {id:'301',name:'Arjun',time:'00:50',text:'Reviewing the code from the meeting room. The merge looks clean.'},
+          {id:'302',name:'Kavya',time:'01:00',text:'All good from my end. System health is normal. Going to stay at my desk until handover at 02:00.'},
+          {id:'304',name:'Deepa',time:'01:01',text:'Test suite done. No failures. Heading home. Good night.'},
+          {id:'303',name:'Balaji',time:'01:02',text:'Hardware check complete. Everything is in order. Leaving now.'},
+          {id:'301',name:'Arjun',time:'01:05',text:'Having trouble with my auth token. Might have expired. Will sort it out.'},
+          {id:'305',name:'Elan',time:'01:25',text:'Deployment complete. All services healthy. Wrapping up and leaving.'},
+          {id:'302',name:'Kavya',time:'01:29',text:'Just seeing an alert about a credentials file. I had no idea anything was happening. Completely at my desk all night.'},
+          {id:'301',name:'Arjun',time:'01:52',text:'I was in my office the whole time. I cannot believe something happened tonight.'}
+        ]
+      },
+      'evidence.txt':{type:'evidence',desc:'6 clues',
+        rows:[
+          {key:'INCIDENT_TIME',val:'01:20'},
+          {key:'INCIDENT_LOCATION',val:'DataCentre'},
+          {key:'MISSING_ITEM',val:'ROOT_CREDENTIALS_FILE'},
+          {key:'ACCESS_REQUIREMENT',val:'SYS_ADMIN_ROOT_CLEARANCE'},
+          {key:'FILE_LAST_VERIFIED',val:'01:10_INTEGRITY_OK'},
+          {key:'ANOMALY_DETECTED',val:'SESSION_MASK_AT_01:21'}
+        ]
+      },
+      'auth.log':{type:'log',desc:'22 records',
+        cols:['TIME','ID','AUTH_EVENT'],
+        rows:[
+          ['00:30','305','TOKEN_VALID'],['00:36','302','TOKEN_VALID'],['00:40','304','TOKEN_VALID'],['00:42','303','TOKEN_VALID'],
+          ['00:43','301','TOKEN_VALID'],['01:03','302','ADMIN_TOKEN_VALID'],['01:05','301','AUTH_TOKEN_EXPIRED'],
+          ['01:06','301','AUTH_TOKEN_RETRY_FAIL'],['01:07','301','TEMP_TOKEN_ISSUED'],['01:10','304','TOKEN_EXPIRED'],
+          ['01:11','303','TOKEN_EXPIRED'],['01:13','302','ROOT_TOKEN_REQUEST'],['01:14','302','ROOT_AUTH_FAIL_ATTEMPT_1'],
+          ['01:15','302','ROOT_AUTH_SUCCESS'],['01:16','302','CREDENTIAL_STORE_UNLOCKED'],['01:20','302','FILE_COPY_AUTHORISED'],
+          ['01:21','302','SESSION_MASK_ACTIVATED'],['01:22','302','AUDIT_LOG_CLEARED'],['01:28','302','TOKEN_VALID'],
+          ['01:36','306','REMOTE_TOKEN_VALID'],['01:40','302','TOKEN_VALID'],['01:55','301','TOKEN_VALID']
+        ]
+      },
+      'events.log':{type:'log',desc:'18 records',
+        cols:['TIME','SOURCE','EVENT'],
+        rows:[
+          ['00:30','SYSTEM','DEPLOYMENT_WINDOW_OPEN'],['00:55','MONITOR','HEALTH_CHECK_PASS'],['01:00','MONITOR','ALL_SERVICES_OK'],
+          ['01:10','MONITOR','INTEGRITY_CHECK_PASS'],['01:13','SECURITY','ROOT_ACCESS_ATTEMPT_FLAGGED'],['01:14','SECURITY','ROOT_FAIL_ALERT'],
+          ['01:15','SECURITY','ROOT_AUTH_GRANTED_302'],['01:16','SECURITY','CREDENTIAL_STORE_OPEN'],['01:20','SECURITY','FILE_COPY_EVENT'],
+          ['01:21','SECURITY','SESSION_MASK_WARNING'],['01:22','SECURITY','AUDIT_LOG_CLEARED_WARNING'],['01:23','MONITOR','CREDENTIALS_FILE_MISSING'],
+          ['01:24','SYSTEM','ALERT_ESCALATED'],['01:25','SYSTEM','DEPLOYMENT_COMPLETE'],['01:28','MONITOR','INCIDENT_CONFIRMED'],
+          ['01:36','SYSTEM','CTO_REMOTE_NOTIFIED'],['01:40','SECURITY','INCIDENT_RESPONSE_STARTED'],['02:00','SYSTEM','HANDOVER_SCHEDULED']
+        ]
+      }
+    },
+    hints:[
+      'This case has three files with security data: access.log, auth.log, and events.log. Start with events.log to understand what the system detected.',
+      'The system flagged ROOT_ACCESS_ATTEMPT at 01:13. Search auth.log for what happened between 01:13 and 01:22.',
+      'Kavya\'s message at 01:00 says she was at her desk all night. But check locations.txt between 01:13 and 01:22. Where was she really?'
+    ],
+    contradictions:[
+      {suspect:'302',msgIdx:5,evStr:'01:20,302,DataCentre',evFile:'locations.txt',
+       explain:'Kavya stated at 01:00 that she would stay at her desk until handover at 02:00. Her message at 01:29 claims she had no idea anything was happening and was "completely at my desk all night." But location records show her in the DataCentre from 01:14 to 01:22, and auth.log confirms ROOT_AUTH_SUCCESS at 01:15 for ID 302, followed by a SESSION_MASK at 01:21 and AUDIT_LOG_CLEARED at 01:22.'},
+      {suspect:'302',msgIdx:10,evStr:'01:21,302,SESSION_MASK',evFile:'auth.log',
+       explain:'Kavya\'s message at 01:29 says she had no idea anything was happening. But auth.log shows SESSION_MASK_ACTIVATED at 01:21 — an action that requires deliberate input — followed immediately by AUDIT_LOG_CLEARED at 01:22. These are not passive system events.'}
+    ],
+    redHerrings:[
+      {id:'301',detail:'Arjun had two AUTH_FAIL events at 01:05 and 01:06. But his token had simply expired — a TEMP_TOKEN was issued. His location never shows him in the DataCentre.'},
+      {id:'305',detail:'Elan had elevated deployment access all night. But he was in Server Room B for the entire deployment window, not the DataCentre. His access was for the deployment pipeline only.'}
+    ]
+  }
+};
+
+// ─── Game State ────────────────────────────────────────────────────────────
+let gs = {
+  caseId: null,
+  score: 0,
+  hintsUsed: 0,
+  hintIdx: 0,
+  openedFiles: new Set(),
+  boardItems: [],
+  timelineItems: [],
+  contraUsed: new Set(),
+  accusation: null,
+  currentFile: null,
+  searchQ: '',
+  selectedSusRow: null,
+  ctSelMsg: null,
+  ctSelEv: null,
+  ctSelSuspect: null,
+  eventsReviewed: 0,
+  contradictionsFound: 0,
+};
+
+function c() { return CASES[gs.caseId]; }
+function susName(id) { return (c().suspects.find(s=>s.id===id)||{name:id}).name; }
+
+// ─── Navigation ────────────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  updateScores();
+  if(id==='screen-board') renderBoard();
+  if(id==='screen-timeline') renderTimelineScreen();
+  if(id==='screen-contra') renderContra();
+  if(id==='screen-accuse') renderAccuse();
+}
+
+function updateScores() {
+  ['cf','vw','bd','ct','tl','ac','rp'].forEach(p=>{
+    const el = document.getElementById(p+'-score');
+    if(el) el.textContent = gs.score;
+  });
+  ['cf','vw','bd','ct','tl','ac','rp'].forEach(p=>{
+    const el = document.getElementById(p+'-case-num');
+    if(el && gs.caseId) el.textContent = 'CASE #'+gs.caseId+' — '+c().diff;
+  });
+}
+
+// ─── Case Select ────────────────────────────────────────────────────────────
+function initCaseSelect() {
+  const grid = document.getElementById('case-grid');
+  grid.innerHTML = Object.values(CASES).map(ca=>
+    '<div class="case-card" onclick="loadCase(\''+ca.num+'\')">' +
+    '<div class="case-diff '+ca.diffClass+'">'+ca.diff+'</div>' +
+    '<div class="case-num">#'+ca.num+'</div>' +
+    '<div class="case-title">'+ca.title+'</div>' +
+    '<div class="case-details">'+
+      (ca.suspects.length)+' suspects<br>'+
+      Object.keys(ca.files).length+' evidence files<br>'+
+      (ca.suspects.length===4?'30-40':'ca.suspects.length===5'?'60-80':'100+') +' records' +
+    '</div></div>'
+  ).join('');
+}
+
+function loadCase(id) {
+  gs = {
+    caseId: id, score: 0, hintsUsed: 0, hintIdx: 0,
+    openedFiles: new Set(), boardItems: [], timelineItems: [],
+    contraUsed: new Set(), accusation: null, currentFile: null,
+    searchQ: '', selectedSusRow: null,
+    ctSelMsg: null, ctSelEv: null, ctSelSuspect: null,
+    eventsReviewed: 0, contradictionsFound: 0,
+  };
+  renderCaseFile();
+  show('screen-casefile');
+}
+
+// ─── Case File ─────────────────────────────────────────────────────────────
+function renderCaseFile() {
+  const ca = c();
+  document.getElementById('cf-badge').textContent = 'CASE #'+ca.num;
+  document.getElementById('cf-heading').textContent = ca.title.toUpperCase();
+  document.getElementById('cf-meta').innerHTML =
+    '<div class="cf-item"><div class="cf-item-label">TIME</div><div class="cf-item-val">'+ca.incTime+'</div></div>'+
+    '<div class="cf-item"><div class="cf-item-label">LOCATION</div><div class="cf-item-val">'+ca.incLoc+'</div></div>'+
+    '<div class="cf-item"><div class="cf-item-label">MISSING</div><div class="cf-item-val">'+ca.missing+'</div></div>';
+  const fg = document.getElementById('files-grid');
+  const icons = {'suspects.txt':'👤','access.log':'📋','locations.txt':'📍','messages.txt':'💬','evidence.txt':'🔍','network.log':'🌐','auth.log':'🔐','events.log':'⚡'};
+  fg.innerHTML = Object.entries(ca.files).map(([name,f])=>
+    '<div class="file-card'+(gs.openedFiles.has(name)?' opened':'')+'" onclick="openFile(\''+name+'\')">' +
+    (gs.openedFiles.has(name)?'<span class="opened-mark">✓</span>':'')+
+    '<div class="file-icon">'+(icons[name]||'📄')+'</div>' +
+    '<div class="file-name">'+name+'</div>' +
+    '<div class="file-info">'+f.desc+'</div></div>'
+  ).join('');
+  updateScores();
+}
+
+// ─── File Viewer ────────────────────────────────────────────────────────────
+function openFile(name) {
+  if(!gs.openedFiles.has(name)) {
+    gs.openedFiles.add(name);
+    addScore(50, null, null, '+50 FILE OPENED');
+  }
+  gs.currentFile = name;
+  gs.searchQ = '';
+  const f = c().files[name];
+  document.getElementById('vw-filename').textContent = name;
+  document.getElementById('vw-meta').textContent = f.desc + ' — ' + (f.type==='log'?'sortable log file':f.type==='messages'?'internal communications':f.type==='suspects'?'suspect database':f.type==='evidence'?'classified evidence':'');
+  document.getElementById('vw-case-num').textContent = 'CASE #'+gs.caseId;
+  document.getElementById('vw-search').value = '';
+  document.getElementById('vw-filters').innerHTML = '';
+  if(f.type==='log') buildFilters(f);
+  renderFileContent('');
+  show('screen-viewer');
+}
+
+function buildFilters(f) {
+  if(!f.cols) return;
+  const row = document.getElementById('vw-filters');
+  if(f.cols[2]) {
+    const vals = [...new Set(f.rows.map(r=>r[2]))].slice(0,8);
+    row.innerHTML = '<span style="font-size:10px;color:var(--dim);letter-spacing:1px;align-self:center;">FILTER: </span>' +
+      vals.map(v=>'<button class="fbtn" onclick="toggleFilter(this,\''+v+'\')">'+v+'</button>').join('');
+  }
+}
+
+let activeFilter = null;
+function toggleFilter(btn, val) {
+  if(activeFilter===val) { activeFilter=null; btn.classList.remove('active'); }
+  else { document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active')); activeFilter=val; btn.classList.add('active'); }
+  renderFileContent(document.getElementById('vw-search').value);
+}
+
+function doSearch(q) { gs.searchQ=q; renderFileContent(q); }
+
+function renderFileContent(q) {
+  const name = gs.currentFile;
+  const f = c().files[name];
+  const el = document.getElementById('vw-content');
+  q = q.toLowerCase();
+  if(f.type==='suspects') el.innerHTML = renderSuspects(f,q);
+  else if(f.type==='log') el.innerHTML = renderLog(f,q);
+  else if(f.type==='messages') el.innerHTML = renderMessages(f,q);
+  else if(f.type==='evidence') el.innerHTML = renderEvidence(f);
+}
+
+function renderSuspects(f,q) {
+  const filtered = q ? f.rows.filter(r=>r.join(' ').toLowerCase().includes(q)) : f.rows;
+  return '<table class="sus-tbl"><thead><tr>'+f.cols.map(c=>'<th>'+c+'</th>').join('')+'<th></th></tr></thead><tbody>'+
+    filtered.map((r,i)=>'<tr onclick="selectSusRow('+i+',\''+r[0]+'\')" id="sus-row-'+i+'">'+r.map(v=>'<td>'+v+'</td>').join('')+
+    '<td><button class="btn btn-sm btn-dim" onclick="event.stopPropagation();pinItem(\''+r.join(',')+'\',' + "'suspects.txt'" + ')">PIN</button></td></tr>'
+    ).join('')+'</tbody></table>'+
+    '<div class="profile-panel" id="sus-profile"></div>';
+}
+
+function selectSusRow(idx, id) {
+  document.querySelectorAll('.sus-tbl tbody tr').forEach((r,i)=>r.classList.toggle('selected-row',i===idx));
+  const s = c().suspects.find(x=>x.id===id)||{id,name:id,role:'',desc:''};
+  const pp = document.getElementById('sus-profile');
+  pp.innerHTML = '<div class="pp-id">ID: '+s.id+'</div><div class="pp-name">'+s.name+'</div><div class="pp-role">'+s.role+'</div><div class="pp-desc">'+s.desc+'</div>';
+  pp.classList.add('show');
+  gs.eventsReviewed++;
+}
+
+function tagClass(action) {
+  if(['SESSION_START','LOGIN','LOGIN_SUCCESS','AUTH_SUCCESS','TOKEN_VALID','ROOT_AUTH_SUCCESS'].some(t=>action.includes(t.replace('_',''))||action===t)) return 'tag-ok';
+  if(['ACCESS_DENIED','LOGIN_FAILURE','AUTH_FAIL','ROOT_AUTH_FAIL','ACCESS_DENIED'].some(t=>action.includes(t.replace('_',''))||action===t)) return 'tag-err';
+  if(['TOKEN_QUERY','TOKEN_ACCESS','KEY_BACKUP','CREDENTIALS','ROOT_ACCESS','SESSION_MASK','COPY','OVERRIDE'].some(t=>action.toUpperCase().includes(t))) return 'tag-warn';
+  if(['LOGOUT','SESSION_END','SESSION_LOGOUT','SESSION_CLOSE'].some(t=>action.includes(t.replace('_',''))||action===t)) return 'tag-dim';
+  return 'tag-dim';
+}
+
+function renderLog(f,q) {
+  let rows = f.rows;
+  if(activeFilter) rows = rows.filter(r=>r.join(',').toLowerCase().includes(activeFilter.toLowerCase()));
+  if(q) rows = rows.filter(r=>r.join(' ').toLowerCase().includes(q));
+  gs.eventsReviewed = Math.max(gs.eventsReviewed, rows.length);
+  const fileKey = gs.currentFile;
+  return '<table class="log-tbl"><thead><tr>'+f.cols.map(col=>'<th>'+col+'</th>').join('')+'<th></th></tr></thead><tbody>'+
+    rows.map(r=>{
+      const key = r.join(',');
+      const isPinned = gs.boardItems.some(b=>b.text===key);
+      const tc = tagClass(r[r.length-1]);
+      return '<tr class="'+(isPinned?'pinned-row':'')+'" onclick="gs.eventsReviewed++">'+
+        r.map((v,i)=>i===r.length-1?'<td><span class="tag '+tc+'">'+v+'</span></td>':'<td>'+v+'</td>').join('')+
+        '<td><button class="btn btn-sm btn-dim" onclick="pinItem(\''+key+'\',\''+fileKey+'\')">PIN</button></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+
+function renderMessages(f,q) {
+  const rows = q ? f.rows.filter(r=>(r.name+' '+r.time+' '+r.text).toLowerCase().includes(q)) : f.rows;
+  return '<div class="msg-list">'+rows.map((r,i)=>{
+    const sid = c().suspects.findIndex(s=>s.id===r.id);
+    const key = r.id+','+r.time+',"'+r.text+'"';
+    return '<div class="msg-bubble" onclick="pinItem(\''+key.replace(/'/g,"\\'")+'\',' + "'messages.txt'" + ')">'+
+      '<div class="msg-top"><span class="msg-name">'+r.name+'</span><span class="msg-t">'+r.time+'</span><span style="color:var(--dim);font-size:9px;letter-spacing:1px;">ID '+r.id+'</span></div>'+
+      '<div class="msg-text">"'+r.text+'"</div></div>';
+  }).join('')+'</div>';
+}
+
+function renderEvidence(f) {
+  return '<div class="ev-list">'+f.rows.map(r=>
+    '<div class="ev-item"><div class="ev-key">'+r.key+'</div><div class="ev-val">'+r.val+'</div></div>'
+  ).join('')+'</div>';
+}
+
+function pinCurrentView() {
+  const f = c().files[gs.currentFile];
+  const text = gs.currentFile + ' — ' + f.desc;
+  pinItem(text, gs.currentFile);
+}
+
+function pinItem(text, source) {
+  if(gs.boardItems.some(b=>b.text===text)) { notify('Already pinned','n-warn'); return; }
+  gs.boardItems.push({text, source, mark:null});
+  notify('Pinned to board','n-ok');
+  // refresh log table to show pinned
+  if(gs.currentFile) renderFileContent(gs.searchQ);
+}
+
+// ─── Board ─────────────────────────────────────────────────────────────────
+function renderBoard() {
+  const ca = c();
+  if(!ca) return;
+  document.getElementById('board-incident').innerHTML =
+    '<div><div class="bi-label">INCIDENT</div></div>'+
+    '<div><div class="bi-val">'+ca.incTime+'</div><div style="font-size:9px;color:var(--dim);">TIME</div></div>'+
+    '<div><div class="bi-val">'+ca.incLoc+'</div><div style="font-size:9px;color:var(--dim);">LOCATION</div></div>'+
+    '<div><div class="bi-val" style="color:var(--err);">'+ca.missing+'</div><div style="font-size:9px;color:var(--dim);">MISSING</div></div>';
+  const grid = document.getElementById('board-grid');
+  if(gs.boardItems.length===0) { grid.innerHTML='<span class="board-empty-msg">No evidence pinned yet. Open a file and click PIN to add items here.</span>'; return; }
+  grid.innerHTML = gs.boardItems.map((item,i)=>
+    '<div class="board-pin'+(item.mark==='imp'?' imp':item.mark==='irr'?' irr':'')+'">' +
+    '<div class="bp-src">'+item.source+'</div>' +
+    '<div class="bp-text">'+item.text+'</div>' +
+    '<div class="bp-actions">' +
+    '<button class="bp-btn imp-btn" onclick="markPin('+i+',\'imp\')">⚑ IMPORTANT</button>' +
+    '<button class="bp-btn irr-btn" onclick="markPin('+i+',\'irr\')">✕ IRRELEVANT</button>' +
+    '<button class="bp-btn" onclick="removePin('+i+')" style="margin-left:auto;">✕</button>' +
+    '</div></div>'
+  ).join('');
+}
+
+function markPin(i,m) {
+  if(gs.boardItems[i]) {
+    gs.boardItems[i].mark = gs.boardItems[i].mark===m ? null : m;
+    if(m==='irr') {
+      const item = gs.boardItems[i];
+      const ca = c();
+      const isRH = ca.redHerrings.some(rh=>item.text.includes(rh.id));
+      if(isRH && !gs.contraUsed.has('rh'+i)) {
+        gs.contraUsed.add('rh'+i);
+        addScore(100, null, null, '+100 RED HERRING FOUND');
+        notify('Red herring correctly identified! +100','n-ok');
+      }
+    }
+    renderBoard();
+  }
+}
+
+function removePin(i) { gs.boardItems.splice(i,1); renderBoard(); }
+function clearBoard() { if(confirm('Clear all pinned evidence?')) { gs.boardItems=[]; renderBoard(); } }
+
+// ─── Contradiction Detector ─────────────────────────────────────────────────
+function renderContra() {
+  const ca = c();
+  if(!ca) return;
+  const sel = document.getElementById('ct-suspect');
+  sel.innerHTML = '<option value="">— Select a suspect —</option>' +
+    ca.suspects.map(s=>'<option value="'+s.id+'">'+s.name+' (ID '+s.id+')</option>').join('');
+  sel.value = gs.ctSelSuspect||'';
+  document.getElementById('ct-msg-section').style.display='none';
+  document.getElementById('ct-ev-section').style.display='none';
+  document.getElementById('ct-compare-btn').style.display='none';
+  document.getElementById('ct-result').style.display='none';
+  if(gs.ctSelSuspect) ctLoadSuspect();
+}
+
+function ctLoadSuspect() {
+  const id = document.getElementById('ct-suspect').value;
+  gs.ctSelSuspect = id;
+  gs.ctSelMsg = null;
+  gs.ctSelEv = null;
+  document.getElementById('ct-result').style.display='none';
+  if(!id) { document.getElementById('ct-msg-section').style.display='none'; return; }
+  const ca = c();
+  const msgs = ca.files['messages.txt'].rows.filter(r=>r.id===id);
+  const evRows = [];
+  ['access.log','locations.txt','auth.log','network.log'].forEach(fn=>{
+    if(ca.files[fn]) ca.files[fn].rows.filter(r=>r[1]===id).forEach(r=>evRows.push({str:r.join(','),file:fn}));
+  });
+  document.getElementById('ct-msg-list').innerHTML = msgs.map((m,i)=>
+    '<div class="msg-bubble" id="ct-m-'+i+'" onclick="ctPickMsg('+i+',\''+m.text.replace(/'/g,"\\'")+'\')">'+
+    '<div class="msg-top"><span class="msg-t">'+m.time+'</span></div>'+
+    '<div class="msg-text">"'+m.text+'"</div></div>'
+  ).join('');
+  document.getElementById('ct-ev-list').innerHTML = evRows.map((ev,i)=>
+    '<div class="ev-pick-item" id="ct-e-'+i+'" onclick="ctPickEv('+i+',\''+ev.str.replace(/'/g,"\\'")+'\',\''+ev.file+'\')">'+ev.str+'</div>'
+  ).join('');
+  document.getElementById('ct-msg-section').style.display='flex';
+  document.getElementById('ct-ev-section').style.display='flex';
+}
+
+function ctPickMsg(i,text) {
+  gs.ctSelMsg = i;
+  document.querySelectorAll('#ct-msg-list .msg-bubble').forEach((el,j)=>el.classList.toggle('selected-msg',j===i));
+  checkContraReady();
+}
+
+function ctPickEv(i,str,file) {
+  gs.ctSelEv = {str,file};
+  document.querySelectorAll('.ev-pick-item').forEach((el,j)=>el.classList.toggle('sel-ev',j===i));
+  checkContraReady();
+}
+
+function checkContraReady() {
+  document.getElementById('ct-compare-btn').style.display = (gs.ctSelMsg!==null && gs.ctSelEv) ? 'block' : 'none';
+}
+
+function checkContra() {
+  const id = gs.ctSelSuspect;
+  const ca = c();
+  const contraKey = id+'-'+gs.ctSelMsg;
+  const found = ca.contradictions.find(ct=>ct.suspect===id && ct.msgIdx===gs.ctSelMsg && gs.ctSelEv &&
+    (gs.ctSelEv.str.includes(ct.evStr.split(',')[0]) || ct.evStr.includes(gs.ctSelEv.str.split(',')[0])));
+  const res = document.getElementById('ct-result');
+  res.style.display='block';
+  if(found) {
+    res.className='contra-result found';
+    res.innerHTML = '<div class="cr-title warn-text" style="color:var(--warn);">⚠ CONTRADICTION FOUND</div>'+
+      '<div class="cr-row"><div class="cr-label">STATEMENT</div><div class="cr-text">"'+ca.files['messages.txt'].rows.filter(r=>r.id===id)[gs.ctSelMsg]?.text+'"</div></div>'+
+      '<div class="cr-row"><div class="cr-label">CONFLICTS WITH</div><div class="cr-text">'+gs.ctSelEv.str+' ('+gs.ctSelEv.file+')</div></div>'+
+      '<div class="cr-row"><div class="cr-label">ANALYSIS</div><div class="cr-explain">'+found.explain+'</div></div>';
+    if(!gs.contraUsed.has(contraKey)) {
+      gs.contraUsed.add(contraKey);
+      gs.contradictionsFound++;
+      addScore(200, null, null, '+200 CONTRADICTION');
+    }
+  } else {
+    res.className='contra-result';
+    res.innerHTML = '<div class="cr-title" style="color:var(--dim);">NO DIRECT CONTRADICTION</div>'+
+      '<div style="font-size:12px;color:var(--dim);margin-top:8px;">These records do not directly contradict each other. Try a different combination.</div>';
+  }
+}
+
+// ─── Timeline ───────────────────────────────────────────────────────────────
+function buildAllEvents() {
+  const ca = c();
+  const events = [];
+  ['access.log','locations.txt','auth.log','network.log','events.log'].forEach(fn=>{
+    if(!ca.files[fn]) return;
+    const f = ca.files[fn];
+    f.rows.forEach(r=>{
+      events.push({time:r[0], who:r[1]||'SYSTEM', what:r[r.length-1], file:fn});
+    });
+  });
+  return events.sort((a,b)=>a.time.localeCompare(b.time));
+}
+
+function renderTimelineScreen() {
+  const events = buildAllEvents();
+  const ca = c();
+  if(!ca) return;
+  renderTlEvents(events, '');
+  renderTlEntries();
+}
+
+function renderTlEvents(events, q) {
+  const incTime = c().incTime;
+  const list = document.getElementById('tl-event-list');
+  const filtered = q ? events.filter(e=>(e.time+e.who+e.what+e.file).toLowerCase().includes(q.toLowerCase())) : events;
+  list.innerHTML = filtered.map((ev,i)=>{
+    const isInc = ev.time===incTime;
+    const isAdded = gs.timelineItems.some(t=>t.time===ev.time&&t.who===ev.who&&t.what===ev.what);
+    const whoName = ev.who==='SYSTEM'?'SYSTEM':susName(ev.who)+' ('+ev.who+')';
+    return '<div class="tl-ev'+(isAdded?' tl-added':'')+(isInc?' ' :'')+'" onclick="addToTimeline(\''+ev.time+'\',\''+ev.who+'\',\''+ev.what.replace(/'/g,"\\'")+'\',\''+ev.file+'\')" '+(isInc?'style="border-color:rgba(192,64,64,.4);"':'')+'>'+
+      '<span class="tl-ev-time">'+ev.time+'</span>'+
+      '<span class="tl-ev-who">'+whoName+'</span>'+
+      '<span class="tl-ev-what">'+ev.what+'</span>'+
+      '<span class="tl-ev-src">'+ev.file+'</span>'+
+      '</div>';
+  }).join('');
+}
+
+function filterTlEvents(q) {
+  renderTlEvents(buildAllEvents(), q);
+}
+
+function addToTimeline(time, who, what, file) {
+  if(gs.timelineItems.some(t=>t.time===time&&t.who===who&&t.what===what)) return;
+  gs.timelineItems.push({time,who,what,file});
+  gs.timelineItems.sort((a,b)=>a.time.localeCompare(b.time));
+  gs.eventsReviewed++;
+  renderTlEvents(buildAllEvents(), document.getElementById('tl-search').value);
+  renderTlEntries();
+}
+
+function renderTlEntries() {
+  const ca = c();
+  const incTime = ca?ca.incTime:'';
+  const el = document.getElementById('tl-entries');
+  if(gs.timelineItems.length===0) { el.innerHTML='<div style="color:var(--dim);font-size:11px;">Click events to add them here.</div>'; return; }
+  el.innerHTML = gs.timelineItems.map(t=>{
+    const isInc = t.time===incTime;
+    const name = t.who==='SYSTEM'?'SYS':(susName(t.who)||t.who);
+    return '<div class="tl-entry">'+
+      '<div class="tl-dot'+(isInc?' incident-dot':'')+'"></div>'+
+      '<div class="tl-entry-text">'+
+      '<span class="tl-entry-time">'+t.time+'</span> '+
+      '<span class="tl-entry-who">'+name+'</span><br>'+
+      '<span class="tl-entry-act">'+t.what+'</span>'+
+      '</div></div>';
+  }).join('');
+}
+
+function clearTimeline() { gs.timelineItems=[]; renderTlEntries(); renderTlEvents(buildAllEvents(),''); }
+
+// ─── Accusation ─────────────────────────────────────────────────────────────
+function renderAccuse() {
+  const ca = c();
+  if(!ca) return;
+  const opts = document.getElementById('accuse-suspects');
+  opts.innerHTML = ca.suspects.map(s=>
+    '<div class="sus-opt" id="so-'+s.id+'" onclick="selectSus(\''+s.id+'\')">'+
+    '<input type="radio" name="suspect" value="'+s.id+'">'+
+    '<div><div class="so-name">'+s.name+'</div><div class="so-id">ID '+s.id+' — '+s.role+'</div></div>'+
+    '</div>'
+  ).join('');
+  if(gs.accusation) {
+    const el = document.getElementById('so-'+gs.accusation);
+    if(el) { el.classList.add('sel-sus'); el.querySelector('input').checked=true; }
+  }
+}
+
+function selectSus(id) {
+  gs.accusation = id;
+  document.querySelectorAll('.sus-opt').forEach(el=>el.classList.remove('sel-sus'));
+  document.getElementById('so-'+id).classList.add('sel-sus');
+  document.getElementById('so-'+id).querySelector('input').checked=true;
+}
+
+function submitAccusation() {
+  if(!gs.accusation) { notify('Select a suspect first','n-warn'); return; }
+  const ca = c();
+  const correct = gs.accusation === ca.answer;
+  const reasons = [...document.querySelectorAll('.reason-checks input:checked')].map(i=>i.value);
+  if(correct) {
+    let bonus = 500;
+    if(reasons.length>=3) bonus += 100;
+    addScore(bonus, null, null, correct ? '+'+bonus+' CASE SOLVED' : '');
+  } else {
+    addScore(-100, null, null, '-100 WRONG ACCUSATION');
+  }
+  renderReport(correct, reasons);
+  show('screen-report');
+}
+
+// ─── Report ─────────────────────────────────────────────────────────────────
+function renderReport(correct, reasons) {
+  const ca = c();
+  const rBox = document.getElementById('report-box');
+  const reopenBtn = document.getElementById('reopen-btn');
+  const evidenceMap = {
+    location:'Present at incident location',
+    time:'Present at incident time',
+    access:'Accessed the system at incident time',
+    statement:'Statement conflicts with evidence',
+    clearance:'Had the required access clearance'
+  };
+  if(correct) {
+    const evHtml = reasons.map(r=>'<div class="rb-ev"><span class="rb-ev-tick">✓</span><span>'+evidenceMap[r]+'</span></div>').join('');
+    rBox.innerHTML =
+      '<div class="rb-case">CASE #'+ca.num+' — FINAL REPORT</div>'+
+      '<div class="rb-title">INVESTIGATION COMPLETE</div>'+
+      '<div class="rb-section"><div class="rb-label">RESPONSIBLE PERSON</div><div class="rb-name">'+ca.answerName+'</div></div>'+
+      '<div class="rb-section"><div class="rb-label">KEY EVIDENCE</div><div class="rb-ev-list">'+evHtml+'</div></div>'+
+      '<div class="rb-section"><div class="rb-label">INVESTIGATION STATISTICS</div>'+
+      '<div class="stats-grid">'+
+      '<div class="stat-box"><div class="stat-num">'+gs.eventsReviewed+'</div><div class="stat-lbl">RECORDS REVIEWED</div></div>'+
+      '<div class="stat-box"><div class="stat-num">'+gs.contradictionsFound+'</div><div class="stat-lbl">CONTRADICTIONS</div></div>'+
+      '<div class="stat-box"><div class="stat-num">'+gs.hintsUsed+'</div><div class="stat-lbl">HINTS USED</div></div>'+
+      '<div class="stat-box"><div class="stat-num">'+gs.score+'</div><div class="stat-lbl">FINAL SCORE</div></div>'+
+      '</div></div>'+
+      '<div class="case-status cs-solved">CASE #'+ca.num+' — SOLVED</div>';
+    reopenBtn.style.display='none';
+  } else {
+    rBox.innerHTML =
+      '<div class="rb-case">CASE #'+ca.num+'</div>'+
+      '<div class="rb-title">CASE NOT SOLVED</div>'+
+      '<div style="color:var(--dim);font-size:13px;line-height:1.8;margin-bottom:16px;">Your conclusion does not match the available evidence.<br>Return to the files and investigate further.</div>'+
+      '<div class="rb-section"><div class="rb-label">YOUR ACCUSATION</div><div style="font-size:16px;color:var(--err);">'+(ca.suspects.find(s=>s.id===gs.accusation)||{name:'Unknown'}).name+'</div></div>'+
+      '<div class="case-status cs-unsolved">CASE OPEN — INVESTIGATION CONTINUES</div>';
+    reopenBtn.style.display='inline-block';
+  }
+  document.getElementById('rp-score').textContent = gs.score;
+}
+
+function reopenCase() { show('screen-casefile'); renderCaseFile(); }
+
+// ─── Hints ──────────────────────────────────────────────────────────────────
+function showHint() {
+  const ca = c();
+  if(!ca) return;
+  const hints = ca.hints;
+  if(gs.hintIdx>=hints.length) { notify('No more hints available','n-warn'); return; }
+  document.getElementById('hint-text').textContent = hints[gs.hintIdx];
+  gs.hintIdx++;
+  gs.hintsUsed++;
+  addScore(-50, null, null, '-50 HINT USED');
+  document.getElementById('hint-panel').classList.add('show');
+}
+function closeHint() { document.getElementById('hint-panel').classList.remove('show'); }
+
+// ─── Score ───────────────────────────────────────────────────────────────────
+function addScore(pts, x, y, label) {
+  gs.score = Math.max(0, gs.score + pts);
+  updateScores();
+  if(label) {
+    const sf = document.createElement('div');
+    sf.className='sf';
+    sf.textContent = label;
+    sf.style.cssText = 'left:'+(x||window.innerWidth/2)+'px;top:'+(y||200)+'px;color:'+(pts>0?'var(--ok)':'var(--err)');
+    document.body.appendChild(sf);
+    setTimeout(()=>sf.remove(),900);
+  }
+}
+
+// ─── Notification ────────────────────────────────────────────────────────────
+let notifTimer;
+function notify(msg, cls) {
+  const el = document.getElementById('notif');
+  el.textContent=msg;
+  el.className='show '+(cls||'');
+  clearTimeout(notifTimer);
+  notifTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+initCaseSelect();
+
+</script>
+</body>
+</html>
