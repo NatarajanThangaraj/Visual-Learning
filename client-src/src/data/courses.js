@@ -95,6 +95,10 @@ export const courses = [
         title: 'File Handling',
         summary: 'Making what a program writes survive after it stops running.',
         lessons: [
+          { id: 'mission-control', title: 'Mission Control', minutes: 30,
+            blurb: 'A spacecraft goes silent at 10:07 — work the black-box log one record at a time, decide what matters, and find out you have been thinking like a file-reading program all along.',
+            src: '/java/mission-control/index.html',
+            thumbnail: '/java/mission-control/thumb.png' },
           { id: 'alien-decoder', title: 'Alien Decoder', minutes: 20,
             blurb: 'Step into the computer and decode an alien transmission by hand — read a dictionary file line by line, build the lookup in memory, then meet the code that has no meaning.',
             src: '/java/alien-decoder/index.html',
