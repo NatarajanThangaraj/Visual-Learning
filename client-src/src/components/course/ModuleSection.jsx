@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { findLesson } from '../../data/courses';
 import LessonNode from './LessonNode';
 
 /* A numbered module: the header strip from the design (index, title, label,
@@ -39,11 +40,7 @@ export default function ModuleSection({ course, module, index, statusOf, progres
         {module.lessons.map((lesson, i) => (
           <LessonNode
             key={lesson.id}
-            lesson={{
-              ...lesson,
-              courseId: course.id,
-              route: `/learn/${course.id}/${module.id}/${lesson.id}`,
-            }}
+            lesson={findLesson(course.id, lesson.id)}
             status={statusOf(module.id, lesson.id)}
             isLast={i === module.lessons.length - 1}
           />

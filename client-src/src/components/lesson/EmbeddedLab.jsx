@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import LessonThumb from '../course/LessonThumb';
 
@@ -6,6 +7,10 @@ import LessonThumb from '../course/LessonThumb';
    inside the lesson chrome so the course frame (breadcrumb, next, mark
    complete) stays put; on a phone that nested scroll is unusable, so the lab
    is handed over full-screen instead.
+
+   Two paths, and they are not interchangeable: `lesson.src` is the file, only
+   ever fetched; `lesson.labRoute` is the clean URL a person is sent to. Never
+   link to the file — that is what put /…/index.html in the address bar.
 
    The host serves every file with `X-Frame-Options: DENY`, which blocks an
    <iframe src> even same-origin. So the lab is fetched and handed to the frame
@@ -85,27 +90,47 @@ const iconProps = {
   'aria-hidden': 'true',
 };
 
-export default function EmbeddedLab({ lesson }) {
-  const narrow = useMediaQuery('(max-width: 900px)');
-  const frameRef = useRef(null);
-  const [native, pinned, toggleFull] = useFullscreen(frameRef);
-  const full = native || pinned;
+/** Fetch a lab and hand it back ready for srcdoc. `enabled` is false when the
+ *  lab is not going to be framed at all, so a phone never downloads it. */
+function useLabDoc(src, enabled) {
   const [doc, setDoc] = useState(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (narrow) return undefined;
+    if (!enabled) return undefined;
     let live = true;
     setDoc(null);
     setFailed(false);
 
-    fetch(lesson.src)
+    fetch(src)
       .then(r => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
-      .then(html => { if (live) setDoc(withBase(html, lesson.src)); })
+      .then(html => { if (live) setDoc(withBase(html, src)); })
       .catch(() => { if (live) setFailed(true); });
 
     return () => { live = false; };
-  }, [lesson.src, narrow]);
+  }, [src, enabled]);
+
+  return [doc, failed];
+}
+
+export default function EmbeddedLab({ lesson, standalone = false }) {
+  const narrow = useMediaQuery('(max-width: 900px)') && !standalone;
+  const frameRef = useRef(null);
+  const [native, pinned, toggleFull] = useFullscreen(frameRef);
+  const full = native || pinned;
+  const [doc, failed] = useLabDoc(lesson.src, !narrow);
+
+  /* Standalone is the hand-off target: the lab already owns the viewport, so
+     there is no bar to add and nowhere further to go full screen to. */
+  if (standalone) {
+    return failed ? (
+      <div className="lab-frame-fallback">
+        <p>This lab could not be loaded.</p>
+      </div>
+    ) : (
+      <iframe className="lab-iframe" srcDoc={doc ?? ''} title={lesson.title} allow="fullscreen" />
+    );
+  }
 
   if (narrow) {
     return (
@@ -114,9 +139,9 @@ export default function EmbeddedLab({ lesson }) {
         <p className="lab-handoff-text">
           This lab runs best full screen. It opens in a new tab — come back here to mark it complete.
         </p>
-        <a className="lab-open-btn" href={lesson.src} target="_blank" rel="noopener noreferrer">
-          Start the lab ↗
-        </a>
+        <Link className="lab-open-btn" to={lesson.labRoute}>
+          Start the lab →
+        </Link>
       </div>
     );
   }
@@ -133,9 +158,9 @@ export default function EmbeddedLab({ lesson }) {
         <span className="lab-frame-title">{lesson.title}</span>
 
         <div className="lab-tools">
-          <a
+          <Link
             className="lab-tool"
-            href={lesson.src}
+            to={lesson.labRoute}
             target="_blank"
             rel="noopener noreferrer"
             title="Open this lab in a new tab"
@@ -145,7 +170,7 @@ export default function EmbeddedLab({ lesson }) {
               <path d="M15 3h6v6M10 14 21 3" />
             </svg>
             <span>New tab</span>
-          </a>
+          </Link>
 
           <button
             type="button"
@@ -170,9 +195,9 @@ export default function EmbeddedLab({ lesson }) {
       {failed ? (
         <div className="lab-frame-fallback">
           <p>This lab could not be loaded here.</p>
-          <a className="lab-open-btn" href={lesson.src} target="_blank" rel="noopener noreferrer">
+          <Link className="lab-open-btn" to={lesson.labRoute} target="_blank" rel="noopener noreferrer">
             Open it in a new tab ↗
-          </a>
+          </Link>
         </div>
       ) : (
         <iframe

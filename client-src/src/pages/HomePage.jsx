@@ -48,7 +48,7 @@ export default function HomePage() {
             <Link
               key={course.id}
               className="ccard"
-              to={`/learn/${course.id}`}
+              to={`/${course.id}`}
               style={{ '--course-accent': course.accent, '--course-accent-bg': course.accentBg }}
             >
               <CourseIcon courseId={course.id} size={52} />

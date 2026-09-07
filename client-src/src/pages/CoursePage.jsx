@@ -1,17 +1,21 @@
 import { useParams, Navigate } from 'react-router-dom';
-import { getCourse } from '../data/courses';
+import { getCourse, resolveCourseId } from '../data/courses';
 import { useProgress } from '../hooks/useProgress';
 import CourseHero from '../components/course/CourseHero';
 import ModuleSection from '../components/course/ModuleSection';
+import NotFoundPage from './NotFoundPage';
 
 /* The course page: hero, then every module as a numbered section with its own
    vertical lesson path. */
 export default function CoursePage() {
-  const { courseId } = useParams();
-  const course = getCourse(courseId);
+  const { courseId: param } = useParams();
+  const canonical = resolveCourseId(param);
+  const course = getCourse(canonical);
   const { isComplete, isUnlocked, courseProgress, moduleProgress, nextLesson } = useProgress();
 
-  if (!course) return <Navigate to="/" replace />;
+  if (!course) return <NotFoundPage />;
+  /* /others → /problem-solving: the lab folder is not the course id. */
+  if (canonical !== param) return <Navigate to={`/${course.id}`} replace />;
 
   const progress = courseProgress(course.id);
   const next = nextLesson(course.id);

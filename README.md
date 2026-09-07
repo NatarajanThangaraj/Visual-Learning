@@ -46,13 +46,37 @@ so the compiled output ships in the repo.
 | Route | Page |
 |---|---|
 | `/` | Course cards + resume-where-you-left-off |
-| `/learn/:courseId` | Course page — hero, modules, lesson path |
-| `/learn/:courseId/:moduleId/:lessonId` | One page, embedded in the course chrome |
 | `/browse` | The flat catalog — every page, searchable |
+| `/:courseId` | Course page — hero, modules, lesson path |
+| `/:courseId/:lessonId` | One page, embedded in the course chrome |
+| `/:courseId/:lessonId/full` | That page on its own — no sidebar, no chrome |
 
-The `/learn/` prefix is deliberate: the pages are **real files** under `public/`
-(`/java/riya-job-hunt/index.html` and friends), and the prefix keeps SPA routes from ever
-shadowing them. Those direct URLs still work, so old links and bookmarks are safe.
+So a page is `/java/my-expense-tracker`, and the module is not in the URL: lesson ids are
+unique within a course, and leaving the module out means reorganising the modules never
+breaks a link.
+
+**No URL ends in a file name.** The pages are still real files under `public/`
+(`/java/my-expense-tracker/index.html`), but nothing links to that path — the lab is
+*fetched* and handed to the frame as `srcdoc` (the host sends `X-Frame-Options: DENY`, so
+a plain `<iframe src>` would be blocked). "New tab" and the mobile hand-off go to the
+`/full` route instead. Those direct file URLs still resolve, so old links stay valid.
+
+Catalyst Slate serves an exact file if one is there and falls back to `404.html` (a copy of
+`index.html`) otherwise — it never serves a directory index. That fallback is what makes
+`/java/my-expense-tracker` reach the app at all.
+
+### Old URLs
+
+The previous `/learn/…` scheme redirects, so nothing that was shared before breaks:
+
+| Old | Now |
+|---|---|
+| `/learn/java` | `/java` |
+| `/learn/java/file-handling/my-expense-tracker` | `/java/my-expense-tracker` |
+| `/others/luhn-algorithm` | `/problem-solving/luhn-algorithm` |
+
+(The last one is the `others/` folder, which predates the Problem Solving course name and
+still holds its files.)
 
 ## Progress and unlocking
 
@@ -85,15 +109,17 @@ cd ../client && python3 -m http.server 4599
 
 Everything is registered in **one file**: `client-src/src/data/courses.js`.
 
-1. Drop the self-contained folder at `client-src/public/<category>/<slug>/index.html`
-   (plus a `thumb.png` screenshot beside it).
-2. Add one entry to the right module's `lessons` array:
+1. Drop the self-contained folder at `client-src/public/<folder>/<id>/index.html`
+   (plus a `thumb.png` screenshot beside it), where `<folder>` is the course's `folder`
+   field — `java`, `python` or `others`.
+2. Add one entry to the right module's `lessons` array — identity only, no paths:
    ```js
    { id: 'smart-traffic-signal', title: 'Smart Traffic Signal', minutes: 25,
-     blurb: 'One-line summary shown on the card.',
-     src: '/java/smart-traffic-signal/index.html',
-     thumbnail: '/java/smart-traffic-signal/thumb.png' },
+     blurb: 'One-line summary shown on the card.' },
    ```
+   The `id` **is** the folder name: the file, the thumbnail and both URLs are derived from
+   it. If there is no `thumb.png` yet, add `thumb: false` and the card falls back to the
+   course's art.
 
 The card, the route, the sidebar counts, next/prev and unlocking all follow automatically.
 A new module is just another `{ id, title, summary, lessons: [] }` object in the course's

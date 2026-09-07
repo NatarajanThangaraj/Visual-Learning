@@ -8,7 +8,7 @@ export default function LessonShell({
   return (
     <div className="lesson-page" style={{ '--course-accent': course.accent, '--course-accent-bg': course.accentBg }}>
       <nav className="crumbs" aria-label="Breadcrumb">
-        <Link to={`/learn/${course.id}`}>{course.title}</Link>
+        <Link to={`/${course.id}`}>{course.title}</Link>
         <span aria-hidden="true">/</span>
         <span>{lesson.moduleTitle}</span>
       </nav>
@@ -31,7 +31,7 @@ export default function LessonShell({
             <span className="ln-name">{prev.title}</span>
           </Link>
         ) : (
-          <Link className="ln-side" to={`/learn/${course.id}`}>
+          <Link className="ln-side" to={`/${course.id}`}>
             <span className="ln-dir">←</span>
             <span className="ln-name">Course overview</span>
           </Link>
@@ -51,7 +51,7 @@ export default function LessonShell({
             <span className="ln-name">{next.title}</span>
           </Link>
         ) : (
-          <Link className="ln-side ln-next" to={`/learn/${course.id}`}>
+          <Link className="ln-side ln-next" to={`/${course.id}`}>
             <span className="ln-dir">Finish →</span>
             <span className="ln-name">Back to the course</span>
           </Link>

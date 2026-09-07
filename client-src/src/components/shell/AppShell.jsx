@@ -11,8 +11,9 @@ export default function AppShell() {
 
   /* A lesson is a lab in a frame, so its page is sized to the viewport rather
      than left to grow — see the lab block in lesson.css. Read off the route
-     because the shell renders the lesson through <Outlet>. */
-  const isLesson = /^\/learn\/[^/]+\/[^/]+\/[^/]+/.test(pathname);
+     because the shell renders the lesson through <Outlet>: a lesson is the
+     only two-segment route the shell serves, /browse being the exception. */
+  const isLesson = /^\/[^/]+\/[^/]+\/?$/.test(pathname);
 
   /* Any navigation closes the mobile drawer and returns you to the top. A
      viewport-fitted lesson scrolls the <main> instead of the window, and the

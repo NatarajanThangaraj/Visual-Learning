@@ -53,7 +53,7 @@ export default function Sidebar({ collapsed, onToggle, onNavigate }) {
             <NavLink
               key={c.id}
               className="sb-link sb-course"
-              to={`/learn/${c.id}`}
+              to={`/${c.id}`}
               onClick={onNavigate}
               title={`${c.title} — ${p.done} of ${p.total} pages`}
             >
