@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyExpenseTracker — Track your daily expenses. Simply.</title>
+<meta name="description" content="MyExpenseTracker — a small Java app for tracking daily expenses. Add an expense, view reports by category, export to CSV.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --white:    #ffffff;
+  --card:     #dbe9fb;
+  --card-bar: #c6dcf8;
+  --bord:     #5b8def;
+  --navy:     #1a2b4c;
+  --ink:      #35496e;
+  --muted:    #6b7c99;
+  --line:     #8b97a8;
+  --shadow:   0 2px 4px rgba(26,43,76,.05), 0 8px 24px rgba(26,43,76,.08);
+  --shadow-lg:0 4px 8px rgba(26,43,76,.06), 0 18px 44px rgba(26,43,76,.11);
+  --sans:     'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --radius:   14px;
+}
+
+html{scroll-behavior:smooth}
+body{overflow-x:hidden}
+
+body{
+  background:var(--white);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{width:100%;max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ── Nav ─────────────────────────────────────────── */
+header#nav{
+  position:sticky;top:0;z-index:60;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid #e8eef8;
+}
+#nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;height:68px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;
+  color:var(--navy);letter-spacing:-.2px;text-decoration:none}
+.brand .glyph{
+  width:30px;height:30px;flex:none;border-radius:8px;
+  background:var(--card);border:2px solid var(--bord);
+  display:grid;place-items:center;font-size:14px;font-weight:800;color:var(--navy)
+}
+#nav nav{display:flex;align-items:center;gap:28px}
+#nav nav a{color:var(--muted);text-decoration:none;font-size:14.5px;font-weight:500}
+#nav nav a:hover{color:var(--navy)}
+#nav nav a.cta{
+  padding:8px 16px;border-radius:9px;background:var(--navy);color:#fff;font-weight:600
+}
+#nav nav a.cta:hover{background:#0f1e38;color:#fff}
+
+/* ── Hero ────────────────────────────────────────── */
+#hero{padding:104px 0 8px;text-align:center}
+.stereotype{
+  display:inline-block;font-size:12.5px;font-weight:600;letter-spacing:.06em;
+  color:var(--navy);background:var(--card);border:1px solid var(--bord);
+  padding:5px 14px;border-radius:999px;margin-bottom:30px
+}
+#hero h1{
+  font-size:clamp(1.95rem,8.4vw,4.6rem);line-height:1.05;font-weight:800;
+  color:var(--navy);letter-spacing:-.035em;overflow-wrap:break-word
+}
+#hero .tagline{
+  margin:22px auto 0;max-width:34ch;font-size:clamp(1.05rem,2.4vw,1.3rem);
+  color:var(--muted);font-weight:400
+}
+.actions{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:40px}
+.btn{
+  display:inline-flex;align-items:center;gap:9px;padding:13px 26px;border-radius:11px;
+  font-size:15px;font-weight:600;text-decoration:none;transition:transform .15s, box-shadow .15s
+}
+.btn-primary{background:var(--navy);color:#fff;box-shadow:var(--shadow)}
+.btn-ghost{background:var(--card);color:var(--navy);border:2px solid var(--bord)}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.hero-note{margin-top:22px;font-size:13.5px;color:var(--muted)}
+
+/* ── Connectors ──────────────────────────────────── */
+.connector{position:relative;height:120px;display:grid;place-items:center}
+.connector::before{
+  content:'';position:absolute;top:0;bottom:0;left:50%;
+  width:2px;background:var(--line);transform:translateX(-50%)
+}
+.connector::after{
+  content:'';position:absolute;bottom:0;left:50%;
+  width:11px;height:11px;border-right:2px solid var(--line);border-bottom:2px solid var(--line);
+  transform:translateX(-50%) rotate(45deg)
+}
+.connector span{
+  position:relative;z-index:2;
+  background:var(--card);border:1px solid var(--bord);color:var(--navy);
+  font-size:12.5px;font-weight:600;padding:4px 14px;border-radius:999px
+}
+
+/* ── Section headings ────────────────────────────── */
+.sec-head{text-align:center;max-width:52ch;margin:0 auto 52px}
+.sec-head .eyebrow{
+  font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--bord);margin-bottom:14px
+}
+.sec-head h2{
+  font-size:clamp(1.75rem,4vw,2.5rem);font-weight:800;color:var(--navy);
+  letter-spacing:-.025em;line-height:1.15
+}
+.sec-head p{margin-top:14px;color:var(--muted);font-size:16.5px}
+
+/* ── UML feature cards ───────────────────────────── */
+#features{padding:0 0 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:26px;
+  max-width:840px;margin:0 auto}
+.uml{
+  background:var(--card);
+  border:2px solid var(--bord);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  transition:transform .18s, box-shadow .18s;
+}
+.uml:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.uml-bar{background:var(--card-bar);padding:16px 20px 14px;text-align:center}
+.uml-bar .stereo{display:block;font-size:11px;font-weight:600;color:var(--bord);
+  letter-spacing:.05em;margin-bottom:2px}
+.uml-bar h3{font-size:17.5px;font-weight:800;color:var(--navy);letter-spacing:-.01em}
+.uml-div{height:2px;background:var(--bord)}
+.uml ul{list-style:none;padding:18px 20px 20px}
+.uml li{
+  display:flex;gap:9px;align-items:baseline;
+  font-size:14.5px;line-height:1.6;color:var(--navy);padding:3.5px 0
+}
+.uml li .vis{
+  flex:none;width:13px;text-align:center;font-weight:700;color:var(--bord);
+  font-size:15px;line-height:1.6
+}
+.uml li code{
+  font-family:ui-monospace,'SF Mono',SFMono-Regular,Menlo,monospace;
+  font-size:13.2px;color:var(--navy)
+}
+
+/* ── Diagram ─────────────────────────────────────── */
+#architecture{padding:0}
+.diagram-frame{
+  background:var(--white);
+  border:2px solid var(--bord);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:34px 26px 26px;
+}
+.diagram-frame .scroller{overflow-x:auto;display:flex;justify-content:center}
+.diagram-frame svg{width:100%;max-width:640px;min-width:278px;height:auto;display:block}
+figcaption{
+  margin-top:26px;padding-top:20px;border-top:1px solid #e8eef8;
+  text-align:center;font-size:14.5px;font-weight:600;color:var(--navy)
+}
+figcaption small{display:block;margin-top:6px;font-size:13px;font-weight:400;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px}
+.legend span{
+  background:var(--card);border:1px solid var(--bord);color:var(--navy);
+  font-size:12px;font-weight:600;padding:3px 12px;border-radius:999px
+}
+
+/* ── Footer ──────────────────────────────────────── */
+footer{margin-top:120px;border-top:1px solid #e8eef8;padding:52px 0 44px}
+.foot-top{display:flex;flex-wrap:wrap;gap:32px;justify-content:space-between;align-items:flex-start}
+.foot-brand{max-width:30ch}
+.foot-brand p{margin-top:10px;font-size:14px;color:var(--muted)}
+.foot-links{display:flex;flex-wrap:wrap;gap:40px}
+.foot-col h4{
+  font-size:11.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--navy);margin-bottom:12px
+}
+.foot-col a{
+  display:block;color:var(--muted);text-decoration:none;font-size:14.5px;padding:3px 0
+}
+.foot-col a:hover{color:var(--bord)}
+.foot-bottom{
+  margin-top:44px;padding-top:24px;border-top:1px solid #e8eef8;
+  display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;
+  font-size:13px;color:var(--muted)
+}
+
+@media (max-width:640px){
+  #nav nav{gap:16px}
+  #nav nav a.hide-sm{display:none}
+  #hero{padding:64px 0 4px}
+  .connector{height:92px}
+  .diagram-frame{padding:22px 14px 18px}
+  footer{margin-top:80px}
+}
+</style>
+</head>
+<body>
+
+<header id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="glyph">₹</span>MyExpenseTracker</a>
+    <nav>
+      <a href="#features" class="hide-sm">Features</a>
+      <a href="#architecture" class="hide-sm">Architecture</a>
+      <a href="#download" class="cta">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ── Hero ───────────────────────────────────── -->
+  <section id="hero">
+    <div class="wrap">
+      <span class="stereotype">&laquo; Java · console application &raquo;</span>
+      <h1>MyExpenseTracker</h1>
+      <p class="tagline">Track your daily expenses. Simply.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#download">Download</a>
+        <a class="btn btn-ghost" href="https://github.com/your-username/MyExpenseTracker">View on GitHub</a>
+      </div>
+      <p class="hero-note">Four classes. One text file. No account, no cloud, no subscription.</p>
+    </div>
+  </section>
+
+  <div class="connector"><span>uses</span></div>
+
+  <!-- ── Features as UML class boxes ─────────────── -->
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Features</p>
+        <h2>Everything it does, one box at a time</h2>
+        <p>Each feature is a real part of the program — the fields it stores and the methods it exposes.</p>
+      </div>
+
+      <div class="grid">
+
+        <article class="uml">
+          <header class="uml-bar">
+            <span class="stereo">&laquo; feature &raquo;</span>
+            <h3>Add Expense</h3>
+          </header>
+          <div class="uml-div"></div>
+          <ul>
+            <li><span class="vis">−</span><code>double amount</code></li>
+            <li><span class="vis">−</span><code>String category</code></li>
+            <li><span class="vis">−</span><code>String date</code></li>
+            <li><span class="vis">−</span><code>String note</code></li>
+            <li><span class="vis">+</span><code>addExpense(Expense)</code></li>
+          </ul>
+        </article>
+
+        <article class="uml">
+          <header class="uml-bar">
+            <span class="stereo">&laquo; feature &raquo;</span>
+            <h3>View Reports</h3>
+          </header>
+          <div class="uml-div"></div>
+          <ul>
+            <li><span class="vis">+</span><code>viewExpenses()</code></li>
+            <li><span class="vis">+</span><code>calculateTotal()</code></li>
+            <li><span class="vis">+</span><code>calculateCategoryTotal()</code></li>
+            <li><span class="vis">+</span><code>generateReport()</code></li>
+            <li><span class="vis">+</span><code>display()</code></li>
+          </ul>
+        </article>
+
+        <article class="uml">
+          <header class="uml-bar">
+            <span class="stereo">&laquo; feature &raquo;</span>
+            <h3>Categories</h3>
+          </header>
+          <div class="uml-div"></div>
+          <ul>
+            <li><span class="vis">·</span>Food &amp; Groceries</li>
+            <li><span class="vis">·</span>Travel</li>
+            <li><span class="vis">·</span>Bills &amp; Rent</li>
+            <li><span class="vis">·</span>Shopping</li>
+            <li><span class="vis">·</span>Health &amp; Other</li>
+          </ul>
+        </article>
+
+        <article class="uml">
+          <header class="uml-bar">
+            <span class="stereo">&laquo; feature &raquo;</span>
+            <h3>CSV Export</h3>
+          </header>
+          <div class="uml-div"></div>
+          <ul>
+            <li><span class="vis">−</span><code>String fileName</code></li>
+            <li><span class="vis">+</span><code>saveExpense(Expense)</code></li>
+            <li><span class="vis">+</span><code>readExpenses()</code></li>
+            <li><span class="vis">·</span><code>expenses.csv</code></li>
+            <li><span class="vis">·</span>Opens in Excel or Sheets</li>
+          </ul>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="connector"><span>manages</span></div>
+
+  <!-- ── Architecture ───────────────────────────── -->
+  <section id="architecture">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Architecture</p>
+        <h2>Class Diagram</h2>
+        <p>Four classes, each with one job. <strong>Main</strong> runs the menu, <strong>ExpenseTracker</strong>
+           holds the list, <strong>FileManager</strong> talks to the file, <strong>Expense</strong> is one row of spending.</p>
+      </div>
+
+      <figure class="diagram-frame">
+        <div class="scroller">
+          <svg viewBox="0 0 800 1890" role="img"
+               aria-label="UML class diagram: Main uses ExpenseTracker, which uses FileManager and manages Expense; FileManager reads and writes Expense.">
+            <defs>
+              <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5"
+                      markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#5f6b7d"/>
+              </marker>
+              <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1a2b4c" flood-opacity=".13"/>
+              </filter>
+              <style>
+                .bx  { fill:#dbe9fb; stroke:#5b8def; stroke-width:2 }
+                .bar { fill:#c6dcf8 }
+                .dv  { stroke:#5b8def; stroke-width:2 }
+                .nm  { font:800 21px 'Inter',system-ui,sans-serif; fill:#1a2b4c; text-anchor:middle }
+                .mb  { font:400 19px 'Inter',system-ui,sans-serif; fill:#1a2b4c }
+                .cn  { stroke:#5f6b7d; stroke-width:2; fill:none }
+                .pl  { fill:#dbe9fb; stroke:#5b8def; stroke-width:1 }
+                .plt { font:600 17px 'Inter',system-ui,sans-serif; fill:#1a2b4c; text-anchor:middle }
+              </style>
+            </defs>
+
+            <!-- ══ Main ══ -->
+            <g filter="url(#sh)">
+              <rect class="bx" x="262" y="18" width="264" height="254" rx="5"/>
+              <path class="bar" d="M263,23 a4,4 0 0 1 4,-4 h254 a4,4 0 0 1 4,4 v67 h-262 z"/>
+            </g>
+            <line class="dv" x1="262" y1="90"  x2="526" y2="90"/>
+            <line class="dv" x1="262" y1="146" x2="526" y2="146"/>
+            <rect class="bx" x="262" y="18" width="264" height="254" rx="5" fill="none"/>
+            <text class="nm" x="394" y="62">Main</text>
+            <text class="mb" x="282" y="200">+main()</text>
+            <text class="mb" x="282" y="240">+showMenu()</text>
+
+            <!-- Main → ExpenseTracker : uses -->
+            <path class="cn" d="M394,272 V464" marker-end="url(#arw)"/>
+            <g>
+              <rect class="pl" x="352" y="352" width="84" height="30" rx="6"/>
+              <text class="plt" x="394" y="373">uses</text>
+            </g>
+
+            <!-- ══ ExpenseTracker ══ -->
+            <g filter="url(#sh)">
+              <rect class="bx" x="42" y="478" width="700" height="400" rx="5"/>
+              <path class="bar" d="M43,483 a4,4 0 0 1 4,-4 h690 a4,4 0 0 1 4,4 v73 h-698 z"/>
+            </g>
+            <line class="dv" x1="42" y1="556" x2="742" y2="556"/>
+            <line class="dv" x1="42" y1="636" x2="742" y2="636"/>
+            <rect class="bx" x="42" y="478" width="700" height="400" rx="5" fill="none"/>
+            <text class="nm" x="392" y="526">ExpenseTracker</text>
+            <text class="mb" x="64" y="604">−List&lt;Expense&gt; expenses</text>
+            <text class="mb" x="64" y="684">+addExpense(Expense expense)</text>
+            <text class="mb" x="64" y="724">+viewExpenses()</text>
+            <text class="mb" x="64" y="764">+calculateTotal()</text>
+            <text class="mb" x="64" y="804">+calculateCategoryTotal(String category)</text>
+            <text class="mb" x="64" y="844">+generateReport()</text>
+
+            <!-- ExpenseTracker → FileManager : uses -->
+            <path class="cn" d="M508,878 V1064" marker-end="url(#arw)"/>
+            <g>
+              <rect class="pl" x="466" y="952" width="84" height="30" rx="6"/>
+              <text class="plt" x="508" y="973">uses</text>
+            </g>
+
+            <!-- ExpenseTracker → Expense : manages (elbow route, left) -->
+            <path class="cn" d="M272,878 V898 a14,14 0 0 1 -14,14 H94 a14,14 0 0 0 -14,14
+                                 V1478 a14,14 0 0 0 14,14 H390 a14,14 0 0 1 14,14 V1530"
+                  marker-end="url(#arw)"/>
+            <g>
+              <rect class="pl" x="16" y="1186" width="128" height="30" rx="6"/>
+              <text class="plt" x="80" y="1207">manages</text>
+            </g>
+
+            <!-- ══ FileManager ══ -->
+            <g filter="url(#sh)">
+              <rect class="bx" x="222" y="1078" width="572" height="284" rx="5"/>
+              <path class="bar" d="M223,1083 a4,4 0 0 1 4,-4 h562 a4,4 0 0 1 4,4 v73 h-570 z"/>
+            </g>
+            <line class="dv" x1="222" y1="1156" x2="794" y2="1156"/>
+            <line class="dv" x1="222" y1="1238" x2="794" y2="1238"/>
+            <rect class="bx" x="222" y="1078" width="572" height="284" rx="5" fill="none"/>
+            <text class="nm" x="508" y="1126">FileManager</text>
+            <text class="mb" x="244" y="1204">−String fileName</text>
+            <text class="mb" x="244" y="1286">+saveExpense(Expense expense)</text>
+            <text class="mb" x="244" y="1326">+readExpenses()</text>
+
+            <!-- FileManager → Expense : reads/writes -->
+            <path class="cn" d="M508,1362 V1530" marker-end="url(#arw)"/>
+            <g>
+              <rect class="pl" x="424" y="1418" width="168" height="30" rx="6"/>
+              <text class="plt" x="508" y="1439">reads/writes</text>
+            </g>
+
+            <!-- ══ Expense ══ -->
+            <g filter="url(#sh)">
+              <rect class="bx" x="292" y="1540" width="326" height="332" rx="5"/>
+              <path class="bar" d="M293,1545 a4,4 0 0 1 4,-4 h316 a4,4 0 0 1 4,4 v73 h-324 z"/>
+            </g>
+            <line class="dv" x1="292" y1="1618" x2="618" y2="1618"/>
+            <line class="dv" x1="292" y1="1810" x2="618" y2="1810"/>
+            <rect class="bx" x="292" y="1540" width="326" height="332" rx="5" fill="none"/>
+            <text class="nm" x="455" y="1588">Expense</text>
+            <text class="mb" x="314" y="1666">−double amount</text>
+            <text class="mb" x="314" y="1706">−String category</text>
+            <text class="mb" x="314" y="1746">−String date</text>
+            <text class="mb" x="314" y="1786">−String note</text>
+            <text class="mb" x="314" y="1856">+display()</text>
+          </svg>
+        </div>
+
+        <figcaption>
+          Class Diagram – MyExpenseTracker
+          <small>Main → ExpenseTracker → FileManager → Expense</small>
+        </figcaption>
+
+        <div class="legend">
+          <span>uses</span><span>manages</span><span>reads/writes</span>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────── -->
+  <footer id="download">
+    <div class="wrap">
+      <div class="foot-top">
+        <div class="foot-brand">
+          <a class="brand" href="#top"><span class="glyph">₹</span>MyExpenseTracker</a>
+          <p>A small Java console app for tracking daily expenses. Your data stays in one
+             plain text file on your own machine.</p>
+        </div>
+        <div class="foot-links">
+          <div class="foot-col">
+            <h4>Get it</h4>
+            <a href="https://github.com/your-username/MyExpenseTracker/releases">Download .jar</a>
+            <a href="https://github.com/your-username/MyExpenseTracker/archive/refs/heads/main.zip">Download source (.zip)</a>
+          </div>
+          <div class="foot-col">
+            <h4>Project</h4>
+            <a href="https://github.com/your-username/MyExpenseTracker">GitHub repository</a>
+            <a href="https://github.com/your-username/MyExpenseTracker/issues">Report an issue</a>
+          </div>
+          <div class="foot-col">
+            <h4>Docs</h4>
+            <a href="#architecture">Class diagram</a>
+            <a href="#features">Features</a>
+          </div>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>© 2026 MyExpenseTracker · Built with Java</span>
+        <span>Requires Java 17 or newer</span>
+      </div>
+    </div>
+  </footer>
+
+</main>
+</body>
+</html>
