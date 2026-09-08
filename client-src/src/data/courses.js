@@ -85,6 +85,8 @@ export const courses = [
             blurb: 'A six-step assignment: design the Passenger, Vehicle, Rider and Ride classes behind a ride-booking app, then see the same ride as the passenger, the rider and the owner.' },
           { id: 'swiggy-kitchen', title: 'Build the Swiggy Backend', minutes: 40,
             blurb: 'A seven-step assignment: model a food order end to end — and meet the idea that one object can hold a whole list of others.' },
+          { id: 'event-registration', title: 'Event Registration Playground', minutes: 25,
+            blurb: 'Step through one action at a time and watch four classes collaborate — Main asks, EventRegistration decides, Participant objects get built, FileManager keeps the records. Then read the same program as a participant list, as raw file rows, and as a UML diagram.' },
         ],
       },
       {
