@@ -87,6 +87,8 @@ export const courses = [
             blurb: 'A seven-step assignment: model a food order end to end — and meet the idea that one object can hold a whole list of others.' },
           { id: 'event-registration', title: 'Event Registration Playground', minutes: 25,
             blurb: 'Step through one action at a time and watch four classes collaborate — Main asks, EventRegistration decides, Participant objects get built, FileManager keeps the records. Then read the same program as a participant list, as raw file rows, and as a UML diagram.' },
+          { id: 'booking-and-rental', title: 'Room Booking & Vehicle Rental', minutes: 30,
+            blurb: 'Two playgrounds, one idea: book a hotel room, then rent a vehicle, and watch the same four-class shape underneath — Main asks, the service decides, a Booking or Rental object is created, and a Room or Vehicle is marked unavailable. Each side comes with its own file records, report and UML diagram.' },
         ],
       },
       {
