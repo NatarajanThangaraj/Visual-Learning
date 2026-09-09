@@ -89,6 +89,8 @@ export const courses = [
             blurb: 'Step through one action at a time and watch four classes collaborate — Main asks, EventRegistration decides, Participant objects get built, FileManager keeps the records. Then read the same program as a participant list, as raw file rows, and as a UML diagram.' },
           { id: 'booking-and-rental', title: 'Room Booking & Vehicle Rental', minutes: 30,
             blurb: 'Two playgrounds, one idea: book a hotel room, then rent a vehicle, and watch the same four-class shape underneath — Main asks, the service decides, a Booking or Rental object is created, and a Room or Vehicle is marked unavailable. Each side comes with its own file records, report and UML diagram.' },
+          { id: 'my-expense-tracker', title: 'Expense Tracker Playground', minutes: 25,
+            blurb: 'Step through the calls one at a time and watch four classes talk to each other — Main asks, ExpenseTracker delegates, Expense objects get built, FileManager writes the CSV. Then read the same program as a report and as a UML diagram.' },
         ],
       },
       {
@@ -108,8 +110,6 @@ export const courses = [
             blurb: 'Work a case out of five raw text files: pin the records, build the timeline, catch the statement that contradicts the evidence — then write the engine that does it for any case.' },
           { id: 'songbox', title: 'SongBox', minutes: 30,
             blurb: 'Sixty real songs live in one text file — split a line into its five fields, pick any mix of genres and artists, then play the shortlist you built and walk it with next and previous.' },
-          { id: 'my-expense-tracker', title: 'Expense Tracker Playground', minutes: 25,
-            blurb: 'Step through the calls one at a time and watch four classes talk to each other — Main asks, ExpenseTracker delegates, Expense objects get built, FileManager writes the CSV. Then read the same program as a report and as a UML diagram.' },
         ],
       },
     ],
