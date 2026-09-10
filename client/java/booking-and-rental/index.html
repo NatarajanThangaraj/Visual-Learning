@@ -81,9 +81,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
 /* ── NAV ── */
 nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);
-  padding:0 28px;display:flex;align-items:center;height:58px;position:sticky;top:0;z-index:200;
+  padding:8px 22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:58px;position:sticky;top:0;z-index:200;
   box-shadow:0 1px 0 var(--border),0 4px 16px rgba(108,63,199,.05);}
-.logo{font-size:15px;font-weight:800;color:var(--text);margin-right:24px;white-space:nowrap;display:flex;align-items:center;gap:9px;}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.logo{font-size:15px;font-weight:800;color:var(--text);white-space:nowrap;display:flex;align-items:center;gap:9px;}
 .logo-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6c3fc7,#a03090);
   display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 10px rgba(108,63,199,.3);}
 .logo span{background:linear-gradient(135deg,var(--blue),#a03090);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
@@ -93,7 +94,7 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
 .nav-tab:hover{color:var(--blue);background:var(--blue-light);}
 .nav-tab.active{background:linear-gradient(135deg,var(--blue-light),var(--violet-light));color:var(--blue);
   font-weight:600;box-shadow:var(--shadow-sm);border:1px solid var(--blue-mid);}
-.theme-toggle{margin-left:auto;padding:6px 14px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;
+.theme-toggle{padding:6px 14px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;
   border:1px solid var(--border2);border-radius:8px;background:var(--surface2);color:var(--text2);
   cursor:pointer;transition:all .2s;white-space:nowrap;}
 .theme-toggle:hover{border-color:var(--blue);color:var(--blue);}
@@ -359,6 +360,105 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
 .diag-note code{font-family:'JetBrains Mono',monospace;font-size:11px;
   background:rgba(108,63,199,.10);padding:1px 6px;border-radius:4px;color:var(--blue);}
 
+/* ── ROLE GATE ── */
+.gate{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;
+  padding:28px 20px;background:var(--bg);overflow-y:auto;}
+.gate::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 50% at 15% 8%,var(--mesh1),transparent 60%),
+             radial-gradient(ellipse 55% 45% at 85% 88%,var(--mesh2),transparent 60%);}
+.gate.hide{display:none;}
+.gate-card{position:relative;z-index:1;width:100%;max-width:880px;margin:auto;text-align:center;animation:fadeInScale .45s ease;}
+.gate-badge{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text3);border:1.5px solid var(--border);border-radius:20px;
+  padding:6px 14px;background:var(--surface);margin-bottom:16px;}
+.gate h1{font-size:30px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px;color:var(--text);}
+.gate h1 span{background:linear-gradient(135deg,var(--blue),#a03090);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.gate-sub{font-size:14px;color:var(--text2);margin-bottom:26px;line-height:1.6;}
+.gate-roles{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:720px){.gate-roles{grid-template-columns:1fr;}}
+.rolecard{text-align:left;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);
+  padding:24px;cursor:pointer;transition:all .25s;box-shadow:var(--shadow-lg);position:relative;
+  overflow:hidden;font-family:'Inter',sans-serif;}
+.rolecard::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.rolecard.admin::before{background:linear-gradient(90deg,#6c3fc7,#a03090);}
+.rolecard.user::before{background:linear-gradient(90deg,#2e8b6e,#3aa882);}
+.rolecard:hover{transform:translateY(-5px);box-shadow:var(--shadow-xl);border-color:var(--blue);}
+.rolecard.user:hover{border-color:var(--green2);}
+.rolecard.picked{border-color:var(--green2);box-shadow:0 0 0 3px rgba(46,139,110,.18),var(--shadow-lg);}
+.rc-ico{font-size:34px;margin-bottom:10px;}
+.rc-name{font-size:19px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-.02em;}
+.rc-desc{font-size:12.5px;color:var(--text2);line-height:1.6;margin-bottom:14px;}
+.rc-ops{display:flex;flex-direction:column;gap:6px;}
+.rc-op{font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:7px;
+  background:var(--blue-light);border:1px solid var(--blue-mid);color:var(--blue);}
+.rolecard.user .rc-op{background:var(--green-light);border-color:var(--green-mid);color:var(--green);}
+.gate-name{margin-top:20px;background:var(--surface);border:1.5px solid var(--green-mid);border-radius:16px;
+  padding:18px 20px;display:none;text-align:left;box-shadow:var(--shadow);}
+.gate-name.show{display:block;animation:fadeInScale .3s ease;}
+.gate-name-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.gate-name input{flex:1;min-width:180px;padding:10px 14px;font-size:14px;font-family:'Inter',sans-serif;
+  border:1.5px solid var(--border2);border-radius:10px;background:var(--surface2);color:var(--text);outline:none;}
+.gate-name input:focus{border-color:var(--green2);box-shadow:0 0 0 3px rgba(46,139,110,.12);}
+.gate-go{padding:11px 22px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;border:none;
+  border-radius:10px;background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;cursor:pointer;
+  box-shadow:0 4px 16px rgba(46,139,110,.3);transition:all .2s;}
+.gate-go:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(46,139,110,.45);}
+.gate-note{margin-top:22px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);line-height:1.9;}
+
+/* ── ROLE BADGE ── */
+.role-badge{display:none;align-items:center;gap:8px;padding:4px 5px 4px 12px;border-radius:20px;
+  font-size:12px;font-weight:700;border:1.5px solid;white-space:nowrap;}
+.role-badge.admin{background:var(--blue-light);border-color:var(--blue-mid);color:var(--blue);}
+.role-badge.user{background:var(--green-light);border-color:var(--green-mid);color:var(--green);}
+.role-switch{border:1px solid currentColor;border-radius:14px;padding:3px 10px;font-size:11px;font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;background:var(--surface);color:inherit;transition:all .2s;}
+.role-switch:hover{background:var(--surface2);}
+
+/* ── STARS + REVIEWS ── */
+.stars{display:flex;gap:4px;}
+.star{font-size:22px;line-height:1;cursor:pointer;background:none;border:none;padding:0;
+  color:var(--text4);transition:all .15s;}
+.star.on{color:#f0a020;transform:scale(1.08);}
+.stars-ro{font-size:13px;letter-spacing:2px;color:#f0a020;white-space:nowrap;}
+.rev-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:720px){.rev-grid{grid-template-columns:1fr;}}
+.rev-card{background:var(--surface2);border:1.5px solid var(--border);border-left:4px solid #f0a020;
+  border-radius:12px;padding:13px 15px;margin-bottom:11px;box-shadow:var(--shadow-sm);
+  animation:fadeInScale .3s ease backwards;}
+.rev-card:last-child{margin-bottom:0;}
+.rev-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
+.rev-name{font-size:13px;font-weight:700;color:var(--text);}
+.rev-txt{font-size:12.5px;color:var(--text2);line-height:1.65;}
+.rev-meta{font-size:10px;color:var(--text3);margin-top:7px;font-family:'JetBrains Mono',monospace;}
+.ta{width:100%;padding:10px 13px;font-size:13px;font-family:'Inter',sans-serif;resize:vertical;min-height:78px;
+  border:1.5px solid var(--border2);border-radius:10px;background:var(--surface);color:var(--text);outline:none;}
+.ta:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(108,63,199,.10);}
+
+/* ── INVENTORY / AVAILABILITY ── */
+.mini-btn{padding:4px 11px;font-size:11px;font-weight:600;font-family:'Inter',sans-serif;border-radius:7px;
+  border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .18s;}
+.mini-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
+.mini-btn.danger:hover{border-color:var(--rose);color:var(--rose);background:var(--rose-light);}
+.mini-btn:disabled{opacity:.35;cursor:not-allowed;}
+.avail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;margin-bottom:20px;}
+.avail-card{border-radius:14px;border:1.5px solid var(--border);background:var(--surface);padding:14px 16px;
+  cursor:pointer;transition:all .2s;box-shadow:var(--shadow-sm);animation:fadeInScale .3s ease backwards;}
+.avail-card:hover{transform:translateY(-3px);border-color:var(--blue);box-shadow:var(--shadow);}
+.avail-card.sel{border-color:var(--blue);background:var(--blue-light);box-shadow:0 0 0 3px rgba(108,63,199,.12);}
+.ac-no{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.02em;}
+.ac-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+.ac-price{font-size:14px;font-weight:700;color:var(--blue);margin-top:8px;}
+.st-free{background:var(--green-light);border-color:var(--green-mid);color:var(--green);}
+.st-busy{background:var(--rose-light);border-color:var(--rose-mid);color:var(--rose);}
+.inline-msg{display:none;border-radius:10px;padding:11px 15px;font-size:12.5px;font-weight:500;
+  margin-top:12px;line-height:1.55;animation:fadeInScale .3s ease;}
+.inline-msg.ok{background:var(--green-light);border:1.5px solid var(--green-mid);color:var(--green);}
+.inline-msg.bad{background:var(--rose-light);border:1.5px solid var(--rose-mid);color:var(--rose);}
+.role-hint{font-size:12px;color:var(--text2);line-height:1.7;padding:12px 16px;margin-bottom:18px;
+  background:var(--expl-bg);border:1.5px solid var(--border);border-left:4px solid var(--blue);border-radius:10px;}
+.role-hint code{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--blue-light);
+  padding:1px 6px;border-radius:4px;color:var(--blue);}
+
 /* ── DARK OVERRIDES ── */
 [data-theme="dark"] .dtbl thead th{background:linear-gradient(135deg,var(--blue-light),var(--surface2));}
 [data-theme="dark"] .add-card{background:var(--surface);}
@@ -374,35 +474,109 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
 [data-theme="dark"] .vt-bike{background:var(--green-light);border-color:var(--green-mid);color:var(--green);}
 [data-theme="dark"] .st-active{background:var(--green-light);border-color:var(--green-mid);color:var(--green);}
 [data-theme="dark"] .st-inactive{background:var(--rose-light);border-color:var(--rose-mid);color:var(--rose);}
+[data-theme="dark"] .rolecard,[data-theme="dark"] .gate-name{background:var(--surface);}
+[data-theme="dark"] .rev-card{background:var(--surface2);}
+[data-theme="dark"] .avail-card{background:var(--surface);}
 </style>
 </head>
 <body>
 <div class="wrap">
 
+<!-- ════ ROLE GATE — the first thing Main asks ════ -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-badge">☕ Main.showRoleMenu()</div>
+    <h1>Who is <span>signing in</span>?</h1>
+    <p class="gate-sub">One program, two doors. The <strong>same</strong> RoomBooking and RentalService objects
+      are behind both — what changes is <em>which methods you are allowed to call</em>.</p>
+    <div class="gate-roles">
+      <button class="rolecard admin" id="rolecard-admin" onclick="pickRole('admin')">
+        <div class="rc-ico">👨‍💼</div>
+        <div class="rc-name">Admin</div>
+        <div class="rc-desc">You own the hotel and the fleet. You create the things guests book,
+          set the prices, and read the money.</div>
+        <div class="rc-ops">
+          <div class="rc-op">addRoom() · addVehicle()</div>
+          <div class="rc-op">modifyRoomDetails() · modifyVehicleDetails()</div>
+          <div class="rc-op">removeRoom() · removeVehicle()</div>
+          <div class="rc-op">viewAllBookings() · overallRevenue()</div>
+        </div>
+      </button>
+      <button class="rolecard user" id="rolecard-user" onclick="pickRole('user')">
+        <div class="rc-ico">🙋</div>
+        <div class="rc-name">User</div>
+        <div class="rc-desc">You are a guest. You can only see what is available, take one of them,
+          give it back, and say what you thought.</div>
+        <div class="rc-ops">
+          <div class="rc-op">searchRoom() · searchVehicle()</div>
+          <div class="rc-op">bookRoom() · rentVehicle()</div>
+          <div class="rc-op">cancelBooking() · returnVehicle()</div>
+          <div class="rc-op">viewMyBookings() · giveReview()</div>
+        </div>
+      </button>
+    </div>
+    <div class="gate-name" id="gate-name">
+      <div class="field" style="margin-bottom:10px"><label>Your name — every Booking you make stores it</label></div>
+      <div class="gate-name-row">
+        <input id="gname" list="known-guests" value="Rahul Sharma" placeholder="e.g. Priya Nair"
+               onkeydown="if(event.key==='Enter')enterAsUser()"/>
+        <button class="gate-go" onclick="enterAsUser()">Enter as guest →</button>
+      </div>
+      <datalist id="known-guests"></datalist>
+    </div>
+    <div class="gate-note">
+      int choice = getUserChoice();<br>
+      if (choice == 1) adminMenu(); else guestMenu();
+    </div>
+  </div>
+</div>
+
 <!-- NAV -->
 <nav>
   <div class="logo"><div class="logo-icon">☕</div><span>Java</span>&nbsp;Playground</div>
-  <div class="app-switcher">
+  <div class="app-switcher" id="app-switcher" style="display:none">
     <button class="app-pill active" onclick="switchApp('room',this)">🏨 Room Booking</button>
     <button class="app-pill"        onclick="switchApp('vehicle',this)">🚗 Vehicle Rental</button>
   </div>
-  <div class="nav-tabs" id="room-nav">
-    <button class="nav-tab active" onclick="showPanel('room','pg',this)">⚡ Playground</button>
-    <button class="nav-tab" onclick="showPanel('room','book',this)">📝 Book room</button>
-    <button class="nav-tab" onclick="showPanel('room','view',this)">🏨 Bookings</button>
-    <button class="nav-tab" onclick="showPanel('room','file',this)">🗄 File records</button>
-    <button class="nav-tab" onclick="showPanel('room','report',this)">📊 Report</button>
-    <button class="nav-tab" onclick="showPanel('room','diagram',this)">🗂 Class diagram</button>
+
+  <div class="nav-tabs" id="nav-room-admin" style="display:none">
+    <button class="nav-tab active" data-panel="pg"      onclick="showPanel('room','pg',this)">⚡ Playground</button>
+    <button class="nav-tab"        data-panel="rooms"   onclick="showPanel('room','rooms',this)">🛏 Rooms</button>
+    <button class="nav-tab"        data-panel="view"    onclick="showPanel('room','view',this)">📋 All bookings</button>
+    <button class="nav-tab"        data-panel="report"  onclick="showPanel('room','report',this)">💰 Revenue</button>
+    <button class="nav-tab"        data-panel="file"    onclick="showPanel('room','file',this)">🗄 File records</button>
+    <button class="nav-tab"        data-panel="diagram" onclick="showPanel('room','diagram',this)">🗂 Class diagram</button>
   </div>
-  <div class="nav-tabs" id="vehicle-nav" style="display:none">
-    <button class="nav-tab active" onclick="showPanel('vehicle','pg',this)">⚡ Playground</button>
-    <button class="nav-tab" onclick="showPanel('vehicle','rent',this)">📝 Rent vehicle</button>
-    <button class="nav-tab" onclick="showPanel('vehicle','view',this)">🚗 Rentals</button>
-    <button class="nav-tab" onclick="showPanel('vehicle','file',this)">🗄 File records</button>
-    <button class="nav-tab" onclick="showPanel('vehicle','report',this)">📊 Report</button>
-    <button class="nav-tab" onclick="showPanel('vehicle','diagram',this)">🗂 Class diagram</button>
+  <div class="nav-tabs" id="nav-room-user" style="display:none">
+    <button class="nav-tab active" data-panel="pg"      onclick="showPanel('room','pg',this)">⚡ Playground</button>
+    <button class="nav-tab"        data-panel="book"    onclick="showPanel('room','book',this)">📝 Book a room</button>
+    <button class="nav-tab"        data-panel="my"      onclick="showPanel('room','my',this)">🧾 My bookings</button>
+    <button class="nav-tab"        data-panel="review"  onclick="showPanel('room','review',this)">⭐ Reviews</button>
+    <button class="nav-tab"        data-panel="diagram" onclick="showPanel('room','diagram',this)">🗂 Class diagram</button>
   </div>
-  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙 Night</button>
+  <div class="nav-tabs" id="nav-vehicle-admin" style="display:none">
+    <button class="nav-tab active" data-panel="pg"      onclick="showPanel('vehicle','pg',this)">⚡ Playground</button>
+    <button class="nav-tab"        data-panel="fleet"   onclick="showPanel('vehicle','fleet',this)">🚙 Fleet</button>
+    <button class="nav-tab"        data-panel="view"    onclick="showPanel('vehicle','view',this)">📋 All rentals</button>
+    <button class="nav-tab"        data-panel="report"  onclick="showPanel('vehicle','report',this)">💰 Revenue</button>
+    <button class="nav-tab"        data-panel="file"    onclick="showPanel('vehicle','file',this)">🗄 File records</button>
+    <button class="nav-tab"        data-panel="diagram" onclick="showPanel('vehicle','diagram',this)">🗂 Class diagram</button>
+  </div>
+  <div class="nav-tabs" id="nav-vehicle-user" style="display:none">
+    <button class="nav-tab active" data-panel="pg"      onclick="showPanel('vehicle','pg',this)">⚡ Playground</button>
+    <button class="nav-tab"        data-panel="rent"    onclick="showPanel('vehicle','rent',this)">🚗 Rent a vehicle</button>
+    <button class="nav-tab"        data-panel="my"      onclick="showPanel('vehicle','my',this)">🧾 My rentals</button>
+    <button class="nav-tab"        data-panel="review"  onclick="showPanel('vehicle','review',this)">⭐ Reviews</button>
+    <button class="nav-tab"        data-panel="diagram" onclick="showPanel('vehicle','diagram',this)">🗂 Class diagram</button>
+  </div>
+
+  <div class="nav-right">
+    <div class="role-badge" id="role-badge">
+      <span id="role-badge-txt"></span>
+      <button class="role-switch" onclick="openGate()">Switch</button>
+    </div>
+    <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙 Night</button>
+  </div>
 </nav>
 
 <!-- ════ ROOM BOOKING ════ -->
@@ -412,13 +586,19 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
   <div class="panel active" id="room-pg">
     <div class="pg-head">
       <h2>Room Booking <span>playground</span></h2>
-      <p>Step through how Main, RoomBooking, Booking and Room collaborate.</p>
+      <p id="r-pg-sub">Step through how Main, RoomBooking, Booking and Room collaborate.</p>
     </div>
-    <div class="act-row">
-      <button class="act-btn active" id="ra-search" onclick="rpick('search')">🔍 Search room</button>
-      <button class="act-btn" id="ra-book"   onclick="rpick('book')">📝 Book room</button>
-      <button class="act-btn" id="ra-cancel" onclick="rpick('cancel')">❌ Cancel booking</button>
-      <button class="act-btn" id="ra-view"   onclick="rpick('view')">📋 View bookings</button>
+    <div class="act-row" id="r-acts-user">
+      <button class="act-btn active" id="ra-search" onclick="rpick('search')">🔍 searchRoom()</button>
+      <button class="act-btn" id="ra-book"   onclick="rpick('book')">📝 bookRoom()</button>
+      <button class="act-btn" id="ra-cancel" onclick="rpick('cancel')">❌ cancelBooking()</button>
+      <button class="act-btn" id="ra-review" onclick="rpick('review')">⭐ giveReview()</button>
+    </div>
+    <div class="act-row" id="r-acts-admin" style="display:none">
+      <button class="act-btn active" id="ra-add"     onclick="rpick('add')">➕ addRoom()</button>
+      <button class="act-btn" id="ra-modify"  onclick="rpick('modify')">✏️ modifyRoomDetails()</button>
+      <button class="act-btn" id="ra-remove"  onclick="rpick('remove')">🗑 removeRoom()</button>
+      <button class="act-btn" id="ra-revenue" onclick="rpick('revenue')">💰 overallRevenue()</button>
     </div>
     <div id="rf-search" class="form-grid">
       <div class="field"><label>Room type</label>
@@ -433,6 +613,25 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
     </div>
     <div id="rf-cancel" class="form-grid" style="display:none">
       <div class="field"><label>Booking ID</label><input id="rfc-id" value="BK001"/></div>
+    </div>
+    <div id="rf-review" class="form-grid" style="display:none">
+      <div class="field"><label>Booking ID</label><select id="rfv-id"></select></div>
+      <div class="field"><label>Rating</label>
+        <select id="rfv-rating" style="width:110px"><option value="5">★★★★★</option><option value="4">★★★★☆</option><option value="3">★★★☆☆</option><option value="2">★★☆☆☆</option><option value="1">★☆☆☆☆</option></select></div>
+      <div class="field"><label>Comment</label><input id="rfv-text" value="Clean room, quick check-in." style="width:230px"/></div>
+    </div>
+    <div id="rf-add" class="form-grid" style="display:none">
+      <div class="field"><label>Room number</label><input id="rfa-no" value="501" style="width:110px"/></div>
+      <div class="field"><label>Room type</label><select id="rfa-type"><option>Single</option><option>Double</option><option selected>Suite</option><option>Deluxe</option></select></div>
+      <div class="field"><label>Price / night</label><input id="rfa-price" value="5200" style="width:110px"/></div>
+    </div>
+    <div id="rf-modify" class="form-grid" style="display:none">
+      <div class="field"><label>Room</label><select id="rfm-no"></select></div>
+      <div class="field"><label>New type</label><select id="rfm-type"><option>Single</option><option>Double</option><option>Suite</option><option>Deluxe</option></select></div>
+      <div class="field"><label>New price</label><input id="rfm-price" value="2600" style="width:110px"/></div>
+    </div>
+    <div id="rf-remove" class="form-grid" style="display:none">
+      <div class="field"><label>Room</label><select id="rfx-no"></select></div>
     </div>
     <div class="stage" id="r-stage"></div>
     <div class="ctrl-bar">
@@ -451,35 +650,126 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
     </div>
   </div>
 
-  <!-- Book room -->
+  <!-- USER — Book a room -->
   <div class="panel" id="room-book">
     <div class="page-head">
       <div><div class="page-title">Book a <span>room</span></div>
-        <div class="page-sub">Main → RoomBooking.bookRoom() → new Booking() → Room.setAvailable(false)</div></div>
-      <div class="method-pill">bookRoom()</div>
+        <div class="page-sub">RoomBooking.searchRoom() → bookRoom() → new Booking() → Room.setAvailable(false)</div></div>
+      <div class="method-pill">searchRoom() · bookRoom()</div>
     </div>
+    <div class="role-hint">As a guest you never touch <code>List&lt;Room&gt;</code> directly. You can only see the
+      <strong>Room</strong> objects whose <code>available</code> flag is still <code>true</code> — the admin decides which
+      rooms exist at all.</div>
+    <div class="slabel">Available rooms — searchRoom()</div>
+    <div class="search-bar">
+      <select id="rb-ftype" onchange="renderRAvail()"><option value="">All types</option><option>Single</option><option>Double</option><option>Suite</option><option>Deluxe</option></select>
+    </div>
+    <div class="avail-grid" id="r-avail"></div>
     <div class="add-wrap">
       <div class="add-card">
         <h3>🏨 New booking</h3>
         <div class="form-col">
           <div class="field"><label>Customer name</label><input id="rb-name" placeholder="e.g. Priya Nair"/></div>
-          <div class="field"><label>Room type</label><select id="rb-type"><option>Single</option><option>Double</option><option>Suite</option><option>Deluxe</option></select></div>
-          <div class="field"><label>Check-in date</label><input id="rb-in" placeholder="DD-MM-YYYY"/></div>
-          <div class="field"><label>Check-out date</label><input id="rb-out" placeholder="DD-MM-YYYY"/></div>
+          <div class="field"><label>Room (pick a card above, or choose here)</label><select id="rb-room" onchange="syncAvailSel()"></select></div>
+          <div class="field"><label>Check-in date</label><input id="rb-in" placeholder="DD-MM-YYYY" value="10-10-2026"/></div>
+          <div class="field"><label>Check-out date</label><input id="rb-out" placeholder="DD-MM-YYYY" value="13-10-2026"/></div>
           <button class="submit-btn" onclick="addBooking()">Book room →</button>
-          <div class="success-msg" id="rb-ok">✅ Room booked and saved to file!</div>
+          <div class="inline-msg" id="rb-msg"></div>
         </div>
       </div>
       <div class="add-card"><h3>🕐 Recently booked</h3><div id="r-recent"></div></div>
     </div>
   </div>
 
-  <!-- Bookings view -->
+  <!-- USER — My bookings -->
+  <div class="panel" id="room-my">
+    <div class="page-head">
+      <div><div class="page-title">My <span>bookings</span></div>
+        <div class="page-sub" id="r-my-sub">RoomBooking.viewMyBookings(customerName) → filters List&lt;Booking&gt;</div></div>
+      <div class="method-pill">viewMyBookings() · cancelBooking()</div>
+    </div>
+    <div class="chips" id="r-my-chips"></div>
+    <div class="tbl-wrap"><table class="dtbl">
+      <thead><tr><th>Booking ID</th><th>Room No</th><th>Type</th><th>Check-in</th><th>Check-out</th><th>Price</th><th>Status</th><th></th></tr></thead>
+      <tbody id="r-my-tbody"></tbody>
+    </table></div>
+    <div class="role-hint" style="margin-top:18px">Cancelling calls <code>booking.setActive(false)</code> <em>and</em>
+      <code>room.setAvailable(true)</code> — one action, two objects changed. That is why the Room lives inside the Booking.</div>
+  </div>
+
+  <!-- USER — Reviews -->
+  <div class="panel" id="room-review">
+    <div class="page-head">
+      <div><div class="page-title">Give a <span>review</span></div>
+        <div class="page-sub">RoomBooking.addReview() → new Review() → FileManager.saveReview()</div></div>
+      <div class="method-pill">giveReview()</div>
+    </div>
+    <div class="rev-grid">
+      <div class="add-card">
+        <h3>⭐ Rate your stay</h3>
+        <div class="form-col">
+          <div class="field"><label>Which booking?</label><select id="rv-book"></select></div>
+          <div class="field"><label>Rating</label><div class="stars" id="rv-stars"></div></div>
+          <div class="field"><label>Comment</label><textarea class="ta" id="rv-text" placeholder="How was the room?"></textarea></div>
+          <button class="submit-btn" onclick="addRReview()">Submit review →</button>
+          <div class="inline-msg" id="rv-msg"></div>
+        </div>
+      </div>
+      <div class="add-card">
+        <h3>💬 What guests are saying</h3>
+        <div id="r-revsum" style="margin-bottom:14px"></div>
+        <div id="r-revlist"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN — Rooms inventory -->
+  <div class="panel" id="room-rooms">
+    <div class="page-head">
+      <div><div class="page-title">Manage <span>rooms</span></div>
+        <div class="page-sub">The admin-only side of RoomBooking — it owns List&lt;Room&gt;</div></div>
+      <div class="method-pill">addRoom() · modifyRoomDetails() · removeRoom()</div>
+    </div>
+    <div class="role-hint">Everything a guest can book has to exist first. <code>addRoom()</code> constructs a
+      <strong>Room</strong>, <code>modifyRoomDetails()</code> calls its setters, and <code>removeRoom()</code> drops it from
+      the list — but only if no active <strong>Booking</strong> still points at it.</div>
+    <div class="chips" id="r-inv-chips"></div>
+    <div class="add-wrap">
+      <div class="add-card">
+        <h3>➕ Add a room</h3>
+        <div class="form-col">
+          <div class="field"><label>Room number</label><input id="ar-no" placeholder="e.g. 501"/></div>
+          <div class="field"><label>Room type</label><select id="ar-type"><option>Single</option><option>Double</option><option>Suite</option><option>Deluxe</option></select></div>
+          <div class="field"><label>Price per night (₹)</label><input id="ar-price" placeholder="e.g. 5200"/></div>
+          <button class="submit-btn" onclick="adminAddRoom()">addRoom() →</button>
+          <div class="inline-msg" id="ar-msg"></div>
+        </div>
+      </div>
+      <div class="add-card">
+        <h3>✏️ Modify room details</h3>
+        <div class="form-col">
+          <div class="field"><label>Room</label><select id="mr-no" onchange="prefillModifyRoom()"></select></div>
+          <div class="field"><label>Room type</label><select id="mr-type"><option>Single</option><option>Double</option><option>Suite</option><option>Deluxe</option></select></div>
+          <div class="field"><label>Price per night (₹)</label><input id="mr-price"/></div>
+          <div class="field"><label>Availability</label><select id="mr-avail"><option value="yes">✅ Available</option><option value="no">❌ Occupied</option></select></div>
+          <button class="submit-btn" onclick="adminModifyRoom()">modifyRoomDetails() →</button>
+          <div class="inline-msg" id="mr-msg"></div>
+        </div>
+      </div>
+    </div>
+    <div class="slabel">Room inventory — List&lt;Room&gt;</div>
+    <div class="tbl-wrap"><table class="dtbl">
+      <thead><tr><th>Object</th><th>Room No</th><th>Type</th><th>Price / night</th><th>Availability</th><th>Bookings</th><th></th></tr></thead>
+      <tbody id="r-inv-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- ADMIN — All bookings -->
   <div class="panel" id="room-view">
     <div class="page-head">
       <div><div class="page-title">All <span>bookings</span></div>
-        <div class="page-sub">RoomBooking.viewBookings() → FileManager.readBookings() → List&lt;Booking&gt;</div></div>
-      <div class="method-pill">viewBookings()</div>
+        <div class="page-sub">RoomBooking.viewAllBookings() → FileManager.readBookings() → List&lt;Booking&gt;</div></div>
+      <div class="method-pill">viewAllBookings()</div>
     </div>
     <div class="chips" id="r-chips"></div>
     <div class="slabel">Search &amp; filter</div>
@@ -506,6 +796,10 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
     <div class="slabel">bookings.csv — raw file content</div>
     <div class="file-terminal" id="r-term"><div class="prompt">$ cat bookings.csv</div></div>
     <div class="file-stats" id="r-fstats"></div>
+    <div class="slabel">rooms.csv — the admin's inventory</div>
+    <div class="file-terminal" id="r-term2"><div class="prompt">$ cat rooms.csv</div></div>
+    <div class="slabel">reviews.csv — what guests wrote</div>
+    <div class="file-terminal" id="r-term3"><div class="prompt">$ cat reviews.csv</div></div>
     <div class="slabel">Booking objects created from file</div>
     <div class="tbl-wrap"><table class="dtbl">
       <thead><tr><th>Object</th><th>Customer</th><th>Room type</th><th>Check-in</th><th>Check-out</th><th>Status</th></tr></thead>
@@ -516,11 +810,14 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
   <!-- Report -->
   <div class="panel" id="room-report">
     <div class="page-head">
-      <div><div class="page-title">Booking <span>report</span></div><div class="page-sub" id="r-rpt-date"></div></div>
-      <div class="method-pill">generateReport()</div>
+      <div><div class="page-title">Overall <span>revenue</span></div><div class="page-sub" id="r-rpt-date"></div></div>
+      <div class="method-pill">overallRevenue()</div>
     </div>
+    <div class="role-hint">Revenue is not stored anywhere — it is <em>derived</em>. <code>overallRevenue()</code> walks
+      <code>List&lt;Booking&gt;</code> and adds up <code>booking.getPrice()</code>, the price that was copied off the Room at
+      the moment of booking. Change a room's price today and yesterday's bookings keep theirs.</div>
     <div class="kpi-grid" id="r-kpi"></div>
-    <div class="slabel">Bookings by room type</div>
+    <div class="slabel">Revenue by room type</div>
     <div id="r-bars"></div>
     <div class="slabel">All transactions</div>
     <div class="tbl-wrap"><table class="dtbl">
@@ -532,85 +829,118 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
   <!-- Diagram -->
   <div class="panel" id="room-diagram">
     <div class="page-head"><div><div class="page-title">Class <span>diagram</span></div>
-      <div class="page-sub">UML — matches your uploaded diagram exactly</div></div></div>
+      <div class="page-sub">One RoomBooking class — its methods split into the two doors</div></div></div>
     <div class="diag-wrap">
-      <svg viewBox="0 0 760 580" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+      <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;display:block;margin:0 auto;">
         <defs>
           <linearGradient id="rg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ede5f7"/><stop offset="100%" stop-color="#faf7fe"/></linearGradient>
           <linearGradient id="rg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d8f5ec"/><stop offset="100%" stop-color="#edfaf5"/></linearGradient>
+          <linearGradient id="rg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fdf3e0"/><stop offset="100%" stop-color="#fffbf2"/></linearGradient>
           <marker id="rm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M1 1L9 5L1 9" fill="none" stroke="#6c3fc7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
           <marker id="rdm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M1 1L9 5L1 9" fill="none" stroke="#2e8b6e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
           <filter id="rgl"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
-        <rect width="760" height="580" fill="#f7f3fc" rx="12"/>
+        <rect width="800" height="600" fill="#f7f3fc" rx="12"/>
         <pattern id="rdots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="rgba(108,63,199,.06)"/></pattern>
-        <rect width="760" height="580" fill="url(#rdots)" rx="12"/>
-        <!-- Main -->
-        <rect x="275" y="14" width="200" height="95" rx="12" fill="url(#rg1)" stroke="#d4c6ec" stroke-width="1.5"/>
-        <line x1="275" y1="14" x2="475" y2="14" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
-        <text x="375" y="36" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">Main</text>
-        <line x1="285" y1="43" x2="465" y2="43" stroke="#d4c6ec" stroke-width="1"/>
-        <text x="290" y="59" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ main(String[] args)</text>
-        <text x="290" y="73" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ showMenu()</text>
-        <text x="290" y="87" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ getUserChoice() : int</text>
-        <!-- Main → RoomBooking -->
-        <line x1="375" y1="109" x2="375" y2="155" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#rm)" filter="url(#rgl)"/>
-        <rect x="348" y="123" width="52" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
-        <text x="374" y="135" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">uses</text>
-        <!-- RoomBooking -->
-        <rect x="180" y="157" width="248" height="172" rx="12" fill="url(#rg1)" stroke="#d4c6ec" stroke-width="1.5"/>
-        <line x1="180" y1="157" x2="428" y2="157" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
-        <text x="304" y="179" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">RoomBooking</text>
-        <line x1="190" y1="186" x2="418" y2="186" stroke="#d4c6ec" stroke-width="1"/>
-        <text x="195" y="202" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- List&lt;Booking&gt; bookings</text>
-        <text x="195" y="216" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- List&lt;Room&gt; rooms</text>
-        <line x1="190" y1="223" x2="418" y2="223" stroke="#d4c6ec" stroke-width="1"/>
-        <text x="195" y="239" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ searchRoom()</text>
-        <text x="195" y="254" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ bookRoom()</text>
-        <text x="195" y="269" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ cancelBooking()</text>
-        <text x="195" y="284" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ viewBookings()</text>
-        <text x="195" y="299" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ generateReport()</text>
-        <!-- creates arrow -->
-        <line x1="375" y1="329" x2="490" y2="382" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#rm)" filter="url(#rgl)"/>
-        <rect x="406" y="346" width="52" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
-        <text x="432" y="358" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">creates</text>
-        <!-- manages curved left -->
-        <path d="M190 270 Q65 310 65 448 Q65 510 130 526" stroke="#6c3fc7" stroke-width="1.5" fill="none" marker-end="url(#rm)" stroke-dasharray="5 3"/>
-        <rect x="14" y="384" width="54" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
-        <text x="41" y="396" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">manages</text>
-        <!-- Booking -->
-        <rect x="446" y="384" width="225" height="130" rx="12" fill="url(#rg1)" stroke="#d4c6ec" stroke-width="1.5"/>
-        <line x1="446" y1="384" x2="671" y2="384" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
-        <text x="558" y="406" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">Booking</text>
-        <line x1="456" y1="413" x2="661" y2="413" stroke="#d4c6ec" stroke-width="1"/>
-        <text x="461" y="429" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String bookingId</text>
-        <text x="461" y="443" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String customerName</text>
-        <text x="461" y="457" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- Room room</text>
-        <text x="461" y="471" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String checkInDate</text>
-        <text x="461" y="485" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String checkOutDate</text>
-        <!-- reserves dashed -->
-        <line x1="510" y1="514" x2="290" y2="530" stroke="#2e8b6e" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#rdm)"/>
-        <rect x="365" y="510" width="54" height="16" rx="4" fill="#d8f5ec" stroke="#a8e8d4" stroke-width=".5"/>
-        <text x="392" y="522" text-anchor="middle" fill="#2e8b6e" font-family="Inter" font-size="10" font-weight="600">reserves</text>
-        <!-- Room -->
-        <rect x="115" y="532" width="230" height="36" rx="12" fill="url(#rg2)" stroke="#a8e8d4" stroke-width="1.5"/>
-        <line x1="115" y1="532" x2="345" y2="532" stroke="#2e8b6e" stroke-width="3.5" stroke-linecap="round"/>
-        <text x="230" y="552" text-anchor="middle" fill="#1a5038" font-family="Inter" font-size="12" font-weight="700">Room  |  roomNumber · roomType · price · available</text>
+        <rect width="800" height="600" fill="url(#rdots)" rx="12"/>
+
         <!-- Legend -->
-        <rect x="580" y="14" width="168" height="90" rx="9" fill="#ffffff" stroke="#d4c6ec" stroke-width="1"/>
-        <text x="664" y="31" text-anchor="middle" fill="#8a70b8" font-family="Inter" font-size="10" font-weight="700">LEGEND</text>
-        <line x1="592" y1="42" x2="614" y2="42" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#rm)"/>
-        <text x="620" y="46" fill="#8a70b8" font-family="Inter" font-size="10">direct call</text>
-        <line x1="592" y1="57" x2="614" y2="57" stroke="#6c3fc7" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#rm)"/>
-        <text x="620" y="61" fill="#8a70b8" font-family="Inter" font-size="10">creates / manages</text>
-        <line x1="592" y1="72" x2="614" y2="72" stroke="#2e8b6e" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#rdm)"/>
-        <text x="620" y="76" fill="#8a70b8" font-family="Inter" font-size="10">reserves</text>
-        <text x="592" y="92" fill="#8a70b8" font-family="Inter" font-size="9">– private  + public</text>
+        <rect x="20" y="18" width="196" height="104" rx="9" fill="#ffffff" stroke="#d4c6ec" stroke-width="1"/>
+        <text x="118" y="36" text-anchor="middle" fill="#8a70b8" font-family="Inter" font-size="10" font-weight="700">LEGEND</text>
+        <line x1="32" y1="48" x2="56" y2="48" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#rm)"/>
+        <text x="62" y="52" fill="#8a70b8" font-family="Inter" font-size="10">direct call</text>
+        <line x1="32" y1="66" x2="56" y2="66" stroke="#6c3fc7" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#rm)"/>
+        <text x="62" y="70" fill="#8a70b8" font-family="Inter" font-size="10">creates / manages</text>
+        <line x1="32" y1="84" x2="56" y2="84" stroke="#2e8b6e" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#rdm)"/>
+        <text x="62" y="88" fill="#8a70b8" font-family="Inter" font-size="10">reserves</text>
+        <text x="32" y="108" fill="#8a70b8" font-family="Inter" font-size="9">&#8211; private   + public</text>
+
+        <!-- Main -->
+        <rect x="295" y="18" width="210" height="95" rx="12" fill="url(#rg1)" stroke="#d4c6ec" stroke-width="1.5"/>
+        <line x1="295" y1="18" x2="505" y2="18" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="400" y="40" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">Main</text>
+        <line x1="305" y1="48" x2="495" y2="48" stroke="#d4c6ec" stroke-width="1"/>
+        <text x="310" y="64" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ main(String[] args)</text>
+        <text x="310" y="78" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ showRoleMenu()</text>
+        <text x="310" y="92" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ getUserChoice() : int</text>
+        <line x1="400" y1="113" x2="400" y2="152" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#rm)" filter="url(#rgl)"/>
+        <rect x="373" y="122" width="54" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
+        <text x="400" y="134" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">uses</text>
+
+        <!-- RoomBooking -->
+        <rect x="240" y="154" width="320" height="248" rx="12" fill="url(#rg1)" stroke="#d4c6ec" stroke-width="1.5"/>
+        <line x1="240" y1="154" x2="560" y2="154" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="400" y="176" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">RoomBooking</text>
+        <line x1="250" y1="184" x2="550" y2="184" stroke="#d4c6ec" stroke-width="1"/>
+        <text x="256" y="200" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- List&lt;Room&gt; rooms</text>
+        <text x="256" y="214" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- List&lt;Booking&gt; bookings</text>
+        <text x="256" y="228" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- List&lt;Review&gt; reviews</text>
+        <line x1="250" y1="236" x2="550" y2="236" stroke="#d4c6ec" stroke-width="1"/>
+        <rect x="256" y="242" width="86" height="14" rx="3" fill="#d8f5ec" stroke="#a8e8d4" stroke-width=".5"/>
+        <text x="299" y="252" text-anchor="middle" fill="#2e8b6e" font-family="Inter" font-size="9" font-weight="700">USER OPS</text>
+        <text x="256" y="270" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ searchRoom()</text>
+        <text x="256" y="284" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ bookRoom()</text>
+        <text x="256" y="298" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ cancelBooking()</text>
+        <text x="256" y="312" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ viewMyBookings() · addReview()</text>
+        <rect x="256" y="322" width="92" height="14" rx="3" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
+        <text x="302" y="332" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="9" font-weight="700">ADMIN OPS</text>
+        <text x="256" y="350" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ addRoom()</text>
+        <text x="256" y="364" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ modifyRoomDetails()</text>
+        <text x="256" y="378" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ removeRoom()</text>
+        <text x="256" y="392" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ viewAllBookings() · overallRevenue()</text>
+
+        <!-- Booking -->
+        <rect x="608" y="150" width="180" height="132" rx="12" fill="url(#rg1)" stroke="#d4c6ec" stroke-width="1.5"/>
+        <line x1="608" y1="150" x2="788" y2="150" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="698" y="172" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">Booking</text>
+        <line x1="618" y1="180" x2="778" y2="180" stroke="#d4c6ec" stroke-width="1"/>
+        <text x="623" y="196" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String bookingId</text>
+        <text x="623" y="210" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String customerName</text>
+        <text x="623" y="224" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- Room room</text>
+        <text x="623" y="238" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- double price</text>
+        <text x="623" y="252" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String checkIn/Out</text>
+        <text x="623" y="266" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- boolean active</text>
+        <line x1="562" y1="216" x2="606" y2="216" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#rm)" filter="url(#rgl)"/>
+        <rect x="558" y="186" width="52" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
+        <text x="584" y="198" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">creates</text>
+
+        <!-- Review -->
+        <rect x="30" y="440" width="270" height="118" rx="12" fill="url(#rg3)" stroke="#f5dfa0" stroke-width="1.5"/>
+        <line x1="30" y1="440" x2="300" y2="440" stroke="#9a6820" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="165" y="462" text-anchor="middle" fill="#9a6820" font-family="Inter" font-size="13" font-weight="700">Review</text>
+        <line x1="40" y1="470" x2="290" y2="470" stroke="#f5dfa0" stroke-width="1"/>
+        <text x="46" y="486" fill="#9a6820" font-family="JetBrains Mono" font-size="10">- String reviewId</text>
+        <text x="46" y="500" fill="#9a6820" font-family="JetBrains Mono" font-size="10">- String customerName</text>
+        <text x="46" y="514" fill="#9a6820" font-family="JetBrains Mono" font-size="10">- int rating          // 1..5</text>
+        <text x="46" y="528" fill="#9a6820" font-family="JetBrains Mono" font-size="10">- String comment</text>
+        <text x="46" y="546" fill="#9a6820" font-family="JetBrains Mono" font-size="10">- String bookingId</text>
+        <path d="M300 402 L200 438" stroke="#6c3fc7" stroke-width="1.5" fill="none" stroke-dasharray="5 3" marker-end="url(#rm)"/>
+        <rect x="223" y="404" width="54" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
+        <text x="250" y="416" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">creates</text>
+
+        <!-- Room -->
+        <rect x="470" y="440" width="300" height="118" rx="12" fill="url(#rg2)" stroke="#a8e8d4" stroke-width="1.5"/>
+        <line x1="470" y1="440" x2="770" y2="440" stroke="#2e8b6e" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="620" y="462" text-anchor="middle" fill="#1a5038" font-family="Inter" font-size="13" font-weight="700">Room</text>
+        <line x1="480" y1="470" x2="760" y2="470" stroke="#a8e8d4" stroke-width="1"/>
+        <text x="486" y="486" fill="#1a5038" font-family="JetBrains Mono" font-size="10">- int roomNumber</text>
+        <text x="486" y="500" fill="#1a5038" font-family="JetBrains Mono" font-size="10">- String roomType</text>
+        <text x="486" y="514" fill="#1a5038" font-family="JetBrains Mono" font-size="10">- double price</text>
+        <text x="486" y="528" fill="#1a5038" font-family="JetBrains Mono" font-size="10">- boolean available</text>
+        <text x="486" y="546" fill="#1a5038" font-family="JetBrains Mono" font-size="10">+ setPrice() + setAvailable()</text>
+        <path d="M500 402 L560 438" stroke="#6c3fc7" stroke-width="1.5" fill="none" stroke-dasharray="5 3" marker-end="url(#rm)"/>
+        <rect x="503" y="404" width="58" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
+        <text x="532" y="416" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">manages</text>
+        <line x1="690" y1="284" x2="655" y2="437" stroke="#2e8b6e" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#rdm)"/>
+        <rect x="648" y="352" width="56" height="16" rx="4" fill="#d8f5ec" stroke="#a8e8d4" stroke-width=".5"/>
+        <text x="676" y="364" text-anchor="middle" fill="#2e8b6e" font-family="Inter" font-size="10" font-weight="600">reserves</text>
       </svg>
     </div>
-    <div class="diag-note"><strong>Reading:</strong> Solid purple = direct call · Dashed purple = <code>creates/manages</code> · Dashed teal = <code>reserves</code></div>
+    <div class="diag-note"><strong>Reading:</strong> there is only <em>one</em> RoomBooking class. The role you picked at
+      the door decides which half of its method list <code>Main</code> is willing to call — the objects, the lists and the
+      files underneath are exactly the same either way.</div>
   </div>
 </div><!-- /app-room -->
 
@@ -621,13 +951,19 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
   <div class="panel active" id="vehicle-pg">
     <div class="pg-head">
       <h2>Vehicle Rental <span>playground</span></h2>
-      <p>Step through how Main, RentalService, Rental and Vehicle collaborate.</p>
+      <p id="v-pg-sub">Step through how Main, RentalService, Rental and Vehicle collaborate.</p>
     </div>
-    <div class="act-row">
-      <button class="act-btn active" id="va-search" onclick="vpick('search')">🔍 Search vehicle</button>
-      <button class="act-btn" id="va-rent"   onclick="vpick('rent')">🚗 Rent vehicle</button>
-      <button class="act-btn" id="va-return" onclick="vpick('return')">↩ Return vehicle</button>
-      <button class="act-btn" id="va-view"   onclick="vpick('view')">📋 View rentals</button>
+    <div class="act-row" id="v-acts-user">
+      <button class="act-btn active" id="va-search" onclick="vpick('search')">🔍 searchVehicle()</button>
+      <button class="act-btn" id="va-rent"   onclick="vpick('rent')">🚗 rentVehicle()</button>
+      <button class="act-btn" id="va-return" onclick="vpick('return')">↩ returnVehicle()</button>
+      <button class="act-btn" id="va-review" onclick="vpick('review')">⭐ giveReview()</button>
+    </div>
+    <div class="act-row" id="v-acts-admin" style="display:none">
+      <button class="act-btn active" id="va-add"     onclick="vpick('add')">➕ addVehicle()</button>
+      <button class="act-btn" id="va-modify"  onclick="vpick('modify')">✏️ modifyVehicleDetails()</button>
+      <button class="act-btn" id="va-remove"  onclick="vpick('remove')">🗑 removeVehicle()</button>
+      <button class="act-btn" id="va-revenue" onclick="vpick('revenue')">💰 overallRevenue()</button>
     </div>
     <div id="vf-search" class="form-grid">
       <div class="field"><label>Vehicle type</label>
@@ -641,6 +977,26 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
     </div>
     <div id="vf-return" class="form-grid" style="display:none">
       <div class="field"><label>Rental ID</label><input id="vfrt-id" value="RT001"/></div>
+    </div>
+    <div id="vf-review" class="form-grid" style="display:none">
+      <div class="field"><label>Rental ID</label><select id="vfv-id"></select></div>
+      <div class="field"><label>Rating</label>
+        <select id="vfv-rating" style="width:110px"><option value="5">★★★★★</option><option value="4">★★★★☆</option><option value="3">★★★☆☆</option><option value="2">★★☆☆☆</option><option value="1">★☆☆☆☆</option></select></div>
+      <div class="field"><label>Comment</label><input id="vfv-text" value="Clean car, smooth pickup." style="width:230px"/></div>
+    </div>
+    <div id="vf-add" class="form-grid" style="display:none">
+      <div class="field"><label>Vehicle number</label><input id="vfa-num" value="KL08ZZ4321" style="width:130px"/></div>
+      <div class="field"><label>Model</label><input id="vfa-model" value="Mahindra Thar" style="width:140px"/></div>
+      <div class="field"><label>Type</label><select id="vfa-type"><option>Sedan</option><option selected>SUV</option><option>Bike</option><option>Truck</option><option>Van</option></select></div>
+      <div class="field"><label>Rent / day</label><input id="vfa-rate" value="3400" style="width:100px"/></div>
+    </div>
+    <div id="vf-modify" class="form-grid" style="display:none">
+      <div class="field"><label>Vehicle</label><select id="vfm-num"></select></div>
+      <div class="field"><label>New type</label><select id="vfm-type"><option>Sedan</option><option>SUV</option><option>Bike</option><option>Truck</option><option>Van</option></select></div>
+      <div class="field"><label>New rent / day</label><input id="vfm-rate" value="1800" style="width:110px"/></div>
+    </div>
+    <div id="vf-remove" class="form-grid" style="display:none">
+      <div class="field"><label>Vehicle</label><select id="vfx-num"></select></div>
     </div>
     <div class="stage" id="v-stage"></div>
     <div class="ctrl-bar">
@@ -659,34 +1015,124 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
     </div>
   </div>
 
-  <!-- Rent vehicle -->
+  <!-- USER — Rent a vehicle -->
   <div class="panel" id="vehicle-rent">
     <div class="page-head">
       <div><div class="page-title">Rent a <span>vehicle</span></div>
-        <div class="page-sub">Main → RentalService.rentVehicle() → new Rental() → Vehicle.setAvailable(false)</div></div>
-      <div class="method-pill">rentVehicle()</div>
+        <div class="page-sub">RentalService.searchVehicle() → rentVehicle() → new Rental() → Vehicle.setAvailable(false)</div></div>
+      <div class="method-pill">searchVehicle() · rentVehicle()</div>
     </div>
+    <div class="role-hint">Only vehicles with <code>available == true</code> reach you. The total is computed once,
+      at rental time: <code>totalAmount = vehicle.getRentPerDay() * days</code>.</div>
+    <div class="slabel">Available vehicles — searchVehicle()</div>
+    <div class="search-bar">
+      <select id="vr-ftype" onchange="renderVAvail()"><option value="">All types</option><option>Sedan</option><option>SUV</option><option>Bike</option><option>Truck</option><option>Van</option></select>
+    </div>
+    <div class="avail-grid" id="v-avail"></div>
     <div class="add-wrap">
       <div class="add-card">
         <h3>🚗 New rental</h3>
         <div class="form-col">
           <div class="field"><label>Customer name</label><input id="vr-name" placeholder="e.g. Neha Gupta"/></div>
-          <div class="field"><label>Vehicle type</label><select id="vr-type"><option>Sedan</option><option>SUV</option><option>Bike</option><option>Truck</option><option>Van</option></select></div>
-          <div class="field"><label>Number of days</label><input id="vr-days" placeholder="e.g. 5"/></div>
+          <div class="field"><label>Vehicle (pick a card above, or choose here)</label><select id="vr-veh" onchange="syncVAvailSel()"></select></div>
+          <div class="field"><label>Number of days</label><input id="vr-days" value="3"/></div>
           <button class="submit-btn" onclick="addRental()">Rent vehicle →</button>
-          <div class="success-msg" id="vr-ok">✅ Vehicle rented and saved to file!</div>
+          <div class="inline-msg" id="vr-msg"></div>
         </div>
       </div>
       <div class="add-card"><h3>🕐 Recent rentals</h3><div id="v-recent"></div></div>
     </div>
   </div>
 
-  <!-- Rentals view -->
+  <!-- USER — My rentals -->
+  <div class="panel" id="vehicle-my">
+    <div class="page-head">
+      <div><div class="page-title">My <span>rentals</span></div>
+        <div class="page-sub" id="v-my-sub">RentalService.viewMyRentals(customerName) → filters List&lt;Rental&gt;</div></div>
+      <div class="method-pill">viewMyRentals() · returnVehicle()</div>
+    </div>
+    <div class="chips" id="v-my-chips"></div>
+    <div class="tbl-wrap"><table class="dtbl">
+      <thead><tr><th>Rental ID</th><th>Vehicle No</th><th>Type</th><th>Days</th><th>Rate</th><th>Total</th><th>Status</th><th></th></tr></thead>
+      <tbody id="v-my-tbody"></tbody>
+    </table></div>
+    <div class="role-hint" style="margin-top:18px">Returning a vehicle flips <code>vehicle.setAvailable(true)</code>, which
+      is why it reappears in <em>every other guest's</em> search the moment you hand it back.</div>
+  </div>
+
+  <!-- USER — Reviews -->
+  <div class="panel" id="vehicle-review">
+    <div class="page-head">
+      <div><div class="page-title">Give a <span>review</span></div>
+        <div class="page-sub">RentalService.addReview() → new Review() → FileManager.saveReview()</div></div>
+      <div class="method-pill">giveReview()</div>
+    </div>
+    <div class="rev-grid">
+      <div class="add-card">
+        <h3>⭐ Rate your ride</h3>
+        <div class="form-col">
+          <div class="field"><label>Which rental?</label><select id="vv-rent"></select></div>
+          <div class="field"><label>Rating</label><div class="stars" id="vv-stars"></div></div>
+          <div class="field"><label>Comment</label><textarea class="ta" id="vv-text" placeholder="How was the vehicle?"></textarea></div>
+          <button class="submit-btn" onclick="addVReview()">Submit review →</button>
+          <div class="inline-msg" id="vv-msg"></div>
+        </div>
+      </div>
+      <div class="add-card">
+        <h3>💬 What renters are saying</h3>
+        <div id="v-revsum" style="margin-bottom:14px"></div>
+        <div id="v-revlist"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN — Fleet -->
+  <div class="panel" id="vehicle-fleet">
+    <div class="page-head">
+      <div><div class="page-title">Manage the <span>fleet</span></div>
+        <div class="page-sub">The admin-only side of RentalService — it owns List&lt;Vehicle&gt;</div></div>
+      <div class="method-pill">addVehicle() · modifyVehicleDetails() · removeVehicle()</div>
+    </div>
+    <div class="role-hint">A <strong>Vehicle</strong> is identified by its number plate, so <code>addVehicle()</code>
+      refuses a plate that is already in the list — the same duplicate guard <code>addRoom()</code> uses for room numbers.</div>
+    <div class="chips" id="v-inv-chips"></div>
+    <div class="add-wrap">
+      <div class="add-card">
+        <h3>➕ Add a vehicle</h3>
+        <div class="form-col">
+          <div class="field"><label>Vehicle number</label><input id="av-num" placeholder="e.g. KL08ZZ4321"/></div>
+          <div class="field"><label>Model</label><input id="av-model" placeholder="e.g. Mahindra Thar"/></div>
+          <div class="field"><label>Type</label><select id="av-type"><option>Sedan</option><option>SUV</option><option>Bike</option><option>Truck</option><option>Van</option></select></div>
+          <div class="field"><label>Rent per day (₹)</label><input id="av-rate" placeholder="e.g. 3400"/></div>
+          <button class="submit-btn" onclick="adminAddVehicle()">addVehicle() →</button>
+          <div class="inline-msg" id="av-msg"></div>
+        </div>
+      </div>
+      <div class="add-card">
+        <h3>✏️ Modify vehicle details</h3>
+        <div class="form-col">
+          <div class="field"><label>Vehicle</label><select id="mv-num" onchange="prefillModifyVehicle()"></select></div>
+          <div class="field"><label>Type</label><select id="mv-type"><option>Sedan</option><option>SUV</option><option>Bike</option><option>Truck</option><option>Van</option></select></div>
+          <div class="field"><label>Rent per day (₹)</label><input id="mv-rate"/></div>
+          <div class="field"><label>Availability</label><select id="mv-avail"><option value="yes">✅ Available</option><option value="no">❌ On rent</option></select></div>
+          <button class="submit-btn" onclick="adminModifyVehicle()">modifyVehicleDetails() →</button>
+          <div class="inline-msg" id="mv-msg"></div>
+        </div>
+      </div>
+    </div>
+    <div class="slabel">Fleet — List&lt;Vehicle&gt;</div>
+    <div class="tbl-wrap"><table class="dtbl">
+      <thead><tr><th>Object</th><th>Number</th><th>Model</th><th>Type</th><th>Rent / day</th><th>Availability</th><th>Rentals</th><th></th></tr></thead>
+      <tbody id="v-inv-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- ADMIN — All rentals -->
   <div class="panel" id="vehicle-view">
     <div class="page-head">
       <div><div class="page-title">All <span>rentals</span></div>
-        <div class="page-sub">RentalService.viewRentals() → FileManager.readRentals() → List&lt;Rental&gt;</div></div>
-      <div class="method-pill">viewRentals()</div>
+        <div class="page-sub">RentalService.viewAllRentals() → FileManager.readRentals() → List&lt;Rental&gt;</div></div>
+      <div class="method-pill">viewAllRentals()</div>
     </div>
     <div class="chips" id="v-chips"></div>
     <div class="slabel">Search &amp; filter</div>
@@ -713,6 +1159,10 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
     <div class="slabel">rentals.csv — raw file content</div>
     <div class="file-terminal" id="v-term"><div class="prompt">$ cat rentals.csv</div></div>
     <div class="file-stats" id="v-fstats"></div>
+    <div class="slabel">vehicles.csv — the admin's fleet</div>
+    <div class="file-terminal" id="v-term2"><div class="prompt">$ cat vehicles.csv</div></div>
+    <div class="slabel">reviews.csv — what renters wrote</div>
+    <div class="file-terminal" id="v-term3"><div class="prompt">$ cat reviews.csv</div></div>
     <div class="slabel">Rental objects created from file</div>
     <div class="tbl-wrap"><table class="dtbl">
       <thead><tr><th>Object</th><th>Customer</th><th>Type</th><th>Days</th><th>Total</th><th>Status</th></tr></thead>
@@ -723,11 +1173,14 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
   <!-- Report -->
   <div class="panel" id="vehicle-report">
     <div class="page-head">
-      <div><div class="page-title">Rental <span>report</span></div><div class="page-sub" id="v-rpt-date"></div></div>
-      <div class="method-pill">generateReport()</div>
+      <div><div class="page-title">Overall <span>revenue</span></div><div class="page-sub" id="v-rpt-date"></div></div>
+      <div class="method-pill">overallRevenue()</div>
     </div>
+    <div class="role-hint"><code>overallRevenue()</code> adds up <code>rental.getTotalAmount()</code> across
+      <code>List&lt;Rental&gt;</code>. Each rental froze its own <code>rentPerDay</code> at rental time, so raising a
+      vehicle's rate today only affects the rentals made after it.</div>
     <div class="kpi-grid" id="v-kpi"></div>
-    <div class="slabel">Rentals by vehicle type</div>
+    <div class="slabel">Revenue by vehicle type</div>
     <div id="v-bars"></div>
     <div class="slabel">All transactions</div>
     <div class="tbl-wrap"><table class="dtbl">
@@ -739,83 +1192,117 @@ nav{background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid 
   <!-- Diagram -->
   <div class="panel" id="vehicle-diagram">
     <div class="page-head"><div><div class="page-title">Class <span>diagram</span></div>
-      <div class="page-sub">UML — matches your uploaded diagram exactly</div></div></div>
+      <div class="page-sub">One RentalService class — its methods split into the two doors</div></div></div>
     <div class="diag-wrap">
-      <svg viewBox="0 0 760 580" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+      <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;display:block;margin:0 auto;">
         <defs>
           <linearGradient id="vg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ede5f7"/><stop offset="100%" stop-color="#faf7fe"/></linearGradient>
           <linearGradient id="vg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d8f5ec"/><stop offset="100%" stop-color="#edfaf5"/></linearGradient>
+          <linearGradient id="vg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fdf3e0"/><stop offset="100%" stop-color="#fffbf2"/></linearGradient>
           <marker id="vm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M1 1L9 5L1 9" fill="none" stroke="#6c3fc7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
           <marker id="vdm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M1 1L9 5L1 9" fill="none" stroke="#2e8b6e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
           <filter id="vgl"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
-        <rect width="760" height="580" fill="#f7f3fc" rx="12"/>
+        <rect width="800" height="600" fill="#f7f3fc" rx="12"/>
         <pattern id="vdots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="rgba(108,63,199,.06)"/></pattern>
-        <rect width="760" height="580" fill="url(#vdots)" rx="12"/>
-        <!-- Main -->
-        <rect x="275" y="14" width="200" height="80" rx="12" fill="url(#vg1)" stroke="#d4c6ec" stroke-width="1.5"/>
-        <line x1="275" y1="14" x2="475" y2="14" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
-        <text x="375" y="36" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">Main</text>
-        <line x1="285" y1="43" x2="465" y2="43" stroke="#d4c6ec" stroke-width="1"/>
-        <text x="290" y="58" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ main(String[] args)</text>
-        <text x="290" y="72" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ showMenu()</text>
-        <line x1="375" y1="94" x2="375" y2="140" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#vm)" filter="url(#vgl)"/>
-        <rect x="348" y="108" width="52" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
-        <text x="374" y="120" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">uses</text>
-        <!-- RentalService -->
-        <rect x="175" y="142" width="255" height="172" rx="12" fill="url(#vg1)" stroke="#d4c6ec" stroke-width="1.5"/>
-        <line x1="175" y1="142" x2="430" y2="142" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
-        <text x="302" y="164" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">RentalService</text>
-        <line x1="185" y1="171" x2="420" y2="171" stroke="#d4c6ec" stroke-width="1"/>
-        <text x="190" y="187" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- List&lt;Vehicle&gt; vehicles</text>
-        <text x="190" y="201" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- List&lt;Rental&gt; rentals</text>
-        <line x1="185" y1="208" x2="420" y2="208" stroke="#d4c6ec" stroke-width="1"/>
-        <text x="190" y="224" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ searchVehicle()</text>
-        <text x="190" y="239" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ rentVehicle()</text>
-        <text x="190" y="254" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ returnVehicle()</text>
-        <text x="190" y="269" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ viewRentals()</text>
-        <text x="190" y="284" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ generateReport()</text>
-        <!-- creates -->
-        <line x1="375" y1="314" x2="488" y2="368" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#vm)" filter="url(#vgl)"/>
-        <rect x="406" y="332" width="52" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
-        <text x="432" y="344" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">creates</text>
-        <!-- manages -->
-        <path d="M185 255 Q65 295 65 432 Q65 496 128 512" stroke="#6c3fc7" stroke-width="1.5" fill="none" marker-end="url(#vm)" stroke-dasharray="5 3"/>
-        <rect x="14" y="368" width="54" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
-        <text x="41" y="380" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">manages</text>
-        <!-- Rental -->
-        <rect x="444" y="370" width="228" height="130" rx="12" fill="url(#vg1)" stroke="#d4c6ec" stroke-width="1.5"/>
-        <line x1="444" y1="370" x2="672" y2="370" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
-        <text x="558" y="392" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">Rental</text>
-        <line x1="454" y1="399" x2="662" y2="399" stroke="#d4c6ec" stroke-width="1"/>
-        <text x="459" y="415" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String rentalId</text>
-        <text x="459" y="429" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String customerName</text>
-        <text x="459" y="443" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- Vehicle vehicle</text>
-        <text x="459" y="457" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- int days</text>
-        <text x="459" y="471" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- double totalAmount</text>
-        <!-- rents dashed -->
-        <line x1="508" y1="500" x2="292" y2="518" stroke="#2e8b6e" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#vdm)"/>
-        <rect x="366" y="496" width="38" height="16" rx="4" fill="#d8f5ec" stroke="#a8e8d4" stroke-width=".5"/>
-        <text x="385" y="508" text-anchor="middle" fill="#2e8b6e" font-family="Inter" font-size="10" font-weight="600">rents</text>
-        <!-- Vehicle -->
-        <rect x="115" y="522" width="240" height="36" rx="12" fill="url(#vg2)" stroke="#a8e8d4" stroke-width="1.5"/>
-        <line x1="115" y1="522" x2="355" y2="522" stroke="#2e8b6e" stroke-width="3.5" stroke-linecap="round"/>
-        <text x="235" y="542" text-anchor="middle" fill="#1a5038" font-family="Inter" font-size="12" font-weight="700">Vehicle  |  vehicleNumber · model · type · rentPerDay · available</text>
+        <rect width="800" height="600" fill="url(#vdots)" rx="12"/>
+
         <!-- Legend -->
-        <rect x="580" y="14" width="168" height="90" rx="9" fill="#ffffff" stroke="#d4c6ec" stroke-width="1"/>
-        <text x="664" y="31" text-anchor="middle" fill="#8a70b8" font-family="Inter" font-size="10" font-weight="700">LEGEND</text>
-        <line x1="592" y1="42" x2="614" y2="42" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#vm)"/>
-        <text x="620" y="46" fill="#8a70b8" font-family="Inter" font-size="10">direct call</text>
-        <line x1="592" y1="57" x2="614" y2="57" stroke="#6c3fc7" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#vm)"/>
-        <text x="620" y="61" fill="#8a70b8" font-family="Inter" font-size="10">creates / manages</text>
-        <line x1="592" y1="72" x2="614" y2="72" stroke="#2e8b6e" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#vdm)"/>
-        <text x="620" y="76" fill="#8a70b8" font-family="Inter" font-size="10">rents</text>
-        <text x="592" y="92" fill="#8a70b8" font-family="Inter" font-size="9">– private  + public</text>
+        <rect x="20" y="18" width="196" height="104" rx="9" fill="#ffffff" stroke="#d4c6ec" stroke-width="1"/>
+        <text x="118" y="36" text-anchor="middle" fill="#8a70b8" font-family="Inter" font-size="10" font-weight="700">LEGEND</text>
+        <line x1="32" y1="48" x2="56" y2="48" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#vm)"/>
+        <text x="62" y="52" fill="#8a70b8" font-family="Inter" font-size="10">direct call</text>
+        <line x1="32" y1="66" x2="56" y2="66" stroke="#6c3fc7" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#vm)"/>
+        <text x="62" y="70" fill="#8a70b8" font-family="Inter" font-size="10">creates / manages</text>
+        <line x1="32" y1="84" x2="56" y2="84" stroke="#2e8b6e" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#vdm)"/>
+        <text x="62" y="88" fill="#8a70b8" font-family="Inter" font-size="10">rents</text>
+        <text x="32" y="108" fill="#8a70b8" font-family="Inter" font-size="9">&#8211; private   + public</text>
+
+        <!-- Main -->
+        <rect x="295" y="18" width="210" height="95" rx="12" fill="url(#vg1)" stroke="#d4c6ec" stroke-width="1.5"/>
+        <line x1="295" y1="18" x2="505" y2="18" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="400" y="40" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">Main</text>
+        <line x1="305" y1="48" x2="495" y2="48" stroke="#d4c6ec" stroke-width="1"/>
+        <text x="310" y="64" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ main(String[] args)</text>
+        <text x="310" y="78" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ showRoleMenu()</text>
+        <text x="310" y="92" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ getUserChoice() : int</text>
+        <line x1="400" y1="113" x2="400" y2="152" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#vm)" filter="url(#vgl)"/>
+        <rect x="373" y="122" width="54" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
+        <text x="400" y="134" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">uses</text>
+
+        <!-- RentalService -->
+        <rect x="240" y="154" width="320" height="248" rx="12" fill="url(#vg1)" stroke="#d4c6ec" stroke-width="1.5"/>
+        <line x1="240" y1="154" x2="560" y2="154" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="400" y="176" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">RentalService</text>
+        <line x1="250" y1="184" x2="550" y2="184" stroke="#d4c6ec" stroke-width="1"/>
+        <text x="256" y="200" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- List&lt;Vehicle&gt; vehicles</text>
+        <text x="256" y="214" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- List&lt;Rental&gt; rentals</text>
+        <text x="256" y="228" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- List&lt;Review&gt; reviews</text>
+        <line x1="250" y1="236" x2="550" y2="236" stroke="#d4c6ec" stroke-width="1"/>
+        <rect x="256" y="242" width="86" height="14" rx="3" fill="#d8f5ec" stroke="#a8e8d4" stroke-width=".5"/>
+        <text x="299" y="252" text-anchor="middle" fill="#2e8b6e" font-family="Inter" font-size="9" font-weight="700">USER OPS</text>
+        <text x="256" y="270" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ searchVehicle()</text>
+        <text x="256" y="284" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ rentVehicle()</text>
+        <text x="256" y="298" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ returnVehicle()</text>
+        <text x="256" y="312" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ viewMyRentals() · addReview()</text>
+        <rect x="256" y="322" width="92" height="14" rx="3" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
+        <text x="302" y="332" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="9" font-weight="700">ADMIN OPS</text>
+        <text x="256" y="350" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ addVehicle()</text>
+        <text x="256" y="364" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ modifyVehicleDetails()</text>
+        <text x="256" y="378" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ removeVehicle()</text>
+        <text x="256" y="392" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">+ viewAllRentals() · overallRevenue()</text>
+
+        <!-- Rental -->
+        <rect x="608" y="150" width="180" height="132" rx="12" fill="url(#vg1)" stroke="#d4c6ec" stroke-width="1.5"/>
+        <line x1="608" y1="150" x2="788" y2="150" stroke="#6c3fc7" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="698" y="172" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="13" font-weight="700">Rental</text>
+        <line x1="618" y1="180" x2="778" y2="180" stroke="#d4c6ec" stroke-width="1"/>
+        <text x="623" y="196" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String rentalId</text>
+        <text x="623" y="210" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- String customerName</text>
+        <text x="623" y="224" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- Vehicle vehicle</text>
+        <text x="623" y="238" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- int days</text>
+        <text x="623" y="252" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- double totalAmount</text>
+        <text x="623" y="266" fill="#8a70b8" font-family="JetBrains Mono" font-size="10">- boolean active</text>
+        <line x1="562" y1="216" x2="606" y2="216" stroke="#6c3fc7" stroke-width="1.5" marker-end="url(#vm)" filter="url(#vgl)"/>
+        <rect x="558" y="186" width="52" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
+        <text x="584" y="198" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">creates</text>
+
+        <!-- Review -->
+        <rect x="30" y="440" width="270" height="118" rx="12" fill="url(#vg3)" stroke="#f5dfa0" stroke-width="1.5"/>
+        <line x1="30" y1="440" x2="300" y2="440" stroke="#9a6820" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="165" y="462" text-anchor="middle" fill="#9a6820" font-family="Inter" font-size="13" font-weight="700">Review</text>
+        <line x1="40" y1="470" x2="290" y2="470" stroke="#f5dfa0" stroke-width="1"/>
+        <text x="46" y="486" fill="#9a6820" font-family="JetBrains Mono" font-size="10">- String reviewId</text>
+        <text x="46" y="500" fill="#9a6820" font-family="JetBrains Mono" font-size="10">- String customerName</text>
+        <text x="46" y="514" fill="#9a6820" font-family="JetBrains Mono" font-size="10">- int rating          // 1..5</text>
+        <text x="46" y="528" fill="#9a6820" font-family="JetBrains Mono" font-size="10">- String comment</text>
+        <text x="46" y="546" fill="#9a6820" font-family="JetBrains Mono" font-size="10">- String rentalId</text>
+        <path d="M300 402 L200 438" stroke="#6c3fc7" stroke-width="1.5" fill="none" stroke-dasharray="5 3" marker-end="url(#vm)"/>
+        <rect x="223" y="404" width="54" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
+        <text x="250" y="416" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">creates</text>
+
+        <!-- Vehicle -->
+        <rect x="470" y="440" width="300" height="118" rx="12" fill="url(#vg2)" stroke="#a8e8d4" stroke-width="1.5"/>
+        <line x1="470" y1="440" x2="770" y2="440" stroke="#2e8b6e" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="620" y="462" text-anchor="middle" fill="#1a5038" font-family="Inter" font-size="13" font-weight="700">Vehicle</text>
+        <line x1="480" y1="470" x2="760" y2="470" stroke="#a8e8d4" stroke-width="1"/>
+        <text x="486" y="486" fill="#1a5038" font-family="JetBrains Mono" font-size="10">- String vehicleNumber</text>
+        <text x="486" y="500" fill="#1a5038" font-family="JetBrains Mono" font-size="10">- String model · type</text>
+        <text x="486" y="514" fill="#1a5038" font-family="JetBrains Mono" font-size="10">- double rentPerDay</text>
+        <text x="486" y="528" fill="#1a5038" font-family="JetBrains Mono" font-size="10">- boolean available</text>
+        <text x="486" y="546" fill="#1a5038" font-family="JetBrains Mono" font-size="10">+ setRentPerDay() + setAvailable()</text>
+        <path d="M500 402 L560 438" stroke="#6c3fc7" stroke-width="1.5" fill="none" stroke-dasharray="5 3" marker-end="url(#vm)"/>
+        <rect x="503" y="404" width="58" height="16" rx="4" fill="#ede5f7" stroke="#d4c6ec" stroke-width=".5"/>
+        <text x="532" y="416" text-anchor="middle" fill="#6c3fc7" font-family="Inter" font-size="10" font-weight="600">manages</text>
+        <line x1="690" y1="284" x2="655" y2="437" stroke="#2e8b6e" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#vdm)"/>
+        <rect x="656" y="352" width="40" height="16" rx="4" fill="#d8f5ec" stroke="#a8e8d4" stroke-width=".5"/>
+        <text x="676" y="364" text-anchor="middle" fill="#2e8b6e" font-family="Inter" font-size="10" font-weight="600">rents</text>
       </svg>
     </div>
-    <div class="diag-note"><strong>Reading:</strong> Solid purple = direct call · Dashed purple = <code>creates/manages</code> · Dashed teal = <code>rents</code></div>
+    <div class="diag-note"><strong>Reading:</strong> the same shape as the hotel, with different nouns. Compare the two
+      <code>ADMIN OPS</code> blocks — <code>addRoom()</code> / <code>addVehicle()</code> do the same job on a different class.</div>
   </div>
 </div><!-- /app-vehicle -->
 
@@ -833,33 +1320,96 @@ function applyTheme(t){
 }
 function toggleTheme(){ applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'); }
 
-// ── NAV ──────────────────────────────────────────────────
+// ── ROLE GATE ────────────────────────────────────────────
+let ROLE=null;              // 'admin' | 'user' — chosen at the door
+let ME='Rahul Sharma';      // the signed-in guest; every Booking/Rental stores this name
 let curApp='room';
+
+function pickRole(r){
+  if(r==='admin'){ enterApp('admin','Admin'); return; }
+  document.getElementById('rolecard-user').classList.add('picked');
+  const g=document.getElementById('gate-name');
+  g.classList.add('show');
+  const inp=document.getElementById('gname');
+  inp.focus(); inp.select();
+}
+function enterAsUser(){
+  const n=document.getElementById('gname').value.trim()||'Guest';
+  ME=n; enterApp('user',n);
+}
+function enterApp(role,label){
+  ROLE=role;
+  document.getElementById('gate').classList.add('hide');
+  document.getElementById('app-switcher').style.display='flex';
+  const b=document.getElementById('role-badge');
+  b.className='role-badge '+role; b.style.display='flex';
+  document.getElementById('role-badge-txt').textContent = role==='admin' ? '👨‍💼 Admin' : '🙋 '+label;
+  syncRoleUI();
+}
+function openGate(){
+  document.getElementById('gate').classList.remove('hide');
+  document.getElementById('gate-name').classList.remove('show');
+  document.getElementById('rolecard-user').classList.remove('picked');
+  refreshGuestList();
+}
+function refreshGuestList(){
+  const names=[...new Set([...RDB.map(b=>b.cust),...VDB.map(r=>r.cust)])];
+  document.getElementById('known-guests').innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
+}
+
+/* One nav group per (app, role); one act-row per (app, role). Everything else
+   — the stage, the object cards, the files — is shared, because in the Java
+   program it is literally the same object. */
+function syncRoleUI(){
+  ['room','vehicle'].forEach(app=>['admin','user'].forEach(r=>{
+    document.getElementById(`nav-${app}-${r}`).style.display=(app===curApp&&r===ROLE)?'flex':'none';
+  }));
+  ['r','v'].forEach(ns=>{
+    document.getElementById(ns+'-acts-admin').style.display=ROLE==='admin'?'flex':'none';
+    document.getElementById(ns+'-acts-user').style.display =ROLE==='user' ?'flex':'none';
+  });
+  document.getElementById('r-pg-sub').textContent = ROLE==='admin'
+    ? 'Admin operations — RoomBooking building and pricing the Room objects guests will book.'
+    : `Guest operations — you are signed in as ${ME}. RoomBooking, Booking and Room, seen from the outside.`;
+  document.getElementById('v-pg-sub').textContent = ROLE==='admin'
+    ? 'Admin operations — RentalService building and pricing the Vehicle objects renters will take.'
+    : `Guest operations — you are signed in as ${ME}. RentalService, Rental and Vehicle, seen from the outside.`;
+  document.getElementById('r-my-sub').textContent = `RoomBooking.viewMyBookings("${ME}") → filters List<Booking>`;
+  document.getElementById('v-my-sub').textContent = `RentalService.viewMyRentals("${ME}") → filters List<Rental>`;
+  const rn=document.getElementById('rb-name'); if(rn&&!rn.value) rn.value=ME;
+  const vn=document.getElementById('vr-name'); if(vn&&!vn.value) vn.value=ME;
+  refreshSelects();
+  rpick(ROLE==='admin'?'add':'search');
+  vpick(ROLE==='admin'?'add':'search');
+  gotoPanel(curApp,'pg');
+}
+function gotoPanel(app,panel){
+  const nav=document.getElementById(`nav-${app}-${ROLE}`);
+  const btn=nav.querySelector(`[data-panel="${panel}"]`)||nav.querySelector('.nav-tab');
+  showPanel(app,btn.dataset.panel,btn);
+}
+
+// ── NAV ──────────────────────────────────────────────────
 function switchApp(app,btn){
   curApp=app;
   document.querySelectorAll('.app-pill').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.app-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('app-'+app).classList.add('active');
-  document.getElementById('room-nav').style.display    = app==='room'?'flex':'none';
-  document.getElementById('vehicle-nav').style.display = app==='vehicle'?'flex':'none';
+  syncRoleUI();
 }
+const PANEL_RENDER={
+  room:   {book:()=>{renderRAvail();renderRRecent();}, my:renderRMy, review:renderRReview,
+           rooms:renderRInv, view:renderRView, file:renderRFile, report:renderRReport},
+  vehicle:{rent:()=>{renderVAvail();renderVRecent();}, my:renderVMy, review:renderVReview,
+           fleet:renderVFleet, view:renderVView, file:renderVFile, report:renderVReport},
+};
 function showPanel(app,panel,btn){
-  document.querySelectorAll('#'+app+'-nav .nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll(`#nav-${app}-${ROLE} .nav-tab`).forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('#app-'+app+' .panel').forEach(p=>p.classList.remove('active'));
   document.getElementById(app+'-'+panel).classList.add('active');
-  if(app==='room'){
-    if(panel==='view')    renderRView();
-    if(panel==='file')    renderRFile();
-    if(panel==='report')  renderRReport();
-    if(panel==='book')    renderRRecent();
-  } else {
-    if(panel==='view')    renderVView();
-    if(panel==='file')    renderVFile();
-    if(panel==='report')  renderVReport();
-    if(panel==='rent')    renderVRecent();
-  }
+  (PANEL_RENDER[app][panel]||(()=>{}))();
 }
 
 // ── COLOR HELPERS ─────────────────────────────────────────
@@ -889,53 +1439,233 @@ const typeCard=(t,n,C,i)=>`<div class="type-card" style="background:${C.bg()};bo
   <div class="tc-name" style="color:${C.tx()}">${t}</div>
   <div class="tc-cnt" style="color:${C.tx()}">${n}</div>
   <div class="tc-sub" style="color:${C.tx()}">${n} record${n>1?'s':''}</div></div>`;
-const bar=(label,n,total,C)=>{const pct=Math.round(n/total*100);
+const bar=(label,n,total,C,amt)=>{const pct=Math.round(n/total*100);
   return `<div class="bar-item"><span class="bar-cat" style="color:${C.tx()}">${label}</span>
     <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${C.bar}"><span class="bar-pct">${pct}%</span></div></div>
-    <span class="bar-amt" style="color:${C.tx()}">${n}</span></div>`;};
+    <span class="bar-amt" style="color:${C.tx()}">${amt??n}</span></div>`;};
+
+// ── SHARED HELPERS ────────────────────────────────────────
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const starStr=n=>'★'.repeat(n)+'☆'.repeat(5-n);
+const today=()=>new Date().toLocaleDateString('en-GB').replace(/\//g,'-');
+function msg(id,kind,text){
+  const e=document.getElementById(id); if(!e)return;
+  e.className='inline-msg '+kind; e.innerHTML=text; e.style.display='block';
+  clearTimeout(e._t); e._t=setTimeout(()=>{e.style.display='none';},5000);
+}
 
 // ── ROOM DATA ─────────────────────────────────────────────
 const PRICES={'Single':1200,'Double':2200,'Suite':5000,'Deluxe':3500};
-let RDB=[
-  {id:'BK001',cust:'Rahul Sharma',type:'Single',room:101,ci:'10-09-2026',co:'13-09-2026',active:true},
-  {id:'BK002',cust:'Priya Nair',  type:'Double',room:205,ci:'11-09-2026',co:'14-09-2026',active:true},
-  {id:'BK003',cust:'Amit Bose',   type:'Suite', room:302,ci:'09-09-2026',co:'11-09-2026',active:false},
-  {id:'BK004',cust:'Sneha Rao',   type:'Deluxe',room:410,ci:'12-09-2026',co:'15-09-2026',active:true},
-  {id:'BK005',cust:'Deepak Mehta',type:'Single',room:102,ci:'10-09-2026',co:'12-09-2026',active:true},
-  {id:'BK006',cust:'Kavita Joshi',type:'Double',room:208,ci:'08-09-2026',co:'10-09-2026',active:false},
-];
-let rbkCtr=7;
 
+/* List<Room> — the admin's inventory. Nothing can be booked that is not here. */
+let ROOMS=[
+  {no:101,type:'Single',price:1200,available:false},
+  {no:102,type:'Single',price:1200,available:false},
+  {no:103,type:'Single',price:1300,available:true},
+  {no:205,type:'Double',price:2200,available:false},
+  {no:208,type:'Double',price:2200,available:true},
+  {no:210,type:'Double',price:2400,available:true},
+  {no:302,type:'Suite', price:5000,available:true},
+  {no:305,type:'Suite', price:5500,available:true},
+  {no:410,type:'Deluxe',price:3500,available:false},
+  {no:412,type:'Deluxe',price:3800,available:true},
+];
+/* List<Booking> — price is copied off the Room at booking time, not looked up
+   later, which is why changing a room's price never rewrites history. */
+let RDB=[
+  {id:'BK001',cust:'Rahul Sharma',type:'Single',room:101,ci:'10-09-2026',co:'13-09-2026',price:1200,active:true},
+  {id:'BK002',cust:'Priya Nair',  type:'Double',room:205,ci:'11-09-2026',co:'14-09-2026',price:2200,active:true},
+  {id:'BK003',cust:'Amit Bose',   type:'Suite', room:302,ci:'09-09-2026',co:'11-09-2026',price:5000,active:false},
+  {id:'BK004',cust:'Sneha Rao',   type:'Deluxe',room:410,ci:'12-09-2026',co:'15-09-2026',price:3500,active:true},
+  {id:'BK005',cust:'Deepak Mehta',type:'Single',room:102,ci:'10-09-2026',co:'12-09-2026',price:1200,active:true},
+  {id:'BK006',cust:'Kavita Joshi',type:'Double',room:208,ci:'08-09-2026',co:'10-09-2026',price:2200,active:false},
+];
+/* List<Review> */
+let RREV=[
+  {id:'RV001',cust:'Priya Nair',  ref:'BK002',rating:5,text:'Spotless double room and a lovely view over the lake.',date:'14-09-2026'},
+  {id:'RV002',cust:'Amit Bose',   ref:'BK003',rating:3,text:'The suite was comfortable, but check-in took nearly an hour.',date:'11-09-2026'},
+  {id:'RV003',cust:'Deepak Mehta',ref:'BK005',rating:4,text:'Good value for a single. Wi-Fi could be faster.',date:'12-09-2026'},
+];
+let rbkCtr=7, rrvCtr=4;
+const bprice=b=>b.price??PRICES[b.type]??0;
+const roomOf=no=>ROOMS.find(r=>r.no===no)||null;
+const myBookings=()=>RDB.filter(b=>b.cust===ME);
+
+/* ── USER: searchRoom() — the availability browser ── */
+function renderRAvail(){
+  const ft=document.getElementById('rb-ftype').value;
+  const list=ROOMS.filter(r=>r.available&&(!ft||r.type===ft));
+  const sel=parseInt(document.getElementById('rb-room').value)||0;
+  document.getElementById('r-avail').innerHTML = list.length ? list.map((r,i)=>{const c=rc(r.type);
+    return `<div class="avail-card ${r.no===sel?'sel':''}" style="animation-delay:${i*.04}s" onclick="pickRoom(${r.no})">
+      <div class="ac-no">Room ${r.no}</div>
+      <div class="ac-sub">Room r${ROOMS.indexOf(r)+1}</div>
+      <div style="margin-top:8px"><span class="badge ${c.cls}">${r.type}</span></div>
+      <div class="ac-price">${money(r.price)}<span style="font-size:11px;font-weight:500;color:var(--text3)"> / night</span></div>
+    </div>`;}).join('')
+    : `<div class="no-res" style="grid-column:1/-1">No available rooms${ft?' of type '+ft:''} — searchRoom() returned an empty list.</div>`;
+}
+function pickRoom(no){ document.getElementById('rb-room').value=String(no); renderRAvail(); }
+function syncAvailSel(){ renderRAvail(); }
+
+/* ── USER: bookRoom() ── */
 function addBooking(){
   const n=document.getElementById('rb-name').value.trim();
-  const t=document.getElementById('rb-type').value;
+  const no=parseInt(document.getElementById('rb-room').value);
   const ci=document.getElementById('rb-in').value.trim();
   const co=document.getElementById('rb-out').value.trim();
-  if(!n||!ci||!co){alert('Fill all fields.');return;}
-  RDB.push({id:`BK${String(rbkCtr).padStart(3,'0')}`,cust:n,type:t,room:100+rbkCtr,ci,co,active:true});
-  rbkCtr++;
-  document.getElementById('rb-name').value='';document.getElementById('rb-in').value='';document.getElementById('rb-out').value='';
-  const m=document.getElementById('rb-ok');m.style.display='block';setTimeout(()=>m.style.display='none',3000);
-  renderRRecent();
+  if(!n||!ci||!co) return msg('rb-msg','bad','Fill in your name and both dates first.');
+  const room=roomOf(no);
+  if(!room)          return msg('rb-msg','bad','Pick a room — <code>searchRoom()</code> found none selected.');
+  if(!room.available)return msg('rb-msg','bad',`Room ${no} was taken while you were typing — <code>bookRoom()</code> returns <code>false</code>.`);
+  const id=`BK${String(rbkCtr).padStart(3,'0')}`;
+  RDB.push({id,cust:n,type:room.type,room:room.no,ci,co,price:room.price,active:true});
+  room.available=false; rbkCtr++; ME=n;
+  msg('rb-msg','ok',`✅ <strong>${id}</strong> — Room ${room.no} (${room.type}) booked for ${esc(n)} at ${money(room.price)}. Room marked unavailable, row written to bookings.csv.`);
+  refreshSelects(); renderRAvail(); renderRRecent();
 }
 function renderRRecent(){
   const el=document.getElementById('r-recent');
   el.innerHTML=RDB.slice(-4).reverse().map((b,i)=>{const c=rc(b.type);
     return `<div class="recent-item" style="animation-delay:${i*.07}s">
-      <div class="ri-top"><span class="ri-name">${b.cust}</span>
+      <div class="ri-top"><span class="ri-name">${esc(b.cust)}</span>
         <span class="badge ${b.active?'st-active':'st-inactive'}">${b.active?'✅ Active':'❌ Cancelled'}</span></div>
-      <div class="ri-meta"><span class="badge ${c.cls}">${b.type}</span><span>Room ${b.room}</span><span>₹${PRICES[b.type]?.toLocaleString()}</span></div>
+      <div class="ri-meta"><span class="badge ${c.cls}">${b.type}</span><span>Room ${b.room}</span><span>${money(bprice(b))}</span></div>
     </div>`;}).join('');
 }
+
+/* ── USER: viewMyBookings() + cancelBooking() ── */
+function renderRMy(){
+  const mine=myBookings();
+  const active=mine.filter(b=>b.active).length;
+  const spend=mine.filter(b=>b.active).reduce((a,b)=>a+bprice(b),0);
+  document.getElementById('r-my-chips').innerHTML=[
+    chip('🧾',mine.length,'My bookings',rc('Double').bg(),rc('Double').bd(),rc('Double').tx(),.10),
+    chip('✅',active,'Active',dk()?'#0a2e1e':'#d8f5ec',dk()?'#064e3b':'#a8e8d4',dk()?'#6ee7b7':'#2e8b6e',.15),
+    chip('💰',money(spend),'My spend',rc('Suite').bg(),rc('Suite').bd(),rc('Suite').tx(),.20),
+  ].join('');
+  document.getElementById('r-my-tbody').innerHTML = mine.length ? mine.map((b,i)=>{const c=rc(b.type);
+    return `<tr style="animation-delay:${i*.035}s">
+      <td class="tobjlbl">${b.id}</td><td class="ttl">Room ${b.room}</td>
+      <td><span class="badge ${c.cls}">${b.type}</span></td>
+      <td class="tsub">${b.ci}</td><td class="tsub">${b.co}</td>
+      <td class="ttl">${money(bprice(b))}</td>
+      <td><span class="badge ${b.active?'st-active':'st-inactive'}">${b.active?'✅ Active':'❌ Cancelled'}</span></td>
+      <td>${b.active?`<button class="mini-btn danger" onclick="userCancel('${b.id}')">Cancel</button>`:''}</td></tr>`;}).join('')
+    : `<tr><td colspan="8" class="no-res">No bookings under <strong>${esc(ME)}</strong> yet — book one and it will appear here.</td></tr>`;
+}
+function userCancel(id){
+  const b=RDB.find(x=>x.id===id); if(!b||!b.active)return;
+  b.active=false;
+  const rm=roomOf(b.room); if(rm) rm.available=true;   // two objects change, one action
+  refreshSelects(); renderRMy();
+}
+
+/* ── USER: giveReview() ── */
+let rStar=5;
+function setRStar(n){ rStar=n; renderStars('rv-stars',rStar,'setRStar'); }
+function renderStars(elId,val,setter){
+  const el=document.getElementById(elId); if(!el)return;
+  el.innerHTML=[1,2,3,4,5].map(n=>`<button type="button" class="star ${n<=val?'on':''}" onclick="${setter}(${n})">★</button>`).join('');
+}
+function addRReview(){
+  const bid=document.getElementById('rv-book').value;
+  const txt=document.getElementById('rv-text').value.trim();
+  if(!bid) return msg('rv-msg','bad','You can only review a booking you actually made — none found for <strong>'+esc(ME)+'</strong>.');
+  if(!txt) return msg('rv-msg','bad','Write a line about the stay before submitting.');
+  const id=`RV${String(rrvCtr).padStart(3,'0')}`;
+  RREV.push({id,cust:ME,ref:bid,rating:rStar,text:txt,date:today()});
+  rrvCtr++; document.getElementById('rv-text').value='';
+  msg('rv-msg','ok',`✅ <strong>${id}</strong> — new Review(${bid}, ${rStar}★) created and appended to reviews.csv.`);
+  renderRReview();
+}
+function renderRReview(){
+  const avg=RREV.length?(RREV.reduce((a,r)=>a+r.rating,0)/RREV.length):0;
+  document.getElementById('r-revsum').innerHTML=RREV.length
+    ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+         <span style="font-size:26px;font-weight:800;letter-spacing:-.02em">${avg.toFixed(1)}</span>
+         <span class="stars-ro">${starStr(Math.round(avg))}</span>
+         <span style="font-size:12px;color:var(--text3)">${RREV.length} review${RREV.length>1?'s':''}</span></div>`
+    : '<div style="font-size:12px;color:var(--text3)">No reviews yet.</div>';
+  document.getElementById('r-revlist').innerHTML=RREV.slice().reverse().map((r,i)=>
+    `<div class="rev-card" style="animation-delay:${i*.05}s">
+      <div class="rev-top"><span class="rev-name">${esc(r.cust)}</span><span class="stars-ro">${starStr(r.rating)}</span></div>
+      <div class="rev-txt">${esc(r.text)}</div>
+      <div class="rev-meta">${r.id} · booking ${r.ref} · ${r.date}</div>
+    </div>`).join('');
+}
+/* ── ADMIN: addRoom() / modifyRoomDetails() / removeRoom() ── */
+function adminAddRoom(){
+  const no=parseInt(document.getElementById('ar-no').value);
+  const t =document.getElementById('ar-type').value;
+  const p =parseInt(document.getElementById('ar-price').value);
+  if(!no||!p) return msg('ar-msg','bad','A Room needs a number and a price — both fields are required.');
+  if(roomOf(no)) return msg('ar-msg','bad',`Room <strong>${no}</strong> is already in <code>List&lt;Room&gt;</code>. <code>addRoom()</code> refuses duplicates and returns <code>false</code>.`);
+  ROOMS.push({no,type:t,price:p,available:true});
+  document.getElementById('ar-no').value=''; document.getElementById('ar-price').value='';
+  msg('ar-msg','ok',`✅ <code>new Room(${no}, "${t}", ${p}, true)</code> added — inventory is now <strong>${ROOMS.length}</strong> rooms.`);
+  renderRInv(); refreshSelects();
+}
+function prefillModifyRoom(){
+  const r=roomOf(parseInt(document.getElementById('mr-no').value)); if(!r)return;
+  document.getElementById('mr-type').value=r.type;
+  document.getElementById('mr-price').value=r.price;
+  document.getElementById('mr-avail').value=r.available?'yes':'no';
+}
+function adminModifyRoom(){
+  const no=parseInt(document.getElementById('mr-no').value);
+  const r=roomOf(no);
+  if(!r) return msg('mr-msg','bad','Pick a room from the list first.');
+  const p=parseInt(document.getElementById('mr-price').value);
+  if(!p) return msg('mr-msg','bad','Price has to be a number.');
+  const before=`${r.type} · ${money(r.price)} · ${r.available?'available':'occupied'}`;
+  const wantFree=document.getElementById('mr-avail').value==='yes';
+  const held=RDB.some(b=>b.room===no&&b.active);
+  if(wantFree&&held) return msg('mr-msg','bad',`Room ${no} still has an active <strong>Booking</strong> — cancel it before marking the room available, or the two objects would disagree.`);
+  r.type=document.getElementById('mr-type').value;
+  r.price=p; r.available=wantFree;
+  msg('mr-msg','ok',`✅ Room ${no}: <code>${before}</code> → <code>${r.type} · ${money(r.price)} · ${r.available?'available':'occupied'}</code>. Existing bookings keep the price they were made at.`);
+  renderRInv(); refreshSelects();
+}
+function adminRemoveRoom(no){
+  const held=RDB.filter(b=>b.room===no&&b.active);
+  if(held.length) return msg('mr-msg','bad',`Room ${no} cannot be removed — <strong>${held.length}</strong> active booking (${held.map(b=>b.id).join(', ')}) still points at this Room object.`);
+  ROOMS=ROOMS.filter(r=>r.no!==no);
+  msg('mr-msg','ok',`🗑 Room ${no} removed from <code>List&lt;Room&gt;</code> — ${ROOMS.length} rooms left. Past bookings keep their copy of the details.`);
+  renderRInv(); refreshSelects();
+}
+function renderRInv(){
+  const free=ROOMS.filter(r=>r.available).length;
+  const avg=ROOMS.length?ROOMS.reduce((a,r)=>a+r.price,0)/ROOMS.length:0;
+  document.getElementById('r-inv-chips').innerHTML=[
+    chip('🛏',ROOMS.length,'Rooms in list',rc('Double').bg(),rc('Double').bd(),rc('Double').tx(),.10),
+    chip('✅',free,'Available',dk()?'#0a2e1e':'#d8f5ec',dk()?'#064e3b':'#a8e8d4',dk()?'#6ee7b7':'#2e8b6e',.15),
+    chip('🚪',ROOMS.length-free,'Occupied',rc('Deluxe').bg(),rc('Deluxe').bd(),rc('Deluxe').tx(),.20),
+    chip('🏷',money(avg),'Avg price',rc('Suite').bg(),rc('Suite').bd(),rc('Suite').tx(),.25),
+  ].join('');
+  document.getElementById('r-inv-tbody').innerHTML = ROOMS.length ? ROOMS.map((r,i)=>{
+    const c=rc(r.type); const n=RDB.filter(b=>b.room===r.no).length;
+    const held=RDB.some(b=>b.room===r.no&&b.active);
+    return `<tr style="animation-delay:${i*.03}s">
+      <td class="tobjlbl">r${i+1}</td><td class="ttl">${r.no}</td>
+      <td><span class="badge ${c.cls}">${r.type}</span></td>
+      <td class="ttl">${money(r.price)}</td>
+      <td><span class="badge ${r.available?'st-free':'st-busy'}">${r.available?'✅ Available':'❌ Occupied'}</span></td>
+      <td class="tsub">${n}</td>
+      <td><button class="mini-btn danger" ${held?'disabled title="active booking"':''} onclick="adminRemoveRoom(${r.no})">Remove</button></td></tr>`;}).join('')
+    : `<tr><td colspan="7" class="no-res">List&lt;Room&gt; is empty — nothing for a guest to book.</td></tr>`;
+}
+
 function renderRView(){
   const active=RDB.filter(b=>b.active).length;
-  const total=RDB.reduce((a,b)=>a+(PRICES[b.type]||0),0);
+  const total=RDB.reduce((a,b)=>a+bprice(b),0);
   const types=[...new Set(RDB.map(b=>b.type))];
   document.getElementById('r-chips').innerHTML=[
     chip('🏨',RDB.length,'Total bookings',  rc('Double').bg(), rc('Double').bd(), rc('Double').tx(),.10),
     chip('✅',active,    'Active',           dk()?'#0a2e1e':'#d8f5ec', dk()?'#064e3b':'#a8e8d4', dk()?'#6ee7b7':'#2e8b6e',.15),
     chip('❌',RDB.length-active,'Cancelled', rc('Deluxe').bg(),rc('Deluxe').bd(),rc('Deluxe').tx(),.20),
-    chip('💰','₹'+total.toLocaleString(),'Revenue', rc('Suite').bg(),rc('Suite').bd(),rc('Suite').tx(),.25),
+    chip('💰',money(total),'Revenue', rc('Suite').bg(),rc('Suite').bd(),rc('Suite').tx(),.25),
   ].join('');
   const flt=document.getElementById('r-ftype');
   flt.innerHTML='<option value="">All types</option>'+types.map(t=>`<option>${t}</option>`).join('');
@@ -946,10 +1676,10 @@ function renderRView(){
 function renderRTable(data){
   document.getElementById('r-tbody').innerHTML=data.length?data.map((b,i)=>{const c=rc(b.type);
     return `<tr style="animation-delay:${i*.035}s">
-      <td class="tobjlbl">${b.id}</td><td><div class="ttl">${b.cust}</div></td>
+      <td class="tobjlbl">${b.id}</td><td><div class="ttl">${esc(b.cust)}</div></td>
       <td class="tsub">Room ${b.room}</td><td><span class="badge ${c.cls}">${b.type}</span></td>
       <td class="tsub">${b.ci}</td><td class="tsub">${b.co}</td>
-      <td class="ttl">₹${PRICES[b.type]?.toLocaleString()}</td>
+      <td class="ttl">${money(bprice(b))}</td>
       <td><span class="badge ${b.active?'st-active':'st-inactive'}">${b.active?'✅ Active':'❌ Cancelled'}</span></td></tr>`;}).join('')
     :`<tr><td colspan="8" style="text-align:center;padding:36px;color:var(--text3)">No bookings found.</td></tr>`;
 }
@@ -962,19 +1692,28 @@ function filterBookings(){
     (!ft||b.type===ft)&&
     (!fs||(fs==='active'?b.active:!b.active))));
 }
-function renderRFile(){
-  const term=document.getElementById('r-term');term.innerHTML='<div class="prompt">$ cat bookings.csv</div>';
-  const cols=[`var(--blue)`,`var(--violet)`,`var(--amber)`,`var(--rose)`,`var(--green)`,`var(--pink)`];
-  RDB.forEach((b,i)=>{
-    const d=document.createElement('div');d.className='fline';d.style.color=cols[i%cols.length];
-    d.innerHTML=`<span style="color:var(--text4);margin-right:8px">${String(i+1).padStart(2,'0')}│ </span>${b.id},${b.cust},${b.type},${b.room},${b.ci},${b.co}`;
-    term.appendChild(d);setTimeout(()=>d.classList.add('show'),80+i*100);
+const FCOLS=['var(--blue)','var(--violet)','var(--amber)','var(--rose)','var(--green)','var(--pink)'];
+function fillTerm(termId,prompt,rows){
+  const term=document.getElementById(termId);
+  term.innerHTML=`<div class="prompt">$ cat ${prompt}</div>`;
+  if(!rows.length){term.innerHTML+='<div class="fline show" style="color:var(--text3)">(empty file)</div>';return;}
+  rows.forEach((row,i)=>{
+    const d=document.createElement('div');d.className='fline';d.style.color=FCOLS[i%FCOLS.length];
+    d.innerHTML=`<span style="color:var(--text4);margin-right:8px">${String(i+1).padStart(2,'0')}│ </span>${esc(row)}`;
+    term.appendChild(d);setTimeout(()=>d.classList.add('show'),80+i*70);
   });
+}
+function renderRFile(){
+  fillTerm('r-term','bookings.csv',RDB.map(b=>`${b.id},${b.cust},${b.type},${b.room},${b.ci},${b.co},${bprice(b)},${b.active}`));
+  fillTerm('r-term2','rooms.csv',ROOMS.map(r=>`${r.no},${r.type},${r.price},${r.available}`));
+  fillTerm('r-term3','reviews.csv',RREV.map(r=>`${r.id},${r.cust},${r.ref},${r.rating},"${r.text}",${r.date}`));
   const gm={};RDB.forEach(b=>{if(!gm[b.type])gm[b.type]=0;gm[b.type]++;});
-  document.getElementById('r-fstats').innerHTML=[{l:'Total rows',v:RDB.length},{l:'Fields/row',v:6},{l:'Types',v:Object.keys(gm).length},{l:'Active',v:RDB.filter(b=>b.active).length}]
+  document.getElementById('r-fstats').innerHTML=[
+    {l:'Booking rows',v:RDB.length},{l:'Room rows',v:ROOMS.length},
+    {l:'Review rows',v:RREV.length},{l:'Active bookings',v:RDB.filter(b=>b.active).length}]
     .map(({l,v})=>`<div class="fstat"><strong>${v}</strong>${l}</div>`).join('');
   document.getElementById('r-ftbody').innerHTML=RDB.map((b,i)=>{const c=rc(b.type);
-    return `<tr><td class="tobjlbl">b${i+1}</td><td><div class="ttl">${b.cust}</div></td>
+    return `<tr><td class="tobjlbl">b${i+1}</td><td><div class="ttl">${esc(b.cust)}</div></td>
       <td><span class="badge ${c.cls}">${b.type}</span></td>
       <td class="tsub">${b.ci}</td><td class="tsub">${b.co}</td>
       <td><span class="badge ${b.active?'st-active':'st-inactive'}">${b.active?'✅ Active':'❌ Cancelled'}</span></td></tr>`;}).join('');
@@ -982,65 +1721,230 @@ function renderRFile(){
 function renderRReport(){
   document.getElementById('r-rpt-date').textContent='Generated: '+new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
   const active=RDB.filter(b=>b.active).length;
-  const total=RDB.reduce((a,b)=>a+(PRICES[b.type]||0),0);
-  const gm={};RDB.forEach(b=>{if(!gm[b.type])gm[b.type]=0;gm[b.type]++;});
-  const top=Object.entries(gm).sort((a,b)=>b[1]-a[1])[0];
+  const total=RDB.reduce((a,b)=>a+bprice(b),0);
+  const earned=RDB.filter(b=>b.active).reduce((a,b)=>a+bprice(b),0);
+  const rev={};RDB.forEach(b=>{rev[b.type]=(rev[b.type]||0)+bprice(b);});
+  const occ=ROOMS.length?Math.round((ROOMS.length-ROOMS.filter(r=>r.available).length)/ROOMS.length*100):0;
+  const top=Object.entries(rev).sort((a,b)=>b[1]-a[1])[0]||['—',0];
   document.getElementById('r-kpi').innerHTML=[
-    kpi('🏨','Total bookings',RDB.length,RDB.length+' records',rc('Double').bg(),rc('Double').bd(),rc('Double').tx(),.1),
-    kpi('✅','Active',active,Math.round(active/RDB.length*100)+'% rate',dk()?'#0a2e1e':'#d8f5ec',dk()?'#064e3b':'#a8e8d4',dk()?'#6ee7b7':'#2e8b6e',.15),
-    kpi('💰','Revenue','₹'+total.toLocaleString(),'all bookings',rc('Suite').bg(),rc('Suite').bd(),rc('Suite').tx(),.2),
-    kpi('🏆','Top type',top[0],top[1]+' bookings',rc(top[0]).bg(),rc(top[0]).bd(),rc(top[0]).tx(),.25),
+    kpi('💰','Total revenue',money(total),RDB.length+' bookings',rc('Suite').bg(),rc('Suite').bd(),rc('Suite').tx(),.1),
+    kpi('✅','Confirmed',money(earned),active+' active · '+(RDB.length-active)+' cancelled',dk()?'#0a2e1e':'#d8f5ec',dk()?'#064e3b':'#a8e8d4',dk()?'#6ee7b7':'#2e8b6e',.15),
+    kpi('🛏','Occupancy',occ+'%',ROOMS.length+' rooms in list',rc('Double').bg(),rc('Double').bd(),rc('Double').tx(),.2),
+    kpi('🏆','Top earner',top[0],money(top[1]),rc(top[0]).bg(),rc(top[0]).bd(),rc(top[0]).tx(),.25),
+    kpi('📊','Avg booking',money(RDB.length?total/RDB.length:0),'per Booking object',rc('Deluxe').bg(),rc('Deluxe').bd(),rc('Deluxe').tx(),.3),
   ].join('');
-  document.getElementById('r-bars').innerHTML=Object.entries(gm).sort((a,b)=>b[1]-a[1]).map(([t,n])=>bar(t,n,RDB.length,rc(t))).join('');
+  document.getElementById('r-bars').innerHTML=Object.entries(rev).sort((a,b)=>b[1]-a[1])
+    .map(([t,n])=>bar(t,n,total||1,rc(t),money(n))).join('');
   document.getElementById('r-rtbody').innerHTML=RDB.map((b,i)=>{const c=rc(b.type);
-    return `<tr><td class="tobjlbl">${b.id}</td><td><div class="ttl">${b.cust}</div></td>
+    return `<tr><td class="tobjlbl">${b.id}</td><td><div class="ttl">${esc(b.cust)}</div></td>
       <td><span class="badge ${c.cls}">${b.type}</span></td>
       <td class="tsub">${b.ci}</td><td class="tsub">${b.co}</td>
-      <td class="ttl">₹${PRICES[b.type]?.toLocaleString()}</td>
+      <td class="ttl">${money(bprice(b))}</td>
       <td><span class="badge ${b.active?'st-active':'st-inactive'}">${b.active?'✅ Active':'❌ Cancelled'}</span></td></tr>`;}).join('');
 }
 
 // ── VEHICLE DATA ──────────────────────────────────────────
 const RATES={'Sedan':1500,'SUV':3000,'Bike':500,'Truck':4000,'Van':2500};
-let VDB=[
-  {id:'RT001',cust:'Arun Kumar',  type:'Sedan',num:'MH01AB1234',days:3,active:true},
-  {id:'RT002',cust:'Priya Sharma',type:'SUV',  num:'DL05CD5678',days:5,active:true},
-  {id:'RT003',cust:'Deepa Nair',  type:'Bike', num:'KA02EF9012',days:2,active:false},
-  {id:'RT004',cust:'Vikram Singh',type:'Truck', num:'GJ03GH3456',days:7,active:true},
-  {id:'RT005',cust:'Sneha Raju',  type:'Van',  num:'TN04IJ7890',days:4,active:true},
-  {id:'RT006',cust:'Rajesh Babu', type:'Sedan',num:'MH06KL2345',days:1,active:false},
-];
-let vrtCtr=7;
 
+/* List<Vehicle> — the admin's fleet, keyed by number plate. */
+let VEHICLES=[
+  {num:'MH01AB1234',model:'Honda City',      type:'Sedan',rate:1500,available:false},
+  {num:'MH06KL2345',model:'Maruti Dzire',    type:'Sedan',rate:1400,available:true},
+  {num:'DL05CD5678',model:'Hyundai Creta',   type:'SUV',  rate:3000,available:false},
+  {num:'KA07MN6789',model:'Tata Harrier',    type:'SUV',  rate:3200,available:true},
+  {num:'KA02EF9012',model:'Royal Enfield',   type:'Bike', rate:500, available:true},
+  {num:'GJ03GH3456',model:'Tata Ace',        type:'Truck',rate:4000,available:false},
+  {num:'TN04IJ7890',model:'Force Traveller', type:'Van',  rate:2500,available:false},
+];
+let VDB=[
+  {id:'RT001',cust:'Arun Kumar',  type:'Sedan',num:'MH01AB1234',days:3,rate:1500,active:true},
+  {id:'RT002',cust:'Priya Sharma',type:'SUV',  num:'DL05CD5678',days:5,rate:3000,active:true},
+  {id:'RT003',cust:'Deepa Nair',  type:'Bike', num:'KA02EF9012',days:2,rate:500, active:false},
+  {id:'RT004',cust:'Vikram Singh',type:'Truck',num:'GJ03GH3456',days:7,rate:4000,active:true},
+  {id:'RT005',cust:'Sneha Raju',  type:'Van',  num:'TN04IJ7890',days:4,rate:2500,active:true},
+  {id:'RT006',cust:'Rajesh Babu', type:'Sedan',num:'MH06KL2345',days:1,rate:1400,active:false},
+];
+let VREV=[
+  {id:'VR001',cust:'Deepa Nair', ref:'RT003',rating:5,text:'The Enfield was spotless and pickup took two minutes.',date:'11-09-2026'},
+  {id:'VR002',cust:'Rajesh Babu',ref:'RT006',rating:3,text:'Dzire ran fine, but it was handed over almost empty.',date:'09-09-2026'},
+];
+let vrtCtr=7, vrvCtr=3;
+const vrate=r=>r.rate??RATES[r.type]??0;
+const vtot=r=>vrate(r)*r.days;
+const vehOf=num=>VEHICLES.find(v=>v.num===num)||null;
+const myRentals=()=>VDB.filter(r=>r.cust===ME);
+
+/* ── USER: searchVehicle() ── */
+function renderVAvail(){
+  const ft=document.getElementById('vr-ftype').value;
+  const list=VEHICLES.filter(v=>v.available&&(!ft||v.type===ft));
+  const sel=document.getElementById('vr-veh').value;
+  document.getElementById('v-avail').innerHTML = list.length ? list.map((v,i)=>{const c=vc(v.type);
+    return `<div class="avail-card ${v.num===sel?'sel':''}" style="animation-delay:${i*.04}s" onclick="pickVeh('${v.num}')">
+      <div class="ac-no">${esc(v.model)}</div>
+      <div class="ac-sub">${v.num}</div>
+      <div style="margin-top:8px"><span class="badge ${c.cls}">${v.type}</span></div>
+      <div class="ac-price">${money(v.rate)}<span style="font-size:11px;font-weight:500;color:var(--text3)"> / day</span></div>
+    </div>`;}).join('')
+    : `<div class="no-res" style="grid-column:1/-1">No available vehicles${ft?' of type '+ft:''} — searchVehicle() returned an empty list.</div>`;
+}
+function pickVeh(num){ document.getElementById('vr-veh').value=num; renderVAvail(); }
+function syncVAvailSel(){ renderVAvail(); }
+
+/* ── USER: rentVehicle() ── */
 function addRental(){
   const n=document.getElementById('vr-name').value.trim();
-  const t=document.getElementById('vr-type').value;
-  const d=parseInt(document.getElementById('vr-days').value)||1;
-  if(!n){alert('Enter customer name.');return;}
-  VDB.push({id:`RT${String(vrtCtr).padStart(3,'0')}`,cust:n,type:t,num:`XX${vrtCtr}YY`,days:d,active:true});
-  vrtCtr++;
-  document.getElementById('vr-name').value='';document.getElementById('vr-days').value='';
-  const m=document.getElementById('vr-ok');m.style.display='block';setTimeout(()=>m.style.display='none',3000);
-  renderVRecent();
+  const num=document.getElementById('vr-veh').value;
+  const d=parseInt(document.getElementById('vr-days').value)||0;
+  if(!n)  return msg('vr-msg','bad','Enter the customer name — it is stored on the Rental object.');
+  if(d<1) return msg('vr-msg','bad','Number of days has to be at least 1.');
+  const v=vehOf(num);
+  if(!v)           return msg('vr-msg','bad','Pick a vehicle first.');
+  if(!v.available) return msg('vr-msg','bad',`${v.num} is already on rent — <code>rentVehicle()</code> returns <code>false</code>.`);
+  const id=`RT${String(vrtCtr).padStart(3,'0')}`;
+  VDB.push({id,cust:n,type:v.type,num:v.num,days:d,rate:v.rate,active:true});
+  v.available=false; vrtCtr++; ME=n;
+  msg('vr-msg','ok',`✅ <strong>${id}</strong> — ${esc(v.model)} (${v.num}) for ${d} day${d>1?'s':''}: ${d} × ${money(v.rate)} = <strong>${money(v.rate*d)}</strong>. Vehicle marked unavailable.`);
+  refreshSelects(); renderVAvail(); renderVRecent();
 }
 function renderVRecent(){
   const el=document.getElementById('v-recent');
-  el.innerHTML=VDB.slice(-4).reverse().map((r,i)=>{const c=vc(r.type);const total=(RATES[r.type]||0)*r.days;
+  el.innerHTML=VDB.slice(-4).reverse().map((r,i)=>{const c=vc(r.type);
     return `<div class="recent-item" style="animation-delay:${i*.07}s">
-      <div class="ri-top"><span class="ri-name">${r.cust}</span>
+      <div class="ri-top"><span class="ri-name">${esc(r.cust)}</span>
         <span class="badge ${r.active?'st-active':'st-inactive'}">${r.active?'✅ Active':'↩ Returned'}</span></div>
-      <div class="ri-meta"><span class="badge ${c.cls}">${r.type}</span><span>${r.days}d</span><span>₹${total.toLocaleString()}</span></div>
+      <div class="ri-meta"><span class="badge ${c.cls}">${r.type}</span><span>${r.days}d</span><span>${money(vtot(r))}</span></div>
     </div>`;}).join('');
+}
+
+/* ── USER: viewMyRentals() + returnVehicle() ── */
+function renderVMy(){
+  const mine=myRentals();
+  const active=mine.filter(r=>r.active).length;
+  const spend=mine.reduce((a,r)=>a+vtot(r),0);
+  document.getElementById('v-my-chips').innerHTML=[
+    chip('🧾',mine.length,'My rentals',vc('SUV').bg(),vc('SUV').bd(),vc('SUV').tx(),.10),
+    chip('✅',active,'On rent now',dk()?'#0a2e1e':'#d8f5ec',dk()?'#064e3b':'#a8e8d4',dk()?'#6ee7b7':'#2e8b6e',.15),
+    chip('💰',money(spend),'My spend',vc('Truck').bg(),vc('Truck').bd(),vc('Truck').tx(),.20),
+  ].join('');
+  document.getElementById('v-my-tbody').innerHTML = mine.length ? mine.map((r,i)=>{const c=vc(r.type);
+    return `<tr style="animation-delay:${i*.035}s">
+      <td class="tobjlbl">${r.id}</td><td class="ttl">${r.num}</td>
+      <td><span class="badge ${c.cls}">${r.type}</span></td>
+      <td class="tsub">${r.days}d</td><td class="tsub">${money(vrate(r))}/day</td>
+      <td class="ttl">${money(vtot(r))}</td>
+      <td><span class="badge ${r.active?'st-active':'st-inactive'}">${r.active?'✅ Active':'↩ Returned'}</span></td>
+      <td>${r.active?`<button class="mini-btn" onclick="userReturn('${r.id}')">Return</button>`:''}</td></tr>`;}).join('')
+    : `<tr><td colspan="8" class="no-res">No rentals under <strong>${esc(ME)}</strong> yet.</td></tr>`;
+}
+function userReturn(id){
+  const r=VDB.find(x=>x.id===id); if(!r||!r.active)return;
+  r.active=false;
+  const v=vehOf(r.num); if(v) v.available=true;
+  refreshSelects(); renderVMy();
+}
+
+/* ── USER: giveReview() ── */
+let vStar=5;
+function setVStar(n){ vStar=n; renderStars('vv-stars',vStar,'setVStar'); }
+function addVReview(){
+  const rid=document.getElementById('vv-rent').value;
+  const txt=document.getElementById('vv-text').value.trim();
+  if(!rid) return msg('vv-msg','bad','You can only review a rental you actually made — none found for <strong>'+esc(ME)+'</strong>.');
+  if(!txt) return msg('vv-msg','bad','Write a line about the vehicle before submitting.');
+  const id=`VR${String(vrvCtr).padStart(3,'0')}`;
+  VREV.push({id,cust:ME,ref:rid,rating:vStar,text:txt,date:today()});
+  vrvCtr++; document.getElementById('vv-text').value='';
+  msg('vv-msg','ok',`✅ <strong>${id}</strong> — new Review(${rid}, ${vStar}★) created and appended to reviews.csv.`);
+  renderVReview();
+}
+function renderVReview(){
+  const avg=VREV.length?(VREV.reduce((a,r)=>a+r.rating,0)/VREV.length):0;
+  document.getElementById('v-revsum').innerHTML=VREV.length
+    ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+         <span style="font-size:26px;font-weight:800;letter-spacing:-.02em">${avg.toFixed(1)}</span>
+         <span class="stars-ro">${starStr(Math.round(avg))}</span>
+         <span style="font-size:12px;color:var(--text3)">${VREV.length} review${VREV.length>1?'s':''}</span></div>`
+    : '<div style="font-size:12px;color:var(--text3)">No reviews yet.</div>';
+  document.getElementById('v-revlist').innerHTML=VREV.slice().reverse().map((r,i)=>
+    `<div class="rev-card" style="animation-delay:${i*.05}s">
+      <div class="rev-top"><span class="rev-name">${esc(r.cust)}</span><span class="stars-ro">${starStr(r.rating)}</span></div>
+      <div class="rev-txt">${esc(r.text)}</div>
+      <div class="rev-meta">${r.id} · rental ${r.ref} · ${r.date}</div>
+    </div>`).join('');
+}
+
+/* ── ADMIN: addVehicle() / modifyVehicleDetails() / removeVehicle() ── */
+function adminAddVehicle(){
+  const num=document.getElementById('av-num').value.trim().toUpperCase();
+  const model=document.getElementById('av-model').value.trim();
+  const t=document.getElementById('av-type').value;
+  const rate=parseInt(document.getElementById('av-rate').value);
+  if(!num||!model||!rate) return msg('av-msg','bad','A Vehicle needs a number, a model and a daily rate.');
+  if(vehOf(num)) return msg('av-msg','bad',`<strong>${esc(num)}</strong> is already in <code>List&lt;Vehicle&gt;</code>. <code>addVehicle()</code> refuses duplicate plates.`);
+  VEHICLES.push({num,model,type:t,rate,available:true});
+  document.getElementById('av-num').value='';document.getElementById('av-model').value='';document.getElementById('av-rate').value='';
+  msg('av-msg','ok',`✅ <code>new Vehicle("${esc(num)}", "${esc(model)}", "${t}", ${rate}, true)</code> added — fleet is now <strong>${VEHICLES.length}</strong> vehicles.`);
+  renderVFleet(); refreshSelects();
+}
+function prefillModifyVehicle(){
+  const v=vehOf(document.getElementById('mv-num').value); if(!v)return;
+  document.getElementById('mv-type').value=v.type;
+  document.getElementById('mv-rate').value=v.rate;
+  document.getElementById('mv-avail').value=v.available?'yes':'no';
+}
+function adminModifyVehicle(){
+  const num=document.getElementById('mv-num').value;
+  const v=vehOf(num);
+  if(!v) return msg('mv-msg','bad','Pick a vehicle from the fleet first.');
+  const rate=parseInt(document.getElementById('mv-rate').value);
+  if(!rate) return msg('mv-msg','bad','Rent per day has to be a number.');
+  const before=`${v.type} · ${money(v.rate)}/day · ${v.available?'available':'on rent'}`;
+  const wantFree=document.getElementById('mv-avail').value==='yes';
+  const held=VDB.some(r=>r.num===num&&r.active);
+  if(wantFree&&held) return msg('mv-msg','bad',`${num} is still on an active <strong>Rental</strong> — it has to be returned before the flag can be flipped.`);
+  v.type=document.getElementById('mv-type').value; v.rate=rate; v.available=wantFree;
+  msg('mv-msg','ok',`✅ ${num}: <code>${before}</code> → <code>${v.type} · ${money(v.rate)}/day · ${v.available?'available':'on rent'}</code>. Past rentals keep the rate they were priced at.`);
+  renderVFleet(); refreshSelects();
+}
+function adminRemoveVehicle(num){
+  const held=VDB.filter(r=>r.num===num&&r.active);
+  if(held.length) return msg('mv-msg','bad',`${num} cannot be removed — rental ${held.map(r=>r.id).join(', ')} still points at this Vehicle object.`);
+  VEHICLES=VEHICLES.filter(v=>v.num!==num);
+  msg('mv-msg','ok',`🗑 ${num} removed from <code>List&lt;Vehicle&gt;</code> — ${VEHICLES.length} vehicles left.`);
+  renderVFleet(); refreshSelects();
+}
+function renderVFleet(){
+  const free=VEHICLES.filter(v=>v.available).length;
+  const avg=VEHICLES.length?VEHICLES.reduce((a,v)=>a+v.rate,0)/VEHICLES.length:0;
+  document.getElementById('v-inv-chips').innerHTML=[
+    chip('🚙',VEHICLES.length,'Fleet size',vc('SUV').bg(),vc('SUV').bd(),vc('SUV').tx(),.10),
+    chip('✅',free,'Available',dk()?'#0a2e1e':'#d8f5ec',dk()?'#064e3b':'#a8e8d4',dk()?'#6ee7b7':'#2e8b6e',.15),
+    chip('🔑',VEHICLES.length-free,'On rent',vc('Sedan').bg(),vc('Sedan').bd(),vc('Sedan').tx(),.20),
+    chip('🏷',money(avg),'Avg rate/day',vc('Truck').bg(),vc('Truck').bd(),vc('Truck').tx(),.25),
+  ].join('');
+  document.getElementById('v-inv-tbody').innerHTML = VEHICLES.length ? VEHICLES.map((v,i)=>{
+    const c=vc(v.type); const n=VDB.filter(r=>r.num===v.num).length;
+    const held=VDB.some(r=>r.num===v.num&&r.active);
+    return `<tr style="animation-delay:${i*.03}s">
+      <td class="tobjlbl">v${i+1}</td><td class="ttl">${v.num}</td>
+      <td class="tsub">${esc(v.model)}</td>
+      <td><span class="badge ${c.cls}">${v.type}</span></td>
+      <td class="ttl">${money(v.rate)}</td>
+      <td><span class="badge ${v.available?'st-free':'st-busy'}">${v.available?'✅ Available':'❌ On rent'}</span></td>
+      <td class="tsub">${n}</td>
+      <td><button class="mini-btn danger" ${held?'disabled title="on an active rental"':''} onclick="adminRemoveVehicle('${v.num}')">Remove</button></td></tr>`;}).join('')
+    : `<tr><td colspan="8" class="no-res">List&lt;Vehicle&gt; is empty — nothing for a renter to take.</td></tr>`;
 }
 function renderVView(){
   const active=VDB.filter(r=>r.active).length;
-  const total=VDB.reduce((a,r)=>a+(RATES[r.type]||0)*r.days,0);
+  const total=VDB.reduce((a,r)=>a+vtot(r),0);
   const types=[...new Set(VDB.map(r=>r.type))];
   document.getElementById('v-chips').innerHTML=[
     chip('🚗',VDB.length,'Total rentals',  vc('SUV').bg(),vc('SUV').bd(),vc('SUV').tx(),.10),
     chip('✅',active,    'Active',           dk()?'#0a2e1e':'#d8f5ec',dk()?'#064e3b':'#a8e8d4',dk()?'#6ee7b7':'#2e8b6e',.15),
     chip('↩',VDB.length-active,'Returned', vc('Sedan').bg(),vc('Sedan').bd(),vc('Sedan').tx(),.20),
-    chip('💰','₹'+total.toLocaleString(),'Revenue', vc('Truck').bg(),vc('Truck').bd(),vc('Truck').tx(),.25),
+    chip('💰',money(total),'Revenue', vc('Truck').bg(),vc('Truck').bd(),vc('Truck').tx(),.25),
   ].join('');
   const flt=document.getElementById('v-ftype');
   flt.innerHTML='<option value="">All types</option>'+types.map(t=>`<option>${t}</option>`).join('');
@@ -1049,7 +1953,7 @@ function renderVView(){
   document.getElementById('v-type-grid').innerHTML=Object.entries(gm).sort((a,b)=>b[1]-a[1]).map(([t,n],i)=>typeCard(t,n,vc(t),i)).join('');
 }
 function renderVTable(data){
-  document.getElementById('v-tbody').innerHTML=data.length?data.map((r,i)=>{const c=vc(r.type);const total=(RATES[r.type]||0)*r.days;
+  document.getElementById('v-tbody').innerHTML=data.length?data.map((r,i)=>{const c=vc(r.type);const total=vtot(r);
     return `<tr style="animation-delay:${i*.035}s">
       <td class="tobjlbl">${r.id}</td><td><div class="ttl">${r.cust}</div></td>
       <td class="tsub">${r.num}</td><td><span class="badge ${c.cls}">${r.type}</span></td>
@@ -1067,17 +1971,14 @@ function filterRentals(){
     (!fs||(fs==='active'?r.active:!r.active))));
 }
 function renderVFile(){
-  const term=document.getElementById('v-term');term.innerHTML='<div class="prompt">$ cat rentals.csv</div>';
-  const cols=[`var(--blue)`,`var(--violet)`,`var(--green)`,`var(--amber)`,`var(--rose)`,`var(--pink)`];
-  VDB.forEach((r,i)=>{
-    const d=document.createElement('div');d.className='fline';d.style.color=cols[i%cols.length];
-    d.innerHTML=`<span style="color:var(--text4);margin-right:8px">${String(i+1).padStart(2,'0')}│ </span>${r.id},${r.cust},${r.type},${r.num},${r.days},${(RATES[r.type]||0)*r.days}`;
-    term.appendChild(d);setTimeout(()=>d.classList.add('show'),80+i*100);
-  });
-  const gm={};VDB.forEach(r=>{if(!gm[r.type])gm[r.type]=0;gm[r.type]++;});
-  document.getElementById('v-fstats').innerHTML=[{l:'Total rows',v:VDB.length},{l:'Fields/row',v:6},{l:'Types',v:Object.keys(gm).length},{l:'Active',v:VDB.filter(r=>r.active).length}]
+  fillTerm('v-term','rentals.csv',VDB.map(r=>`${r.id},${r.cust},${r.type},${r.num},${r.days},${vrate(r)},${vtot(r)},${r.active}`));
+  fillTerm('v-term2','vehicles.csv',VEHICLES.map(v=>`${v.num},${v.model},${v.type},${v.rate},${v.available}`));
+  fillTerm('v-term3','reviews.csv',VREV.map(r=>`${r.id},${r.cust},${r.ref},${r.rating},"${r.text}",${r.date}`));
+  document.getElementById('v-fstats').innerHTML=[
+    {l:'Rental rows',v:VDB.length},{l:'Vehicle rows',v:VEHICLES.length},
+    {l:'Review rows',v:VREV.length},{l:'Active rentals',v:VDB.filter(r=>r.active).length}]
     .map(({l,v})=>`<div class="fstat"><strong>${v}</strong>${l}</div>`).join('');
-  document.getElementById('v-ftbody').innerHTML=VDB.map((r,i)=>{const c=vc(r.type);const total=(RATES[r.type]||0)*r.days;
+  document.getElementById('v-ftbody').innerHTML=VDB.map((r,i)=>{const c=vc(r.type);const total=vtot(r);
     return `<tr><td class="tobjlbl">r${i+1}</td><td><div class="ttl">${r.cust}</div></td>
       <td><span class="badge ${c.cls}">${r.type}</span></td>
       <td class="tsub">${r.days}d</td><td class="ttl">₹${total.toLocaleString()}</td>
@@ -1086,21 +1987,50 @@ function renderVFile(){
 function renderVReport(){
   document.getElementById('v-rpt-date').textContent='Generated: '+new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
   const active=VDB.filter(r=>r.active).length;
-  const total=VDB.reduce((a,r)=>a+(RATES[r.type]||0)*r.days,0);
-  const gm={};VDB.forEach(r=>{if(!gm[r.type])gm[r.type]=0;gm[r.type]++;});
-  const top=Object.entries(gm).sort((a,b)=>b[1]-a[1])[0];
+  const total=VDB.reduce((a,r)=>a+vtot(r),0);
+  const rev={};VDB.forEach(r=>{rev[r.type]=(rev[r.type]||0)+vtot(r);});
+  const days=VDB.reduce((a,r)=>a+r.days,0);
+  const util=VEHICLES.length?Math.round((VEHICLES.length-VEHICLES.filter(v=>v.available).length)/VEHICLES.length*100):0;
+  const top=Object.entries(rev).sort((a,b)=>b[1]-a[1])[0]||['—',0];
   document.getElementById('v-kpi').innerHTML=[
-    kpi('🚗','Total rentals',VDB.length,VDB.length+' records',vc('SUV').bg(),vc('SUV').bd(),vc('SUV').tx(),.1),
-    kpi('✅','Active',active,Math.round(active/VDB.length*100)+'% rate',dk()?'#0a2e1e':'#d8f5ec',dk()?'#064e3b':'#a8e8d4',dk()?'#6ee7b7':'#2e8b6e',.15),
-    kpi('💰','Revenue','₹'+total.toLocaleString(),'all rentals',vc('Truck').bg(),vc('Truck').bd(),vc('Truck').tx(),.2),
-    kpi('🏆','Top type',top[0],top[1]+' rentals',vc(top[0]).bg(),vc(top[0]).bd(),vc(top[0]).tx(),.25),
+    kpi('💰','Total revenue',money(total),VDB.length+' rentals',vc('Truck').bg(),vc('Truck').bd(),vc('Truck').tx(),.1),
+    kpi('✅','On rent now',active,util+'% of the fleet',dk()?'#0a2e1e':'#d8f5ec',dk()?'#064e3b':'#a8e8d4',dk()?'#6ee7b7':'#2e8b6e',.15),
+    kpi('📅','Days rented',days,'across all rentals',vc('SUV').bg(),vc('SUV').bd(),vc('SUV').tx(),.2),
+    kpi('🏆','Top earner',top[0],money(top[1]),vc(top[0]).bg(),vc(top[0]).bd(),vc(top[0]).tx(),.25),
+    kpi('📊','Avg rental',money(VDB.length?total/VDB.length:0),'per Rental object',vc('Van').bg(),vc('Van').bd(),vc('Van').tx(),.3),
   ].join('');
-  document.getElementById('v-bars').innerHTML=Object.entries(gm).sort((a,b)=>b[1]-a[1]).map(([t,n])=>bar(t,n,VDB.length,vc(t))).join('');
-  document.getElementById('v-rtbody').innerHTML=VDB.map((r,i)=>{const c=vc(r.type);const total=(RATES[r.type]||0)*r.days;
+  document.getElementById('v-bars').innerHTML=Object.entries(rev).sort((a,b)=>b[1]-a[1])
+    .map(([t,n])=>bar(t,n,total||1,vc(t),money(n))).join('');
+  document.getElementById('v-rtbody').innerHTML=VDB.map((r,i)=>{const c=vc(r.type);const total=vtot(r);
     return `<tr><td class="tobjlbl">${r.id}</td><td><div class="ttl">${r.cust}</div></td>
       <td><span class="badge ${c.cls}">${r.type}</span></td>
       <td class="tsub">${r.days}d</td><td class="ttl">₹${total.toLocaleString()}</td>
       <td><span class="badge ${r.active?'st-active':'st-inactive'}">${r.active?'✅ Active':'↩ Returned'}</span></td></tr>`;}).join('');
+}
+
+// ── SELECT REFRESH ────────────────────────────────────────
+function fillSelect(id,opts,keep){
+  const el=document.getElementById(id); if(!el)return;
+  const prev=keep??el.value;
+  el.innerHTML=opts.map(o=>`<option value="${esc(o.v)}">${esc(o.t)}</option>`).join('');
+  if(opts.some(o=>String(o.v)===String(prev))) el.value=prev;
+}
+function refreshSelects(){
+  const allRooms=ROOMS.map(r=>({v:r.no,t:`Room ${r.no} — ${r.type} · ₹${r.price}`}));
+  fillSelect('rfm-no',allRooms); fillSelect('rfx-no',allRooms); fillSelect('mr-no',allRooms);
+  fillSelect('rb-room',ROOMS.filter(r=>r.available).map(r=>({v:r.no,t:`Room ${r.no} — ${r.type} · ₹${r.price}/night`})));
+  const mine=myBookings();
+  fillSelect('rv-book',mine.map(b=>({v:b.id,t:`${b.id} — Room ${b.room} (${b.type})`})));
+  fillSelect('rfv-id',mine.map(b=>({v:b.id,t:`${b.id} — Room ${b.room}`})));
+
+  const allVeh=VEHICLES.map(v=>({v:v.num,t:`${v.num} — ${v.model} · ₹${v.rate}`}));
+  fillSelect('vfm-num',allVeh); fillSelect('vfx-num',allVeh); fillSelect('mv-num',allVeh);
+  fillSelect('vr-veh',VEHICLES.filter(v=>v.available).map(v=>({v:v.num,t:`${v.model} (${v.num}) — ₹${v.rate}/day`})));
+  const mineV=myRentals();
+  fillSelect('vv-rent',mineV.map(r=>({v:r.id,t:`${r.id} — ${r.num} (${r.type})`})));
+  fillSelect('vfv-id',mineV.map(r=>({v:r.id,t:`${r.id} — ${r.num}`})));
+
+  prefillModifyRoom(); prefillModifyVehicle(); refreshGuestList();
 }
 
 // ── PLAYGROUND ────────────────────────────────────────────
@@ -1136,78 +2066,277 @@ function act(ids,stageNS,tag,note){
 function setExpl(id,html){document.getElementById(id).innerHTML=html;}
 
 // ROOM playground
+const R_ACTIONS=['search','book','cancel','review','add','modify','remove','revenue'];
+const R_BTN={search:'ra-search',book:'ra-book',cancel:'ra-cancel',review:'ra-review',
+             add:'ra-add',modify:'ra-modify',remove:'ra-remove',revenue:'ra-revenue'};
+const R_FORM={search:'rf-search',book:'rf-book',cancel:'rf-cancel',review:'rf-review',
+              add:'rf-add',modify:'rf-modify',remove:'rf-remove',revenue:null};
+/* Three stage layouts, all reusing the same five node ids — because in the Java
+   program it is always Main → service → two objects → one file. */
+const R_LAYOUT={
+  booking  :{ctrl:['RoomBooking','manages bookings + rooms'],
+             o1:['Booking','bookingId · customerName<br>room · price · dates'],
+             o2:['Room','roomNumber · roomType<br>price · available'],csv:'bookings.csv'},
+  inventory:{ctrl:['RoomBooking','owns the room inventory'],
+             o1:['Room','roomNumber · roomType<br>price · available'],
+             o2:['List&lt;Room&gt;','the hotel inventory'],csv:'rooms.csv'},
+  review   :{ctrl:['RoomBooking','manages bookings + reviews'],
+             o1:['Review','reviewId · customerName<br>rating · comment'],
+             o2:['Booking','the stay being reviewed'],csv:'reviews.csv'},
+};
+const rLayout=()=>['add','modify','remove'].includes(rAction)?'inventory':(rAction==='review'?'review':'booking');
+
 let rAction='search',rSteps=[],rIdx=-1;
 function rpick(a){
   rAction=a;
-  ['search','book','cancel','view'].forEach(x=>document.getElementById('ra-'+x).classList.toggle('active',x===a));
-  document.getElementById('rf-search').style.display = a==='search'?'flex':'none';
-  document.getElementById('rf-book').style.display   = a==='book'?'flex':'none';
-  document.getElementById('rf-cancel').style.display = a==='cancel'?'flex':'none';
+  R_ACTIONS.forEach(x=>{
+    const b=document.getElementById(R_BTN[x]); if(b) b.classList.toggle('active',x===a);
+    const f=R_FORM[x]&&document.getElementById(R_FORM[x]); if(f) f.style.display=(x===a?'flex':'none');
+  });
   rreset();
 }
 function rBuild(){
+  const L=R_LAYOUT[rLayout()];
   document.getElementById('r-stage').innerHTML=`<div class="diag">
-    ${nodeHTML('Main','entry point','r-main')}${arrowSVG()}
-    ${nodeHTML('RoomBooking','manages bookings + rooms','r-ctrl')}${arrowSVG()}
+    ${nodeHTML('Main',ROLE==='admin'?'admin menu':'guest menu','r-main')}${arrowSVG()}
+    ${nodeHTML(L.ctrl[0],L.ctrl[1],'r-ctrl')}${arrowSVG()}
     <div class="brow">
-      <div class="bcol">${nodeHTML('Booking','bookingId · customerName<br>room · checkIn · checkOut','r-obj1')}</div>
-      <div class="bcol">${nodeHTML('Room','roomNumber · roomType<br>price · available','r-obj2')}${arrowSVG()}
+      <div class="bcol">${nodeHTML(L.o1[0],L.o1[1],'r-obj1')}</div>
+      <div class="bcol">${nodeHTML(L.o2[0],L.o2[1],'r-obj2')}${arrowSVG()}
         <div class="node" id="r-csv">
-          <div class="nname" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">bookings.csv</div>
+          <div class="nname" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">${L.csv}</div>
           <div class="filebox" id="r-csvbox"></div>
         </div>
       </div>
     </div></div>`;
 }
+/* Clear every highlight and mark the service node done — the last step of
+   almost every sequence. */
+function rDone(html){
+  ['r-main','r-ctrl','r-obj1','r-obj2','r-csv'].forEach(id=>{
+    const e=document.getElementById(id); if(e)e.classList.remove('active','dim');});
+  document.getElementById('r-ctrl').classList.add('done');
+  rExpl(html);
+}
 function ract(ids,tag,note){act(ids,'r-',tag,note);}
 function rExpl(h){setExpl('r-expl',h);}
 
 function rStepsSearch(type){
-  const avail=RDB.filter(b=>b.active&&(!type||b.type===type));
+  const avail=ROOMS.filter(r=>r.available&&(!type||r.type===type));
   return[
-    {run(){ract(['r-main']);rExpl('<strong>Main</strong> calls <code>RoomBooking.searchRoom()</code>.');}},
-    {run(){ract(['r-ctrl'],'searchRoom()',type?`"Find ${type} rooms"`:'"Find available rooms"');rExpl('<strong>RoomBooking</strong> loops through its room list checking <code>available == true</code>.');}},
-    {run(){ract(['r-obj2'],'room.isAvailable()');rExpl('<strong>Room</strong> objects are checked one by one for availability.');}},
+    {run(){ract(['r-main']);rExpl('<strong>Main</strong> calls <code>RoomBooking.searchRoom()</code> — a guest operation, open to anyone at the door.');}},
+    {run(){ract(['r-ctrl'],'searchRoom()',type?`"Find ${type} rooms"`:'"Find available rooms"');rExpl('<strong>RoomBooking</strong> loops through <code>List&lt;Room&gt;</code> checking <code>available == true</code>.');}},
+    {run(){ract(['r-obj2'],'room.isAvailable()');rExpl('<strong>Room</strong> objects are checked one by one. The guest never sees the list itself — only what comes back.');}},
     {run(){
       ract(['r-obj2'],'room.isAvailable()');
       const box=document.getElementById('r-obj2');
       const row=document.createElement('div');row.style.cssText='display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;';
-      row.innerHTML=avail.slice(0,3).map((b,i)=>ocardHTML(`rsoc${i}`,'🏨',[`Room ${b.room}`,b.type,`₹${PRICES[b.type]}/night`],'Available ✓')).join('');
+      row.innerHTML=avail.slice(0,3).map((r,i)=>ocardHTML(`rsoc${i}`,'🏨',[`Room ${r.no}`,r.type,`${money(r.price)}/night`],'Available ✓')).join('');
       box.appendChild(row);avail.slice(0,3).forEach((_,i)=>setTimeout(()=>showC(`rsoc${i}`),60+i*130));
-      rExpl(`<strong>${avail.length} rooms</strong> available${type?' ('+type+')':''}. Returned to RoomBooking.`);
+      rExpl(`<strong>${avail.length} room${avail.length===1?'':'s'}</strong> available${type?' ('+type+')':''}. Returned to RoomBooking as a <code>List&lt;Room&gt;</code>.`);
+    }},
+    {run(){rDone(`✅ <code>searchRoom()</code> complete — ${avail.length} available room${avail.length===1?'':'s'} out of ${ROOMS.length} in the inventory.`);}},
+  ];
+}
+/* ── ADMIN sequences ── */
+function rStepsAdd(no,type,price){
+  if(!no||!price) return [{run(){ract(['r-main']);rExpl('Enter a room number and a price above, then press <strong>▶ Run</strong>.');}}];
+  if(roomOf(no)) return[
+    {run(){ract(['r-main']);rExpl(`<strong>Main</strong> (admin menu) calls <code>RoomBooking.addRoom(${no}, "${type}", ${price})</code>.`);}},
+    {run(){ract(['r-ctrl'],'addRoom()',`"Is ${no} taken?"`);rExpl('<strong>RoomBooking</strong> scans <code>List&lt;Room&gt;</code> for that room number first.');}},
+    {run(){ract(['r-obj2'],'already present');rExpl(`❌ Room <strong>${no}</strong> is already in the list. <code>addRoom()</code> returns <code>false</code> — no object is constructed and nothing is written.`);}},
+    {run(){rDone(`Nothing changed. A duplicate room number would give two Room objects the same identity, and a Booking could not say which one it holds.`);}},
+  ];
+  return[
+    {run(){ract(['r-main']);rExpl(`<strong>Main</strong> (admin menu) calls <code>RoomBooking.addRoom(${no}, "${type}", ${price})</code>.`);}},
+    {run(){ract(['r-ctrl'],'addRoom()',`"Is ${no} taken?"`);rExpl('<strong>RoomBooking</strong> scans <code>List&lt;Room&gt;</code> — the number is free, so it may build the object.');}},
+    {run(){
+      ract(['r-obj1'],'new Room(...)');
+      const box=document.getElementById('r-obj1');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('r-aoc1','🛏',[`roomNumber = ${no}`,`roomType = "${type}"`,`price = ${money(price)}`,'available = true'],'Room r1');
+      box.appendChild(d.firstChild);showC('r-aoc1');
+      rExpl('<strong>Room constructor</strong> runs — one new object, four fields set. It starts life <code>available</code>.');
+    }},
+    {run(){ract(['r-obj2'],'rooms.add(r1)');rExpl(`The reference is appended to <code>List&lt;Room&gt;</code> — the inventory goes from <strong>${ROOMS.length}</strong> to <strong>${ROOMS.length+1}</strong> rooms.`);}},
+    {run(){
+      ract(['r-csv'],'saveRoom(r1)');
+      if(!roomOf(no)){ROOMS.push({no,type,price,available:true});refreshSelects();}
+      document.getElementById('r-csvbox').innerHTML=`<div class="frow" id="rafr1">${no},${type},${price},true</div>`;showR('rafr1');
+      rExpl('<strong>FileManager</strong> appends the row to <code>rooms.csv</code> so the room survives the program ending.');
+    }},
+    {run(){rDone(`✅ <code>addRoom()</code> complete. Room <strong>${no}</strong> now shows up in every guest's <code>searchRoom()</code>.`);}},
+  ];
+}
+function rStepsModify(no,type,price){
+  const r=roomOf(no);
+  if(!r) return[
+    {run(){ract(['r-main']);rExpl(`<strong>Main</strong> calls <code>RoomBooking.modifyRoomDetails(${no}, …)</code>.`);}},
+    {run(){ract(['r-ctrl'],'modifyRoomDetails()');rExpl('<strong>RoomBooking</strong> searches the list for that room number.');}},
+    {run(){rDone(`❌ Room <code>${no}</code> is not in <code>List&lt;Room&gt;</code> — the method returns <code>false</code> without touching anything.`);}},
+  ];
+  const before={type:r.type,price:r.price};
+  return[
+    {run(){ract(['r-main']);rExpl(`<strong>Main</strong> calls <code>RoomBooking.modifyRoomDetails(${no}, "${type}", ${price})</code> — admin only.`);}},
+    {run(){ract(['r-ctrl'],'modifyRoomDetails()',`"Find room ${no}"`);rExpl('<strong>RoomBooking</strong> walks the list until <code>room.getRoomNumber() == '+no+'</code>.');}},
+    {run(){
+      ract(['r-obj1'],'found');
+      const box=document.getElementById('r-obj1');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('r-moc1','🛏',[`roomNumber = ${no}`,`roomType = "${before.type}"`,`price = ${money(before.price)}`],'before');
+      box.appendChild(d.firstChild);showC('r-moc1');
+      rExpl('The <strong>Room</strong> object is found. Note what happens next — no new object is made.');
     }},
     {run(){
-      ['r-main','r-ctrl','r-obj1','r-obj2','r-csv'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active','dim');});
-      document.getElementById('r-ctrl').classList.add('done');
-      rExpl(`✅ <code>searchRoom()</code> complete. ${avail.length} available rooms found.`);
+      ract(['r-obj1'],'setType() · setPrice()');
+      r.type=type; r.price=price; refreshSelects();
+      const box=document.getElementById('r-obj1');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('r-moc2','✏️',[`roomType = "${type}"`,`price = ${money(price)}`],'after');
+      box.appendChild(d.firstChild);showC('r-moc2');
+      rExpl('<strong>Setters mutate the existing object.</strong> Every Booking that holds a reference to this Room now sees the new values too.');
+    }},
+    {run(){
+      ract(['r-csv'],'rewrite row');
+      document.getElementById('r-csvbox').innerHTML=`<div class="frow" id="rmfr1">${no},${type},${price},${r.available}</div>`;showR('rmfr1');
+      rExpl('<strong>FileManager</strong> rewrites that line of <code>rooms.csv</code>.');
+    }},
+    {run(){rDone(`✅ Room ${no}: <code>${before.type} · ${money(before.price)}</code> → <code>${type} · ${money(price)}</code>. Bookings already made keep the price they copied — that is why <code>overallRevenue()</code> does not change.`);}},
+  ];
+}
+function rStepsRemove(no){
+  const r=roomOf(no);
+  if(!r) return[
+    {run(){ract(['r-main']);rExpl(`<strong>Main</strong> calls <code>RoomBooking.removeRoom(${no})</code>.`);}},
+    {run(){ract(['r-ctrl'],'removeRoom()');rExpl('<strong>RoomBooking</strong> searches the list.');}},
+    {run(){rDone(`❌ Room <code>${no}</code> is not in the list — nothing to remove.`);}},
+  ];
+  const held=RDB.filter(b=>b.room===no&&b.active);
+  return[
+    {run(){ract(['r-main']);rExpl(`<strong>Main</strong> calls <code>RoomBooking.removeRoom(${no})</code> — admin only.`);}},
+    {run(){ract(['r-ctrl'],'removeRoom()',`"Find room ${no}"`);rExpl('<strong>RoomBooking</strong> locates the Room object in <code>List&lt;Room&gt;</code>.');}},
+    {run(){
+      ract(['r-obj1'],'found');
+      const box=document.getElementById('r-obj1');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('r-xoc1','🛏',[`roomNumber = ${no}`,`roomType = "${r.type}"`,`available = ${r.available}`],'Room');
+      box.appendChild(d.firstChild);showC('r-xoc1');
+      rExpl('Found. But before it can go, one question has to be answered.');
+    }},
+    {run(){
+      ract(['r-obj2'],'any active Booking?');
+      rExpl(held.length
+        ? `❌ <strong>${held.length} active Booking</strong> (${held.map(b=>b.id).join(', ')}) still holds a reference to this Room. Removing it from the list would leave a Booking pointing at a room the hotel says does not exist.`
+        : '✅ No active <strong>Booking</strong> references this Room. It is safe to drop.');
+    }},
+    {run(){
+      if(held.length){rDone(`<code>removeRoom(${no})</code> returns <code>false</code>. Cancel the booking first — <em>then</em> the room can go.`);return;}
+      ract(['r-csv'],'delete row');
+      ROOMS=ROOMS.filter(x=>x.no!==no); refreshSelects();
+      document.getElementById('r-csvbox').innerHTML=`<div class="frow" id="rxfr1">${no},…  ← line deleted</div>`;showR('rxfr1');
+      rExpl('<strong>FileManager</strong> rewrites <code>rooms.csv</code> without that line.');
+    }},
+    {run(){
+      if(held.length){rDone(`Nothing was removed — the reference from <code>${held[0].id}</code> protected the object.`);return;}
+      rDone(`✅ Room ${no} removed. Past <strong>Booking</strong> objects still hold their own copy of the number and price, so the history stays readable.`);
     }},
   ];
 }
+function rStepsRevenue(){
+  const total=RDB.reduce((a,b)=>a+bprice(b),0);
+  const rev={};RDB.forEach(b=>{rev[b.type]=(rev[b.type]||0)+bprice(b);});
+  return[
+    {run(){ract(['r-main']);rExpl('<strong>Main</strong> (admin menu) calls <code>RoomBooking.overallRevenue()</code>.');}},
+    {run(){ract(['r-ctrl'],'overallRevenue()','double sum = 0;');rExpl('<strong>RoomBooking</strong> starts a running total and asks <strong>FileManager</strong> for every booking row.');}},
+    {run(){
+      ract(['r-csv'],'readBookings()');
+      const box=document.getElementById('r-csvbox');
+      box.innerHTML=RDB.map((b,i)=>`<div class="frow" id="rrfr${i}">${b.id},${b.cust},${b.type},${bprice(b)}</div>`).join('');
+      RDB.forEach((_,i)=>setTimeout(()=>showR('rrfr'+i),60+i*70));
+      rExpl(`<strong>${RDB.length} rows</strong> read from <code>bookings.csv</code>.`);
+    }},
+    {run(){
+      ract(['r-obj1'],'new Booking(row)');
+      const box=document.getElementById('r-obj1');const row=document.createElement('div');
+      row.style.cssText='display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;';
+      row.innerHTML=RDB.slice(0,4).map((b,i)=>ocardHTML(`rroc${i}`,'📋',[b.id,b.type,money(bprice(b))],`b${i+1}`)).join('');
+      box.appendChild(row);RDB.slice(0,4).forEach((_,i)=>setTimeout(()=>showC(`rroc${i}`),60+i*110));
+      rExpl('Each row becomes a <strong>Booking</strong> object again — the price it stored, not the room\'s price today.');
+    }},
+    {run(){
+      ract(['r-ctrl'],'sum += b.getPrice()');
+      rExpl(`Adding them up: ${Object.entries(rev).map(([t,n])=>`${t} ${money(n)}`).join(' + ')} = <strong>${money(total)}</strong>.`);
+    }},
+    {run(){rDone(`✅ <code>overallRevenue()</code> returns <strong>${money(total)}</strong>. Notice it is computed, never stored — there is no <code>revenue</code> field anywhere.`);}},
+  ];
+}
+/* ── USER: giveReview() ── */
+function rStepsReview(bid,rating,text){
+  const b=RDB.find(x=>x.id===bid);
+  if(!b) return[
+    {run(){ract(['r-main']);rExpl('<strong>Main</strong> calls <code>RoomBooking.addReview()</code>.');}},
+    {run(){ract(['r-ctrl'],'addReview()');rExpl('<strong>RoomBooking</strong> looks for a booking of yours to attach the review to.');}},
+    {run(){rDone(`❌ No booking found for <strong>${esc(ME)}</strong>. Book a room first — a review has to point at a real stay.`);}},
+  ];
+  const id=`RV${String(rrvCtr).padStart(3,'0')}`;
+  return[
+    {run(){ract(['r-main']);rExpl(`<strong>Main</strong> calls <code>RoomBooking.addReview("${bid}", ${rating}, "…")</code>.`);}},
+    {run(){ract(['r-ctrl'],'addReview()',`"Is ${bid} yours?"`);rExpl(`<strong>RoomBooking</strong> checks that booking <code>${bid}</code> really belongs to <strong>${esc(ME)}</strong> — you cannot review a stay you did not have.`);}},
+    {run(){
+      ract(['r-obj2'],'find Booking');
+      const box=document.getElementById('r-obj2');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('r-vco1','📋',[b.id,esc(b.cust),`Room ${b.room}`],'Found ✓');
+      box.appendChild(d.firstChild);showC('r-vco1');
+      rExpl('The <strong>Booking</strong> is found — the review will store its id as a link back to it.');
+    }},
+    {run(){
+      ract(['r-obj1'],'new Review(...)');
+      const box=document.getElementById('r-obj1');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('r-vco2','⭐',[id,esc(ME),starStr(rating),esc(text).slice(0,26)+(text.length>26?'…':'')],'Review rv1');
+      box.appendChild(d.firstChild);showC('r-vco2');
+      rExpl('<strong>Review</strong> constructor runs — a fourth kind of object, with its own file.');
+    }},
+    {run(){
+      ract(['r-csv'],'saveReview(rv1)');
+      RREV.push({id,cust:ME,ref:bid,rating,text,date:today()}); rrvCtr++;
+      document.getElementById('r-csvbox').innerHTML=`<div class="frow" id="rvfr1">${id},${esc(ME)},${bid},${rating}</div>`;showR('rvfr1');
+      rExpl('<strong>FileManager</strong> appends the row to <code>reviews.csv</code>.');
+    }},
+    {run(){rDone(`✅ Review <strong>${id}</strong> saved — ${starStr(rating)}. The admin sees it in the file records without ever calling <code>addReview()</code>.`);}},
+  ];
+}
 function rStepsBook(cust,type,ci,co){
+  const room=ROOMS.find(r=>r.available&&r.type===type);
+  if(!room) return[
+    {run(){ract(['r-main']);rExpl(`<strong>Main</strong> calls <code>RoomBooking.bookRoom("${esc(cust)}", "${type}", …)</code>.`);}},
+    {run(){ract(['r-ctrl'],'bookRoom()',`"Any free ${type}?"`);rExpl('<strong>RoomBooking</strong> scans <code>List&lt;Room&gt;</code> for a free room of that type.');}},
+    {run(){ract(['r-obj2'],'none available');rExpl(`❌ Every <strong>${type}</strong> room is taken.`);}},
+    {run(){rDone(`<code>bookRoom()</code> returns <code>false</code> — no Booking is created. Only the admin can fix this, with <code>addRoom()</code>.`);}},
+  ];
   const newId=`BK${String(rbkCtr).padStart(3,'0')}`;
   return[
-    {run(){ract(['r-main']);rExpl('<strong>Main</strong> calls <code>RoomBooking.bookRoom()</code>.');}},
-    {run(){ract(['r-ctrl'],'bookRoom()','"Create Booking object"');rExpl('<strong>RoomBooking</strong> finds an available room, then calls the <strong>Booking</strong> constructor.');}},
-    {run(){ract(['r-obj1'],'new Booking(...)');rExpl('<strong>Booking class</strong> constructor runs. Building booking object...');}},
+    {run(){ract(['r-main']);rExpl(`<strong>Main</strong> calls <code>RoomBooking.bookRoom("${esc(cust)}", "${type}", …)</code>.`);}},
+    {run(){ract(['r-ctrl'],'bookRoom()',`"Any free ${type}?"`);rExpl('<strong>RoomBooking</strong> scans <code>List&lt;Room&gt;</code> for a free room of that type.');}},
+    {run(){
+      ract(['r-obj2'],`Room ${room.no} ✓`);
+      const box=document.getElementById('r-obj2');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('r-boc0','🛏',[`Room ${room.no}`,room.type,`${money(room.price)}/night`],'available ✓');
+      box.appendChild(d.firstChild);showC('r-boc0');
+      rExpl(`<strong>Room ${room.no}</strong> is free. Its price is read <em>now</em> and copied into the booking.`);
+    }},
     {run(){
       ract(['r-obj1'],'new Booking(...)');
       const box=document.getElementById('r-obj1');
-      const d=document.createElement('div');d.innerHTML=ocardHTML('r-oc1','📋',[newId,cust,type,ci+'→'+co],'Booking b1');
+      const d=document.createElement('div');d.innerHTML=ocardHTML('r-oc1','📋',[newId,esc(cust),`Room ${room.no} · ${room.type}`,money(room.price),ci+'→'+co],'Booking b1');
       box.appendChild(d.firstChild);showC('r-oc1');
-      rExpl(`<strong>📋 Booking b1</strong> created — ID: ${newId}, Customer: ${cust}.`);
+      rExpl(`<strong>📋 Booking b1</strong> created — <code>${newId}</code>, holding a reference to Room ${room.no} and a copy of its price.`);
     }},
-    {run(){ract(['r-obj2'],'room.setAvailable(false)');rExpl('<strong>Room</strong> object updated — <code>available = false</code>.');}},
+    {run(){ract(['r-obj2'],'room.setAvailable(false)');rExpl(`<strong>Room ${room.no}</strong> updated — <code>available = false</code>. It disappears from every other guest's <code>searchRoom()</code> immediately.`);}},
     {run(){
       ract(['r-csv'],'saveBooking(b1)');
-      document.getElementById('r-csvbox').innerHTML=`<div class="frow" id="rfr1">${newId},${cust},${type},${ci},${co}</div>`;
-      showR('rfr1');RDB.push({id:newId,cust,type,room:100+rbkCtr,ci,co,active:true});rbkCtr++;
+      document.getElementById('r-csvbox').innerHTML=`<div class="frow" id="rfr1">${newId},${esc(cust)},${room.type},${room.no},${room.price}</div>`;
+      showR('rfr1');
+      RDB.push({id:newId,cust,type:room.type,room:room.no,ci,co,price:room.price,active:true});
+      room.available=false; rbkCtr++; refreshSelects();
       rExpl('<strong>FileManager</strong> writes the row to <code>bookings.csv</code>.');
     }},
-    {run(){
-      ['r-main','r-ctrl','r-obj1','r-obj2','r-csv'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active','dim');});
-      document.getElementById('r-ctrl').classList.add('done');
-      rExpl(`✅ Room booked! <code>${newId}</code> confirmed for <strong>${cust}</strong>. File updated.`);
-    }},
+    {run(){rDone(`✅ Room booked — <code>${newId}</code> for <strong>${esc(cust)}</strong> at ${money(room.price)}. One call, three things changed: a new object, a flag, a file.`);}},
   ];
 }
 function rStepsCancel(bid){
@@ -1225,13 +2354,20 @@ function rStepsCancel(bid){
       } else { rExpl(`Booking <code>${bid}</code> not found.`); }
     }},
     {run(){
-      if(found){ract(['r-obj2'],'room.setAvailable(true)');found.active=false;rExpl('Room availability restored — <code>available = true</code>.');}
+      if(found){
+        ract(['r-obj2'],'room.setAvailable(true)');
+        found.active=false;
+        const rm=roomOf(found.room); if(rm) rm.available=true;
+        refreshSelects();
+        rExpl(`Two objects change together: <code>booking.setActive(false)</code> <em>and</em> <code>room.setAvailable(true)</code> on Room ${found.room}.`);
+      }
       else {ract(['r-ctrl'],'return false');rExpl('<code>cancelBooking()</code> returns <code>false</code>.');}
     }},
     {run(){
       ract(['r-csv']);document.getElementById('r-csvbox').innerHTML=`<div class="frow" id="rccf1">${found?found.id+',CANCELLED':'Not found'}</div>`;showR('rccf1');
-      document.getElementById('r-ctrl').classList.remove('active','dim');document.getElementById('r-ctrl').classList.add('done');
-      rExpl(`✅ Cancelled. Room made available again. File updated.`);
+      rDone(found
+        ? `✅ Cancelled. Room ${found.room} is back in the search results, and the row is rewritten in <code>bookings.csv</code>.`
+        : `Nothing to cancel — no booking with that id.`);
     }},
   ];
 }
@@ -1261,18 +2397,20 @@ function rStepsView(){
     }},
   ];
 }
+const val=(id,d)=>{const e=document.getElementById(id);const v=e?String(e.value).trim():'';return v||d;};
 function rrun(){
   rBuild();
-  const type=document.getElementById('rfs-type')?.value||'';
-  const cust=document.getElementById('rfb-name')?.value||'Rahul Sharma';
-  const rtype=document.getElementById('rfb-type')?.value||'Single';
-  const ci=document.getElementById('rfb-in')?.value||'10-09-2026';
-  const co=document.getElementById('rfb-out')?.value||'13-09-2026';
-  const bid=document.getElementById('rfc-id')?.value||'BK001';
-  if(rAction==='search')      rSteps=rStepsSearch(type);
-  else if(rAction==='book')   rSteps=rStepsBook(cust,rtype,ci,co);
-  else if(rAction==='cancel') rSteps=rStepsCancel(bid);
-  else                        rSteps=rStepsView();
+  switch(rAction){
+    case 'search':  rSteps=rStepsSearch(val('rfs-type','')); break;
+    case 'book':    rSteps=rStepsBook(val('rfb-name','Rahul Sharma'),val('rfb-type','Single'),val('rfb-in','10-09-2026'),val('rfb-out','13-09-2026')); break;
+    case 'cancel':  rSteps=rStepsCancel(val('rfc-id','BK001')); break;
+    case 'review':  rSteps=rStepsReview(val('rfv-id',''),parseInt(val('rfv-rating','5')),val('rfv-text','Nice stay.')); break;
+    case 'add':     rSteps=rStepsAdd(parseInt(val('rfa-no','')),val('rfa-type','Suite'),parseInt(val('rfa-price',''))); break;
+    case 'modify':  rSteps=rStepsModify(parseInt(val('rfm-no','')),val('rfm-type','Double'),parseInt(val('rfm-price','2600'))); break;
+    case 'remove':  rSteps=rStepsRemove(parseInt(val('rfx-no',''))); break;
+    case 'revenue': rSteps=rStepsRevenue(); break;
+    default:        rSteps=rStepsView();
+  }
   rIdx=-1;document.getElementById('r-run').disabled=true;document.getElementById('r-next').disabled=false;
   rExpl('Ready — press <strong>→ Next</strong> to step through.');updateR();
 }
@@ -1281,79 +2419,274 @@ function rreset(){rSteps=[];rIdx=-1;document.getElementById('r-run').disabled=fa
 function updateR(){const t=rSteps.length,c=Math.min(rIdx+1,t);document.getElementById('r-sctr').textContent=t>0?`Step ${c} / ${t}`:'';}
 
 // VEHICLE playground
+const V_ACTIONS=['search','rent','return','review','add','modify','remove','revenue'];
+const V_BTN={search:'va-search',rent:'va-rent',return:'va-return',review:'va-review',
+             add:'va-add',modify:'va-modify',remove:'va-remove',revenue:'va-revenue'};
+const V_FORM={search:'vf-search',rent:'vf-rent',return:'vf-return',review:'vf-review',
+              add:'vf-add',modify:'vf-modify',remove:'vf-remove',revenue:null};
+const V_LAYOUT={
+  booking  :{ctrl:['RentalService','manages rentals + vehicles'],
+             o1:['Rental','rentalId · customerName<br>vehicle · days · totalAmount'],
+             o2:['Vehicle','vehicleNumber · model<br>type · rentPerDay · available'],csv:'rentals.csv'},
+  inventory:{ctrl:['RentalService','owns the fleet'],
+             o1:['Vehicle','vehicleNumber · model<br>type · rentPerDay · available'],
+             o2:['List&lt;Vehicle&gt;','the whole fleet'],csv:'vehicles.csv'},
+  review   :{ctrl:['RentalService','manages rentals + reviews'],
+             o1:['Review','reviewId · customerName<br>rating · comment'],
+             o2:['Rental','the rental being reviewed'],csv:'reviews.csv'},
+};
+const vLayout=()=>['add','modify','remove'].includes(vAction)?'inventory':(vAction==='review'?'review':'booking');
+
 let vAction='search',vSteps=[],vIdx=-1;
 function vpick(a){
   vAction=a;
-  ['search','rent','return','view'].forEach(x=>document.getElementById('va-'+x).classList.toggle('active',x===a));
-  document.getElementById('vf-search').style.display = a==='search'?'flex':'none';
-  document.getElementById('vf-rent').style.display   = a==='rent'?'flex':'none';
-  document.getElementById('vf-return').style.display = a==='return'?'flex':'none';
+  V_ACTIONS.forEach(x=>{
+    const b=document.getElementById(V_BTN[x]); if(b) b.classList.toggle('active',x===a);
+    const f=V_FORM[x]&&document.getElementById(V_FORM[x]); if(f) f.style.display=(x===a?'flex':'none');
+  });
   vreset();
 }
 function vBuild(){
+  const L=V_LAYOUT[vLayout()];
   document.getElementById('v-stage').innerHTML=`<div class="diag">
-    ${nodeHTML('Main','entry point','v-main')}${arrowSVG()}
-    ${nodeHTML('RentalService','manages rentals + vehicles','v-ctrl')}${arrowSVG()}
+    ${nodeHTML('Main',ROLE==='admin'?'admin menu':'guest menu','v-main')}${arrowSVG()}
+    ${nodeHTML(L.ctrl[0],L.ctrl[1],'v-ctrl')}${arrowSVG()}
     <div class="brow">
-      <div class="bcol">${nodeHTML('Rental','rentalId · customerName<br>vehicle · days · totalAmount','v-obj1')}</div>
-      <div class="bcol">${nodeHTML('Vehicle','vehicleNumber · model<br>type · rentPerDay · available','v-obj2')}${arrowSVG()}
+      <div class="bcol">${nodeHTML(L.o1[0],L.o1[1],'v-obj1')}</div>
+      <div class="bcol">${nodeHTML(L.o2[0],L.o2[1],'v-obj2')}${arrowSVG()}
         <div class="node" id="v-csv">
-          <div class="nname" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">rentals.csv</div>
+          <div class="nname" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">${L.csv}</div>
           <div class="filebox" id="v-csvbox"></div>
         </div>
       </div>
     </div></div>`;
 }
+function vDone(html){
+  ['v-main','v-ctrl','v-obj1','v-obj2','v-csv'].forEach(id=>{
+    const e=document.getElementById(id); if(e)e.classList.remove('active','dim');});
+  document.getElementById('v-ctrl').classList.add('done');
+  vExpl(html);
+}
 function vact(ids,tag,note){act(ids,'v-',tag,note);}
 function vExpl(h){setExpl('v-expl',h);}
 
 function vStepsSearch(type){
-  const avail=VDB.filter(r=>r.active&&(!type||r.type===type));
+  const avail=VEHICLES.filter(v=>v.available&&(!type||v.type===type));
   return[
-    {run(){vact(['v-main']);vExpl('<strong>Main</strong> calls <code>RentalService.searchVehicle()</code>.');}},
-    {run(){vact(['v-ctrl'],'searchVehicle()',type?`"Find ${type}"`:'"All available"');vExpl('<strong>RentalService</strong> scans the vehicle list for <code>available == true</code>.');}},
+    {run(){vact(['v-main']);vExpl('<strong>Main</strong> calls <code>RentalService.searchVehicle()</code> — a guest operation.');}},
+    {run(){vact(['v-ctrl'],'searchVehicle()',type?`"Find ${type}"`:'"All available"');vExpl('<strong>RentalService</strong> scans <code>List&lt;Vehicle&gt;</code> for <code>available == true</code>.');}},
     {run(){vact(['v-obj2'],'vehicle.isAvailable()');vExpl('<strong>Vehicle</strong> objects are checked one by one.');}},
     {run(){
       vact(['v-obj2'],'vehicle.isAvailable()');
       const box=document.getElementById('v-obj2');const row=document.createElement('div');
       row.style.cssText='display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;';
-      row.innerHTML=avail.slice(0,3).map((r,i)=>ocardHTML(`vsoc${i}`,'🚗',[r.num,r.type,`₹${RATES[r.type]}/day`],'Available ✓')).join('');
+      row.innerHTML=avail.slice(0,3).map((v,i)=>ocardHTML(`vsoc${i}`,'🚗',[v.num,v.model,`${money(v.rate)}/day`],'Available ✓')).join('');
       box.appendChild(row);avail.slice(0,3).forEach((_,i)=>setTimeout(()=>showC(`vsoc${i}`),60+i*130));
-      vExpl(`<strong>${avail.length} vehicles</strong> available${type?' ('+type+')':''}. Returned to RentalService.`);
+      vExpl(`<strong>${avail.length} vehicle${avail.length===1?'':'s'}</strong> available${type?' ('+type+')':''}. Returned as a <code>List&lt;Vehicle&gt;</code>.`);
+    }},
+    {run(){vDone(`✅ <code>searchVehicle()</code> complete — ${avail.length} of ${VEHICLES.length} in the fleet are free.`);}},
+  ];
+}
+/* ── ADMIN sequences ── */
+function vStepsAdd(num,model,type,rate){
+  if(!num||!model||!rate) return [{run(){vact(['v-main']);vExpl('Fill in the number, model and daily rate above, then press <strong>▶ Run</strong>.');}}];
+  if(vehOf(num)) return[
+    {run(){vact(['v-main']);vExpl(`<strong>Main</strong> (admin menu) calls <code>RentalService.addVehicle("${esc(num)}", …)</code>.`);}},
+    {run(){vact(['v-ctrl'],'addVehicle()',`"Is ${esc(num)} known?"`);vExpl('<strong>RentalService</strong> checks the fleet for that number plate first.');}},
+    {run(){vact(['v-obj2'],'already present');vExpl(`❌ <strong>${esc(num)}</strong> is already in the fleet — <code>addVehicle()</code> returns <code>false</code>.`);}},
+    {run(){vDone('Nothing changed. The plate is the vehicle\'s identity, so it has to stay unique.');}},
+  ];
+  return[
+    {run(){vact(['v-main']);vExpl(`<strong>Main</strong> (admin menu) calls <code>RentalService.addVehicle("${esc(num)}", "${esc(model)}", "${type}", ${rate})</code>.`);}},
+    {run(){vact(['v-ctrl'],'addVehicle()',`"Is ${esc(num)} known?"`);vExpl('<strong>RentalService</strong> checks the fleet — the plate is new, so it may build the object.');}},
+    {run(){
+      vact(['v-obj1'],'new Vehicle(...)');
+      const box=document.getElementById('v-obj1');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('v-aoc1','🚙',[`vehicleNumber = "${esc(num)}"`,`model = "${esc(model)}"`,`type = "${type}"`,`rentPerDay = ${money(rate)}`,'available = true'],'Vehicle v1');
+      box.appendChild(d.firstChild);showC('v-aoc1');
+      vExpl('<strong>Vehicle constructor</strong> runs — five fields, and it starts out available.');
+    }},
+    {run(){vact(['v-obj2'],'vehicles.add(v1)');vExpl(`Appended to <code>List&lt;Vehicle&gt;</code> — fleet grows from <strong>${VEHICLES.length}</strong> to <strong>${VEHICLES.length+1}</strong>.`);}},
+    {run(){
+      vact(['v-csv'],'saveVehicle(v1)');
+      if(!vehOf(num)){VEHICLES.push({num,model,type,rate,available:true});refreshSelects();}
+      document.getElementById('v-csvbox').innerHTML=`<div class="frow" id="vafr1">${esc(num)},${esc(model)},${type},${rate},true</div>`;showR('vafr1');
+      vExpl('<strong>FileManager</strong> appends the row to <code>vehicles.csv</code>.');
+    }},
+    {run(){vDone(`✅ <code>addVehicle()</code> complete. <strong>${esc(model)}</strong> now appears in every renter's <code>searchVehicle()</code>.`);}},
+  ];
+}
+function vStepsModify(num,type,rate){
+  const v=vehOf(num);
+  if(!v) return[
+    {run(){vact(['v-main']);vExpl(`<strong>Main</strong> calls <code>RentalService.modifyVehicleDetails("${esc(num)}", …)</code>.`);}},
+    {run(){vact(['v-ctrl'],'modifyVehicleDetails()');vExpl('<strong>RentalService</strong> searches the fleet.');}},
+    {run(){vDone(`❌ <code>${esc(num)}</code> is not in <code>List&lt;Vehicle&gt;</code> — returns <code>false</code>.`);}},
+  ];
+  const before={type:v.type,rate:v.rate};
+  return[
+    {run(){vact(['v-main']);vExpl(`<strong>Main</strong> calls <code>RentalService.modifyVehicleDetails("${esc(num)}", "${type}", ${rate})</code> — admin only.`);}},
+    {run(){vact(['v-ctrl'],'modifyVehicleDetails()',`"Find ${esc(num)}"`);vExpl('<strong>RentalService</strong> walks the fleet comparing number plates.');}},
+    {run(){
+      vact(['v-obj1'],'found');
+      const box=document.getElementById('v-obj1');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('v-moc1','🚙',[esc(v.model),`type = "${before.type}"`,`rentPerDay = ${money(before.rate)}`],'before');
+      box.appendChild(d.firstChild);showC('v-moc1');
+      vExpl('The <strong>Vehicle</strong> object is found. No new object will be made.');
     }},
     {run(){
-      ['v-main','v-ctrl','v-obj1','v-obj2','v-csv'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active','dim');});
-      document.getElementById('v-ctrl').classList.add('done');
-      vExpl(`✅ <code>searchVehicle()</code> complete. ${avail.length} vehicles available.`);
+      vact(['v-obj1'],'setType() · setRentPerDay()');
+      v.type=type; v.rate=rate; refreshSelects();
+      const box=document.getElementById('v-obj1');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('v-moc2','✏️',[`type = "${type}"`,`rentPerDay = ${money(rate)}`],'after');
+      box.appendChild(d.firstChild);showC('v-moc2');
+      vExpl('<strong>Setters mutate the object in place</strong> — the same object every future Rental will reference.');
+    }},
+    {run(){
+      vact(['v-csv'],'rewrite row');
+      document.getElementById('v-csvbox').innerHTML=`<div class="frow" id="vmfr1">${esc(num)},${esc(v.model)},${type},${rate},${v.available}</div>`;showR('vmfr1');
+      vExpl('<strong>FileManager</strong> rewrites that line of <code>vehicles.csv</code>.');
+    }},
+    {run(){vDone(`✅ ${esc(num)}: <code>${before.type} · ${money(before.rate)}/day</code> → <code>${type} · ${money(rate)}/day</code>. Rentals already priced keep their own <code>totalAmount</code>.`);}},
+  ];
+}
+function vStepsRemove(num){
+  const v=vehOf(num);
+  if(!v) return[
+    {run(){vact(['v-main']);vExpl(`<strong>Main</strong> calls <code>RentalService.removeVehicle("${esc(num)}")</code>.`);}},
+    {run(){vact(['v-ctrl'],'removeVehicle()');vExpl('<strong>RentalService</strong> searches the fleet.');}},
+    {run(){vDone(`❌ <code>${esc(num)}</code> is not in the fleet — nothing to remove.`);}},
+  ];
+  const held=VDB.filter(r=>r.num===num&&r.active);
+  return[
+    {run(){vact(['v-main']);vExpl(`<strong>Main</strong> calls <code>RentalService.removeVehicle("${esc(num)}")</code> — admin only.`);}},
+    {run(){vact(['v-ctrl'],'removeVehicle()',`"Find ${esc(num)}"`);vExpl('<strong>RentalService</strong> locates the Vehicle object.');}},
+    {run(){
+      vact(['v-obj1'],'found');
+      const box=document.getElementById('v-obj1');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('v-xoc1','🚙',[esc(v.model),esc(v.num),`available = ${v.available}`],'Vehicle');
+      box.appendChild(d.firstChild);showC('v-xoc1');
+      vExpl('Found — but one check comes first.');
+    }},
+    {run(){
+      vact(['v-obj2'],'any active Rental?');
+      vExpl(held.length
+        ? `❌ Rental <strong>${held.map(r=>r.id).join(', ')}</strong> still holds a reference to this Vehicle. Someone is driving it right now.`
+        : '✅ No active <strong>Rental</strong> references this Vehicle. Safe to drop.');
+    }},
+    {run(){
+      if(held.length){vDone(`<code>removeVehicle("${esc(num)}")</code> returns <code>false</code>. It has to be returned first.`);return;}
+      vact(['v-csv'],'delete row');
+      VEHICLES=VEHICLES.filter(x=>x.num!==num); refreshSelects();
+      document.getElementById('v-csvbox').innerHTML=`<div class="frow" id="vxfr1">${esc(num)},…  ← line deleted</div>`;showR('vxfr1');
+      vExpl('<strong>FileManager</strong> rewrites <code>vehicles.csv</code> without that line.');
+    }},
+    {run(){
+      if(held.length){vDone('Nothing was removed — an active Rental protected the object.');return;}
+      vDone(`✅ ${esc(num)} removed from the fleet. Past <strong>Rental</strong> objects keep their own copy of the plate and the amount.`);
     }},
   ];
 }
+function vStepsRevenue(){
+  const total=VDB.reduce((a,r)=>a+vtot(r),0);
+  const rev={};VDB.forEach(r=>{rev[r.type]=(rev[r.type]||0)+vtot(r);});
+  return[
+    {run(){vact(['v-main']);vExpl('<strong>Main</strong> (admin menu) calls <code>RentalService.overallRevenue()</code>.');}},
+    {run(){vact(['v-ctrl'],'overallRevenue()','double sum = 0;');vExpl('<strong>RentalService</strong> starts a running total and asks for every rental row.');}},
+    {run(){
+      vact(['v-csv'],'readRentals()');
+      const box=document.getElementById('v-csvbox');
+      box.innerHTML=VDB.map((r,i)=>`<div class="frow" id="vrfr${i}">${r.id},${r.type},${r.days}d,${vtot(r)}</div>`).join('');
+      VDB.forEach((_,i)=>setTimeout(()=>showR('vrfr'+i),60+i*70));
+      vExpl(`<strong>${VDB.length} rows</strong> read from <code>rentals.csv</code>.`);
+    }},
+    {run(){
+      vact(['v-obj1'],'new Rental(row)');
+      const box=document.getElementById('v-obj1');const row=document.createElement('div');
+      row.style.cssText='display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;';
+      row.innerHTML=VDB.slice(0,4).map((r,i)=>ocardHTML(`vroc${i}`,'🚗',[r.id,r.type,money(vtot(r))],`r${i+1}`)).join('');
+      box.appendChild(row);VDB.slice(0,4).forEach((_,i)=>setTimeout(()=>showC(`vroc${i}`),60+i*110));
+      vExpl('Each row becomes a <strong>Rental</strong> object with the <code>totalAmount</code> it was priced at.');
+    }},
+    {run(){
+      vact(['v-ctrl'],'sum += r.getTotalAmount()');
+      vExpl(`Adding them up: ${Object.entries(rev).map(([t,n])=>`${t} ${money(n)}`).join(' + ')} = <strong>${money(total)}</strong>.`);
+    }},
+    {run(){vDone(`✅ <code>overallRevenue()</code> returns <strong>${money(total)}</strong> — derived from the list, never stored.`);}},
+  ];
+}
+function vStepsReview(rid,rating,text){
+  const r=VDB.find(x=>x.id===rid);
+  if(!r) return[
+    {run(){vact(['v-main']);vExpl('<strong>Main</strong> calls <code>RentalService.addReview()</code>.');}},
+    {run(){vact(['v-ctrl'],'addReview()');vExpl('<strong>RentalService</strong> looks for a rental of yours to attach the review to.');}},
+    {run(){vDone(`❌ No rental found for <strong>${esc(ME)}</strong>. Rent something first.`);}},
+  ];
+  const id=`VR${String(vrvCtr).padStart(3,'0')}`;
+  return[
+    {run(){vact(['v-main']);vExpl(`<strong>Main</strong> calls <code>RentalService.addReview("${rid}", ${rating}, "…")</code>.`);}},
+    {run(){vact(['v-ctrl'],'addReview()',`"Is ${rid} yours?"`);vExpl(`<strong>RentalService</strong> checks that rental <code>${rid}</code> belongs to <strong>${esc(ME)}</strong>.`);}},
+    {run(){
+      vact(['v-obj2'],'find Rental');
+      const box=document.getElementById('v-obj2');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('v-vco1','🚗',[r.id,esc(r.cust),r.num],'Found ✓');
+      box.appendChild(d.firstChild);showC('v-vco1');
+      vExpl('The <strong>Rental</strong> is found — the review stores its id as a link back.');
+    }},
+    {run(){
+      vact(['v-obj1'],'new Review(...)');
+      const box=document.getElementById('v-obj1');const d=document.createElement('div');
+      d.innerHTML=ocardHTML('v-vco2','⭐',[id,esc(ME),starStr(rating),esc(text).slice(0,26)+(text.length>26?'…':'')],'Review rv1');
+      box.appendChild(d.firstChild);showC('v-vco2');
+      vExpl('<strong>Review</strong> constructor runs — the same class the hotel side uses.');
+    }},
+    {run(){
+      vact(['v-csv'],'saveReview(rv1)');
+      VREV.push({id,cust:ME,ref:rid,rating,text,date:today()}); vrvCtr++;
+      document.getElementById('v-csvbox').innerHTML=`<div class="frow" id="vvfr1">${id},${esc(ME)},${rid},${rating}</div>`;showR('vvfr1');
+      vExpl('<strong>FileManager</strong> appends the row to <code>reviews.csv</code>.');
+    }},
+    {run(){vDone(`✅ Review <strong>${id}</strong> saved — ${starStr(rating)}.`);}},
+  ];
+}
 function vStepsRent(cust,type,days){
-  const rate=RATES[type]||1500;const total=rate*parseInt(days);
+  const d=Math.max(1,parseInt(days)||1);
+  const veh=VEHICLES.find(v=>v.available&&v.type===type);
+  if(!veh) return[
+    {run(){vact(['v-main']);vExpl(`<strong>Main</strong> calls <code>RentalService.rentVehicle("${esc(cust)}", "${type}", ${d})</code>.`);}},
+    {run(){vact(['v-ctrl'],'rentVehicle()',`"Any free ${type}?"`);vExpl('<strong>RentalService</strong> scans the fleet for a free vehicle of that type.');}},
+    {run(){vact(['v-obj2'],'none available');vExpl(`❌ Every <strong>${type}</strong> is out on rent.`);}},
+    {run(){vDone(`<code>rentVehicle()</code> returns <code>false</code>. Only the admin can add another one, with <code>addVehicle()</code>.`);}},
+  ];
+  const total=veh.rate*d;
   const newId=`RT${String(vrtCtr).padStart(3,'0')}`;
   return[
-    {run(){vact(['v-main']);vExpl('<strong>Main</strong> calls <code>RentalService.rentVehicle()</code>.');}},
-    {run(){vact(['v-ctrl'],'rentVehicle()','"Find available vehicle"');vExpl('<strong>RentalService</strong> picks an available vehicle, then calls <strong>Rental</strong> constructor.');}},
-    {run(){vact(['v-obj1'],'new Rental(...)');vExpl('<strong>Rental class</strong> constructor called. Building rental object...');}},
+    {run(){vact(['v-main']);vExpl(`<strong>Main</strong> calls <code>RentalService.rentVehicle("${esc(cust)}", "${type}", ${d})</code>.`);}},
+    {run(){vact(['v-ctrl'],'rentVehicle()',`"Any free ${type}?"`);vExpl('<strong>RentalService</strong> scans <code>List&lt;Vehicle&gt;</code> for a free vehicle of that type.');}},
+    {run(){
+      vact(['v-obj2'],`${veh.num} ✓`);
+      const box=document.getElementById('v-obj2');const dv=document.createElement('div');
+      dv.innerHTML=ocardHTML('v-boc0','🚙',[esc(veh.model),veh.num,`${money(veh.rate)}/day`],'available ✓');
+      box.appendChild(dv.firstChild);showC('v-boc0');
+      vExpl(`<strong>${esc(veh.model)}</strong> is free. Its <code>rentPerDay</code> is read now and used for the total.`);
+    }},
     {run(){
       vact(['v-obj1'],'new Rental(...)');
-      const box=document.getElementById('v-obj1');const d=document.createElement('div');
-      d.innerHTML=ocardHTML('v-oc1','🚗',[newId,cust,type,`${days} days · ₹${total.toLocaleString()}`],'Rental r1');
-      box.appendChild(d.firstChild);showC('v-oc1');
-      vExpl(`<strong>🚗 Rental r1</strong> created. ${days} × ₹${rate} = <strong>₹${total.toLocaleString()}</strong>.`);
+      const box=document.getElementById('v-obj1');const dv=document.createElement('div');
+      dv.innerHTML=ocardHTML('v-oc1','🚗',[newId,esc(cust),veh.num,`${d} days × ${money(veh.rate)}`,money(total)],'Rental r1');
+      box.appendChild(dv.firstChild);showC('v-oc1');
+      vExpl(`<strong>🚗 Rental r1</strong> created. <code>totalAmount = ${d} × ${money(veh.rate)} = ${money(total)}</code> — computed once, then stored.`);
     }},
-    {run(){vact(['v-obj2'],'vehicle.setAvailable(false)');vExpl('<strong>Vehicle</strong> updated — <code>available = false</code>.');}},
+    {run(){vact(['v-obj2'],'vehicle.setAvailable(false)');vExpl(`<strong>${veh.num}</strong> updated — <code>available = false</code>. It vanishes from everyone else's search.`);}},
     {run(){
       vact(['v-csv'],'saveRental(r1)');
-      document.getElementById('v-csvbox').innerHTML=`<div class="frow" id="vrf1">${newId},${cust},${type},${days},${total}</div>`;
-      showR('vrf1');VDB.push({id:newId,cust,type,num:`XX${vrtCtr}`,days:parseInt(days),active:true});vrtCtr++;
-      vExpl('FileManager writes to <code>rentals.csv</code>.');
+      document.getElementById('v-csvbox').innerHTML=`<div class="frow" id="vrf1">${newId},${esc(cust)},${veh.type},${veh.num},${d},${total}</div>`;
+      showR('vrf1');
+      VDB.push({id:newId,cust,type:veh.type,num:veh.num,days:d,rate:veh.rate,active:true});
+      veh.available=false; vrtCtr++; refreshSelects();
+      vExpl('<strong>FileManager</strong> writes the row to <code>rentals.csv</code>.');
     }},
-    {run(){
-      ['v-main','v-ctrl','v-obj1','v-obj2','v-csv'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active','dim');});
-      document.getElementById('v-ctrl').classList.add('done');
-      vExpl(`✅ Vehicle rented! <code>${newId}</code> for <strong>${cust}</strong>. Total: ₹${total.toLocaleString()}.`);
-    }},
+    {run(){vDone(`✅ Rented — <code>${newId}</code> for <strong>${esc(cust)}</strong>, total ${money(total)}.`);}},
   ];
 }
 function vStepsReturn(rid){
@@ -1369,13 +2702,20 @@ function vStepsReturn(rid){
       } else { vExpl(`Rental <code>${rid}</code> not found.`); }
     }},
     {run(){
-      if(found){vact(['v-obj2'],'vehicle.setAvailable(true)');found.active=false;vExpl('Vehicle updated — <code>available = true</code>.');}
+      if(found){
+        vact(['v-obj2'],'vehicle.setAvailable(true)');
+        found.active=false;
+        const v=vehOf(found.num); if(v) v.available=true;
+        refreshSelects();
+        vExpl(`Two objects change: <code>rental.setActive(false)</code> and <code>vehicle.setAvailable(true)</code> on ${found.num}.`);
+      }
       else {vact(['v-ctrl'],'return false');vExpl('<code>returnVehicle()</code> returns <code>false</code>.');}
     }},
     {run(){
       vact(['v-csv']);document.getElementById('v-csvbox').innerHTML=`<div class="frow" id="vrtf1">${found?found.id+',RETURNED':'Not found'}</div>`;showR('vrtf1');
-      document.getElementById('v-ctrl').classList.remove('active','dim');document.getElementById('v-ctrl').classList.add('done');
-      vExpl(`✅ Vehicle returned. Made available again. File updated.`);
+      vDone(found
+        ? `✅ Returned. ${found.num} is back in the search results, and <code>rentals.csv</code> is rewritten. The amount already charged stays on the Rental.`
+        : 'Nothing to return — no rental with that id.');
     }},
   ];
 }
@@ -1407,15 +2747,17 @@ function vStepsView(){
 }
 function vrun(){
   vBuild();
-  const type=document.getElementById('vfs-type')?.value||'';
-  const cust=document.getElementById('vfr-name')?.value||'Amit Bose';
-  const vtype=document.getElementById('vfr-type')?.value||'Sedan';
-  const days=document.getElementById('vfr-days')?.value||'3';
-  const rid=document.getElementById('vfrt-id')?.value||'RT001';
-  if(vAction==='search')      vSteps=vStepsSearch(type);
-  else if(vAction==='rent')   vSteps=vStepsRent(cust,vtype,days);
-  else if(vAction==='return') vSteps=vStepsReturn(rid);
-  else                        vSteps=vStepsView();
+  switch(vAction){
+    case 'search':  vSteps=vStepsSearch(val('vfs-type','')); break;
+    case 'rent':    vSteps=vStepsRent(val('vfr-name','Amit Bose'),val('vfr-type','Sedan'),val('vfr-days','3')); break;
+    case 'return':  vSteps=vStepsReturn(val('vfrt-id','RT001')); break;
+    case 'review':  vSteps=vStepsReview(val('vfv-id',''),parseInt(val('vfv-rating','5')),val('vfv-text','Good ride.')); break;
+    case 'add':     vSteps=vStepsAdd(val('vfa-num','').toUpperCase(),val('vfa-model',''),val('vfa-type','SUV'),parseInt(val('vfa-rate',''))); break;
+    case 'modify':  vSteps=vStepsModify(val('vfm-num',''),val('vfm-type','SUV'),parseInt(val('vfm-rate','1800'))); break;
+    case 'remove':  vSteps=vStepsRemove(val('vfx-num','')); break;
+    case 'revenue': vSteps=vStepsRevenue(); break;
+    default:        vSteps=vStepsView();
+  }
   vIdx=-1;document.getElementById('v-run').disabled=true;document.getElementById('v-next').disabled=false;
   vExpl('Ready — press <strong>→ Next</strong> to step through.');updateV();
 }
@@ -1423,8 +2765,12 @@ function vnext(){vIdx++;if(vIdx>=vSteps.length){vExpl('All steps done. Press <st
 function vreset(){vSteps=[];vIdx=-1;document.getElementById('v-run').disabled=false;document.getElementById('v-next').disabled=true;document.getElementById('v-sctr').textContent='';vExpl('Choose an action above and press <strong>▶ Run</strong> to begin.');vBuild();}
 function updateV(){const t=vSteps.length,c=Math.min(vIdx+1,t);document.getElementById('v-sctr').textContent=t>0?`Step ${c} / ${t}`:'';}
 
-// INIT
-initTheme();rBuild();vBuild();
+// INIT — the gate is up; nothing else runs until a role is chosen.
+initTheme();
+renderStars('rv-stars',rStar,'setRStar');
+renderStars('vv-stars',vStar,'setVStar');
+refreshSelects();
+rBuild();vBuild();
 </script>
 </body>
 </html>
