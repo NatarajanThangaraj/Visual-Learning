@@ -108,6 +108,8 @@ export const courses = [
             blurb: 'A six-step assignment: take a name, pick a level and a topic, run ten questions against one clock, then save the score and fight for a place in the top five.' },
           { id: 'file-detective', title: 'File Detective', minutes: 30,
             blurb: 'Work a case out of five raw text files: pin the records, build the timeline, catch the statement that contradicts the evidence — then write the engine that does it for any case.' },
+          { id: 'detective-case', title: 'Detective Case File', minutes: 30,
+            blurb: 'Twelve lab events, five cases to close: watch the incident replay, work out who used Computer 3, who was still inside at 09:00, who never left and who stayed longest — then write the Evidence, FileManager and Investigator classes that read the same log out of a text file.' },
           { id: 'songbox', title: 'SongBox', minutes: 30,
             blurb: 'Sixty real songs live in one text file — split a line into its five fields, pick any mix of genres and artists, then play the shortlist you built and walk it with next and previous.' },
         ],
