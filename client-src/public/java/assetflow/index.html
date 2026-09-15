@@ -461,7 +461,9 @@ var ICON = {
   shield:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5.5c0 4.3-2.9 8-7 9.5-4.1-1.5-7-5.2-7-9.5V6z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
   search:'<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.4" stroke="currentColor" stroke-width="2"/><path d="M15.8 15.8L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   box:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
-  spark:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.1 5.9L20 11l-5.9 2.1L12 19l-2.1-5.9L4 11l5.9-2.1z" fill="#fff"/></svg>'
+  spark:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.1 5.9L20 11l-5.9 2.1L12 19l-2.1-5.9L4 11l5.9-2.1z" fill="#fff"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 4.5l8.3 14.4H3.7z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 10v3.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.05" fill="currentColor"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 
 /* ════════════════════════════════════════
@@ -494,10 +496,12 @@ var assets = [
   {tag:'KBD-101', type:'keyboard', who:'Nila'}
 ];
 
+/* two kinds of card share one line. a broken thing is not put behind
+   someone who wants a second monitor — it goes in front of them. */
 var queue = [
-  {who:'Meera', type:'laptop'},
-  {who:'Arjun', type:'monitor'},
-  {who:'Ravi',  type:'headset'}
+  {who:'Meera', type:'laptop',  kind:'request'},
+  {who:'Arjun', type:'monitor', kind:'request'},
+  {who:'Ravi',  type:'headset', kind:'request'}
 ];
 
 var view = 'desk';
@@ -533,8 +537,11 @@ function renderDesk(newTag){
     return;
   }
   el.innerHTML = mine.map(function(a){
-    return '<div class="tile'+(a.tag===newTag?' is-new':'')+'">'+
-             ICON[a.type]+
+    var flagged = a.broken
+      ? '<span class="badge">'+ICON.alert+'</span>'
+      : '<button class="flag" data-flag="'+a.tag+'" aria-label="Report a problem with '+a.tag+'">'+ICON.alert+'</button>';
+    return '<div class="tile'+(a.tag===newTag?' is-new':'')+(a.broken?' is-broken':'')+'">'+
+             flagged+ICON[a.type]+
              '<div class="tag">'+a.tag+'</div>'+
            '</div>';
   }).join('');

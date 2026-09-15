@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Detective — Discover why we need another class</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #21253a;
+  --surface3: #2a2f47;
+  --border: #3a3f5c;
+  --border2: #4a5080;
+  --text: #e8eaf6;
+  --text2: #9ea3c0;
+  --text3: #6b70a0;
+  --accent: #7c7fff;
+  --accent2: #5b5ff0;
+  --green: #4caf7d;
+  --amber: #f0a843;
+  --red: #f06b6b;
+  --pink: #e879a0;
+  --teal: #4dd9c0;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+#app { height: 100vh; display: flex; flex-direction: column; }
+
+/* Progress bar */
+#progress-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+.step-label { font-size: 13px; color: var(--text2); min-width: 100px; }
+.dots { display: flex; gap: 6px; flex: 1; }
+.dot {
+  width: 32px; height: 6px; border-radius: 3px;
+  background: var(--border); transition: all 0.3s;
+}
+.dot.active { background: var(--accent); }
+.dot.done { background: var(--accent2); }
+.restart-btn {
+  background: none; border: 1px solid var(--border2); color: var(--text2);
+  padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 12px;
+  transition: all 0.2s;
+}
+.restart-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Main content */
+#screen-container {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 32px 24px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.screen { width: 100%; max-width: 860px; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+.subtitle { font-size: 15px; color: var(--text2); margin-bottom: 28px; line-height: 1.6; }
+.step-tag {
+  display: inline-block; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--accent); font-size: 11px; letter-spacing: 0.5px; padding: 4px 10px;
+  border-radius: 20px; margin-bottom: 14px; font-weight: 600;
+}
+
+/* Cards */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px;
+}
+.card-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--text3);
+  text-transform: uppercase; margin-bottom: 12px;
+}
+
+/* Class diagram boxes */
+.class-box {
+  background: var(--surface2); border: 1.5px solid var(--border2);
+  border-radius: var(--radius); overflow: hidden; display: inline-block; min-width: 200px;
+  transition: all 0.4s;
+}
+.class-name {
+  background: var(--accent2); padding: 10px 20px; font-size: 15px; font-weight: 700;
+  text-align: center; color: #fff;
+}
+.class-name.green-header { background: linear-gradient(135deg, #1e7a50, #2da870); }
+.class-name.purple-header { background: linear-gradient(135deg, #5b2db5, #7c5de0); }
+.class-section { border-top: 1px solid var(--border); padding: 12px 20px; }
+.class-field { font-size: 13px; color: var(--teal); padding: 3px 0; font-family: 'Consolas','Courier New',monospace; }
+.class-method { font-size: 13px; color: var(--amber); padding: 3px 0; font-family: 'Consolas','Courier New',monospace; }
+
+/* Note cards */
+.note-card {
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  padding: 14px 18px; min-width: 160px; max-width: 200px; display: inline-block;
+  transition: all 0.3s;
+}
+.note-pin { font-size: 16px; margin-right: 6px; }
+.note-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.note-content { font-size: 12px; color: var(--text2); }
+.note-category {
+  display: inline-block; background: var(--surface3); border: 1px solid var(--border);
+  font-size: 11px; color: var(--text3); padding: 2px 8px; border-radius: 10px; margin-top: 6px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block; padding: 12px 28px; border-radius: 8px; font-size: 15px;
+  font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; text-align: center;
+}
+.btn-primary { background: var(--accent2); color: #fff; }
+.btn-primary:hover { background: var(--accent); transform: translateY(-1px); }
+.btn-outline {
+  background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-choice {
+  display: block; width: 100%; padding: 18px 24px; margin-bottom: 12px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer; text-align: left; font-size: 15px;
+  color: var(--text); font-family: inherit; transition: all 0.2s;
+}
+.btn-choice:hover { border-color: var(--accent); background: var(--surface3); }
+.btn-choice.correct { border-color: var(--green); background: rgba(76,175,125,0.1); color: var(--green); }
+.btn-choice.wrong { border-color: var(--red); background: rgba(240,107,107,0.1); color: var(--red); animation: shake 0.3s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+/* Input form */
+.input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.input-row { display: flex; align-items: center; gap: 12px; }
+.input-label { font-size: 13px; color: var(--text2); width: 80px; flex-shrink: 0; }
+input[type="text"], select {
+  background: var(--surface2); border: 1px solid var(--border2); color: var(--text);
+  padding: 8px 14px; border-radius: 6px; font-size: 14px; flex: 1;
+  font-family: inherit; outline: none;
+}
+input[type="text"]:focus, select:focus { border-color: var(--accent); }
+select option { background: var(--surface2); }
+
+/* Notes grid */
+.notes-grid { display: flex; flex-wrap: wrap; gap: 14px; margin: 20px 0; }
+
+/* Code blocks */
+.code-block {
+  background: #0d1117; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 18px 20px; font-family: 'Consolas','Courier New',monospace; font-size: 13px;
+  line-height: 1.7; overflow-x: auto;
+}
+.kw { color: #f97583; } .cls { color: #79b8ff; } .type { color: #b392f0; }
+.field-c { color: #56d364; } .method-c { color: #e3b341; } .comment-c { color: #6a737d; }
+.str-c { color: #9ecbff; }
+
+/* Arrow / relationship */
+.relationship {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 0;
+}
+.rel-arrow { font-size: 24px; color: var(--accent); }
+.rel-label { font-size: 12px; color: var(--text3); }
+
+/* Columns */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 680px) { .two-col, .three-col { grid-template-columns: 1fr; } }
+
+/* Animation for properties floating */
+@keyframes flyRight { from { transform: translateX(0) scale(1); opacity: 1; } to { transform: translateX(120px) scale(0.9); opacity: 0; } }
+@keyframes flyIn { from { transform: translateX(-40px) scale(0.9); opacity: 0; } to { transform: translateX(0) scale(1); opacity: 1; } }
+.fly-out { animation: flyRight 0.5s ease forwards; }
+.fly-in { animation: flyIn 0.5s ease 0.5s both; }
+
+/* Highlight */
+.highlight { color: var(--amber); }
+.highlight-green { color: var(--green); }
+.highlight-blue { color: var(--accent); }
+
+/* Investigation panel */
+.investigation-row {
+  display: flex; align-items: flex-start; gap: 16px; padding: 16px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+.inv-icon { font-size: 24px; flex-shrink: 0; }
+.inv-content { flex: 1; }
+.inv-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.inv-desc { font-size: 13px; color: var(--text2); }
+
+/* Summary flow */
+.flow-step {
+  display: flex; align-items: center; gap: 16px; padding: 14px 18px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+}
+.flow-arrow { font-size: 18px; color: var(--border2); margin: 0 auto 4px; display: block; text-align: center; }
+.flow-num { width: 32px; height: 32px; border-radius: 50%; background: var(--accent2); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.flow-text { font-size: 14px; color: var(--text2); }
+.flow-text strong { color: var(--text); }
+
+/* Big idea */
+.big-idea {
+  background: linear-gradient(135deg, rgba(92,95,240,0.2), rgba(78,127,208,0.2));
+  border: 1.5px solid var(--accent); border-radius: var(--radius);
+  padding: 28px 32px; text-align: center; margin: 20px 0;
+}
+.big-idea h2 { color: var(--accent); font-size: 22px; margin-bottom: 20px; }
+.big-idea-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 12px 0; }
+.big-idea-pill {
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px;
+  padding: 12px 24px; font-size: 15px; font-weight: 600;
+}
+.big-idea-plus { font-size: 22px; color: var(--text3); }
+.big-idea-arrow { font-size: 28px; color: var(--accent); display: block; margin: 8px 0; }
+.big-idea-result {
+  background: var(--accent2); color: #fff; border-radius: 8px;
+  padding: 14px 32px; font-size: 16px; font-weight: 700;
+}
+.quote-box {
+  background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 14px 18px; margin: 12px 0; font-size: 14px; color: var(--text2); font-style: italic;
+}
+
+/* Crowded single class visual */
+.crowded-class {
+  background: var(--surface2); border: 2px solid var(--red); border-radius: var(--radius);
+  padding: 20px; position: relative; transition: all 0.4s;
+}
+.crowded-class.normal { border-color: var(--border2); }
+.crowded-badge {
+  position: absolute; top: -10px; right: 12px; background: var(--red);
+  color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px;
+}
+.problem-item {
+  background: rgba(240,107,107,0.1); border: 1px solid rgba(240,107,107,0.3);
+  border-radius: 6px; padding: 8px 14px; margin: 8px 0; font-size: 13px; color: var(--red);
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* Object badge */
+.object-badge {
+  display: flex; flex-direction: column; gap: 6px; padding: 14px 18px;
+  background: var(--surface2); border: 1.5px solid var(--border2); border-radius: var(--radius-sm);
+}
+.object-header { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.object-field { font-size: 13px; font-family: monospace; }
+.object-field .field-name { color: var(--teal); }
+.object-field .field-val { color: var(--amber); }
+
+/* Scenario cards */
+.scenario-card {
+  background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 20px; cursor: pointer; transition: all 0.2s;
+}
+.scenario-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.scenario-icon { font-size: 28px; margin-bottom: 10px; }
+.scenario-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.scenario-desc { font-size: 13px; color: var(--text2); }
+
+/* Back/next nav */
+.nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+.chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 12px; color: var(--text3); }
+
+/* Ops animation */
+.ops-row { display: flex; flex-wrap: wrap; gap: 10px; padding: 16px; }
+.op-pill {
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px;
+  padding: 8px 16px; font-size: 13px; display: flex; align-items: center; gap: 8px;
+  transition: all 0.3s;
+}
+.op-pill.moving { background: rgba(92,95,240,0.15); border-color: var(--accent); }
+
+.fade-in-item { animation: fadeIn 0.4s ease both; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="progress-bar">
+    <span class="step-label" id="step-label">The Challenge</span>
+    <div class="dots" id="dots"></div>
+    <button class="restart-btn" onclick="restart()">↺ Restart</button>
+  </div>
+  <div id="screen-container">
+    <div id="screen" class="screen"></div>
+  </div>
+</div>
+
+<script>
+// App state
+let state = {
+  step: 0,
+  notes: [],
+  noteTitle: '', noteContent: '', noteCat: 'Programming', notePinned: false,
+  scenario: 'notes'
+};
+
+const TOTAL_STEPS = 10;
+const STEP_NAMES = [
+  'The Challenge','Single Class','Create Notes','Problem Appears',
+  'Discover the Thing','Multiple Objects','Responsibility','Transformation',
+  'Java Code','Big Idea'
+];
+
+function updateProgress() {
+  document.getElementById('step-label').textContent = `Step ${state.step+1} / ${TOTAL_STEPS}`;
+  const dots = document.getElementById('dots');
+  dots.innerHTML = Array.from({length: TOTAL_STEPS}, (_,i) =>
+    `<div class="dot ${i < state.step ? 'done' : i === state.step ? 'active' : ''}"></div>`
+  ).join('');
+}
+
+function restart() {
+  state = { step: 0, notes: [], noteTitle:'', noteContent:'', noteCat:'Programming', notePinned:false, scenario:'notes' };
+  render();
+}
+
+function goTo(step) {
+  state.step = step;
+  render();
+  document.getElementById('screen-container').scrollTop = 0;
+}
+
+function render() {
+  updateProgress();
+  const screens = [s0,s1,s2,s3,s4,s5,s6,s7,s8,s9];
+  document.getElementById('screen').innerHTML = '';
+  document.getElementById('screen').appendChild(screens[state.step]());
+}
+
+// ── SCREEN 0: The Challenge ──────────────────────────────────────────────────
+function s0() {
+  const el = div();
+  el.innerHTML = `
+    <div class="step-tag">CASE 0 / THE CHALLENGE</div>
+    <h1>📝 You need to build a Notes App</h1>
+    <p class="subtitle">Users need to create, edit, delete, search, pin, and view notes. How would you design it?</p>
+    <div class="card">
+      <div class="card-title">Required Features</div>
+      ${['Create notes','Edit notes','Delete notes','Search notes','Pin notes','View notes']
+        .map(f => `<div style="padding:6px 0; font-size:14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px">
+          <span style="color:var(--green)">✓</span> ${f}</div>`).join('')}
+    </div>
+    <p style="font-size:15px; margin:24px 0 16px; font-weight:600">How would you design this application?</p>
+    <button class="btn-choice" onclick="chooseDesign('one')">
+      <span style="font-size:20px; margin-right:12px">🏠</span>
+      <strong>ONE CLASS</strong> — Put everything in a single class
+    </button>
+    <button class="btn-choice" onclick="chooseDesign('multi')">
+      <span style="font-size:20px; margin-right:12px">🏘️</span>
+      <strong>MULTIPLE CLASSES</strong> — Split into separate classes
+    </button>
+  `;
+  return el;
+}
+
+function chooseDesign(choice) {
+  if (choice === 'one') {
+    goTo(1);
+  } else {
+    const btns = document.querySelectorAll('.btn-choice');
+    btns[1].classList.add('correct');
+    btns[0].style.opacity = '0.5';
+    setTimeout(() => goTo(1), 1200);
+  }
+}
+
+// ── SCREEN 1: The Single Class ────────────────────────────────────────────────
+function s1() {
+  const el = div();
+  el.innerHTML = `
+    <div class="step-tag">CASE 1 / THE DESIGN</div>
+    <h1>The Single Class Approach</h1>
+    <p class="subtitle">One class to rule them all. Looks simple, right?</p>
+    <div style="display:flex; justify-content:center; margin: 28px 0;">
+      <div class="class-box" style="min-width:260px">
+        <div class="class-name">NotesApp</div>
+        <div class="class-section">
+          <div class="class-field">title</div>
+          <div class="class-field">content</div>
+          <div class="class-field">category</div>
+          <div class="class-field">pinned</div>
+          <div class="class-field">createdDate</div>
+        </div>
+        <div class="class-section">
+          <div class="class-method">addNote()</div>
+          <div class="class-method">deleteNote()</div>
+          <div class="class-method">searchNote()</div>
+          <div class="class-method">editNote()</div>
+          <div class="class-method">displayNotes()</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background: rgba(76,175,125,0.08); border-color: rgba(76,175,125,0.3)">
+      <div style="font-size:14px; color:var(--green); margin-bottom:6px">✓ Everything is in one place</div>
+      <div style="font-size:13px; color:var(--text2)">All the data fields and all the operations. Clean and simple. Let's try using it!</div>
+    </div>
+    <div class="nav-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goTo(2)">Let's try it →</button>
+    </div>
+  `;
+  return el;
+}
+
+// ── SCREEN 2: Create Notes ────────────────────────────────────────────────────
+function s2() {
+  const el = div();
+  const presets = [
+    {title:'Java', content:'Classes and Objects', cat:'Programming', pin:true},
+    {title:'SQL', content:'Joins and Queries', cat:'Databases', pin:false},
+    {title:'Python', content:'Lists and Loops', cat:'Programming', pin:false},
+    {title:'Git', content:'Version Control', cat:'Tools', pin:true},
+    {title:'Linux', content:'Shell Commands', cat:'OS', pin:false},
+  ];
+
+  el.innerHTML = `
+    <div class="step-tag">CASE 2 / CREATE NOTES</div>
+    <h1>Create Some Notes</h1>
+    <p class="subtitle">Use the NotesApp to create notes. Everything looks fine so far...</p>
+    <div class="card">
+      <div class="card-title">New Note</div>
+      <div class="input-group">
+        <div class="input-row">
+          <span class="input-label">Title</span>
+          <input type="text" id="n-title" placeholder="e.g. Java" value="${state.noteTitle}">
+        </div>
+        <div class="input-row">
+          <span class="input-label">Content</span>
+          <input type="text" id="n-content" placeholder="e.g. Classes and Objects" value="${state.noteContent}">
+        </div>
+        <div class="input-row">
+          <span class="input-label">Category</span>
+          <select id="n-cat">
+            ${['Programming','Databases','Tools','OS','Other'].map(c =>
+              `<option ${c===state.noteCat?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div class="input-row">
+          <span class="input-label">Pinned</span>
+          <select id="n-pin">
+            <option value="false" ${!state.notePinned?'selected':''}>No</option>
+            <option value="true" ${state.notePinned?'selected':''}>Yes</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addNote()" style="width:100%; margin-bottom:12px">+ CREATE NOTE</button>
+      <div style="font-size:12px; color:var(--text3); text-align:center">or use quick presets:</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; justify-content:center">
+        ${presets.filter(p => !state.notes.find(n=>n.title===p.title)).map(p =>
+          `<button class="btn btn-outline" style="padding:6px 14px; font-size:12px" onclick='addPreset(${JSON.stringify(p)})'>
+            ${p.pin?'📌 ':''}${p.title}
+          </button>`).join('')}
+      </div>
+    </div>
+    <div id="notes-area">
+      ${renderNotesGrid()}
+    </div>
+    ${state.notes.length >= 3 ? `
+    <div class="nav-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goTo(3)">I've created enough notes →</button>
+    </div>` : `<div style="text-align:center; font-size:13px; color:var(--text3); margin-top:16px">Create at least ${3 - state.notes.length} more note${3-state.notes.length!==1?'s':''} to continue</div>`}
+  `;
+  return el;
+}
+
+function renderNotesGrid() {
+  if (!state.notes.length) return '<div style="text-align:center; color:var(--text3); font-size:14px; padding:20px">No notes yet. Create your first note!</div>';
+  return `<div class="notes-grid">${state.notes.map(n => `
+    <div class="note-card fade-in-item">
+      <div class="note-title">${n.pin?'📌 ':''}${n.title}</div>
+      <div class="note-content">${n.content}</div>
+      <div class="note-category">${n.cat}</div>
+    </div>`).join('')}</div>`;
+}
+
+function addNote() {
+  const t = document.getElementById('n-title').value.trim();
+  const c = document.getElementById('n-content').value.trim();
+  const cat = document.getElementById('n-cat').value;
+  const pin = document.getElementById('n-pin').value === 'true';
+  if (!t || !c) { alert('Please enter a title and content.'); return; }
+  state.notes.push({title:t, content:c, cat, pin});
+  state.noteTitle = ''; state.noteContent = ''; state.noteCat = cat; state.notePinned = false;
+  render();
+}
+
+function addPreset(p) {
+  state.notes.push({title:p.title, content:p.content, cat:p.cat, pin:p.pin});
+  render();
+}
+
+// ── SCREEN 3: Show the Problem ────────────────────────────────────────────────
+function s3() {
+  const el = div();
+  el.innerHTML = `
+    <div class="step-tag">CASE 3 / THE PROBLEM</div>
+    <h1>Wait... Something feels off</h1>
+    <p class="subtitle">Look at the NotesApp class. It started with data for <em>one</em> note. But now you have ${state.notes.length} notes...</p>
+    <div class="two-col" style="margin: 20px 0;">
+      <div class="crowded-class" id="crowded">
+        <div class="crowded-badge">⚠️ Confused!</div>
+        <div style="font-size:13px; color:var(--text2); margin-bottom:12px; font-weight:600">NotesApp</div>
+        <div class="class-field" style="font-size:13px">title = ???</div>
+        <div class="class-field" style="font-size:13px">content = ???</div>
+        <div class="class-field" style="font-size:13px">category = ???</div>
+        <div class="class-field" style="font-size:13px">pinned = ???</div>
+        <div style="margin-top:12px">
+          ${state.notes.map((n,i) => `<div class="problem-item">📋 Note ${i+1}: "${n.title}" — whose data is it?</div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:14px; color:var(--amber); margin-bottom:8px; font-weight:600">🤔 The Problem</div>
+          <p style="font-size:13px; color:var(--text2); line-height:1.6">
+            NotesApp has fields like <code style="color:var(--teal)">title</code> and <code style="color:var(--teal)">content</code> — but which note do they belong to?
+          </p>
+        </div>
+        <div class="investigation-row">
+          <div class="inv-icon">😕</div>
+          <div class="inv-content">
+            <div class="inv-title">One class, many notes</div>
+            <div class="inv-desc">We're creating multiple notes, but the class only has fields for one. Where does each note's data go?</div>
+          </div>
+        </div>
+        <div class="investigation-row">
+          <div class="inv-icon">🔍</div>
+          <div class="inv-content">
+            <div class="inv-title">Data is mixed up</div>
+            <div class="inv-desc">title, content, category — these describe a note. But <em>which</em> note?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center; margin:24px 0">
+      <p style="font-size:16px; color:var(--text2); margin-bottom:20px"><strong style="color:var(--amber)">"Wait... where does each note's data belong?"</strong></p>
+      <button class="btn btn-primary" style="font-size:16px" onclick="goTo(4)">🔍 Let's investigate!</button>
+    </div>
+  `;
+  return el;
+}
+
+// ── SCREEN 4: Discover the Thing ─────────────────────────────────────────────
+function s4() {
+  const el = div();
+  el.innerHTML = `
+    <div class="step-tag">CASE 4 / THE DISCOVERY</div>
+    <h1>What are we actually creating?</h1>
+    <p class="subtitle">Think about what you created again and again. What is the <em>thing</em>?</p>
+    <div class="card" style="text-align:center; padding: 24px 32px; margin-bottom: 24px">
+      <div style="font-size:15px; color:var(--text2); margin-bottom:20px">We kept creating:</div>
+      <div class="notes-grid" style="justify-content:center">
+        ${state.notes.slice(0,3).map(n => `
+          <div class="note-card">${n.pin?'📌 ':''}
+            <div class="note-title">${n.title}</div>
+            <div class="note-content">${n.content}</div>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:20px; font-size:15px; color:var(--text2)">We created one ________ after another.</div>
+    </div>
+    <p style="font-size:16px; font-weight:600; margin-bottom:16px">What is the thing we are creating again and again?</p>
+    <button class="btn-choice" onclick="answerThing('NotesApp')">📦 NotesApp — the whole app</button>
+    <button class="btn-choice" onclick="answerThing('Note')">📋 Note — a single piece of data</button>
+    <button class="btn-choice" onclick="answerThing('Search')">🔍 Search — the search feature</button>
+    <button class="btn-choice" onclick="answerThing('List')">📂 List — a list of items</button>
+    <div id="thing-feedback" style="margin-top:20px"></div>
+  `;
+  return el;
+}
+
+function answerThing(answer) {
+  const btns = document.querySelectorAll('.btn-choice');
+  btns.forEach(b => b.disabled = true);
+  if (answer === 'Note') {
+    btns[1].classList.add('correct');
+    document.getElementById('thing-feedback').innerHTML = `
+      <div class="card" style="background:rgba(76,175,125,0.08); border-color:rgba(76,175,125,0.3)">
+        <div style="color:var(--green); font-size:15px; font-weight:700; margin-bottom:12px">✓ Exactly! A Note!</div>
+        <p style="font-size:14px; color:var(--text2); margin-bottom:16px">Every time we "created a note", we were dealing with a new <strong>Note</strong> — a thing with its own title, content, category, and pin status.</p>
+        <div style="display:flex; justify-content:center; margin-bottom:16px;">
+          <div class="class-box fly-in" style="min-width:220px">
+            <div class="class-name green-header">Note</div>
+            <div class="class-section">
+              <div class="class-field">title</div>
+              <div class="class-field">content</div>
+              <div class="class-field">category</div>
+              <div class="class-field">pinned</div>
+              <div class="class-field">createdDate</div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center; font-style:italic; color:var(--text2); font-size:14px; margin-bottom:16px">"A Note is a thing with its own data."</div>
+        <button class="btn btn-primary" style="width:100%" onclick="goTo(5)">See the Note objects →</button>
+      </div>`;
+  } else {
+    const idx = ['NotesApp','Note','Search','List'].indexOf(answer);
+    btns[idx].classList.add('wrong');
+    document.getElementById('thing-feedback').innerHTML = `<div style="color:var(--red); font-size:14px; margin-top:8px">Not quite. Think about what data you entered each time you clicked "Create Note". Hint: it starts with N... 📋</div>`;
+    setTimeout(() => { btns.forEach(b => { b.classList.remove('wrong','correct'); b.disabled = false; }); document.getElementById('thing-feedback').innerHTML = ''; }, 2000);
+  }
+}
+
+// ── SCREEN 5: Multiple Note Objects ──────────────────────────────────────────
+function s5() {
+  const el = div();
+  const noteObjs = state.notes.slice(0, 4);
+  el.innerHTML = `
+    <div class="step-tag">CASE 5 / OBJECTS</div>
+    <h1>Each note becomes its own object</h1>
+    <p class="subtitle">With a <code style="color:var(--teal)">Note</code> class, each note is now a separate, independent object with its own data.</p>
+    <div class="three-col" style="margin: 20px 0;">
+      ${noteObjs.map((n,i) => `
+        <div class="object-badge fade-in-item" style="animation-delay:${i*0.15}s">
+          <div class="object-header">note object ${i+1}</div>
+          <div class="object-field"><span class="field-name">title</span> = <span class="field-val">"${n.title}"</span></div>
+          <div class="object-field"><span class="field-name">content</span> = <span class="field-val">"${n.content}"</span></div>
+          <div class="object-field"><span class="field-name">category</span> = <span class="field-val">"${n.cat}"</span></div>
+          <div class="object-field"><span class="field-name">pinned</span> = <span class="field-val">${n.pin}</span></div>
+        </div>`).join('')}
+    </div>
+    <div class="card" style="border-color:var(--amber); background:rgba(240,168,67,0.06)">
+      <div style="color:var(--amber); font-size:15px; font-weight:700; margin-bottom:8px">💡 Great! But now a new question...</div>
+      <p style="font-size:14px; color:var(--text2); margin-bottom:12px">
+        We have <strong>${state.notes.length} Note objects</strong>. Each one holds its own data perfectly.
+      </p>
+      <p style="font-size:15px; font-weight:600; color:var(--text)">
+        But <em>who keeps and manages all these Note objects?</em>
+      </p>
+    </div>
+    <div class="nav-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goTo(6)">Figure out who manages them →</button>
+    </div>
+  `;
+  return el;
+}
+
+// ── SCREEN 6: Discover Responsibility ────────────────────────────────────────
+function s6() {
+  const el = div();
+  el.innerHTML = `
+    <div class="step-tag">CASE 6 / RESPONSIBILITY</div>
+    <h1>Who manages the notes?</h1>
+    <p class="subtitle">Look at these operations. Where do they belong?</p>
+    <div class="card">
+      <div class="card-title">Operations in our app</div>
+      <div class="ops-row" id="ops-row">
+        <div class="op-pill">➕ addNote</div>
+        <div class="op-pill">🗑 deleteNote</div>
+        <div class="op-pill">🔍 searchNotes</div>
+        <div class="op-pill">✏️ editNote</div>
+        <div class="op-pill">📋 displayNotes</div>
+      </div>
+    </div>
+    <p style="font-size:16px; font-weight:600; margin-bottom:16px">Do these operations describe ONE Note?</p>
+    <button class="btn-choice" onclick="answerOp('yes')">✅ Yes, they belong in the Note class</button>
+    <button class="btn-choice" onclick="answerOp('no')">❌ No — they work with MANY notes</button>
+    <div id="op-feedback"></div>
+  `;
+  return el;
+}
+
+function answerOp(ans) {
+  const btns = document.querySelectorAll('.btn-choice');
+  btns.forEach(b => b.disabled = true);
+  if (ans === 'no') {
+    btns[1].classList.add('correct');
+    document.getElementById('op-feedback').innerHTML = `
+      <div class="card" style="margin-top:20px; background:rgba(76,175,125,0.08); border-color:rgba(76,175,125,0.3)">
+        <div style="color:var(--green); font-weight:700; margin-bottom:12px">✓ Exactly right!</div>
+        <p style="font-size:14px; color:var(--text2); margin-bottom:16px">
+          <code style="color:var(--amber)">addNote()</code>, <code style="color:var(--amber)">deleteNote()</code>, <code style="color:var(--amber)">searchNotes()</code> — these all operate on <em>many notes</em>. They need to <strong>manage a collection</strong>.
+        </p>
+        <div style="display:flex; justify-content:center; margin-bottom:16px">
+          <div class="class-box fly-in" style="min-width:240px">
+            <div class="class-name purple-header">NotesManager</div>
+            <div class="class-section">
+              <div class="class-field" style="color:var(--accent)">List&lt;Note&gt; notes</div>
+            </div>
+            <div class="class-section">
+              <div class="class-method">addNote(note)</div>
+              <div class="class-method">deleteNote(note)</div>
+              <div class="class-method">searchNote(keyword)</div>
+              <div class="class-method">editNote(note)</div>
+              <div class="class-method">displayNotes()</div>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:14px; color:var(--text2); margin-bottom:12px">NotesManager's job: <strong>keep track of all Note objects</strong> and perform operations on the collection.</p>
+        <button class="btn btn-primary" style="width:100%" onclick="goTo(7)">See the transformation! →</button>
+      </div>`;
+  } else {
+    btns[0].classList.add('wrong');
+    document.getElementById('op-feedback').innerHTML = `<div style="color:var(--red); font-size:14px; margin-top:8px">Think about it: if I say "search all notes for 'Java'" — does that operation happen inside one Note? Or does it need to look through ALL notes? 🔍</div>`;
+    setTimeout(() => { btns.forEach(b => { b.classList.remove('wrong','correct'); b.disabled = false; }); document.getElementById('op-feedback').innerHTML = ''; }, 2500);
+  }
+}
+
+// ── SCREEN 7: The Transformation ─────────────────────────────────────────────
+function s7() {
+  const el = div();
+  el.innerHTML = `
+    <div class="step-tag">CASE 7 / TRANSFORMATION</div>
+    <h1>Watch the transformation</h1>
+    <p class="subtitle">The single confused class splits into two focused classes, each with a clear responsibility.</p>
+    
+    <div style="text-align:center; margin-bottom:8px">
+      <span style="font-size:13px; color:var(--text3); background:var(--surface2); padding:4px 12px; border-radius:10px">BEFORE</span>
+    </div>
+    <div style="display:flex; justify-content:center; margin-bottom:20px">
+      <div class="class-box" style="min-width:280px; opacity:0.6; border-color:var(--red)">
+        <div class="class-name" style="background:var(--red)">NotesApp 😕</div>
+        <div class="class-section">
+          <div class="class-field">title &nbsp; content &nbsp; category &nbsp; pinned</div>
+        </div>
+        <div class="class-section">
+          <div class="class-method">addNote() &nbsp; deleteNote() &nbsp; searchNote()</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; font-size:28px; margin:12px 0; animation: fadeIn 0.5s 0.3s both">↓ splits into ↓</div>
+
+    <div style="text-align:center; margin-bottom:8px">
+      <span style="font-size:13px; color:var(--green); background:var(--surface2); padding:4px 12px; border-radius:10px">AFTER</span>
+    </div>
+    <div class="two-col" style="margin-bottom:20px">
+      <div style="display:flex; flex-direction:column; align-items:center">
+        <div class="class-box fly-in" style="min-width:220px; width:100%">
+          <div class="class-name green-header">Note</div>
+          <div class="class-section">
+            <div class="class-field">title</div>
+            <div class="class-field">content</div>
+            <div class="class-field">category</div>
+            <div class="class-field">pinned</div>
+            <div class="class-field">createdDate</div>
+          </div>
+        </div>
+        <div style="font-size:13px; color:var(--text2); margin-top:10px; text-align:center">📦 Holds data<br>for ONE note</div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center">
+        <div class="class-box fly-in" style="min-width:220px; width:100%; animation-delay:0.2s">
+          <div class="class-name purple-header">NotesManager</div>
+          <div class="class-section">
+            <div class="class-field" style="color:var(--accent)">List&lt;Note&gt; notes</div>
+          </div>
+          <div class="class-section">
+            <div class="class-method">addNote(note)</div>
+            <div class="class-method">deleteNote(note)</div>
+            <div class="class-method">searchNote(keyword)</div>
+            <div class="class-method">editNote(note)</div>
+            <div class="class-method">displayNotes()</div>
+          </div>
+        </div>
+        <div style="font-size:13px; color:var(--text2); margin-top:10px; text-align:center">🗂 Manages<br>MANY notes</div>
+      </div>
+    </div>
+
+    <div class="card" style="text-align:center; padding:20px">
+      <div style="font-size:14px; color:var(--text2); margin-bottom:10px">The relationship:</div>
+      <div style="display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap">
+        <div class="class-box" style="min-width:140px; display:inline-block">
+          <div class="class-name purple-header" style="font-size:13px; padding:8px">NotesManager</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:24px; color:var(--accent)">→</div>
+          <div style="font-size:11px; color:var(--text3)">manages many</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          ${[0,1,2].map(i => `<div class="class-box" style="min-width:60px; display:inline-block; opacity:${1-i*0.2}">
+            <div class="class-name green-header" style="font-size:12px; padding:6px">Note</div>
+          </div>`).join('')}
+          <div style="color:var(--text3); align-self:center; font-size:18px">...</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goTo(8)">See the Java code →</button>
+    </div>
+  `;
+  return el;
+}
+
+// ── SCREEN 8: Java Code ───────────────────────────────────────────────────────
+function s8() {
+  const el = div();
+  el.innerHTML = `
+    <div class="step-tag">CASE 8 / JAVA CODE</div>
+    <h1>The code transformation</h1>
+    <p class="subtitle">Here's what this looks like in actual Java. See how the code reflects our discovery.</p>
+    <div class="two-col">
+      <div>
+        <div style="color:var(--red); font-size:13px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px">
+          <span style="background:var(--red); color:#fff; border-radius:10px; padding:2px 8px; font-size:11px">BEFORE</span> confused
+        </div>
+        <div class="code-block">
+<span class="kw">class</span> <span class="cls">NotesApp</span> {
+&nbsp;
+  <span class="comment-c">// data for ONE note...</span>
+  <span class="type">String</span> <span class="field-c">title</span>;
+  <span class="type">String</span> <span class="field-c">content</span>;
+  <span class="type">String</span> <span class="field-c">category</span>;
+  <span class="type">boolean</span> <span class="field-c">pinned</span>;
+&nbsp;
+  <span class="comment-c">// ...mixed with operations on MANY notes</span>
+  <span class="kw">void</span> <span class="method-c">addNote</span>() { }
+  <span class="kw">void</span> <span class="method-c">deleteNote</span>() { }
+  <span class="kw">void</span> <span class="method-c">searchNote</span>() { }
+  <span class="kw">void</span> <span class="method-c">editNote</span>() { }
+}
+        </div>
+      </div>
+      <div>
+        <div style="color:var(--green); font-size:13px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px">
+          <span style="background:var(--green); color:#fff; border-radius:10px; padding:2px 8px; font-size:11px">AFTER</span> clear
+        </div>
+        <div class="code-block" style="margin-bottom:12px">
+<span class="kw">class</span> <span class="cls">Note</span> {
+&nbsp;
+  <span class="comment-c">// data that belongs to ONE note</span>
+  <span class="type">String</span> <span class="field-c">title</span>;
+  <span class="type">String</span> <span class="field-c">content</span>;
+  <span class="type">String</span> <span class="field-c">category</span>;
+  <span class="type">boolean</span> <span class="field-c">pinned</span>;
+}
+        </div>
+        <div class="code-block">
+<span class="kw">class</span> <span class="cls">NotesManager</span> {
+&nbsp;
+  <span class="comment-c">// manages MANY Note objects</span>
+  <span class="type">List</span>&lt;<span class="cls">Note</span>&gt; <span class="field-c">notes</span>;
+&nbsp;
+  <span class="kw">void</span> <span class="method-c">addNote</span>(<span class="cls">Note</span> note) { }
+  <span class="kw">void</span> <span class="method-c">deleteNote</span>(<span class="cls">Note</span> note) { }
+  <span class="kw">void</span> <span class="method-c">searchNote</span>(<span class="type">String</span> kw) { }
+  <span class="kw">void</span> <span class="method-c">editNote</span>(<span class="cls">Note</span> note) { }
+  <span class="kw">void</span> <span class="method-c">displayNotes</span>() { }
+}
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px; background:rgba(92,95,240,0.08); border-color:rgba(92,95,240,0.4)">
+      <div style="display:flex; gap:16px; flex-wrap:wrap">
+        <div style="flex:1; min-width:200px">
+          <div style="color:var(--teal); font-weight:700; font-size:13px; margin-bottom:6px">What moved into Note?</div>
+          <div style="font-size:13px; color:var(--text2)">The data fields — things that describe <em>one single note</em>. Every note object has its own copy.</div>
+        </div>
+        <div style="flex:1; min-width:200px">
+          <div style="color:var(--amber); font-weight:700; font-size:13px; margin-bottom:6px">What moved into NotesManager?</div>
+          <div style="font-size:13px; color:var(--text2)">The operations — things that work with <em>the whole collection</em> of notes.</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goTo(9)">See the big idea →</button>
+    </div>
+  `;
+  return el;
+}
+
+// ── SCREEN 9: Final Learning ──────────────────────────────────────────────────
+function s9() {
+  const el = div();
+  const scenarios = [
+    {icon:'🎬', title:'Movie Watchlist', cls1:'Movie', cls2:'WatchlistManager', id:'movies'},
+    {icon:'🎓', title:'Student Management', cls1:'Student', cls2:'StudentManager', id:'students'},
+    {icon:'📚', title:'Library System', cls1:'Book', cls2:'LibraryManager', id:'library'},
+    {icon:'🛒', title:'Shopping Cart', cls1:'Product', cls2:'Cart', id:'shop'},
+  ];
+  el.innerHTML = `
+    <div class="step-tag">CASE 9 / THE BIG IDEA</div>
+    <h1>💡 You discovered it!</h1>
+    <p class="subtitle">You didn't memorize a rule. You experienced a problem and found the solution yourself.</p>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">Your discovery path</div>
+      <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>You put everything in one class.</strong> It seemed simple.</div></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>It worked at first.</strong> Creating notes felt fine.</div></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>The problem appeared.</strong> Where does each note's data belong?</div></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>You discovered "Note"</strong> — a thing with its own data.</div></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>You discovered "NotesManager"</strong> — a separate responsibility.</div></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step" style="border-color:var(--green); background:rgba(76,175,125,0.08)">
+        <div class="flow-num" style="background:var(--green)">✓</div>
+        <div class="flow-text"><strong style="color:var(--green)">You understand why multiple classes exist.</strong></div>
+      </div>
+    </div>
+
+    <div class="big-idea">
+      <h2>The Big Idea</h2>
+      <div class="big-idea-row">
+        <div class="big-idea-pill">Different Things</div>
+        <div class="big-idea-plus">+</div>
+        <div class="big-idea-pill">Different Responsibilities</div>
+      </div>
+      <span class="big-idea-arrow">↓</span>
+      <div class="big-idea-result">Different Classes</div>
+    </div>
+
+    <div class="quote-box">"We don't create classes just because the teacher says so. We create classes when we discover meaningful things and responsibilities in the problem."</div>
+
+    <div style="margin: 28px 0">
+      <h2 style="margin-bottom:16px">Try another scenario</h2>
+      <p style="font-size:14px; color:var(--text2); margin-bottom:16px">Can you identify the classes yourself? Which two classes would you create?</p>
+      <div class="two-col">
+        ${scenarios.map(s => `
+          <div class="scenario-card" onclick="showScenarioAnswer('${s.id}','${s.cls1}','${s.cls2}','${s.title}')">
+            <div class="scenario-icon">${s.icon}</div>
+            <div class="scenario-title">${s.title}</div>
+            <div class="scenario-desc">What are the two classes?</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div id="scenario-answer"></div>
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="restart()">↺ Start over</button>
+      <div class="chip">You've completed all ${TOTAL_STEPS} steps! 🎉</div>
+    </div>
+  `;
+  return el;
+}
+
+function showScenarioAnswer(id, cls1, cls2, title) {
+  document.querySelectorAll('.scenario-card').forEach(c => c.style.opacity = '0.5');
+  document.querySelector(`[onclick*="${id}"]`).style.opacity = '1';
+  document.querySelector(`[onclick*="${id}"]`).style.borderColor = 'var(--accent)';
+  document.getElementById('scenario-answer').innerHTML = `
+    <div class="card" style="border-color:var(--accent); animation:fadeIn 0.4s ease">
+      <div style="color:var(--accent); font-weight:700; margin-bottom:12px">${title} → Two Classes Discovered!</div>
+      <div class="two-col">
+        <div class="class-box" style="width:100%">
+          <div class="class-name green-header">${cls1}</div>
+          <div class="class-section">
+            <div class="class-field" style="font-size:13px; color:var(--text2)">← data for one ${cls1.toLowerCase()}</div>
+          </div>
+        </div>
+        <div class="class-box" style="width:100%">
+          <div class="class-name purple-header">${cls2}</div>
+          <div class="class-section">
+            <div class="class-field" style="font-size:13px; color:var(--accent)">List&lt;${cls1}&gt;</div>
+          </div>
+          <div class="class-section">
+            <div class="class-method" style="font-size:12px">add() &nbsp; remove() &nbsp; find()</div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:14px; color:var(--text2); margin-top:14px">
+        <strong style="color:var(--teal)">${cls1}</strong> — a thing with its own data.<br>
+        <strong style="color:var(--amber)">${cls2}</strong> — manages a collection of ${cls1}s.
+      </p>
+      <p style="font-size:13px; color:var(--text3); margin-top:8px">The same pattern works in every problem! 🎯</p>
+    </div>`;
+}
+
+// Helper
+function div() { return document.createElement('div'); }
+
+// Start!
+render();
+</script>
+</body>
+</html>

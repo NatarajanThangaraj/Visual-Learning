@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java OOP — From One Class to Many</title>
+<style>
+/* ══════════════════════════════════════════════
+   RESET & TOKENS
+══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --pink:    #FF6B9D; --pink-l:  #FFE4F0; --pink-d:  #C0396B;
+  --blue:    #4A90E2; --blue-l:  #E0EDFF; --blue-d:  #1A5AAA;
+  --teal:    #26C6A6; --teal-l:  #D5F6EF; --teal-d:  #0A7A64;
+  --amber:   #F5A623; --amber-l: #FFF3DC; --amber-d: #9A6200;
+  --purple:  #8B5CF6; --purple-l:#EDE9FE; --purple-d:#5B21B6;
+  --coral:   #FF6B6B; --coral-l: #FFE5E5; --coral-d: #B91C1C;
+  --green:   #22C55E; --green-l: #DCFCE7; --green-d: #15803D;
+  --ink:     #0F172A; --ink2:    #334155; --ink3:    #64748B;
+  --border:  #E2E8F0; --bg:      #F8FAFF;
+  --white:   #FFFFFF;
+  --mono: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --r: 10px;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ══════════════════════════════════════════════
+   APP SHELL
+══════════════════════════════════════════════ */
+#app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+/* ══════════════════════════════════════════════
+   TOP HEADER
+══════════════════════════════════════════════ */
+.app-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0 10px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 20px;
+}
+.app-logo {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: white; flex-shrink: 0;
+}
+.app-name {
+  font-size: 15px; font-weight: 700; color: var(--ink);
+  letter-spacing: -.02em;
+}
+.app-sub { font-size: 12px; color: var(--ink3); }
+.app-stage-pill {
+  margin-left: auto;
+  font-size: 11px; font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: var(--purple-l);
+  color: var(--purple-d);
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════
+   PROGRESS RAIL
+══════════════════════════════════════════════ */
+.progress-rail {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+.prog-seg {
+  flex: 1; height: 6px; border-radius: 4px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background .25s, transform .15s;
+  position: relative;
+}
+.prog-seg:hover { transform: scaleY(1.6); }
+.prog-seg.done  { background: var(--teal); }
+.prog-seg.active{ background: linear-gradient(90deg, var(--purple), var(--pink)); }
+.prog-seg .prog-tip {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: white; font-size: 10px;
+  padding: 3px 7px; border-radius: 5px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity .15s;
+}
+.prog-seg:hover .prog-tip { opacity: 1; }
+
+/* ══════════════════════════════════════════════
+   STAGE CARD
+══════════════════════════════════════════════ */
+.stage-card {
+  background: var(--white);
+  border-radius: 16px;
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  animation: cardIn .35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.stage-card-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; gap: 14px;
+}
+.shdr-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.shdr-body {}
+.shdr-stage-lbl { font-size: 11px; color: var(--ink3); margin-bottom: 2px; font-weight: 500; }
+.shdr-title { font-size: 20px; font-weight: 700; color: var(--ink); letter-spacing: -.03em; }
+
+.stage-card-body { padding: 20px 24px; }
+
+/* ══════════════════════════════════════════════
+   IMPORTANCE BANNER
+══════════════════════════════════════════════ */
+.imp-banner {
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  display: flex; gap: 12px; align-items: flex-start;
+  border: 1.5px solid;
+  animation: slideIn .4s ease-out;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.ib-star { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.ib-lbl  { font-size: 10px; font-weight: 700; letter-spacing: .06em; margin-bottom: 3px; text-transform: uppercase; }
+.ib-txt  { font-size: 12.5px; line-height: 1.55; }
+
+/* ══════════════════════════════════════════════
+   THINKING BUBBLE
+══════════════════════════════════════════════ */
+.think-wrap {
+  border: 2px dashed #C4B5FD;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #FAFAFF;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.think-dots { display: flex; flex-direction: column; gap: 3px; align-items: center; padding-top: 3px; flex-shrink: 0; }
+.think-dot  { border-radius: 50%; background: var(--purple); }
+.think-dot:nth-child(1){ width:8px; height:8px; }
+.think-dot:nth-child(2){ width:5px; height:5px; opacity:.55; }
+.think-dot:nth-child(3){ width:3px; height:3px; opacity:.3; }
+.think-lbl { font-size: 10px; font-weight: 700; color: var(--purple-d); letter-spacing:.05em; margin-bottom:3px; }
+.think-q   { font-size: 13px; color: var(--ink2); font-style: italic; line-height: 1.55; }
+.think-q strong { font-style: normal; color: var(--purple-d); font-weight: 600; }
+
+/* ══════════════════════════════════════════════
+   NARRATIVE / CALLOUT
+══════════════════════════════════════════════ */
+.narr { font-size: 13.5px; color: var(--ink2); line-height: 1.65; margin-bottom: 14px; }
+.narr strong { color: var(--ink); font-weight: 600; }
+
+.callout {
+  border-left: 3px solid var(--blue);
+  background: var(--blue-l);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  font-size: 13px; color: var(--blue-d);
+  margin-bottom: 14px; line-height: 1.55;
+}
+
+/* ══════════════════════════════════════════════
+   CODE BLOCK
+══════════════════════════════════════════════ */
+.code-block {
+  background: #0F172A;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-family: var(--mono);
+  font-size: 12px; line-height: 1.85;
+  color: #CBD5E1;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  white-space: pre;
+}
+.ck { color: #93C5FD; }   /* keyword */
+.ct { color: #C4B5FD; }   /* type */
+.cs { color: #6EE7B7; }   /* string */
+.cb { color: #FCD34D; }   /* bool */
+.cm { color: #475569; }   /* comment */
+
+/* ══════════════════════════════════════════════
+   CLASS BOX (UML style)
+══════════════════════════════════════════════ */
+.cls-box {
+  display: inline-flex; flex-direction: column;
+  border: 2px solid; border-radius: 10px;
+  overflow: hidden; min-width: 140px;
+  font-family: var(--mono); font-size: 11px;
+  background: white; vertical-align: top;
+}
+.cls-box-head {
+  padding: 7px 12px; text-align: center;
+  font-size: 12px; font-weight: 700;
+  border-bottom: 2px solid;
+}
+.cls-box-body { padding: 8px 12px; }
+.cls-box-row  { padding: 2px 0; font-size: 11px; display: flex; align-items: center; gap: 5px; }
+.cls-box-row .ts { color: var(--teal-d); font-size: 10px; }
+.cls-box-row .tb { color: var(--amber-d); font-size: 10px; }
+.cls-box-row.mth { color: var(--purple-d); }
+.cls-box-divider { border: none; border-top: 1px solid; margin: 5px 0; }
+
+/* variants */
+.cls-blue  { border-color: var(--blue);   } .cls-blue  .cls-box-head { background: var(--blue-l);   color: var(--blue-d);   border-color: var(--blue); }
+.cls-green { border-color: var(--teal);   } .cls-green .cls-box-head { background: var(--teal-l);   color: var(--teal-d);   border-color: var(--teal); }
+.cls-purple{ border-color: var(--purple); } .cls-purple.cls-box-head,
+.cls-purple .cls-box-head { background: var(--purple-l); color: var(--purple-d); border-color: var(--purple); }
+.cls-amber { border-color: var(--amber);  } .cls-amber .cls-box-head { background: var(--amber-l);  color: var(--amber-d);  border-color: var(--amber); }
+
+/* ══════════════════════════════════════════════
+   COUNTERS
+══════════════════════════════════════════════ */
+.ctr-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.ctr-card {
+  flex: 1; min-width: 80px;
+  background: white; border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; text-align: center;
+}
+.ctr-num {
+  font-size: 28px; font-weight: 800;
+  font-family: var(--mono); line-height: 1;
+  transition: all .35s;
+}
+.ctr-lbl { font-size: 11px; color: var(--ink3); margin-top: 4px; }
+
+/* ══════════════════════════════════════════════
+   PARALLEL LISTS
+══════════════════════════════════════════════ */
+.pl-wrap  { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.pl-col   { flex: 1; min-width: 100px; }
+.pl-name  { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--blue-d); margin-bottom: 6px; }
+.pl-item  {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 10px; border-radius: 6px; margin-bottom: 4px;
+  border: 1.5px solid var(--border);
+  font-family: var(--mono); font-size: 12px;
+  background: white; transition: all .2s;
+}
+.pl-item .idx { color: var(--ink3); font-size: 10px; min-width: 16px; }
+.pl-item.hl { border-color: var(--blue); background: var(--blue-l); }
+.pl-item.miss { border-color: var(--coral); background: var(--coral-l); color: var(--coral-d); font-weight: 600; }
+.pl-link-col { display: flex; align-items: center; justify-content: center; flex: 0 0 52px; font-size: 10px; color: var(--blue); text-align: center; line-height: 1.5; font-weight: 600; }
+
+/* ══════════════════════════════════════════════
+   PILLS (clickable)
+══════════════════════════════════════════════ */
+.pill {
+  display: inline-block;
+  padding: 5px 13px; border-radius: 20px;
+  font-size: 12.5px; font-weight: 600;
+  cursor: pointer; border: 2px solid;
+  transition: all .2s; margin: 3px;
+}
+.pill-purple { background: var(--purple-l); color: var(--purple-d); border-color: var(--purple); }
+.pill-purple:hover { background: var(--purple); color: white; }
+.pill-green  { background: var(--teal-l);   color: var(--teal-d);   border-color: var(--teal); }
+.pill-amber  { background: var(--amber-l);  color: var(--amber-d);  border-color: var(--amber); }
+.pill.selected { background: var(--teal); color: white; border-color: var(--teal); cursor: default; }
+.pill.no-pick  { background: var(--coral-l); color: var(--coral-d); border-color: var(--coral); cursor: default; }
+
+/* ══════════════════════════════════════════════
+   CHOICES
+══════════════════════════════════════════════ */
+.choice-list { display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+.choice-btn {
+  background: white; border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 13px; color: var(--ink2); cursor: pointer;
+  text-align: left; font-family: var(--sans); transition: all .18s;
+}
+.choice-btn:hover { border-color: var(--blue); background: var(--blue-l); color: var(--blue-d); }
+.choice-btn.correct { border-color: var(--green); background: var(--green-l); color: var(--green-d); font-weight: 600; }
+.choice-btn.wrong   { border-color: var(--coral); background: var(--coral-l); color: var(--coral-d); opacity: .65; }
+
+/* ══════════════════════════════════════════════
+   REVEAL BOX
+══════════════════════════════════════════════ */
+.reveal-box {
+  background: var(--teal-l); border: 2px solid var(--teal);
+  border-radius: 10px; padding: 12px 16px;
+  font-size: 13px; color: var(--teal-d); line-height: 1.6;
+  margin-top: 10px; animation: popIn .35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ══════════════════════════════════════════════
+   WARNING
+══════════════════════════════════════════════ */
+.warn-bar {
+  background: var(--coral-l); border: 2px solid var(--coral);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 13px; color: var(--coral-d); font-weight: 700;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  animation: shake .4s ease-out;
+}
+@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-4px)} 40%{transform:translateX(4px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)}
+}
+
+/* ══════════════════════════════════════════════
+   BEFORE / AFTER
+══════════════════════════════════════════════ */
+.ba-grid { display: grid; grid-template-columns: 1fr 40px 1fr; gap: 12px; align-items: start; margin-bottom: 14px; }
+.ba-lbl  { font-size: 11px; font-weight: 700; color: var(--ink3); margin-bottom: 6px; text-transform: uppercase; letter-spacing:.04em; }
+.ba-arrow { display: flex; align-items: center; justify-content: center; padding-top: 28px; font-size: 24px; color: var(--teal); font-weight: 900; }
+
+/* ══════════════════════════════════════════════
+   DROP ZONES (Stage 7)
+══════════════════════════════════════════════ */
+.drop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 10px; padding: 10px; min-height: 64px;
+  transition: all .2s;
+}
+.drop-zone.zone-yes { border-color: var(--teal);  background: var(--teal-l); }
+.drop-zone.zone-no  { border-color: var(--coral); background: var(--coral-l); }
+.drop-zone-lbl { font-size: 11px; font-weight: 700; color: var(--ink3); margin-bottom: 6px; text-transform: uppercase; letter-spacing:.04em; }
+
+/* ══════════════════════════════════════════════
+   INPUTS & FORMS
+══════════════════════════════════════════════ */
+.field-g { margin-bottom: 12px; }
+.field-lbl { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink3); margin-bottom: 5px; }
+.field-in {
+  width: 100%; padding: 9px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px; font-family: var(--sans); font-size: 13px;
+  color: var(--ink); background: white; outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.field-in:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
+
+.btn {
+  padding: 9px 18px; border-radius: 8px;
+  border: none; font-family: var(--sans); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+}
+.btn-teal   { background: var(--teal);   color: white; }  .btn-teal:hover   { background: var(--teal-d); }
+.btn-purple { background: var(--purple); color: white; }  .btn-purple:hover { background: var(--purple-d); }
+.btn-amber  { background: var(--amber);  color: white; }  .btn-amber:hover  { background: var(--amber-d); }
+.btn-coral  { background: var(--coral);  color: white; }  .btn-coral:hover  { background: var(--coral-d); }
+.btn-ghost  { background: white; color: var(--ink2); border: 1.5px solid var(--border); }
+.btn-ghost:hover { background: var(--bg); border-color: #A0AEC0; }
+.btn-full { width: 100%; }
+
+/* ══════════════════════════════════════════════
+   NOTE CARD
+══════════════════════════════════════════════ */
+.note-card {
+  border: 1.5px solid var(--border); border-radius: 9px;
+  padding: 10px 14px; margin-bottom: 7px;
+  background: white; animation: popIn .3s ease-out;
+}
+.note-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.note-sub   { font-size: 11.5px; color: var(--ink3); margin-top: 2px; }
+
+/* ══════════════════════════════════════════════
+   REFLECTION
+══════════════════════════════════════════════ */
+.ref-q  { margin-bottom: 14px; }
+.ref-qt { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.ref-ans {
+  background: var(--teal-l); border: 1.5px solid var(--teal);
+  border-radius: 8px; padding: 9px 13px;
+  font-size: 12.5px; color: var(--teal-d); font-style: italic; line-height: 1.55;
+}
+
+/* ══════════════════════════════════════════════
+   FINAL CARD
+══════════════════════════════════════════════ */
+.final-card {
+  background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%);
+  border-radius: 16px; padding: 28px; text-align: center; margin-top: 14px;
+  color: white; position: relative; overflow: hidden;
+}
+.final-card::before {
+  content:''; position:absolute; inset:0;
+  background: radial-gradient(circle at 30% 50%, rgba(139,92,246,.25) 0%, transparent 60%),
+              radial-gradient(circle at 80% 20%, rgba(255,107,157,.2) 0%, transparent 50%);
+  pointer-events:none;
+}
+.final-hed  { font-size: 18px; font-weight: 800; color: white; margin-bottom: 6px; position: relative; }
+.final-sub  { font-size: 12.5px; color: rgba(255,255,255,.5); margin-bottom: 16px; position: relative; }
+.final-flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 12px 0; position: relative; }
+.ff-item    { font-size: 12.5px; color: rgba(255,255,255,.8); padding: 6px 20px; background: rgba(255,255,255,.06); border-radius: 8px; margin: 3px 0; min-width: 240px; }
+.ff-arr     { color: var(--teal); font-size: 14px; }
+.final-eq   { font-size: 15px; font-weight: 700; color: var(--teal); margin-top: 14px; position: relative; }
+
+.try-grid { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+.try-btn  {
+  padding: 7px 14px; border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.07);
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.75);
+  cursor: pointer; font-family: var(--sans); transition: all .18s;
+}
+.try-btn:hover { background: rgba(255,255,255,.15); color: white; border-color: rgba(255,255,255,.3); }
+
+/* ══════════════════════════════════════════════
+   NAV ROW
+══════════════════════════════════════════════ */
+.nav-row { display: flex; gap: 8px; flex-wrap: wrap; padding: 16px 24px; border-top: 1.5px solid var(--border); }
+
+/* ══════════════════════════════════════════════
+   ★★★  ANIMATED CLASS DIAGRAM (Stage 8)  ★★★
+══════════════════════════════════════════════ */
+.anim-diagram {
+  background: #F0F4FF;
+  border-radius: 14px;
+  padding: 24px 16px;
+  margin-bottom: 14px;
+  position: relative;
+  overflow: visible;
+}
+
+/* SVG connector lines */
+.dia-svg {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.dia-layer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.dia-node {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid;
+  overflow: hidden;
+  min-width: 140px;
+  font-family: var(--mono);
+  font-size: 11px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .5s ease, transform .5s cubic-bezier(.22,1,.36,1), box-shadow .2s;
+}
+.dia-node:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,.12);
+  transform: translateY(-2px) !important;
+}
+.dia-node.visible { opacity: 1; transform: translateY(0); }
+
+.dia-node-head {
+  padding: 8px 14px; text-align: center;
+  font-size: 13px; font-weight: 800;
+  border-bottom: 2px solid;
+  letter-spacing: -.01em;
+}
+.dia-node-body { padding: 8px 12px; }
+.dia-node-row { padding: 2px 0; font-size: 11px; display: flex; align-items: center; gap: 5px; }
+.dia-node-row .ts { color: var(--teal-d); }
+.dia-node-row .tb { color: var(--amber-d); }
+.dia-node-row.mth { color: var(--purple-d); }
+
+/* node color themes */
+.node-gray   { border-color: #94A3B8; }
+.node-gray   .dia-node-head { background: #F1F5F9; color: #334155; border-color: #94A3B8; }
+.node-purple { border-color: var(--purple); }
+.node-purple .dia-node-head { background: var(--purple-l); color: var(--purple-d); border-color: var(--purple); }
+.node-teal   { border-color: var(--teal); }
+.node-teal   .dia-node-head { background: var(--teal-l); color: var(--teal-d); border-color: var(--teal); }
+
+/* connector line between layers */
+.dia-connector {
+  display: flex; align-items: center; justify-content: center;
+  height: 32px; position: relative; z-index: 1; margin-bottom: 4px;
+}
+.dia-line {
+  width: 2px; height: 32px;
+  background: linear-gradient(180deg, #94A3B8, var(--purple));
+  opacity: 0; transition: opacity .4s ease;
+}
+.dia-line.visible { opacity: 1; }
+.dia-conn-lbl {
+  position: absolute; right: calc(50% - 70px);
+  font-size: 10px; color: var(--ink3); font-weight: 600;
+  background: #F0F4FF; padding: 1px 6px; border-radius: 4px;
+}
+.dia-arrow-head {
+  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--purple);
+  opacity: 0; transition: opacity .4s ease;
+}
+.dia-arrow-head.visible { opacity: 1; }
+
+/* multi-node row (Note objects) */
+.dia-notes-row {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  position: relative; z-index: 1;
+}
+.dia-notes-row .dia-node { min-width: 120px; }
+
+/* ══════════════════════════════════════════════
+   UTIL
+══════════════════════════════════════════════ */
+.hidden { display: none !important; }
+.mt8 { margin-top: 8px; }
+.mb8 { margin-bottom: 8px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+.row .grow { flex: 1; min-width: 160px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Topbar -->
+  <div class="app-topbar">
+    <div class="app-logo">&#9998;</div>
+    <div>
+      <div class="app-name">Java OOP Learning App</div>
+      <div class="app-sub">From one class to many — discover, don't memorize</div>
+    </div>
+    <div class="app-stage-pill" id="tb-pill">Stage 1 of 10</div>
+  </div>
+
+  <!-- Progress rail -->
+  <div class="progress-rail" id="progress-rail"></div>
+
+  <!-- Stage card -->
+  <div class="stage-card" id="stage-card">
+    <div class="stage-card-header" id="stage-card-header"></div>
+    <div class="stage-card-body" id="stage-card-body"></div>
+  </div>
+
+  <!-- Nav row (inside card at bottom) -->
+  <div class="nav-row" id="nav-row" style="border:1.5px solid var(--border);border-top:none;border-radius:0 0 16px 16px;background:white;margin-top:0"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════ DATA ═══════════════════════════════ */
+const BOOL_ATTRS = ['pinned','archived','favorite'];
+const ALL_ATTRS  = ['title','content','category','createdDate','modifiedDate',
+                    'pinned','archived','favorite','color','reminder','attachment'];
+const ATTR_GROUPS = [
+  { label:'Add category',                               attrs:['category'] },
+  { label:'Add dates (createdDate, modifiedDate)',      attrs:['createdDate','modifiedDate'] },
+  { label:'Add booleans (pinned, archived, favorite)',  attrs:['pinned','archived','favorite'] },
+  { label:'Add extras (color, reminder, attachment)',   attrs:['color','reminder','attachment'] },
+];
+const ACTIONS = ['ADD','DELETE','SEARCH','EDIT','LIST','PIN','ARCHIVE'];
+
+const STAGE_META = [
+  { title:'One Note',             emoji:'📝', iconBg:'#FFE4F0', color:'pink',
+    imp:'Every complex system started simple.',
+    impTxt:'A class is just a container for related data — a title, a content. Nothing scary here. But watch what happens when requirements grow.',
+    impColor:'pink', thinkQ:'Why would just one title and one content ever become a problem?' },
+  { title:'Many Notes',           emoji:'📚', iconBg:'#E0EDFF', color:'blue',
+    imp:'The index is a fragile link.',
+    impTxt:'Two separate lists connected only by position. One misplaced insert, one sort, one deletion — and the link breaks silently.',
+    impColor:'blue', thinkQ:'What is the <strong>only</strong> thing connecting titles[1] to contents[1]? Is that enough?' },
+  { title:'More Attributes',      emoji:'➕', iconBg:'#FFF3DC', color:'amber',
+    imp:'Complexity compounds with every feature.',
+    impTxt:'Each new requirement forces a new ArrayList. 2 becomes 11. The counter tells the story.',
+    impColor:'amber', thinkQ:'If every feature needs a new ArrayList, what happens after 20 features?' },
+  { title:'Maintenance Problem',  emoji:'⚠️', iconBg:'#FFE5E5', color:'coral',
+    imp:'Parallel lists break under change.',
+    impTxt:'The bug here is organizational. Splitting one concept across 11 lists means 11 places to forget to update.',
+    impColor:'coral', thinkQ:'When adding one note requires touching 11 different places, what is the real problem?' },
+  { title:'Discover Note Class',  emoji:'💡', iconBg:'#EDE9FE', color:'purple',
+    imp:'This is the key insight of OOP.',
+    impTxt:'When you realize all fields describe the same thing, you have discovered encapsulation — the core idea behind objects.',
+    impColor:'purple', thinkQ:'Do title, category, and pinned describe <strong>different</strong> things — or <strong>one</strong> thing?' },
+  { title:'ArrayList&lt;Note&gt;',emoji:'🔄', iconBg:'#D5F6EF', color:'teal',
+    imp:'Eleven fragile lists collapse into one.',
+    impTxt:'The Note object carries all its data wherever it goes. Nothing can go out of sync because nothing is separated.',
+    impColor:'teal', thinkQ:'If the Note carries all its own data, what can possibly go out of sync?' },
+  { title:'Discover NotesManager',emoji:'🗂️', iconBg:'#EDE9FE', color:'purple',
+    imp:'Data and behavior are different responsibilities.',
+    impTxt:'A Note stores data about itself. Managing a collection is a completely different job that deserves its own class.',
+    impColor:'purple', thinkQ:'Should a Note know how to search through all other notes? <strong>Who</strong> should be responsible for that?' },
+  { title:'Final Class Diagram',  emoji:'🏗️', iconBg:'#D5F6EF', color:'teal',
+    imp:'Three classes. Three jobs. One clear system.',
+    impTxt:'NotesApp runs the program. NotesManager manages the collection. Note holds the data. Each class has one clear job.',
+    impColor:'teal', thinkQ:'If you described each class in one sentence, could you? If not, that class is doing too much.' },
+  { title:'Reflection',           emoji:'🪞', iconBg:'#D5F6EF', color:'teal',
+    imp:'Discovery beats memorization.',
+    impTxt:'You didn\'t follow a rule — you experienced the problem and found the solution. That understanding transfers to every new problem.',
+    impColor:'teal', thinkQ:'Can you now look at a new problem and ask the right questions yourself?' },
+  { title:'Try Another Problem',  emoji:'🚀', iconBg:'#FFF3DC', color:'amber',
+    imp:'Transfer the thinking process.',
+    impTxt:'The discovery process is the real skill. Apply the same questions to any domain — students, movies, employees, orders.',
+    impColor:'amber', thinkQ:'Pick a problem below. Before clicking, ask: <strong>what is the central thing in this system?</strong>' },
+];
+
+/* ═══════════════════════════════ STATE ═══════════════════════════════ */
+const S = {
+  stage: 0, attrs: ['title','content'], notes: [],
+  attrGroup: 0, actsSorted: {}, refStep: 0,
+  s5props: [], bugShown: false,
+};
+
+/* ═══════════════════════════════ HELPERS ═══════════════════════════════ */
+function g(id) { return document.getElementById(id); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function impBanner(m) {
+  const palettes = {
+    pink:  ['var(--pink-l)','#FFAAD0','var(--pink-d)'],
+    blue:  ['var(--blue-l)','var(--blue)','var(--blue-d)'],
+    amber: ['var(--amber-l)','var(--amber)','var(--amber-d)'],
+    coral: ['var(--coral-l)','var(--coral)','var(--coral-d)'],
+    purple:['var(--purple-l)','var(--purple)','var(--purple-d)'],
+    teal:  ['var(--teal-l)','var(--teal)','var(--teal-d)'],
+  };
+  const [bg,bd,tx] = palettes[m.impColor] || palettes.teal;
+  return `<div class="imp-banner" style="background:${bg};border-color:${bd}">
+    <div class="ib-star">★</div>
+    <div>
+      <div class="ib-lbl" style="color:${tx}">Why this stage matters</div>
+      <div class="ib-txt" style="color:${tx}"><strong>${m.imp}</strong> ${m.impTxt}</div>
+    </div>
+  </div>`;
+}
+
+function thinkBubble(m) {
+  return `<div class="think-wrap">
+    <div class="think-dots"><div class="think-dot"></div><div class="think-dot"></div><div class="think-dot"></div></div>
+    <div>
+      <div class="think-lbl">Think about this</div>
+      <div class="think-q">${m.thinkQ}</div>
+    </div>
+  </div>`;
+}
+
+function code(html) { return `<div class="code-block">${html}</div>`; }
+function kw(t) { return `<span class="ck">${t}</span>`; }
+function ty(t) { return `<span class="ct">${t}</span>`; }
+function cs(t) { return `<span class="cs">${t}</span>`; }
+function cb(t) { return `<span class="cb">${t}</span>`; }
+function cm(t) { return `<span class="cm">${t}</span>`; }
+
+function clsBox(name, attrs, methods, variant) {
+  const v = variant||'blue';
+  const heads = { blue:'cls-blue', green:'cls-green', purple:'cls-purple', amber:'cls-amber' };
+  const cls = heads[v] || 'cls-blue';
+  let rows = attrs.map(a => {
+    const ib = BOOL_ATTRS.includes(a);
+    return `<div class="cls-box-row"><span class="${ib?'tb':'ts'}">${ib?'bool':'String'}</span> ${a}</div>`;
+  }).join('');
+  if (methods&&methods.length) {
+    rows += `<hr class="cls-box-divider" style="border-color:var(--border)">`;
+    rows += methods.map(m=>`<div class="cls-box-row mth">+ ${m}</div>`).join('');
+  }
+  return `<div class="cls-box ${cls}"><div class="cls-box-head">${name}</div><div class="cls-box-body">${rows}</div></div>`;
+}
+
+/* ═══════════════════════════════ RENDER ═══════════════════════════════ */
+function render() {
+  const m = STAGE_META[S.stage];
+  g('tb-pill').textContent = `Stage ${S.stage+1} of 10`;
+
+  // Progress rail
+  const rail = g('progress-rail');
+  rail.innerHTML = '';
+  STAGE_META.forEach((sm, i) => {
+    const d = document.createElement('div');
+    d.className = 'prog-seg' + (i < S.stage ? ' done' : i===S.stage ? ' active' : '');
+    d.innerHTML = `<div class="prog-tip">${i+1}. ${sm.title}</div>`;
+    d.onclick = () => { if(i <= S.stage){ S.stage=i; resetT(); render(); }};
+    rail.appendChild(d);
+  });
+
+  // Header
+  g('stage-card-header').innerHTML = `
+    <div class="shdr-icon" style="background:${m.iconBg}">${m.emoji}</div>
+    <div class="shdr-body">
+      <div class="shdr-stage-lbl">Stage ${S.stage+1} of 10</div>
+      <div class="shdr-title">${m.title}</div>
+    </div>`;
+
+  // Body
+  g('stage-card-body').innerHTML = '';
+  [s0,s1,s2,s3,s4,s5,s6,s7,s8,s9][S.stage]();
+
+  // Nav
+  buildNav();
+}
+
+function resetT() { S.bugShown=false; S.s5props=[]; S.actsSorted={}; }
+
+function buildNav() {
+  const nav = g('nav-row');
+  nav.innerHTML = '';
+  if (S.stage > 0) {
+    const b = document.createElement('button');
+    b.className='btn btn-ghost'; b.textContent='← Previous';
+    b.onclick = ()=>{ S.stage--; resetT(); render(); };
+    nav.appendChild(b);
+  }
+  if (S.stage < 9) {
+    const b = document.createElement('button');
+    b.className='btn btn-purple'; b.textContent='Next →';
+    b.onclick = ()=>{ S.stage++; S.attrGroup=0; resetT(); S.refStep=0; render(); };
+    nav.appendChild(b);
+  }
+  const rb = document.createElement('button');
+  rb.className='btn btn-ghost'; rb.textContent='Restart';
+  rb.onclick = ()=>{ S.stage=0; S.attrs=['title','content']; S.notes=[]; S.attrGroup=0; S.refStep=0; resetT(); render(); };
+  nav.appendChild(rb);
+}
+
+function setBody(html) { g('stage-card-body').innerHTML = html; }
+
+/* ═══════════════════════════════ STAGES ═══════════════════════════════ */
+
+/* ─── S0 ─── */
+function s0() {
+  const m = STAGE_META[0];
+  setBody(`${impBanner(m)}${thinkBubble(m)}
+    <div class="narr">You're building a <strong>Notes App</strong>. Start as simple as possible — just one note, two fields.</div>
+    ${code(`${kw('class')} ${ty('NotesApp')} {\n  ${ty('String')} title;\n  ${ty('String')} content;\n}`)}
+    <div class="row">
+      <div>${clsBox('NotesApp',['title','content'],[])}</div>
+      <div class="grow">
+        <div class="field-g"><label class="field-lbl">Title</label><input class="field-in" id="s0t" placeholder="e.g. Java"></div>
+        <div class="field-g"><label class="field-lbl">Content</label><input class="field-in" id="s0c" placeholder="e.g. OOP concepts"></div>
+        <button class="btn btn-teal btn-full" onclick="s0add()">Create note</button>
+        <div id="s0r" class="mt8"></div>
+      </div>
+    </div>
+    <div class="callout mt8">Looks simple! Two fields, one note. Nothing difficult here — yet.</div>`);
+}
+function s0add() {
+  const t=g('s0t').value.trim(); if(!t){g('s0t').focus();return;}
+  const c=g('s0c').value.trim();
+  g('s0r').innerHTML=`<div class="note-card"><div class="note-title">${esc(t)}</div><div class="note-sub">${esc(c)||'No content'}</div></div>`;
+}
+
+/* ─── S1 ─── */
+function s1() {
+  const m = STAGE_META[1];
+  if(!S.notes.length) S.notes=[{t:'Java',c:'Classes'},{t:'SQL',c:'Joins'},{t:'Python',c:'Lists'},{t:'Git',c:'Branching'},{t:'Linux',c:'Commands'}];
+  setBody(`${impBanner(m)}${thinkBubble(m)}
+    <div class="narr">The app must store <strong>many notes</strong>. We can't have just one title — we need lists.</div>
+    ${code(`${ty('ArrayList')}&lt;${ty('String')}&gt; titles;\n${ty('ArrayList')}&lt;${ty('String')}&gt; contents;`)}
+    <div id="s1lists"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <input class="field-in" id="s1t" placeholder="Title (e.g. Docker)" style="flex:1;min-width:120px">
+      <input class="field-in" id="s1c" placeholder="Content" style="flex:1;min-width:120px">
+      <button class="btn btn-blue" onclick="s1add()">Add</button>
+    </div>`);
+  renderS1();
+}
+function renderS1() {
+  const ns=S.notes, el=g('s1lists'); if(!el)return;
+  let th=`<div class="pl-col"><div class="pl-name">titles</div>`;
+  let ch=`<div class="pl-col"><div class="pl-name">contents</div>`;
+  ns.forEach((n,i)=>{ const hl=i===1?' hl':'';
+    th+=`<div class="pl-item${hl}"><span class="idx">${i}</span>${esc(n.t)}</div>`;
+    ch+=`<div class="pl-item${hl}"><span class="idx">${i}</span>${esc(n.c)}</div>`;
+  });
+  th+='</div>'; ch+='</div>';
+  el.innerHTML=`<div class="pl-wrap" style="margin-bottom:10px">${th}<div class="pl-link-col">index<br>only<br>link</div>${ch}</div>
+  <div class="callout">titles[1] and contents[1] are connected only by their <strong>position</strong>. That is the only link.</div>`;
+}
+function s1add() {
+  const t=g('s1t').value.trim(); if(!t)return;
+  S.notes.push({t,c:g('s1c').value.trim()});
+  g('s1t').value=''; g('s1c').value=''; renderS1();
+}
+
+/* ─── S2 ─── */
+function s2() {
+  const m = STAGE_META[2];
+  S.attrs=['title','content']; S.attrGroup=0;
+  setBody(`${impBanner(m)}${thinkBubble(m)}
+    <div class="narr">Users want categories, dates, pins, colors… Each requirement forces a <strong>new ArrayList</strong>.</div>
+    <div class="ctr-row">
+      <div class="ctr-card"><div class="ctr-num" id="s2an" style="color:var(--amber)">2</div><div class="ctr-lbl">attributes</div></div>
+      <div class="ctr-card"><div class="ctr-num" id="s2ln" style="color:var(--coral)">2</div><div class="ctr-lbl">ArrayLists needed</div></div>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+      <div class="code-block" id="s2code" style="flex:1;min-width:180px;margin-bottom:0"></div>
+      <div style="flex:1;min-width:160px" id="s2btn"></div>
+    </div>`);
+  renderS2();
+}
+function renderS2() {
+  const an=g('s2an'),ln=g('s2ln'),cd=g('s2code'),bd=g('s2btn');
+  if(!an)return;
+  an.textContent=S.attrs.length; ln.textContent=S.attrs.length;
+  cd.innerHTML=S.attrs.map(a=>{ const ib=BOOL_ATTRS.includes(a);
+    return `${ty('ArrayList')}&lt;${ib?cb('Boolean'):cs('String')}&gt; ${a}s;`;
+  }).join('\n');
+  if(S.attrGroup<ATTR_GROUPS.length){
+    const g2=ATTR_GROUPS[S.attrGroup];
+    bd.innerHTML=`<p style="font-size:12px;color:var(--ink3);margin-bottom:8px">Next user requirement:</p>
+    <button class="btn btn-amber btn-full" onclick="s2add()">${esc(g2.label)}</button>`;
+  } else {
+    bd.innerHTML=`<div class="callout"><strong>11 ArrayLists</strong> for one type of data. How many things must you remember just to add one note?</div>`;
+  }
+}
+function s2add() { S.attrs=[...S.attrs,...ATTR_GROUPS[S.attrGroup].attrs]; S.attrGroup++; renderS2(); }
+
+/* ─── S3 ─── */
+function s3() {
+  const m = STAGE_META[3];
+  const params=ALL_ATTRS.map(a=>{ const ib=BOOL_ATTRS.includes(a);
+    return `  ${ib?cb('boolean'):cs('String')} ${a}`;
+  }).join(',\n');
+  const adds=ALL_ATTRS.map(a=>`  ${a}s.add(${a});`).join('\n');
+  setBody(`${impBanner(m)}${thinkBubble(m)}
+    <div class="narr">Here is the <code>addNote()</code> method. Every call must touch every list.</div>
+    <div class="ctr-row">
+      <div class="ctr-card"><div class="ctr-num" style="color:var(--coral)">11</div><div class="ctr-lbl">parameters</div></div>
+      <div class="ctr-card"><div class="ctr-num" style="color:var(--coral)">11</div><div class="ctr-lbl">ArrayLists</div></div>
+      <div class="ctr-card"><div class="ctr-num" style="color:var(--coral)">11</div><div class="ctr-lbl">add() calls</div></div>
+    </div>
+    <div class="code-block" style="max-height:220px;overflow-y:auto">${kw('void')} addNote(\n${params}\n) {\n${adds}\n}</div>
+    <div class="callout">Now imagine a teammate forgets to update one of those 11 lists when adding a new attribute...</div>`);
+}
+
+/* ─── S4 ─── */
+function s4() {
+  const m = STAGE_META[3];
+  setBody(`${impBanner(m)}${thinkBubble(m)}
+    <div class="narr">Adding the <strong>attachment</strong> field — but someone forgot <code>attachments.add()</code>.</div>
+    <div id="s4data"></div>
+    <div id="s4choice"></div>`);
+  renderS4(false);
+  setTimeout(()=>{ renderS4(true); renderS4Choices(); }, 900);
+}
+function renderS4(bug) {
+  const items=[
+    {n:'titles[2]',v:'Python'},{n:'contents[2]',v:'Lists'},{n:'categories[2]',v:'Programming'},
+    {n:'createdDates[2]',v:'Sep 8'},{n:'modifiedDates[2]',v:'Sep 8'},{n:'pinned[2]',v:'false'},
+    {n:'archived[2]',v:'false'},{n:'favorite[2]',v:'true'},{n:'colors[2]',v:'Blue'},
+    {n:'reminders[2]',v:'Tomorrow'},{n:'attachments[2]',v:bug?null:'notes.pdf'},
+  ];
+  let h='';
+  if(bug) h+=`<div class="warn-bar">⚠️ Data Misalignment — attachments[2] is missing!</div>`;
+  items.forEach(it=>{ const miss=bug&&it.v===null;
+    h+=`<div class="pl-item${miss?' miss':''}" style="margin-bottom:4px;font-family:var(--mono);font-size:11.5px">
+      <span class="idx" style="min-width:120px">${it.n}</span>
+      <span>${miss?'❌ missing — index out of sync':'→ '+esc(it.v)}</span>
+    </div>`;
+  });
+  const d=g('s4data'); if(d)d.innerHTML=h;
+}
+function renderS4Choices() {
+  const opts=['ArrayList is bad','Java is bad','Too many related pieces to maintain','Notes cannot have many attributes'];
+  const c=g('s4choice'); if(!c)return;
+  c.innerHTML=`<p style="font-size:13px;font-weight:600;color:var(--ink);margin:12px 0 6px">What became difficult here?</p>
+  <div class="choice-list">${opts.map((o,i)=>`<button class="choice-btn" onclick="s4pick(${i})">${esc(o)}</button>`).join('')}</div>`;
+}
+function s4pick(i) {
+  document.querySelectorAll('.choice-btn').forEach((b,bi)=>{
+    b.className='choice-btn'+(bi===2?' correct':bi===i?' wrong':''); b.onclick=null;
+  });
+  const c=g('s4choice');
+  if(c) c.insertAdjacentHTML('beforeend',`<div class="reveal-box">Exactly — <strong>too many related pieces to maintain</strong>. The bug is not in ArrayList or Java. It's in how we've organized the data — scattered across 11 separate lists that all need to stay in sync.</div>`);
+}
+
+/* ─── S5 ─── */
+function s5() {
+  const m = STAGE_META[4];
+  S.s5props=[];
+  setBody(`${impBanner(m)}${thinkBubble(m)}
+    <div class="narr">Look at all these properties. Do they describe different things, or <strong>one</strong> thing?</div>
+    <div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:12px" id="s5pills">
+      ${ALL_ATTRS.map(a=>`<div class="pill pill-purple" id="pp${a}" onclick="s5pick('${a}')">${a}</div>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--ink3);margin-bottom:10px" id="s5prog">Tap each property to group it →</div>
+    <div id="s5box" style="min-height:60px"></div>
+    <div id="s5rev"></div>`);
+}
+function s5pick(name) {
+  if(S.s5props.includes(name))return;
+  S.s5props.push(name);
+  const p=g('pp'+name); if(p){p.className='pill selected';p.onclick=null;}
+  const pg=g('s5prog'); if(pg)pg.textContent=`${S.s5props.length} / ${ALL_ATTRS.length} placed — ${ALL_ATTRS.length-S.s5props.length} remaining`;
+  const bx=g('s5box'); if(bx)bx.innerHTML=clsBox('Note',S.s5props,[],'green');
+  if(S.s5props.length===ALL_ATTRS.length){
+    const rv=g('s5rev');
+    if(rv)rv.innerHTML=`<div class="reveal-box mt8">All 11 properties describe <strong>one Note</strong>. They belong together. This is what a class is: a bundle of data that belongs to the same thing.</div>`;
+  }
+}
+
+/* ─── S6 ─── */
+function s6() {
+  const m = STAGE_META[5];
+  setBody(`${impBanner(m)}${thinkBubble(m)}
+    <div class="narr">With a <code>Note</code> class, those 11 parallel ArrayLists <strong>collapse into one</strong>.</div>
+    <div class="ba-grid">
+      <div>
+        <div class="ba-lbl">Before — 11 ArrayLists</div>
+        ${code(ALL_ATTRS.map(a=>`${ty('ArrayList')}&lt;${BOOL_ATTRS.includes(a)?cb('Boolean'):cs('String')}&gt; ${a}s;`).join('\n'))}
+      </div>
+      <div class="ba-arrow">→</div>
+      <div>
+        <div class="ba-lbl">After — 1 ArrayList</div>
+        ${code(`${ty('ArrayList')}&lt;${ty('Note')}&gt; notes;`)}
+        <div id="s6tree"></div>
+      </div>
+    </div>
+    <div class="callout">Each item in the list is a <strong>whole Note object</strong>. All 11 fields travel together. Nothing can go out of sync.</div>`);
+  setTimeout(()=>{
+    const t=g('s6tree');
+    if(t)t.innerHTML=code(`notes[0]\n  title: "Java"\n  content: "OOP"\n  pinned: true\n  ${cm('// all 11 fields together')}\n\nnotes[1]\n  title: "SQL"\n  ${cm('// ...')}`);
+  },400);
+}
+
+/* ─── S7 ─── */
+function s7() {
+  const m = STAGE_META[6];
+  S.actsSorted={};
+  setBody(`${impBanner(m)}${thinkBubble(m)}
+    <div class="narr">We have 100 Note objects. These actions need a home. Do they belong <em>inside</em> a Note?</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px" id="s7pills">
+      ${ACTIONS.map(a=>`<div class="pill pill-purple" id="act${a}" onclick="s7sort('${a}')">${a}</div>`).join('')}
+    </div>
+    <div class="drop-grid">
+      <div><div class="drop-zone-lbl">Inside Note?</div><div class="drop-zone zone-no" id="s7no"><div style="font-size:11px;color:var(--coral-d)">Drop here if yes</div></div></div>
+      <div><div class="drop-zone-lbl">Belongs in a manager?</div><div class="drop-zone zone-yes" id="s7yes"><div style="font-size:11px;color:var(--teal-d)">Drop here if yes</div></div></div>
+    </div>
+    <div id="s7rev"></div>`);
+}
+function s7sort(a) {
+  if(S.actsSorted[a])return;
+  S.actsSorted[a]='mgr';
+  const p=g('act'+a); if(p){p.className='pill selected';p.onclick=null;}
+  const drop=g('s7yes');
+  const pill=document.createElement('div');
+  pill.className='pill selected'; pill.style.margin='2px'; pill.textContent=a;
+  drop.appendChild(pill);
+  if(Object.keys(S.actsSorted).length===ACTIONS.length){
+    const rv=g('s7rev');
+    if(rv)rv.innerHTML=`<div class="reveal-box">None of these belong inside a Note. A Note <em>has</em> data — it doesn't manage other notes. We need a separate class.
+    ${code(`${kw('class')} ${ty('NotesManager')} {\n  ${ty('ArrayList')}&lt;${ty('Note')}&gt; notes;\n\n  ${kw('void')} addNote(${ty('Note')} note) { }\n  ${kw('void')} deleteNote(${ty('Note')} note) { }\n  ${kw('void')} searchNote(${ty('String')} kw) { }\n  ${kw('void')} editNote(${ty('Note')} note) { }\n  ${kw('void')} displayNotes() { }\n}`)}</div>`;
+  }
+}
+
+/* ─── S8  (animated diagram) ─── */
+function s8() {
+  const m = STAGE_META[7];
+  setBody(`${impBanner(m)}${thinkBubble(m)}
+    <div class="narr">Three classes, each with one clear job — watch the diagram build itself.</div>
+    <div class="anim-diagram" id="anim-dia">
+
+      <!-- NotesApp -->
+      <div class="dia-layer">
+        <div class="dia-node node-gray" id="dn-app" style="transition-delay:.1s">
+          <div class="dia-node-head">NotesApp</div>
+          <div class="dia-node-body">
+            <div class="dia-node-row mth">+ main()</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- connector 1 -->
+      <div class="dia-connector" id="dconn1">
+        <div class="dia-line" id="dline1" style="background:linear-gradient(180deg,#94A3B8,var(--purple))"></div>
+        <div class="dia-conn-lbl">uses</div>
+        <div class="dia-arrow-head" id="darr1"></div>
+      </div>
+
+      <!-- NotesManager -->
+      <div class="dia-layer">
+        <div class="dia-node node-purple" id="dn-mgr" style="transition-delay:.5s">
+          <div class="dia-node-head">NotesManager</div>
+          <div class="dia-node-body">
+            <div class="dia-node-row"><span class="ts">List&lt;Note&gt;</span> notes</div>
+            <hr style="border:none;border-top:1px solid var(--border);margin:5px 0">
+            <div class="dia-node-row mth">+ addNote(note)</div>
+            <div class="dia-node-row mth">+ deleteNote(note)</div>
+            <div class="dia-node-row mth">+ searchNote(kw)</div>
+            <div class="dia-node-row mth">+ editNote(note)</div>
+            <div class="dia-node-row mth">+ displayNotes()</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- connector 2 -->
+      <div class="dia-connector" id="dconn2">
+        <div class="dia-line" id="dline2" style="background:linear-gradient(180deg,var(--purple),var(--teal))"></div>
+        <div class="dia-conn-lbl">manages</div>
+        <div class="dia-arrow-head" id="darr2" style="border-top-color:var(--teal)"></div>
+      </div>
+
+      <!-- Note objects -->
+      <div class="dia-notes-row">
+        ${[1,2,3].map((n,i)=>`
+        <div class="dia-node node-teal" id="dn-note${n}" style="transition-delay:${.9+i*.15}s">
+          <div class="dia-node-head">Note ${n}</div>
+          <div class="dia-node-body">
+            <div class="dia-node-row"><span class="ts">String</span> title</div>
+            <div class="dia-node-row"><span class="ts">String</span> content</div>
+            <div class="dia-node-row"><span class="ts">String</span> category</div>
+            <div class="dia-node-row"><span class="tb">bool</span> pinned</div>
+            <div class="dia-node-row" style="color:var(--ink3);font-size:10px">+ 7 more...</div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div id="s8-code-area"></div>
+    <button class="btn btn-ghost" id="s8-code-btn" onclick="s8toggleCode()" style="margin-top:4px">See code transformation</button>
+  `);
+
+  // Animate nodes in sequence
+  setTimeout(()=>{ const n=g('dn-app'); if(n)n.classList.add('visible'); },200);
+  setTimeout(()=>{ const l=g('dline1'),a=g('darr1'); if(l)l.classList.add('visible'); if(a)a.classList.add('visible'); },550);
+  setTimeout(()=>{ const n=g('dn-mgr'); if(n)n.classList.add('visible'); },700);
+  setTimeout(()=>{ const l=g('dline2'),a=g('darr2'); if(l)l.classList.add('visible'); if(a)a.classList.add('visible'); },1050);
+  [1,2,3].forEach((n,i)=>{ setTimeout(()=>{ const el=g('dn-note'+n); if(el)el.classList.add('visible'); },1200+i*160); });
+}
+function s8toggleCode() {
+  const area=g('s8-code-area'), btn=g('s8-code-btn');
+  if(area.innerHTML){ area.innerHTML=''; btn.textContent='See code transformation'; return; }
+  btn.textContent='Hide code';
+  area.innerHTML=`<div class="ba-grid" style="margin-top:12px">
+    <div>
+      <div class="ba-lbl">Before</div>
+      ${code(`${kw('class')} ${ty('NotesApp')} {\n  ${ty('ArrayList')}&lt;${cs('String')}&gt; titles;\n  ${ty('ArrayList')}&lt;${cs('String')}&gt; contents;\n  ${cm('// ...9 more lists')}\n\n  ${kw('void')} addNote(...) { }\n  ${kw('void')} deleteNote(...) { }\n}`)}
+    </div>
+    <div class="ba-arrow">→</div>
+    <div>
+      <div class="ba-lbl">After</div>
+      ${code(`${kw('class')} ${ty('Note')} {\n  ${cs('String')} title;\n  ${cb('boolean')} pinned;\n  ${cm('// + 9 more')}\n}\n\n${kw('class')} ${ty('NotesManager')} {\n  ${ty('ArrayList')}&lt;${ty('Note')}&gt; notes;\n  ${kw('void')} addNote(${ty('Note')} n) {}\n}`)}
+    </div>
+  </div>`;
+}
+
+/* ─── S9 (Reflection) ─── */
+function s9() {
+  const m = STAGE_META[8];
+  const qs=[
+    {q:'Why did we create the Note class?', a:'Because title, content, category, pinned, and the rest all describe one Note. Data that belongs together should live together.'},
+    {q:'Why did we create NotesManager?',   a:'Because managing many notes is a separate responsibility. A Note should not manage other notes.'},
+    {q:'Could everything stay in one class technically?', a:'Yes — Java will not stop you. But it becomes harder to read, test, and change as it grows.'},
+    {q:'Then why separate it?', a:'Different things and different responsibilities should be separate. That is the core insight of object-oriented design.'},
+  ];
+  let qHtml='';
+  for(let i=0;i<=S.refStep&&i<qs.length;i++){
+    const q=qs[i];
+    qHtml+=`<div class="ref-q"><div class="ref-qt">${i+1}. ${q.q}</div>
+    ${i<S.refStep
+      ?`<div class="ref-ans">${q.a}</div>`
+      :`<button class="btn btn-ghost" style="font-size:12px" onclick="s9ans(${i})">Reveal answer</button><div id="rv${i}"></div>`
+    }</div>`;
+  }
+  let finalHtml='';
+  if(S.refStep>=qs.length){
+    finalHtml=`<div class="final-card">
+      <div class="final-hed">Don't create classes because someone tells you to.</div>
+      <div class="final-sub">Instead, ask these questions for every new system:</div>
+      <div class="final-flow">
+        <div class="ff-item">What is the <strong>thing</strong>?</div>
+        <div class="ff-arr">↓</div>
+        <div class="ff-item">What <strong>data</strong> belongs to that thing?</div>
+        <div class="ff-arr">↓</div>
+        <div class="ff-item">What does that thing <strong>do</strong>?</div>
+        <div class="ff-arr">↓</div>
+        <div class="ff-item">Who <strong>manages many</strong> of those things?</div>
+        <div class="ff-arr">↓</div>
+        <div class="ff-item">What are the different <strong>responsibilities</strong>?</div>
+      </div>
+      <div class="final-eq">Different things + Different responsibilities = Different classes</div>
+      <div class="try-grid">
+        ${['Student Management','Movie Watchlist','Library','Shopping Cart','Employee Records'].map(p=>
+          `<button class="try-btn" onclick="tryProblem('${p}')">${p} →</button>`
+        ).join('')}
+      </div>
+    </div>`;
+  }
+  setBody(`${impBanner(m)}${thinkBubble(m)}
+    <div class="narr">What did <em>you</em> discover — not what I told you?</div>
+    ${qHtml}
+    ${finalHtml||(!S.refStep?'':`<div style="padding:20px;text-align:center;color:var(--ink3);font-size:13px">Answer each question to unlock the final principle.</div>`)}`);
+}
+function s9ans(i) {
+  const answers=[
+    'Because title, content, category, pinned, and the rest all describe one Note. Data that belongs together should live together.',
+    'Because managing many notes is a separate responsibility. A Note should not manage other notes.',
+    'Yes — Java will not stop you. But it becomes harder to read, test, and change as it grows.',
+    'Different things and different responsibilities should be separate. That is the core insight of object-oriented design.',
+  ];
+  const rv=g('rv'+i);
+  if(rv)rv.innerHTML=`<div class="ref-ans" style="animation:popIn .3s ease-out">${answers[i]}</div>`;
+  S.refStep=i+1;
+  setTimeout(()=>s9(), 500);
+}
+function tryProblem(name) {
+  alert(`Great choice!\n\nFor "${name}", ask yourself:\n• What is the central THING? (e.g. a Student)\n• What DATA does it hold? (name, id, grade...)\n• What MANAGES many of them? (StudentManager?)\n• What RESPONSIBILITIES are separate?\n\nTry naming the classes before looking them up!`);
+}
+
+/* ═══════════════════════════════ INIT ═══════════════════════════════ */
+render();
+</script>
+</body>
+</html>
