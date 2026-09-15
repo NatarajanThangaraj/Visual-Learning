@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AssetFlow — the desk that keeps track</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05060F;--s1:#0A0C1C;--s2:#0F1330;--s3:#151A3E;
+  --bd:#222A5C;--bd2:#33409A;
+  --tx:#EAF0FF;--tx2:#8FA4CC;--tx3:#4A5B8A;
+  --blue:#3B82F6;--purple:#8B5CF6;--cyan:#22D3EE;
+  --glow-b:rgba(59,130,246,.45);--glow-p:rgba(139,92,246,.45);
+  --glass:rgba(255,255,255,.045);--hair:rgba(255,255,255,.09);
+  --r:14px;--r2:22px;
+}
+html,body{height:100%}
+body{
+  font-family:'Poppins',system-ui,sans-serif;
+  background:var(--bg);color:var(--tx);overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* ambient light */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(60% 50% at 18% 8%,rgba(59,130,246,.16),transparent 70%),
+    radial-gradient(55% 50% at 85% 90%,rgba(139,92,246,.16),transparent 70%);
+}
+
+.app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+/* takes no space, but stays rendered so its gradients keep painting */
+.defs{position:absolute;width:0;height:0;overflow:hidden}
+
+/* ─────────── header + toggle ─────────── */
+.top{
+  flex:none;display:flex;align-items:center;gap:16px;
+  padding:14px clamp(14px,3vw,28px);
+}
+.brand{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+.brand .mark{
+  width:28px;height:28px;border-radius:9px;flex:none;
+  background:linear-gradient(140deg,var(--blue),var(--purple));
+  box-shadow:0 0 18px var(--glow-b);
+  display:grid;place-items:center;
+}
+.brand .mark svg{width:16px;height:16px}
+.brand b{font-size:15px;font-weight:600;letter-spacing:.2px}
+
+.toggle{
+  flex:none;position:relative;display:flex;padding:5px;gap:4px;
+  background:var(--glass);border:1px solid var(--hair);
+  border-radius:999px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.thumb{
+  position:absolute;top:5px;left:5px;height:calc(100% - 10px);
+  border-radius:999px;background:linear-gradient(120deg,var(--blue),var(--purple));
+  box-shadow:0 0 22px var(--glow-p),0 2px 10px rgba(0,0,0,.4);
+  transition:transform .42s cubic-bezier(.4,1.3,.4,1),width .42s cubic-bezier(.4,1.3,.4,1);
+}
+.seg{
+  position:relative;z-index:1;display:flex;align-items:center;gap:8px;
+  padding:9px 18px;border:0;background:none;cursor:pointer;
+  font-family:inherit;font-size:13.5px;font-weight:500;color:var(--tx2);
+  border-radius:999px;transition:color .3s;white-space:nowrap;
+}
+.seg svg{width:16px;height:16px}
+.seg.is-on{color:#fff;font-weight:600}
+.count{
+  flex:1;display:flex;justify-content:flex-end;gap:7px;align-items:center;
+  font-size:12px;color:var(--tx3)
+}
+.count b{
+  font-size:12.5px;font-weight:600;color:var(--tx2);
+  background:var(--glass);border:1px solid var(--hair);
+  padding:4px 10px;border-radius:999px;
+}
+
+/* ─────────── stage ─────────── */
+.stage{flex:1;position:relative;min-height:0}
+/* `display` is the authority on which view is up, so a view is never left
+   half-faded if motion is unavailable. The animation carries no fill-mode:
+   if it never runs, the resting state is simply the finished one. */
+.view{
+  position:absolute;inset:0;padding:0 clamp(14px,3vw,28px) clamp(14px,2.4vh,22px);
+  display:none;flex-direction:column;gap:14px;
+}
+.view.is-on{display:flex;animation:viewIn .4s cubic-bezier(.3,1,.4,1)}
+
+/* ─────────── employee view ─────────── */
+.desk{
+  flex:1;min-height:0;position:relative;display:flex;flex-direction:column;
+  border-radius:var(--r2);border:1px solid var(--hair);background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);overflow:hidden;
+}
+.desk-head{
+  flex:none;display:flex;align-items:center;gap:10px;
+  padding:16px 20px 0;
+}
+.who{
+  width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-size:12.5px;font-weight:600;color:#fff;
+  background:linear-gradient(140deg,var(--blue),var(--purple));
+  box-shadow:0 0 14px var(--glow-b);
+}
+.desk-head span{font-size:14px;font-weight:500;color:var(--tx2)}
+
+.tiles{
+  flex:1;min-height:0;overflow:auto;
+  display:flex;flex-wrap:wrap;align-content:center;justify-content:center;
+  gap:clamp(12px,2vw,20px);padding:16px 20px 22px;
+}
+.tile{
+  width:clamp(104px,13vw,138px);padding:18px 12px 14px;
+  border-radius:var(--r);text-align:center;cursor:default;
+  background:linear-gradient(170deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  border:1px solid var(--hair);
+  transition:transform .3s cubic-bezier(.3,1.4,.5,1),box-shadow .3s,border-color .3s;
+  animation:float 5.5s ease-in-out infinite;
+}
+.tile:nth-child(2n){animation-delay:-1.8s}
+.tile:nth-child(3n){animation-delay:-3.4s}
+.tile:hover{
+  transform:translateY(-9px);border-color:rgba(139,92,246,.5);
+  box-shadow:0 14px 34px rgba(0,0,0,.5),0 0 26px var(--glow-p);
+}
+.tile svg{width:clamp(38px,4.6vw,50px);height:clamp(38px,4.6vw,50px)}
+.tile .tag{
+  margin-top:10px;font-size:11px;font-weight:600;letter-spacing:.7px;
+  color:var(--tx2);
+}
+/* no fill-mode: a tile that never gets to animate is simply already there */
+.tile.is-new{animation:landing .75s cubic-bezier(.2,1.5,.4,1),float 5.5s ease-in-out 1s infinite}
+.tile.is-new::after{
+  content:'';position:absolute;inset:-1px;border-radius:var(--r);
+  box-shadow:0 0 0 2px var(--purple),0 0 34px var(--glow-p);
+  animation:fadeGlow 1.6s ease-out forwards;pointer-events:none;
+}
+.tile{position:relative}
+.empty{
+  margin:auto;text-align:center;color:var(--tx3);font-size:13.5px;
+}
+.empty svg{width:44px;height:44px;opacity:.35;margin-bottom:10px}
+
+.fab{
+  position:absolute;right:clamp(18px,3vw,32px);bottom:clamp(18px,3vh,30px);
+  width:58px;height:58px;border-radius:50%;border:0;cursor:pointer;z-index:5;
+  background:linear-gradient(140deg,var(--blue),var(--purple));
+  box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 28px var(--glow-p);
+  display:grid;place-items:center;color:#fff;
+  transition:transform .3s cubic-bezier(.3,1.5,.5,1),box-shadow .3s;
+  animation:breathe 3.6s ease-in-out infinite;
+}
+.fab svg{width:24px;height:24px}
+.fab:hover{transform:scale(1.09) rotate(90deg);box-shadow:0 14px 38px rgba(0,0,0,.5),0 0 40px var(--glow-p)}
+.fab:active{transform:scale(.95) rotate(90deg)}
+
+/* ─────────── picker sheet ─────────── */
+.scrim{
+  position:absolute;inset:0;z-index:20;background:rgba(3,4,12,.72);
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  display:none;
+}
+.scrim.is-on{display:block;animation:fadeIn .3s ease}
+.sheet{
+  position:absolute;z-index:21;left:50%;top:50%;display:none;
+  transform:translate(-50%,-50%);
+  width:min(560px,calc(100% - 36px));padding:22px;
+  border-radius:var(--r2);border:1px solid rgba(255,255,255,.14);
+  background:linear-gradient(165deg,rgba(21,26,62,.96),rgba(10,12,28,.97));
+  box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 50px rgba(139,92,246,.2);
+}
+.sheet.is-on{display:block;animation:sheetIn .44s cubic-bezier(.3,1.4,.5,1)}
+.picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px}
+.pick{
+  padding:16px 8px 13px;border-radius:var(--r);cursor:pointer;text-align:center;
+  background:rgba(255,255,255,.04);border:1px solid var(--hair);color:var(--tx2);
+  transition:transform .26s cubic-bezier(.3,1.5,.5,1),border-color .26s,box-shadow .26s,background .26s;
+}
+.pick svg{width:34px;height:34px}
+.pick small{display:block;margin-top:8px;font-size:11.5px;font-weight:500}
+.pick:hover{
+  transform:translateY(-6px);background:rgba(139,92,246,.14);
+  border-color:rgba(139,92,246,.6);box-shadow:0 0 26px var(--glow-p);color:var(--tx);
+}
+
+/* the flying request */
+.orb{
+  position:absolute;z-index:30;width:20px;height:20px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff,var(--purple) 55%,var(--blue));
+  box-shadow:0 0 26px var(--glow-p),0 0 60px var(--glow-b);
+  opacity:0;pointer-events:none;
+}
+
+/* ─────────── admin view ─────────── */
+.panel{
+  border-radius:var(--r2);border:1px solid var(--hair);background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  display:flex;flex-direction:column;min-height:0;
+}
+.p-head{
+  flex:none;display:flex;align-items:center;gap:10px;padding:14px 18px 0;
+}
+.p-head .dot{width:7px;height:7px;border-radius:50%;background:var(--blue);box-shadow:0 0 10px var(--glow-b)}
+.p-head .dot.p{background:var(--purple);box-shadow:0 0 10px var(--glow-p)}
+.p-head .lbl{font-size:13px;font-weight:500;color:var(--tx2);flex:1}
+
+/* A — request line */
+.line-panel{flex:none;height:clamp(150px,30vh,208px)}
+.lane-wrap{flex:1;min-height:0;display:flex;align-items:center;gap:14px;padding:12px 18px 16px}
+.lane{
+  flex:1;min-width:0;height:100%;display:flex;align-items:center;gap:12px;
+  overflow-x:auto;overflow-y:hidden;padding:2px 2px;scrollbar-width:none;
+}
+.lane::-webkit-scrollbar{display:none}
+.req{
+  flex:none;width:clamp(122px,15vw,150px);padding:13px 12px;position:relative;
+  border-radius:var(--r);cursor:pointer;text-align:center;
+  background:linear-gradient(170deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid var(--hair);
+  transition:transform .3s cubic-bezier(.3,1.4,.5,1),box-shadow .3s,border-color .3s,opacity .3s;
+}
+.req .av{
+  width:26px;height:26px;border-radius:50%;margin:0 auto 9px;display:grid;place-items:center;
+  font-size:11px;font-weight:600;color:#fff;
+}
+.req svg{width:30px;height:30px}
+.req small{display:block;margin-top:8px;font-size:11px;color:var(--tx3);font-weight:500}
+.req:hover{transform:translateY(-6px);box-shadow:0 12px 28px rgba(0,0,0,.45)}
+.req.is-next{
+  border-color:rgba(59,130,246,.55);
+  box-shadow:0 0 0 1px rgba(59,130,246,.3),0 0 26px var(--glow-b);
+}
+.req.is-next::before{
+  content:'';position:absolute;top:8px;right:8px;width:6px;height:6px;border-radius:50%;
+  background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:blink 1.8s ease-in-out infinite;
+}
+.req.nudge{animation:nudge .45s cubic-bezier(.3,.9,.4,1)}
+.lane-empty{margin:auto;color:var(--tx3);font-size:13px}
+
+.process{
+  flex:none;padding:13px 22px;border:0;border-radius:999px;cursor:pointer;
+  font-family:inherit;font-size:13.5px;font-weight:600;color:#fff;
+  background:linear-gradient(120deg,var(--blue),var(--purple));
+  box-shadow:0 8px 24px rgba(0,0,0,.4),0 0 24px var(--glow-b);
+  transition:transform .26s cubic-bezier(.3,1.5,.5,1),box-shadow .26s,opacity .26s;
+}
+.process:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.45),0 0 34px var(--glow-p)}
+.process:active:not(:disabled){transform:translateY(0) scale(.97)}
+.process:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
+
+/* centre stage card — centred by the grid wrapper, never by transform,
+   because the animation owns `transform` outright */
+.stagewrap{
+  position:absolute;inset:0;z-index:25;display:grid;place-items:center;
+  pointer-events:none;
+}
+.stagecard{
+  position:relative;transform:scale(.8);
+  width:210px;padding:22px 18px;border-radius:var(--r2);text-align:center;
+  background:linear-gradient(165deg,rgba(24,30,70,.98),rgba(10,12,28,.98));
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 44px var(--glow-p);
+  opacity:0;visibility:hidden;pointer-events:none;
+}
+.stagecard.is-on{visibility:visible}
+.stagecard .av{width:32px;height:32px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-size:12.5px;font-weight:600;color:#fff}
+.stagecard svg{width:46px;height:46px}
+.stagecard .stamp{
+  margin-top:16px;padding:9px 0;border-radius:10px;
+  font-size:14px;font-weight:700;letter-spacing:2px;color:#fff;
+  background:linear-gradient(120deg,var(--blue),var(--purple));
+  box-shadow:0 0 26px var(--glow-p);
+  opacity:0;transform:scale(2.4) rotate(-8deg);
+}
+.ring{
+  position:absolute;z-index:24;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;
+  border-radius:50%;border:2px solid var(--purple);opacity:0;pointer-events:none;
+}
+
+/* B — find by tag */
+.find-panel{flex:1;min-height:0}
+.scanbar{
+  flex:none;margin:12px 18px 0;position:relative;
+}
+.scanbar svg{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  width:18px;height:18px;color:var(--tx3);pointer-events:none;transition:color .3s;
+}
+.scan{
+  width:100%;padding:14px 16px 14px 44px;border-radius:999px;
+  font-family:inherit;font-size:14px;font-weight:500;letter-spacing:1px;color:var(--tx);
+  background:rgba(255,255,255,.04);border:1px solid var(--hair);outline:none;
+  transition:border-color .3s,box-shadow .3s,background .3s;
+}
+.scan::placeholder{color:var(--tx3);letter-spacing:.3px;font-weight:400}
+.scan:focus{
+  border-color:rgba(59,130,246,.6);background:rgba(59,130,246,.07);
+  box-shadow:0 0 0 3px rgba(59,130,246,.12),0 0 26px var(--glow-b);
+}
+.scanbar.is-hit svg{color:var(--cyan)}
+.scanbar.is-hit .scan{
+  border-color:rgba(34,211,238,.65);background:rgba(34,211,238,.07);
+  box-shadow:0 0 0 3px rgba(34,211,238,.12),0 0 30px rgba(34,211,238,.35);
+}
+
+.chips{
+  flex:1;min-height:0;overflow:auto;
+  display:flex;flex-wrap:wrap;gap:10px;padding:14px 18px 18px;align-content:flex-start;
+  /* centred when there is room to spare; ignored by engines that don't know
+     `safe`, which simply keeps the flex-start above */
+  align-content:safe center;
+}
+.chip{
+  flex:none;display:flex;align-items:center;gap:10px;padding:9px 14px 9px 10px;
+  border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--hair);
+  transition:transform .35s cubic-bezier(.3,1.4,.5,1),box-shadow .35s,border-color .35s,opacity .35s,filter .35s;
+}
+.chip svg{width:22px;height:22px;flex:none}
+.chip .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:9.5px;font-weight:600;color:#fff;flex:none}
+.chip .t{font-size:11.5px;font-weight:600;letter-spacing:.9px;color:var(--tx2)}
+.chip .n{font-size:11.5px;font-weight:400;color:var(--tx3)}
+.chips.is-filtering .chip{opacity:.22;filter:saturate(.3)}
+.chips.is-filtering .chip.is-hit{
+  opacity:1;filter:none;transform:scale(1.07);
+  border-color:rgba(34,211,238,.7);
+  box-shadow:0 0 0 1px rgba(34,211,238,.4),0 0 34px rgba(34,211,238,.45);
+}
+.chips.is-filtering .chip.is-hit .t{color:#fff}
+.chips.is-filtering .chip.is-hit .n{color:var(--tx2)}
+
+@keyframes viewIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetIn{
+  from{opacity:0;transform:translate(-50%,-50%) scale(.9)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes breathe{0%,100%{box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 24px var(--glow-p)}50%{box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 42px var(--glow-p)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes nudge{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}45%{transform:translateX(6px)}70%{transform:translateX(-3px)}}
+@keyframes landing{0%{transform:scale(.4) translateY(-30px);opacity:0}60%{transform:scale(1.12) translateY(0);opacity:1}100%{transform:scale(1)}}
+@keyframes fadeGlow{0%{opacity:1}100%{opacity:0}}
+
+/* short viewports — the embedded frame is ~1140x480 */
+@media (max-height:560px){
+  .top{padding:9px clamp(12px,3vw,22px)}
+  .seg{padding:7px 14px;font-size:12.5px}
+  .brand b{font-size:14px}
+  .view{gap:10px;padding:0 clamp(12px,3vw,22px) 12px}
+  .line-panel{height:154px}
+  .p-head{padding:10px 15px 0}
+  .lane-wrap{padding:8px 15px 12px;gap:10px}
+  .req{width:112px;padding:9px 10px}
+  .req svg{width:24px;height:24px}
+  .req .av{width:22px;height:22px;margin-bottom:6px;font-size:10px}
+  .req small{margin-top:5px;font-size:10px}
+  .process{padding:11px 17px;font-size:12.5px}
+  .scanbar{margin:9px 15px 0}
+  .scan{padding:11px 14px 11px 40px;font-size:13px}
+  .chips{padding:10px 15px 14px;gap:8px}
+  .tiles{padding:10px 16px 16px;gap:12px}
+  .tile{width:100px;padding:13px 10px 11px}
+  .tile svg{width:34px;height:34px}
+  .desk-head{padding:11px 16px 0}
+  .fab{width:50px;height:50px;right:18px;bottom:16px}
+  .stagecard{width:180px;padding:17px 15px}
+  .stagecard svg{width:38px;height:38px}
+}
+@media (max-width:640px){
+  .brand b,.count{display:none}
+  .seg{padding:9px 15px}
+  .lane-wrap{flex-direction:column;align-items:stretch;gap:9px}
+  .lane{height:auto}
+  .line-panel{height:auto;flex:none}
+  .view{overflow:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- every icon gradient, defined exactly once. it lives outside both views so
+     it is never inside a display:none subtree, which would stop the icons
+     that reference it from painting. -->
+<svg class="defs" aria-hidden="true" focusable="false"><defs>
+  <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#60A5FA"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient>
+  <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#3B82F6"/></linearGradient>
+  <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A78BFA"/><stop offset="1" stop-color="#EC4899"/></linearGradient>
+  <linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34D399"/><stop offset="1" stop-color="#22D3EE"/></linearGradient>
+  <linearGradient id="g5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBBF24"/><stop offset="1" stop-color="#F472B6"/></linearGradient>
+</defs></svg>
+
+<div class="app" id="app">
+
+  <header class="top">
+    <div class="brand">
+      <span class="mark" id="mark"></span>
+      <b>AssetFlow</b>
+    </div>
+    <div class="toggle" id="toggle">
+      <span class="thumb" id="thumb"></span>
+      <button class="seg is-on" data-view="desk" id="segDesk" aria-label="My desk"></button>
+      <button class="seg" data-view="admin" id="segAdmin" aria-label="Front desk"></button>
+    </div>
+    <div class="count"><b id="waiting">0</b></div>
+  </header>
+
+  <main class="stage" id="stage">
+
+    <!-- ══════ employee ══════ -->
+    <section class="view is-on" id="viewDesk">
+      <div class="desk">
+        <div class="desk-head"><span class="who">Y</span><span>My desk</span></div>
+        <div class="tiles" id="tiles"></div>
+      </div>
+      <button class="fab" id="fab" aria-label="Request an asset"></button>
+    </section>
+
+    <!-- ══════ admin ══════ -->
+    <section class="view" id="viewAdmin">
+      <div class="panel line-panel">
+        <div class="p-head"><span class="dot"></span><span class="lbl">Waiting</span></div>
+        <div class="lane-wrap">
+          <div class="lane" id="lane"></div>
+          <button class="process" id="process">Process</button>
+        </div>
+      </div>
+      <div class="panel find-panel">
+        <div class="p-head"><span class="dot p"></span><span class="lbl">Everything handed out</span></div>
+        <div class="scanbar" id="scanbar">
+          <span id="scanIcon"></span>
+          <input class="scan" id="scan" aria-label="Find an asset by its tag" placeholder="Type a tag…" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="chips" id="chips"></div>
+      </div>
+    </section>
+
+    <div class="ring" id="ring"></div>
+    <div class="stagewrap"><div class="stagecard" id="stagecard"></div></div>
+    <div class="orb" id="orb"></div>
+    <div class="scrim" id="scrim"></div>
+    <div class="sheet" id="sheet"><div class="picks" id="picks"></div></div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<script>
+/* ════════════════════════════════════════
+   ICONS
+════════════════════════════════════════ */
+var ICON = {
+  laptop:'<svg viewBox="0 0 48 48" fill="none"><rect x="9" y="11" width="30" height="21" rx="3" fill="url(#g1)" opacity=".22"/><rect x="9" y="11" width="30" height="21" rx="3" stroke="url(#g1)" stroke-width="2.2"/><rect x="13" y="15" width="22" height="13" rx="1.5" fill="url(#g1)" opacity=".45"/><path d="M4 36h40l-3 4H7z" fill="url(#g1)" opacity=".75"/></svg>',
+  monitor:'<svg viewBox="0 0 48 48" fill="none"><rect x="6" y="8" width="36" height="25" rx="3" fill="url(#g2)" opacity=".22"/><rect x="6" y="8" width="36" height="25" rx="3" stroke="url(#g2)" stroke-width="2.2"/><rect x="10" y="12" width="28" height="17" rx="1.5" fill="url(#g2)" opacity=".45"/><path d="M19 33l-1.5 6h13L29 33z" fill="url(#g2)" opacity=".7"/><rect x="14" y="38" width="20" height="3" rx="1.5" fill="url(#g2)"/></svg>',
+  headset:'<svg viewBox="0 0 48 48" fill="none"><path d="M10 29v-5a14 14 0 0128 0v5" stroke="url(#g3)" stroke-width="2.6" stroke-linecap="round"/><rect x="5" y="26" width="9" height="14" rx="4" fill="url(#g3)" opacity=".35"/><rect x="5" y="26" width="9" height="14" rx="4" stroke="url(#g3)" stroke-width="2.2"/><rect x="34" y="26" width="9" height="14" rx="4" fill="url(#g3)" opacity=".35"/><rect x="34" y="26" width="9" height="14" rx="4" stroke="url(#g3)" stroke-width="2.2"/></svg>',
+  phone:'<svg viewBox="0 0 48 48" fill="none"><rect x="14" y="5" width="20" height="38" rx="4" fill="url(#g4)" opacity=".22"/><rect x="14" y="5" width="20" height="38" rx="4" stroke="url(#g4)" stroke-width="2.2"/><rect x="17" y="10" width="14" height="24" rx="1.5" fill="url(#g4)" opacity=".45"/><circle cx="24" cy="38" r="1.8" fill="url(#g4)"/></svg>',
+  keyboard:'<svg viewBox="0 0 48 48" fill="none"><rect x="4" y="14" width="40" height="21" rx="3" fill="url(#g5)" opacity=".2"/><rect x="4" y="14" width="40" height="21" rx="3" stroke="url(#g5)" stroke-width="2.2"/><g fill="url(#g5)" opacity=".7"><rect x="9" y="19" width="4" height="4" rx="1"/><rect x="16" y="19" width="4" height="4" rx="1"/><rect x="23" y="19" width="4" height="4" rx="1"/><rect x="30" y="19" width="4" height="4" rx="1"/><rect x="37" y="19" width="2" height="4" rx="1"/><rect x="9" y="26" width="4" height="4" rx="1"/><rect x="16" y="26" width="16" height="4" rx="1"/><rect x="35" y="26" width="4" height="4" rx="1"/></g></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.9"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5.5c0 4.3-2.9 8-7 9.5-4.1-1.5-7-5.2-7-9.5V6z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.4" stroke="currentColor" stroke-width="2"/><path d="M15.8 15.8L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  box:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+  spark:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.1 5.9L20 11l-5.9 2.1L12 19l-2.1-5.9L4 11l5.9-2.1z" fill="#fff"/></svg>'
+};
+
+/* ════════════════════════════════════════
+   DATA
+════════════════════════════════════════ */
+var TYPES = {
+  laptop:  {name:'Laptop',   pre:'LAP'},
+  monitor: {name:'Monitor',  pre:'MON'},
+  headset: {name:'Headset',  pre:'HDS'},
+  phone:   {name:'Phone',    pre:'PHN'},
+  keyboard:{name:'Keyboard', pre:'KBD'}
+};
+var ORDER = ['laptop','monitor','headset','phone','keyboard'];
+
+var PEOPLE = {
+  You:   {i:'Y', c:'linear-gradient(140deg,#3B82F6,#8B5CF6)'},
+  Meera: {i:'M', c:'linear-gradient(140deg,#F472B6,#8B5CF6)'},
+  Arjun: {i:'A', c:'linear-gradient(140deg,#22D3EE,#3B82F6)'},
+  Nila:  {i:'N', c:'linear-gradient(140deg,#34D399,#22D3EE)'},
+  Ravi:  {i:'R', c:'linear-gradient(140deg,#FBBF24,#F472B6)'}
+};
+
+var seq = {LAP:102, MON:102, HDS:102, PHN:102, KBD:102};
+
+var assets = [
+  {tag:'LAP-101', type:'laptop',   who:'You'},
+  {tag:'HDS-101', type:'headset',  who:'You'},
+  {tag:'MON-101', type:'monitor',  who:'Meera'},
+  {tag:'PHN-101', type:'phone',    who:'Arjun'},
+  {tag:'KBD-101', type:'keyboard', who:'Nila'}
+];
+
+var queue = [
+  {who:'Meera', type:'laptop'},
+  {who:'Arjun', type:'monitor'},
+  {who:'Ravi',  type:'headset'}
+];
+
+var view = 'desk';
+var busy = false;
+
+/* anime.js is a nicety, not a requirement */
+var A = (typeof anime === 'function') ? anime : null;
+/* it parks its own clock when the page is hidden, which would strand
+   anything mid-flight at its starting value — keep it ticking */
+if (A) A.suspendWhenDocumentHidden = false;
+
+/* ════════════════════════════════════════
+   SHORTHANDS
+════════════════════════════════════════ */
+function $(id){ return document.getElementById(id); }
+function av(who){
+  var p = PEOPLE[who] || PEOPLE.You;
+  return '<span class="av" style="background:'+p.c+'">'+p.i+'</span>';
+}
+function nextTag(type){
+  var pre = TYPES[type].pre;
+  return pre + '-' + (seq[pre]++);
+}
+
+/* ════════════════════════════════════════
+   RENDER
+════════════════════════════════════════ */
+function renderDesk(newTag){
+  var mine = assets.filter(function(a){ return a.who === 'You'; });
+  var el = $('tiles');
+  if (!mine.length){
+    el.innerHTML = '<div class="empty">'+ICON.box+'<div>Nothing here yet</div></div>';
+    return;
+  }
+  el.innerHTML = mine.map(function(a){
+    return '<div class="tile'+(a.tag===newTag?' is-new':'')+'">'+
+             ICON[a.type]+
+             '<div class="tag">'+a.tag+'</div>'+
+           '</div>';
+  }).join('');
+}
+
+function renderLane(){
+  var el = $('lane');
+  if (!queue.length){
+    el.innerHTML = '<div class="lane-empty">All clear</div>';
+  } else {
+    el.innerHTML = queue.map(function(q,i){
+      return '<div class="req'+(i===0?' is-next':'')+'" data-i="'+i+'">'+
+               av(q.who)+ICON[q.type]+
+               '<small>'+q.who+'</small>'+
+             '</div>';
+    }).join('');
+  }
+  $('waiting').textContent = queue.length;
+  $('process').disabled = !queue.length || busy;
+}
+
+function renderChips(){
+  $('chips').innerHTML = assets.map(function(a){
+    return '<div class="chip" data-tag="'+a.tag+'">'+
+             ICON[a.type]+av(a.who)+
+             '<span class="t">'+a.tag+'</span>'+
+             '<span class="n">'+a.who+'</span>'+
+           '</div>';
+  }).join('');
+  filterChips();
+}
+
+function renderAll(newTag){ renderDesk(newTag); renderLane(); renderChips(); }
+
+/* ════════════════════════════════════════
+   VIEW SWAP
+════════════════════════════════════════ */
+function moveThumb(){
+  var on = $(view === 'desk' ? 'segDesk' : 'segAdmin');
+  $('thumb').style.width = on.offsetWidth + 'px';
+  $('thumb').style.transform = 'translateX(' + (on.offsetLeft - 5) + 'px)';
+}
+
+function setView(next){
+  if (next === view) return;
+  view = next;
+  $('segDesk').classList.toggle('is-on', view === 'desk');
+  $('segAdmin').classList.toggle('is-on', view === 'admin');
+  moveThumb();
+
+  var show = $(view === 'desk' ? 'viewDesk' : 'viewAdmin');
+  var hide = $(view === 'desk' ? 'viewAdmin' : 'viewDesk');
+
+  /* the swap itself is pure CSS — it can never strand a view half-faded */
+  hide.classList.remove('is-on');
+  show.classList.add('is-on');
+}
+
+/* ════════════════════════════════════════
+   EMPLOYEE — request an asset
+════════════════════════════════════════ */
+function openSheet(){ $('scrim').classList.add('is-on'); $('sheet').classList.add('is-on'); }
+function closeSheet(){ $('scrim').classList.remove('is-on'); $('sheet').classList.remove('is-on'); }
+
+function request(type){
+  closeSheet();
+  queue.push({who:'You', type:type});
+  flyOrb(function(){ renderLane(); });
+}
+
+/* the request leaves the desk and heads for the admin */
+function flyOrb(done){
+  var orb = $('orb'), stage = $('stage');
+  var from = $('fab').getBoundingClientRect();
+  var to   = $('segAdmin').getBoundingClientRect();
+  var box  = stage.getBoundingClientRect();
+
+  var x0 = from.left - box.left + from.width/2 - 10;
+  var y0 = from.top  - box.top  + from.height/2 - 10;
+  var x1 = to.left   - box.left + to.width/2 - 10;
+  var y1 = to.top    - box.top  + to.height/2 - 10;
+
+  if (!A){ renderLane(); if (done) done(); return; }
+
+  orb.style.left = x0 + 'px';
+  orb.style.top  = y0 + 'px';
+
+  A.remove(orb);
+  A({
+    targets: orb,
+    keyframes:[
+      {opacity:1, scale:1.3, duration:180},
+      {translateX:(x1-x0)*0.45, translateY:(y1-y0)*0.45 - 70, scale:1, duration:340},
+      {translateX:(x1-x0), translateY:(y1-y0), scale:.5, opacity:0, duration:340}
+    ],
+    easing:'easeInOutQuad',
+    complete: function(){
+      orb.style.opacity = 0;
+      orb.style.transform = 'none';
+      pulseSeg();
+      if (done) done();
+    }
+  });
+}
+
+function pulseSeg(){
+  if (!A) return;
+  A({targets:'#segAdmin', scale:[1,1.14,1], duration:480, easing:'easeOutQuad'});
+}
+
+/* ════════════════════════════════════════
+   ADMIN — process the front of the line
+════════════════════════════════════════ */
+function process(){
+  if (busy || !queue.length) return;
+  busy = true;
+  $('process').disabled = true;
+
+  var req = queue.shift();
+  var tag = nextTag(req.type);
+  var card = $('stagecard'), ring = $('ring');
+
+  card.innerHTML = av(req.who) + ICON[req.type] +
+                   '<div class="stamp" id="stamp">' + tag + '</div>';
+  card.classList.add('is-on');
+
+  var stamp = $('stamp');
+
+  /* whoever gets here first wins — the timeline, or the watchdog below.
+     the asset must land even if the animation never runs. */
+  var settled = false;
+  function settle(){
+    if (settled) return;
+    settled = true;
+    if (A) A.remove(card);
+    card.classList.remove('is-on');
+    card.style.opacity = 0;
+    card.style.transform = 'scale(.8)';
+    assets.push({tag:tag, type:req.type, who:req.who});
+    busy = false;
+    renderAll(tag);
+    if (A){
+      A({targets:'#lane .req', translateX:[26,0],
+         delay:A.stagger(60), duration:420, easing:'easeOutCubic'});
+    }
+  }
+
+  if (!A){ settle(); return; }
+  setTimeout(settle, 3200);
+
+  var tl = A.timeline({easing:'easeOutCubic'});
+
+  /* lift into the centre */
+  tl.add({
+    targets: card,
+    opacity:[0,1],
+    scale:[.8,1],
+    translateY:[24,0],
+    duration:420
+  })
+  /* stamp the tag on */
+  .add({
+    targets: stamp,
+    opacity:[0,1],
+    scale:[2.4,1],
+    rotate:['-8deg','0deg'],
+    duration:420,
+    easing:'easeOutBack'
+  }, '+=120')
+  /* one clean pulse */
+  .add({
+    targets: ring,
+    opacity:[.85,0],
+    scale:[.5,1.9],
+    duration:640,
+    easing:'easeOutQuad'
+  }, '-=220')
+  /* and away to the owner's desk */
+  .add({
+    targets: card,
+    opacity:[1,0],
+    scale:[1,.55],
+    translateY:[0,-120],
+    translateX:[0,-90],
+    duration:520,
+    easing:'easeInBack',
+    complete: settle
+  }, '+=420');
+}
+
+/* tapping anything but the front says no */
+function nudge(el){
+  el.classList.remove('nudge');
+  void el.offsetWidth;
+  el.classList.add('nudge');
+  var first = document.querySelector('#lane .req.is-next');
+  if (first && A) A({targets:first, scale:[1,1.07,1], duration:420, easing:'easeOutQuad'});
+}
+
+/* ════════════════════════════════════════
+   FIND BY TAG
+════════════════════════════════════════ */
+function filterChips(){
+  var q = ($('scan').value || '').trim().toUpperCase();
+  var wrap = $('chips'), bar = $('scanbar');
+  var hit = false;
+
+  if (!q){
+    wrap.classList.remove('is-filtering');
+    bar.classList.remove('is-hit');
+    Array.prototype.forEach.call(wrap.children, function(c){ c.classList.remove('is-hit'); });
+    return;
+  }
+
+  wrap.classList.add('is-filtering');
+  Array.prototype.forEach.call(wrap.children, function(c){
+    var match = (c.getAttribute('data-tag') || '').indexOf(q) === 0;
+    c.classList.toggle('is-hit', match);
+    if (match) hit = true;
+  });
+  bar.classList.toggle('is-hit', hit);
+
+  if (hit && A){
+    var found = wrap.querySelector('.chip.is-hit');
+    if (found) A({targets:found, scale:[1.14,1.07], duration:340, easing:'easeOutBack'});
+  }
+}
+
+/* ════════════════════════════════════════
+   WIRE UP
+════════════════════════════════════════ */
+$('mark').innerHTML  = ICON.spark;
+$('fab').innerHTML   = ICON.plus;
+$('segDesk').innerHTML  = ICON.user + '<span>My desk</span>';
+$('segAdmin').innerHTML = ICON.shield + '<span>Front desk</span>';
+$('scanIcon').outerHTML = ICON.search;
+
+$('picks').innerHTML = ORDER.map(function(t){
+  return '<div class="pick" data-type="'+t+'">'+ICON[t]+'<small>'+TYPES[t].name+'</small></div>';
+}).join('');
+
+$('toggle').addEventListener('click', function(e){
+  var seg = e.target.closest('.seg');
+  if (seg) setView(seg.getAttribute('data-view'));
+});
+
+$('fab').addEventListener('click', openSheet);
+$('scrim').addEventListener('click', closeSheet);
+$('picks').addEventListener('click', function(e){
+  var p = e.target.closest('.pick');
+  if (p) request(p.getAttribute('data-type'));
+});
+
+$('process').addEventListener('click', process);
+$('lane').addEventListener('click', function(e){
+  var r = e.target.closest('.req');
+  if (!r || busy) return;
+  if (r.getAttribute('data-i') === '0') process();
+  else nudge(r);
+});
+
+$('scan').addEventListener('input', filterChips);
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') closeSheet();
+});
+
+window.addEventListener('resize', moveThumb);
+
+renderAll();
+moveThumb();
+/* fonts can shift the toggle width — settle it once they land */
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveThumb);
+setTimeout(moveThumb, 300);
+</script>
+</body>
+</html>

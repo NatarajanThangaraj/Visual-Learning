@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Notes App — Why Multiple Classes?</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --bg:#F5F3FF;--bg2:#EDE9FE;--card:#FFFFFF;--card2:#F5F3FF;
+  --border:#DDD6FE;--border2:#C4B5FD;
+  --text:#1E1B4B;--text2:#6B7280;--text3:#A8A29E;
+  --violet:#7C3AED;--violet2:#8B5CF6;--violet-light:#EDE9FE;
+  --green:#16A34A;--green-light:#DCFCE7;--green-border:#86EFAC;
+  --amber:#D97706;--amber-light:#FEF3C7;--amber-border:#FCD34D;
+  --blue:#1D4ED8;--blue-light:#DBEAFE;--blue-border:#93C5FD;
+  --pink:#BE185D;--pink-light:#FCE7F3;--pink-border:#F9A8D4;
+  --red:#DC2626;
+}
+
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 50% at 20% 10%,#7C3AED10 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%,#8B5CF610 0%,transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%,#DDD6FE30 0%,transparent 60%);
+  pointer-events:none;
+}
+.wrap{position:relative;z-index:1;}
+
+/* ── NAV ── */
+nav{background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-bottom:1.5px solid var(--border);
+  padding:0 28px;display:flex;align-items:center;gap:0;height:56px;position:sticky;top:0;z-index:200;}
+.logo{font-size:15px;font-weight:800;color:var(--text);margin-right:36px;white-space:nowrap;letter-spacing:-.02em;}
+.logo span{color:var(--violet);}
+.nav-tabs{display:flex;gap:3px;flex-wrap:wrap;}
+.nav-tab{padding:7px 16px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;
+  border:none;border-radius:8px;background:transparent;color:var(--text2);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.nav-tab:hover{color:var(--text);background:var(--bg2);}
+.nav-tab.active{background:var(--violet-light);color:var(--violet);border:1px solid var(--border2);}
+
+/* ── PANELS ── */
+.panel{display:none;padding:32px 28px;max-width:960px;margin:0 auto;}
+.panel.active{display:block;}
+
+/* ── PG HEADER ── */
+.pg-head{margin-bottom:24px;}
+.pg-head h2{font-size:22px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px;color:var(--text);}
+.pg-head h2 span{color:var(--violet);}
+.pg-head p{font-size:13px;color:var(--text2);}
+
+/* ── ACTION TABS ── */
+.act-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.act-btn{padding:9px 20px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;
+  border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text2);cursor:pointer;transition:all .2s;}
+.act-btn:hover{border-color:var(--border2);color:var(--text);background:var(--bg2);}
+.act-btn.active{background:var(--violet-light);border-color:var(--violet);color:var(--violet);}
+
+/* ── FORM ── */
+.form-grid{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;}
+.field input{padding:8px 12px;font-size:13px;font-family:'Inter',sans-serif;border:1.5px solid var(--border);
+  border-radius:9px;background:var(--card);color:var(--text);width:132px;outline:none;transition:all .2s;}
+.field input:focus{border-color:var(--violet);box-shadow:0 0 0 3px #7C3AED14;}
+
+/* ── STAGE ── */
+.stage{background:var(--card);border:1.5px solid var(--border);border-radius:18px;
+  padding:28px 20px;min-height:340px;margin-bottom:16px;
+  display:flex;align-items:flex-start;justify-content:center;position:relative;overflow:hidden;}
+.stage::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 50% at 50% 0%,#7C3AED08,transparent);pointer-events:none;}
+.stage::after{content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle,#7C3AED0A 1px,transparent 1px);
+  background-size:28px 28px;pointer-events:none;opacity:.6;}
+.diag{display:flex;flex-direction:column;align-items:center;gap:0;position:relative;z-index:2;}
+
+/* ── NODES ── */
+@keyframes nodePulse{0%,100%{box-shadow:0 4px 16px #7C3AED0A,0 0 0 1.5px var(--border);}50%{box-shadow:0 8px 24px #7C3AED14,0 0 0 1.5px var(--border2);}}
+@keyframes activePulse{0%,100%{box-shadow:0 4px 24px #7C3AED30,0 0 0 1.5px var(--violet);}50%{box-shadow:0 8px 32px #7C3AED50,0 0 0 1.5px var(--violet2);}}
+@keyframes fadeInScale{from{opacity:0;transform:scale(.8) translateY(-8px);}to{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes popIn{from{opacity:0;transform:scale(.9) translateY(5px);}to{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes flowDown{0%{stroke-dashoffset:20;}100%{stroke-dashoffset:0;}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+.node{border:1.5px solid var(--border);border-radius:14px;background:var(--card);
+  padding:13px 18px;min-width:168px;text-align:left;position:relative;overflow:hidden;
+  box-shadow:0 4px 16px #7C3AED0A,inset 0 1px 0 #ffffff80;
+  transition:all .35s cubic-bezier(.4,0,.2,1);animation:nodePulse 4s ease-in-out infinite;}
+.node::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--border2),transparent);}
+.node .nname{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:-.01em;}
+.node .ndetail{font-size:10px;color:var(--text3);line-height:1.7;font-family:'JetBrains Mono',monospace;}
+.node .ntag{display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;
+  padding:3px 8px;border-radius:5px;margin-top:6px;
+  background:var(--violet-light);color:var(--violet);border:1px solid var(--border2);animation:fadeInScale .25s ease;}
+.node .nnote{font-size:10px;color:var(--violet);margin-top:4px;font-style:italic;animation:fadeInScale .25s ease;}
+.node.active{border-color:var(--violet);background:linear-gradient(145deg,#7C3AED0C,var(--card));
+  animation:activePulse 2s ease-in-out infinite;transform:scale(1.04);}
+.node.active .nname{color:var(--violet);}
+.node.dim{opacity:.22;transform:scale(.97);filter:blur(.3px);}
+.node.done{border-color:var(--green-border);background:linear-gradient(145deg,#DCFCE7,var(--card));box-shadow:0 4px 20px #16A34A0F;}
+.node.done .nname{color:var(--green);}
+
+/* ── ARROW ── */
+.arr-wrap{display:flex;justify-content:center;padding:2px 0;}
+.arr-line{stroke:#C4B5FD;stroke-width:1.5;stroke-dasharray:4 3;animation:flowDown .8s linear infinite;}
+
+/* ── OBJECT CARD ── */
+.ocard{border:1.5px solid var(--border2);border-radius:11px;
+  background:linear-gradient(145deg,var(--violet-light),var(--card));
+  padding:10px 12px;margin-top:8px;font-size:11px;min-width:130px;
+  opacity:0;transform:scale(.8) translateY(-8px);
+  transition:opacity .4s cubic-bezier(.4,0,.2,1),transform .4s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 4px 16px #7C3AED0F,inset 0 1px 0 #ffffff80;position:relative;overflow:hidden;}
+.ocard::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);}
+.ocard.show{opacity:1;transform:scale(1) translateY(0);}
+.ocard .otitle{font-size:10px;font-weight:700;color:var(--violet);margin-bottom:5px;}
+.ocard .ofield{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8;}
+.ocard .olbl{font-size:10px;font-weight:700;color:var(--violet);margin-top:5px;font-family:'JetBrains Mono',monospace;}
+
+/* ── FILE BOX ── */
+.filebox{border:1.5px solid var(--green-border);border-radius:8px;background:#F0FDF4;
+  padding:8px 10px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);min-height:28px;margin-top:6px;}
+.frow{color:var(--green);font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.8;
+  opacity:0;transform:translateX(-6px);transition:opacity .3s,transform .3s;}
+.frow.show{opacity:1;transform:translateX(0);}
+
+.brow{display:flex;gap:18px;align-items:flex-start;justify-content:center;}
+.bcol{display:flex;flex-direction:column;align-items:center;gap:0;}
+
+/* ── CONTROLS ── */
+.ctrl-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.ctrls{display:flex;gap:8px;}
+.cbtn{display:flex;align-items:center;gap:6px;padding:8px 18px;font-size:13px;font-weight:600;
+  font-family:'Inter',sans-serif;border:1.5px solid var(--border);border-radius:9px;
+  background:var(--card);color:var(--text);cursor:pointer;transition:all .2s;}
+.cbtn:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 4px 12px #7C3AED14;}
+.cbtn:active{transform:translateY(0);}
+.cbtn:disabled{opacity:.3;cursor:not-allowed;transform:none;}
+.cbtn.pri{background:var(--violet);border-color:var(--violet);color:#fff;box-shadow:0 4px 16px #7C3AED30;}
+.cbtn.pri:hover{background:var(--violet2);box-shadow:0 6px 24px #7C3AED40;transform:translateY(-2px);}
+.stepctr{font-size:12px;color:var(--text3);font-variant-numeric:tabular-nums;}
+
+/* ── EXPLANATION ── */
+.expl{background:var(--card);border:1.5px solid var(--border);border-radius:12px;
+  padding:14px 18px;font-size:13px;color:var(--text2);line-height:1.7;min-height:48px;
+  box-shadow:inset 0 1px 0 #ffffff90;transition:all .3s;}
+.expl code{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--violet-light);padding:1px 7px;border-radius:4px;color:var(--violet);}
+.expl strong{color:var(--text);font-weight:600;}
+
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);}
+.ld{width:9px;height:9px;border-radius:3px;}
+
+/* ── SECTION LABEL ── */
+.slabel{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;
+  margin:24px 0 12px;display:flex;align-items:center;gap:8px;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── VIEW PANEL ── */
+.view-head{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;}
+.view-title{font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--text);}
+.view-title span{color:var(--violet);}
+.method-pill{font-size:11px;font-family:'JetBrains Mono',monospace;background:var(--violet-light);
+  border:1.5px solid var(--border2);border-radius:8px;padding:6px 14px;color:var(--violet);}
+.chips{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;}
+.chip{border-radius:14px;padding:16px 20px;border:1.5px solid;min-width:130px;
+  box-shadow:0 4px 16px #7C3AED0A,inset 0 1px 0 #ffffff80;transition:transform .2s;animation:fadeInScale .4s ease backwards;}
+.chip:hover{transform:translateY(-3px);}
+.chip-val{font-size:26px;font-weight:800;letter-spacing:-.03em;animation:countUp .5s ease;}
+.chip-lbl{font-size:11px;font-weight:500;margin-top:4px;opacity:.75;}
+.exp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+.ecard{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:16px;
+  transition:all .3s;box-shadow:0 2px 12px #7C3AED08;animation:fadeInScale .4s ease backwards;}
+.ecard:hover{transform:translateY(-4px);box-shadow:0 12px 32px #7C3AED14;}
+.ecard-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px;}
+.etitle{font-size:15px;font-weight:700;color:var(--text);flex:1;}
+.badge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1.5px solid;white-space:nowrap;}
+.emeta{font-size:11px;color:var(--text2);line-height:2;display:flex;flex-direction:column;}
+.emeta span{display:flex;align-items:center;gap:6px;}
+.eobj{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1.5px solid var(--border);}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;}
+.cat-card{border-radius:14px;padding:16px;border:1.5px solid;
+  box-shadow:0 4px 16px #7C3AED08;transition:all .3s;animation:fadeInScale .4s ease backwards;}
+.cat-card:hover{transform:translateY(-4px);}
+.cat-name{font-size:11px;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;opacity:.8;}
+.cat-amt{font-size:32px;font-weight:800;letter-spacing:-.02em;}
+.cat-cnt{font-size:11px;margin-top:4px;opacity:.6;}
+
+/* ══════════════════════════════════════════
+   WHY MULTIPLE CLASSES — STAGE-BASED PANEL
+══════════════════════════════════════════ */
+/* Stage sub-nav */
+.why-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px;padding-bottom:16px;border-bottom:1.5px solid var(--border);}
+.wstage-btn{padding:6px 16px;font-size:12px;font-weight:500;border:2px solid var(--border);
+  border-radius:20px;background:var(--card);color:var(--text2);cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;}
+.wstage-btn:hover{border-color:var(--border2);color:var(--text);}
+.wstage-btn.ws-active{background:var(--violet);border-color:var(--violet);color:#fff;font-weight:700;}
+.wstage-btn.ws-done{background:var(--card);border-color:var(--green);color:var(--green);font-weight:600;}
+
+/* Overloaded badge */
+.overloaded-badge{background:#FBBF6E;color:#7C2D12;font-size:11px;font-weight:700;padding:3px 12px;
+  border-radius:20px;margin-left:auto;border:none;}
+
+/* Repeated structure header */
+.rep-header{background:#FFF1F2;border:1.5px solid #FDA4AF;border-radius:9px;
+  padding:10px 13px;font-size:13px;font-weight:700;color:#BE123C;
+  display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+
+/* Think box strong italic */
+.think-box em{font-style:italic;}
+.think-box strong{font-weight:800;}
+
+/* Stage content area */
+.why-scene{animation:slideUp .25s ease;}
+.why-title{font-size:20px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px;color:var(--text);}
+.why-sub{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px;}
+
+/* Class box (single class visual) */
+.sc-box{border:2px solid var(--border2);border-radius:12px;overflow:hidden;transition:border-color .4s;}
+.sc-box.sc-warn{border-color:#FDA4AF;}
+.sc-head{padding:8px 13px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  display:flex;align-items:center;gap:8px;background:var(--violet-light);color:var(--violet);transition:background .4s;border-bottom:1px solid var(--border2);}
+.sc-box.sc-warn .sc-head{background:#FFF1F2;color:#BE123C;border-bottom-color:#FDA4AF;}
+.sc-body{padding:10px;display:flex;flex-direction:column;gap:3px;}
+.sc-field{font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 8px;border-radius:5px;
+  border:1px solid transparent;display:flex;align-items:center;gap:6px;animation:popIn .25s ease both;}
+.sc-field.f-note{background:var(--violet-light);border-color:var(--border2);color:var(--violet);}
+.sc-field.f-warn{background:#FFF1F2;border-color:#FDA4AF;color:#BE123C;}
+.sc-field.f-ops{background:var(--blue-light);border-color:var(--blue-border);color:var(--blue);}
+.sc-field.f-store{background:var(--amber-light);border-color:var(--amber-border);color:var(--amber);}
+.sc-field.f-ui{background:var(--green-light);border-color:var(--green-border);color:var(--green);}
+.sc-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* Think box */
+.think-box{background:var(--amber-light);border:1.5px solid var(--amber-border);border-radius:10px;
+  padding:12px 15px;font-size:13px;color:var(--amber);line-height:1.6;margin:12px 0;}
+
+/* Object cards (Note objects visual) */
+.obj-row{display:flex;gap:8px;flex-wrap:wrap;}
+.obj-card{border:1.5px solid var(--border2);border-radius:9px;overflow:hidden;animation:popIn .3s ease;}
+.obj-head{background:var(--violet);color:#fff;padding:4px 9px;font-size:10px;font-weight:600;
+  display:flex;justify-content:space-between;align-items:center;}
+.obj-body{padding:6px 9px;background:var(--card);display:flex;flex-direction:column;gap:2px;}
+.obj-field{font-family:'JetBrains Mono',monospace;font-size:10px;display:flex;gap:5px;}
+.obj-key{color:var(--violet);min-width:52px;}
+.obj-val{color:var(--text);}
+
+/* Responsibility tags */
+.resp-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid;}
+.resp-tag.r-note{background:var(--violet-light);border-color:var(--border2);color:var(--violet);}
+.resp-tag.r-ops{background:var(--blue-light);border-color:var(--blue-border);color:var(--blue);}
+.resp-tag.r-store{background:var(--amber-light);border-color:var(--amber-border);color:var(--amber);}
+.resp-tag.r-ui{background:var(--green-light);border-color:var(--green-border);color:var(--green);}
+
+/* Architecture flow (manager stage) */
+.arch-flow{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.arch-node{border-radius:8px;padding:6px 16px;font-size:12px;font-weight:600;border:1.5px solid;text-align:center;min-width:140px;}
+.arch-arr{font-size:14px;color:var(--border2);}
+.arch-row{display:flex;gap:16px;margin-top:2px;}
+
+/* Step dots (object flow) */
+.step-dots{display:flex;gap:6px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.sdot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--card);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text3);
+  cursor:pointer;transition:all .2s;flex-shrink:0;}
+.sdot.sd-done{background:var(--green-light);border-color:var(--green-border);color:var(--green);}
+.sdot.sd-active{background:var(--violet-light);border-color:var(--violet);color:var(--violet);transform:scale(1.15);}
+.sdot-line{flex:1;height:2px;background:var(--border);border-radius:2px;max-width:20px;}
+.sdot-line.sl-done{background:var(--green-border);}
+
+/* Flow canvas */
+.flow-canvas{display:flex;gap:12px;align-items:flex-start;}
+.flow-nodes{display:flex;flex-direction:column;gap:4px;min-width:162px;}
+.flow-node{border-radius:10px;padding:9px 13px;border:2px solid;transition:all .3s;text-align:center;}
+.flow-node .fn-name{font-size:12px;font-weight:700;}
+.flow-node .fn-sub{font-size:10px;opacity:.7;margin-top:1px;}
+.flow-node.fn-idle{border-color:var(--border);background:var(--card);opacity:.5;}
+.flow-node.fn-active{border-color:var(--violet);background:var(--violet-light);animation:activePulse 1.4s ease infinite;}
+.flow-node.fn-active .fn-name{color:var(--violet);}
+.flow-node.fn-done{border-color:var(--green-border);background:var(--green-light);}
+.flow-node.fn-done .fn-name{color:var(--green);}
+.flow-conn{text-align:center;font-size:13px;color:var(--border2);height:18px;line-height:18px;transition:color .3s;}
+.flow-conn.fc-lit{color:var(--violet);}
+.flow-right{flex:1;display:flex;flex-direction:column;gap:9px;}
+
+/* Explain card */
+.explain-card{background:linear-gradient(135deg,var(--violet-light),var(--blue-light));
+  border:1.5px solid var(--border2);border-radius:10px;padding:12px 14px;}
+.ec-step{font-size:10px;font-weight:700;color:var(--violet);margin-bottom:2px;}
+.ec-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:5px;}
+.ec-body{font-size:12px;color:var(--text2);line-height:1.55;}
+.ec-body code{font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(255,255,255,.6);padding:1px 5px;border-radius:3px;color:var(--violet);}
+
+/* Memory / file mini panels */
+.mem-panel{background:var(--card);border:1.5px solid var(--border);border-radius:9px;overflow:hidden;}
+.mem-head{background:var(--bg2);border-bottom:1px solid var(--border);padding:5px 10px;font-size:10px;font-weight:700;color:var(--text3);}
+.mem-body{padding:8px 10px;display:flex;flex-direction:column;gap:5px;min-height:40px;}
+.mem-obj{background:var(--card);border:1.5px solid var(--border2);border-radius:6px;overflow:hidden;animation:popIn .3s ease;}
+.mem-obj-head{background:var(--violet-light);padding:3px 7px;font-size:9px;font-weight:700;color:var(--violet);}
+.mem-obj-body{padding:4px 7px;display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;}
+.mem-field{font-family:'JetBrains Mono',monospace;font-size:9px;display:flex;gap:4px;}
+.mem-key{color:var(--violet);}
+.mem-list{background:var(--card);border:1.5px solid var(--pink-border);border-radius:6px;overflow:hidden;animation:popIn .3s ease;}
+.mem-list-head{background:var(--pink-light);padding:3px 7px;font-size:9px;font-weight:700;color:var(--pink);}
+.mem-list-body{padding:5px 7px;display:flex;flex-direction:column;gap:2px;}
+.list-item{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px;background:var(--violet-light);color:var(--violet);animation:fadeInScale .25s ease;}
+.list-item.li-new{background:var(--pink-light);color:var(--pink);}
+.mem-file{background:var(--card);border:1.5px solid var(--green-border);border-radius:6px;overflow:hidden;animation:popIn .3s ease;}
+.mem-file-head{background:var(--green-light);padding:3px 7px;font-size:9px;font-weight:700;color:var(--green);}
+.mem-file-row{font-family:'JetBrains Mono',monospace;font-size:9px;padding:4px 7px;color:var(--green);}
+.mem-empty{font-size:11px;color:var(--text3);font-style:italic;padding:4px 0;}
+
+/* Compare (two designs) */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.cmp-bad{background:#FFF1F2;border:1.5px solid #FDA4AF;border-radius:12px;padding:14px;}
+.cmp-good{background:var(--green-light);border:1.5px solid var(--green-border);border-radius:12px;padding:14px;}
+.cmp-title{font-size:12px;font-weight:700;margin-bottom:10px;}
+.cmp-item{display:flex;align-items:flex-start;gap:7px;margin-bottom:7px;font-size:12px;color:var(--text2);line-height:1.5;}
+.cmp-bullet{width:6px;height:6px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+
+/* Why stage nav buttons */
+.why-cta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px;}
+.why-btn{padding:8px 18px;font-size:13px;font-weight:600;border:1.5px solid var(--border);
+  border-radius:9px;background:var(--card);color:var(--text);cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;}
+.why-btn:hover{border-color:var(--border2);background:var(--bg2);}
+.why-btn.wb-go{background:var(--violet);border-color:var(--violet);color:#fff;}
+.why-btn.wb-go:hover{background:var(--violet2);}
+.why-hint{font-size:12px;color:var(--text3);}
+
+/* Info box */
+.info-box{background:var(--blue-light);border:1.5px solid var(--blue-border);border-radius:9px;
+  padding:10px 13px;font-size:12px;color:var(--blue);line-height:1.55;margin-top:10px;}
+.success-box{background:var(--green-light);border:1.5px solid var(--green-border);border-radius:9px;
+  padding:12px 14px;font-size:12px;color:var(--green);line-height:1.6;margin-top:10px;}
+.final-box{background:var(--violet-light);border:1.5px solid var(--border2);border-radius:12px;
+  padding:16px 18px;margin-top:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav>
+  <div class="logo">📝 <span>Notes App</span> — Why Multiple Classes?</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPanel('playground',this)">⚡ Playground</button>
+    <button class="nav-tab" onclick="showPanel('view',this)">📋 View notes</button>
+    <button class="nav-tab" onclick="showPanel('why',this)">💡 Why multiple classes?</button>
+  </div>
+</nav>
+
+<!-- ══════════════ PLAYGROUND ══════════════ -->
+<div class="panel active" id="panel-playground">
+  <div class="pg-head">
+    <h2>Class interaction <span>playground</span></h2>
+    <p>Step through each action to see how classes communicate, objects are created, and data flows through the system.</p>
+  </div>
+  <div class="act-row">
+    <button class="act-btn active" id="abtn-add"    onclick="pickAction('add')">📝 Add note</button>
+    <button class="act-btn"        id="abtn-view"   onclick="pickAction('view')">📋 View all</button>
+    <button class="act-btn"        id="abtn-search" onclick="pickAction('search')">🔍 Search notes</button>
+    <button class="act-btn"        id="abtn-delete" onclick="pickAction('delete')">🗑 Delete note</button>
+  </div>
+  <div class="form-grid" id="form-grid">
+    <div class="field"><label>Title</label><input id="ft" value="Java Basics"/></div>
+    <div class="field"><label>Content</label><input id="fc" value="Classes and Objects"/></div>
+    <div class="field"><label>Category</label><input id="fcat" value="Learning"/></div>
+    <div class="field"><label>Date</label><input id="fd" value="15-09-2026"/></div>
+  </div>
+  <div class="form-grid" id="form-search" style="display:none">
+    <div class="field"><label>Search keyword</label><input id="fq" value="Java"/></div>
+  </div>
+  <div class="form-grid" id="form-delete" style="display:none">
+    <div class="field"><label>Note ID to delete</label><input id="fdid" value="1"/></div>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div class="ctrl-bar">
+    <div class="ctrls">
+      <button class="cbtn pri" id="btn-run"  onclick="runPG()">▶&nbsp; Run</button>
+      <button class="cbtn"     id="btn-next" onclick="nextPG()" disabled>→&nbsp; Next</button>
+      <button class="cbtn"     id="btn-rst"  onclick="restartPG()">↺&nbsp; Restart</button>
+    </div>
+    <span class="stepctr" id="sctr"></span>
+  </div>
+  <div class="expl" id="expl">Choose an action above and press <strong>▶ Run</strong> to begin.</div>
+  <div class="legend">
+    <div class="li"><div class="ld" style="background:var(--violet)"></div>Active class</div>
+    <div class="li"><div class="ld" style="background:var(--green)"></div>Step complete</div>
+    <div class="li"><div class="ld" style="background:#DDD6FE"></div>Waiting</div>
+  </div>
+</div>
+
+<!-- ══════════════ VIEW NOTES ══════════════ -->
+<div class="panel" id="panel-view">
+  <div class="view-head">
+    <div>
+      <div class="view-title">All <span>notes</span></div>
+      <div style="font-size:13px;color:var(--text2);margin-top:5px;">FileManager → readAll() → Note objects → NotesManager → getAllNotes()</div>
+    </div>
+    <div class="method-pill">getAllNotes()</div>
+  </div>
+  <div class="chips" id="v-chips"></div>
+  <div class="slabel">Note objects</div>
+  <div class="exp-grid" id="v-grid"></div>
+  <div class="slabel">Category totals</div>
+  <div class="cat-grid" id="v-cats"></div>
+</div>
+
+<!-- ══════════════ WHY MULTIPLE CLASSES ══════════════ -->
+<div class="panel" id="panel-why">
+  <div class="view-head" style="margin-bottom:16px;">
+    <div>
+      <div class="view-title">Notes App — <span>Why Multiple Classes?</span></div>
+      <div style="font-size:13px;color:var(--text2);margin-top:5px;">An interactive journey from one class to a clean design</div>
+    </div>
+  </div>
+  <div class="why-nav" id="why-nav"></div>
+  <div id="why-content"></div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ══════════════════════════════════════════
+// SHARED DATA & PALETTE
+// ══════════════════════════════════════════
+const CC = {
+  Learning:  {bg:'#EDE9FE',border:'#C4B5FD',text:'#7C3AED',bar:'linear-gradient(90deg,#8B5CF6,#7C3AED)'},
+  Work:      {bg:'#DBEAFE',border:'#93C5FD',text:'#1D4ED8',bar:'linear-gradient(90deg,#3B82F6,#1D4ED8)'},
+  Personal:  {bg:'#DCFCE7',border:'#86EFAC',text:'#16A34A',bar:'linear-gradient(90deg,#22C55E,#16A34A)'},
+  Ideas:     {bg:'#FCE7F3',border:'#F9A8D4',text:'#BE185D',bar:'linear-gradient(90deg,#EC4899,#BE185D)'},
+  Reference: {bg:'#FEF3C7',border:'#FCD34D',text:'#D97706',bar:'linear-gradient(90deg,#F59E0B,#D97706)'},
+  Projects:  {bg:'#F0FDF4',border:'#86EFAC',text:'#15803D',bar:'linear-gradient(90deg,#16A34A,#15803D)'},
+  Other:     {bg:'#F5F3FF',border:'#DDD6FE',text:'#6B7280',bar:'linear-gradient(90deg,#9CA3AF,#6B7280)'},
+};
+const cc = cat => CC[cat]||CC.Other;
+
+let DB = [
+  {id:1,title:'Java Basics',     content:'Variables, loops, conditionals',  category:'Learning', date:'15-09-2026'},
+  {id:2,title:'OOP Concepts',    content:'Classes, objects, methods',        category:'Learning', date:'15-09-2026'},
+  {id:3,title:'Project ideas',   content:'Build a notes app in Java',        category:'Ideas',    date:'14-09-2026'},
+  {id:4,title:'Meeting notes',   content:'Sprint planning discussion',       category:'Work',     date:'14-09-2026'},
+  {id:5,title:'Encapsulation',   content:'Private fields + getters/setters', category:'Learning', date:'13-09-2026'},
+  {id:6,title:'Book list',       content:'Clean Code, Effective Java',       category:'Reference',date:'13-09-2026'},
+];
+let nextId = 7;
+
+// ══════════════════════════════════════════
+// PANEL SWITCH
+// ══════════════════════════════════════════
+function showPanel(name, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='view') renderView();
+  if(name==='why')  initWhy();
+}
+
+// ══════════════════════════════════════════
+// VIEW PANEL
+// ══════════════════════════════════════════
+function renderView() {
+  const cats=[...new Set(DB.map(e=>e.category))];
+  const chipData=[
+    {val:DB.length,lbl:'Total notes',c:cc('Learning'),delay:.1},
+    {val:cats.length,lbl:'Categories',c:cc('Work'),delay:.2},
+    {val:DB.filter(n=>n.category==='Learning').length,lbl:'Learning notes',c:cc('Ideas'),delay:.3},
+  ];
+  document.getElementById('v-chips').innerHTML=chipData.map(({val,lbl,c,delay})=>`
+    <div class="chip" style="background:${c.bg};border-color:${c.border};color:${c.text};animation-delay:${delay}s">
+      <div class="chip-val">${val}</div><div class="chip-lbl">${lbl}</div>
+    </div>`).join('');
+  document.getElementById('v-grid').innerHTML=DB.map((n,i)=>{
+    const c=cc(n.category);
+    return `<div class="ecard" style="animation-delay:${.05*i}s">
+      <div class="ecard-top"><span class="etitle">${n.title}</span>
+        <span class="badge" style="background:${c.bg};border-color:${c.border};color:${c.text}">${n.category}</span></div>
+      <div class="emeta"><span>📅 ${n.date}</span><span>📄 ${n.content}</span></div>
+      <div class="eobj">Note n${n.id}</div></div>`;}).join('');
+  const catMap={};
+  DB.forEach(n=>{ if(!catMap[n.category])catMap[n.category]={count:0}; catMap[n.category].count++; });
+  document.getElementById('v-cats').innerHTML=Object.entries(catMap).sort((a,b)=>b[1].count-a[1].count)
+    .map(([cat,d],i)=>{const c=cc(cat);return `<div class="cat-card" style="background:${c.bg};border-color:${c.border};animation-delay:${.05*i}s">
+      <div class="cat-name" style="color:${c.text}">${cat}</div>
+      <div class="cat-amt" style="color:${c.text}">${d.count}</div>
+      <div class="cat-cnt" style="color:${c.text}">${d.count} note${d.count>1?'s':''}</div></div>`;}).join('');
+}
+
+// ══════════════════════════════════════════
+// PLAYGROUND
+// ══════════════════════════════════════════
+let pgAction='add',pgSteps=[],pgIdx=-1;
+
+function pickAction(a){
+  pgAction=a;
+  ['add','view','search','delete'].forEach(id=>document.getElementById('abtn-'+id).classList.toggle('active',id===a));
+  document.getElementById('form-grid').style.display  =a==='add'?'flex':'none';
+  document.getElementById('form-search').style.display=a==='search'?'flex':'none';
+  document.getElementById('form-delete').style.display=a==='delete'?'flex':'none';
+  restartPG();
+}
+function arrowSVG(){
+  return `<div class="arr-wrap"><svg width="16" height="26" viewBox="0 0 16 26" style="overflow:visible;display:block">
+    <defs><marker id="nah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M1 1L8 5L1 9" fill="none" stroke="#C4B5FD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker></defs>
+    <line x1="8" y1="1" x2="8" y2="22" stroke="#C4B5FD" stroke-width="1.5" stroke-dasharray="4 3" class="arr-line" marker-end="url(#nah)"/></svg></div>`;
+}
+function nodeHTML(name,detail,id){return `<div class="node" id="nd-${id}"><div class="nname">${name}</div><div class="ndetail">${detail}</div></div>`;}
+function ocardHTML(id,fields,lbl){
+  return `<div class="ocard" id="${id}"><div class="otitle">📝 NOTE</div><div class="ofield">${fields.join('<br>')}</div><div class="olbl">${lbl}</div></div>`;
+}
+function buildStage(){
+  document.getElementById('stage').innerHTML=`<div class="diag">
+    ${nodeHTML('Main','entry point · coordinates app','main')}${arrowSVG()}
+    ${nodeHTML('NotesManager','manages notes &amp; operations','nm')}${arrowSVG()}
+    <div class="brow">
+      <div class="bcol">${nodeHTML('Note','title · content<br>date · category','note')}</div>
+      <div class="bcol">${nodeHTML('FileManager','reads &amp; writes CSV','fm')}${arrowSVG()}
+        <div class="node" id="nd-csv">
+          <div class="nname" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">notes.csv</div>
+          <div class="filebox" id="csvbox"></div>
+        </div>
+      </div>
+    </div></div>`;
+}
+function activate(ids,tag,note){
+  ['main','nm','note','fm','csv'].forEach(id=>{
+    const el=document.getElementById('nd-'+id); if(!el)return;
+    el.classList.remove('active','dim','done');
+    el.querySelectorAll('.ntag,.nnote').forEach(x=>x.remove());
+    if(ids.includes(id)){
+      el.classList.add('active');
+      if(tag){const t=document.createElement('div');t.className='ntag';t.textContent=tag;el.appendChild(t);}
+      if(note){const n=document.createElement('div');n.className='nnote';n.textContent=note;el.appendChild(n);}
+    } else el.classList.add('dim');
+  });
+}
+const show =id=>{const el=document.getElementById(id);if(el)setTimeout(()=>el.classList.add('show'),50);};
+const showR=id=>{const el=document.getElementById(id);if(el)setTimeout(()=>el.classList.add('show'),50);};
+const expl =html=>{document.getElementById('expl').innerHTML=html;};
+
+function stepsAdd(n){
+  return [
+    {run(){activate(['main']);expl('<strong>Main</strong> reads user input and calls <code>NotesManager.addNote()</code> with title, content, category, and date.');}},
+    {run(){activate(['nm'],'addNote()','"Need a new Note object"');expl('<strong>NotesManager</strong> receives the call and delegates to the <strong>Note class</strong> constructor.');}},
+    {run(){activate(['note'],'new Note(...)');expl('The <strong>Note class</strong> constructor is invoked with 4 arguments. A new Note object is being built in heap memory...');}},
+    {run(){
+      activate(['note'],'new Note(...)');
+      const box=document.getElementById('nd-note');
+      const d=document.createElement('div');
+      d.innerHTML=ocardHTML('oc1',[n.title,n.content,n.category,n.date],'Note n'+nextId);
+      box.appendChild(d.firstChild);show('oc1');
+      expl(`<strong>📝 Note n${nextId}</strong> created — title="${n.title}", content="${n.content}", category="${n.category}", date="${n.date}".`);
+    }},
+    {run(){
+      activate(['nm','note'],'addNote()');
+      const box=document.getElementById('nd-nm');
+      const d=document.createElement('div');
+      d.innerHTML=ocardHTML('oc1r',[n.title,n.category],'n'+nextId+' returned ✓');
+      box.appendChild(d.firstChild);show('oc1r');
+      expl(`<code>n${nextId}</code> is returned to <strong>NotesManager</strong> and added to its <code>ArrayList&lt;Note&gt;</code>.`);
+    }},
+    {run(){activate(['fm'],'save(n'+nextId+')','"Writing to disk..."');expl(`<strong>NotesManager</strong> passes <code>n${nextId}</code> to <strong>FileManager.save()</strong>. NotesManager does not handle files — it delegates.`);}},
+    {run(){
+      activate(['csv']);
+      const box=document.getElementById('csvbox');
+      const row=document.createElement('div');row.className='frow';row.id='fr-new';
+      row.textContent=`${n.title},${n.content},${n.category},${n.date}`;
+      box.appendChild(row);showR('fr-new');
+      DB.push({id:nextId,title:n.title,content:n.content,category:n.category,date:n.date});
+      nextId++;
+      expl('<strong>FileManager</strong> converts the Note to a CSV row via <code>note.toCSV()</code> and appends it to <code>notes.csv</code>. Note permanently stored! ✅');
+    }},
+  ];
+}
+function stepsView(){
+  return [
+    {run(){activate(['main']);expl('<strong>Main</strong> calls <code>NotesManager.getAllNotes()</code> to retrieve all notes.');}},
+    {run(){activate(['nm','fm'],'getAllNotes()');expl('<strong>NotesManager</strong> asks <strong>FileManager</strong> to open <code>notes.csv</code> and read every row.');}},
+    {run(){
+      activate(['fm','csv'],'readAll()');
+      const box=document.getElementById('csvbox');
+      box.innerHTML=DB.map((n,i)=>`<div class="frow" id="vfr${i}">${n.title},${n.category},${n.date}</div>`).join('');
+      DB.forEach((_,i)=>setTimeout(()=>showR('vfr'+i),70+i*90));
+      expl(`<strong>FileManager</strong> reads <strong>all ${DB.length} rows</strong> from <code>notes.csv</code> using a BufferedReader.`);
+    }},
+    {run(){
+      activate(['note'],'new Note(row)');
+      const box=document.getElementById('nd-note');
+      const row=document.createElement('div');row.style.cssText='display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;';
+      row.innerHTML=DB.map((n,i)=>ocardHTML(`vo${i}`,[n.title,n.category],'n'+n.id)).join('');
+      box.appendChild(row);DB.forEach((_,i)=>setTimeout(()=>show(`vo${i}`),60+i*120));
+      expl(`Each CSV row is parsed and passed to <code>new Note(...)</code>. <strong>${DB.length} Note objects</strong> created in memory.`);
+    }},
+    {run(){
+      activate(['nm'],'list.add(...)');
+      const box=document.getElementById('nd-nm');
+      const d=document.createElement('div');d.className='ocard show';d.style.marginTop='8px';
+      d.innerHTML=`<div class="otitle">📋 All objects ready</div><div class="ofield">${DB.length} Note objects in ArrayList</div><div class="olbl">getAllNotes() returns list ✓</div>`;
+      box.appendChild(d);
+      expl(`All <strong>${DB.length} Note objects</strong> returned to <strong>NotesManager</strong>, handed back to <strong>Main</strong>. <code>getAllNotes()</code> complete.`);
+    }},
+  ];
+}
+function stepsSearch(query){
+  const matches=DB.filter(n=>n.title.toLowerCase().includes(query.toLowerCase())||n.content.toLowerCase().includes(query.toLowerCase())||n.category.toLowerCase().includes(query.toLowerCase()));
+  return [
+    {run(){activate(['main']);expl(`<strong>Main</strong> calls <code>NotesManager.searchNotes("${query}")</code>.`);}},
+    {run(){activate(['nm','fm'],'searchNotes("'+query+'")');expl('<strong>NotesManager</strong> asks <strong>FileManager</strong> to read all rows first.');}},
+    {run(){
+      activate(['fm','csv'],'readAll()');
+      const box=document.getElementById('csvbox');
+      box.innerHTML=DB.map((n,i)=>`<div class="frow" id="sfr${i}">${n.title},${n.category},${n.date}</div>`).join('');
+      DB.forEach((_,i)=>setTimeout(()=>showR('sfr'+i),60+i*70));
+      expl(`<strong>FileManager</strong> reads all ${DB.length} rows. Each row converts to a Note object.`);
+    }},
+    {run(){
+      activate(['note'],'new Note(row)');
+      const box=document.getElementById('nd-note');
+      const row=document.createElement('div');row.style.cssText='display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;';
+      row.innerHTML=DB.map((n,i)=>ocardHTML(`so${i}`,[n.title,n.category],'n'+n.id)).join('');
+      box.appendChild(row);DB.forEach((_,i)=>setTimeout(()=>show(`so${i}`),60+i*90));
+      expl(`${DB.length} <strong>Note objects</strong> created. Now NotesManager filters them.`);
+    }},
+    {run(){
+      activate(['nm'],'filter by "'+query+'"');
+      const box=document.getElementById('nd-nm');
+      const d=document.createElement('div');d.className='ocard';d.style.marginTop='8px';
+      const matchHtml=matches.length>0?matches.map(n=>`n${n.id}: "${n.title}"`).join('<br>'):'No matches found';
+      d.innerHTML=`<div class="otitle">🔍 searchNotes("${query}")</div><div class="ofield">${matchHtml}</div><div class="olbl">${matches.length} match${matches.length!==1?'es':''} found ✓</div>`;
+      box.appendChild(d);setTimeout(()=>d.classList.add('show'),40);
+      expl(`<strong>NotesManager</strong> checks <code>title.contains("${query}")</code> on each object. Found <strong>${matches.length} match${matches.length!==1?'es':''}</strong>.`);
+    }},
+    {run(){
+      ['main','nm','note','fm','csv'].forEach(id=>{const el=document.getElementById('nd-'+id);if(el)el.classList.remove('active','dim');});
+      document.getElementById('nd-nm').classList.add('done');
+      expl(`✅ Search complete. <strong>${matches.length} note${matches.length!==1?'s':''}</strong> matched <code>"${query}"</code>.`);
+    }},
+  ];
+}
+function stepsDelete(idStr){
+  const delId=parseInt(idStr)||1;const target=DB.find(n=>n.id===delId);
+  return [
+    {run(){activate(['main']);expl(`<strong>Main</strong> calls <code>NotesManager.deleteNote(${delId})</code>. Main does not touch the file directly.`);}},
+    {run(){activate(['nm'],'deleteNote('+delId+')');expl(`<strong>NotesManager</strong> receives the delete request for id <code>${delId}</code>.`);}},
+    {run(){activate(['nm','note'],'remove from list');expl(`<strong>NotesManager</strong> iterates its <code>ArrayList&lt;Note&gt;</code> and removes the object where <code>note.getId() == ${delId}</code>.`);}},
+    {run(){activate(['fm'],'deleteRow('+delId+')','"Rewriting file..."');expl(`<strong>FileManager.deleteRow(${delId})</strong> must rewrite <code>notes.csv</code> without that row.`);}},
+    {run(){
+      activate(['csv']);
+      const remaining=DB.filter(n=>n.id!==delId);
+      const box=document.getElementById('csvbox');
+      box.innerHTML=remaining.length>0?remaining.map((n,i)=>`<div class="frow" id="dfr${i}">${n.title},${n.category},${n.date}</div>`).join(''):`<div style="color:var(--text3);font-size:10px;font-style:italic">File is now empty</div>`;
+      remaining.forEach((_,i)=>setTimeout(()=>showR('dfr'+i),60+i*80));
+      DB=remaining;
+      expl(`<strong>FileManager</strong> rewrites <code>notes.csv</code>. ${target?`"${target.title}" removed.`:'Note not found.'} <strong>${remaining.length} notes</strong> remain. ✅`);
+    }},
+  ];
+}
+function runPG(){
+  buildStage();
+  if(pgAction==='add') pgSteps=stepsAdd({title:document.getElementById('ft').value||'Java Basics',content:document.getElementById('fc').value||'Classes and Objects',category:document.getElementById('fcat').value||'Learning',date:document.getElementById('fd').value||'15-09-2026'});
+  else if(pgAction==='view')   pgSteps=stepsView();
+  else if(pgAction==='search') pgSteps=stepsSearch(document.getElementById('fq').value||'Java');
+  else pgSteps=stepsDelete(document.getElementById('fdid').value||'1');
+  pgIdx=-1;
+  document.getElementById('btn-run').disabled=true;
+  document.getElementById('btn-next').disabled=false;
+  expl('Ready — press <strong>→ Next</strong> to step through the execution.');
+  updateCtr();
+}
+function nextPG(){
+  pgIdx++;
+  if(pgIdx>=pgSteps.length){expl('All steps complete. Press <strong>↺ Restart</strong> to run again.');document.getElementById('btn-next').disabled=true;updateCtr();return;}
+  pgSteps[pgIdx].run();updateCtr();
+  if(pgIdx===pgSteps.length-1)document.getElementById('btn-next').disabled=true;
+}
+function restartPG(){
+  pgSteps=[];pgIdx=-1;
+  document.getElementById('btn-run').disabled=false;
+  document.getElementById('btn-next').disabled=true;
+  document.getElementById('sctr').textContent='';
+  expl('Choose an action above and press <strong>▶ Run</strong> to begin.');
+  buildStage();
+}
+function updateCtr(){const t=pgSteps.length,c=Math.min(pgIdx+1,t);document.getElementById('sctr').textContent=t>0?`Step ${c} / ${t}`:'';}
+
+// ══════════════════════════════════════════
+// WHY MULTIPLE CLASSES — STAGE SYSTEM
+// ══════════════════════════════════════════
+const WHY_STAGES=[
+  {id:'welcome',  label:'Welcome'},
+  {id:'single',   label:'One class'},
+  {id:'grow',     label:'Growing pains'},
+  {id:'signal',   label:'The signal'},
+  {id:'note',     label:'Note class'},
+  {id:'manager',  label:'NotesManager'},
+  {id:'flow',     label:'Object flow'},
+  {id:'compare',  label:'Two designs'},
+];
+let whyCurrent='welcome';
+let whyDone=[];
+let whyNotes=[];  // notes added in the "one class" stage
+let flowStep=0;
+
+const FLOW_STEPS=[
+  {active:[],       title:'Ready to trace',           desc:'Press Next to begin. We\'ll trace what happens when <code>addNote("Java","Classes and Objects")</code> is called.', mem:{}},
+  {active:['main'], title:'Main.java — program starts', desc:'The JVM runs <code>main()</code>. It creates a <code>NotesManager</code> object in heap memory and calls <code>addNote()</code>.',mem:{mgr:true}},
+  {active:['nm'],   title:'NotesManager.addNote() begins', desc:'Execution enters <code>NotesManager</code>. The method receives the arguments and prepares to create a <code>Note</code> object.',mem:{mgr:true}},
+  {active:['note'], title:'new Note(...) — object created', desc:'Java allocates memory for a <code>Note</code> object. The constructor runs and sets all four fields.',mem:{mgr:true,note:true}},
+  {active:['note'], title:'Note fields populated', desc:'Each field is assigned: <code>title="Java"</code>, <code>content="Classes and Objects"</code>, <code>date="15-09-2026"</code>, <code>category="Learning"</code>.',mem:{mgr:true,note:true}},
+  {active:['list'], title:'Note added to ArrayList', desc:'<code>notes.add(note)</code> — the Note object reference is inserted at the end of <code>ArrayList&lt;Note&gt;</code>. Count increases.',mem:{mgr:true,note:true,list:true}},
+  {active:['fm'],   title:'NotesManager calls FileManager', desc:'<code>fileManager.save(note)</code> — NotesManager delegates. It does not know how to write files. FileManager does.',mem:{mgr:true,note:true,list:true}},
+  {active:['csv'],  title:'FileManager writes to notes.csv', desc:'<code>FileManager</code> calls <code>note.toCSV()</code> then appends the result to the file using a <code>FileWriter</code>.',mem:{mgr:true,note:true,list:true,csv:true}},
+  {active:[],       title:'Complete — control returns', desc:'Every class did exactly one job. <code>Main</code> coordinated · <code>NotesManager</code> managed · <code>Note</code> held data · <code>FileManager</code> persisted.',mem:{mgr:true,note:true,list:true,csv:true},done:true},
+];
+
+function initWhy(){
+  renderWhyNav();
+  renderWhyStage(whyCurrent);
+}
+
+function renderWhyNav(){
+  document.getElementById('why-nav').innerHTML=WHY_STAGES.map(s=>`
+    <button class="wstage-btn ${s.id===whyCurrent?'ws-active':whyDone.includes(s.id)?'ws-done':''}"
+      onclick="goWhyStage('${s.id}')">${s.label}</button>`).join('');
+}
+
+function goWhyStage(id){
+  if(!whyDone.includes(whyCurrent)) whyDone.push(whyCurrent);
+  whyCurrent=id;
+  if(id==='flow') flowStep=0;
+  renderWhyNav();
+  renderWhyStage(id);
+}
+
+function renderWhyStage(id){
+  const el=document.getElementById('why-content');
+  el.innerHTML='';
+  const div=document.createElement('div');
+  div.className='why-scene';
+  div.innerHTML=buildWhyStage(id);
+  el.appendChild(div);
+}
+
+function buildWhyStage(id){
+  switch(id){
+    case 'welcome': return stageWelcome();
+    case 'single':  return stageSingle();
+    case 'grow':    return stageGrow();
+    case 'signal':  return stageSignal();
+    case 'note':    return stageNote();
+    case 'manager': return stageManager();
+    case 'flow':    return stageFlow();
+    case 'compare': return stageCompare();
+    default: return stageWelcome();
+  }
+}
+
+function stageWelcome(){
+  return `
+  <div class="why-title">Welcome — let's build a Notes App</div>
+  <div class="why-sub">We'll start the way most beginners do: one class, everything inside it. No rules. Just see what happens as the app grows.<br>Follow each stage and let the design emerge naturally.</div>
+  <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+    <div style="flex:0 0 200px">
+      <div class="sc-box">
+        <div class="sc-head">📄 NotesApp.java</div>
+        <div class="sc-body">
+          ${['Note data','Add note','Delete note','Search note','Update note','Display notes','File handling','Menu / interaction'].map(r=>`
+            <div class="sc-field f-note"><span class="sc-dot"></span>${r}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:12px;padding-top:6px">
+      <div style="font-size:14px;color:var(--text);line-height:1.65">Everything in one place. Looks manageable, right?</div>
+      <div class="think-box">🤔 As you follow each stage, ask yourself:<br><em>When does this start feeling wrong?</em></div>
+      <div class="why-cta"><button class="why-btn wb-go" onclick="goWhyStage('single')">▶ Start building →</button></div>
+    </div>
+  </div>`;
+}
+
+function stageSingle(){
+  const topics=['Java Basics','OOP Concepts','Encapsulation','Inheritance','Polymorphism','Abstraction'];
+  const crowded=whyNotes.length>=4;
+  const fields=whyNotes.flatMap((n,i)=>[
+    {t:`note${i+1}Title = "${n}";`,cl:'f-note'},
+    {t:`note${i+1}Content = "...";`,cl:'f-note'},
+    {t:`note${i+1}Date = "15-09-2026";`,cl:'f-note'},
+  ]);
+  return `
+  <div class="why-title">Single class — add notes and watch it grow</div>
+  <div class="why-sub">Click to add notes. Watch what happens to the class as it fills up.</div>
+  <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+    <div class="sc-box ${crowded?'sc-warn':''}" style="flex:1;min-width:200px">
+      <div class="sc-head">📄 NotesApp.java ${crowded?'<span style="margin-left:auto;font-size:10px;background:#FCA5A5;color:#7F1D1D;padding:1px 7px;border-radius:10px">Getting crowded!</span>':''}</div>
+      <div class="sc-body" id="sc-fields">
+        ${fields.length===0?`<div class="sc-field" style="color:var(--text3);font-style:italic;background:none;border:none">// variables will appear here as you add notes</div>`:
+          fields.map((f,i)=>`<div class="sc-field ${f.cl}" style="animation-delay:${i*.04}s">${f.t}</div>`).join('')}
+        ${whyNotes.length>0?`<div style="height:4px"></div>
+          ${['addNote()','deleteNote()','searchNote()','updateNote()','displayNotes()','saveToFile()'].slice(0,Math.max(2,whyNotes.length+2)).map(m=>`<div class="sc-field f-ops" style="border-style:dashed">void ${m}</div>`).join('')}`:''
+        }
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;min-width:160px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:2px">Add a note:</div>
+      ${topics.filter(t=>!whyNotes.includes(t)).slice(0,6).map(t=>`
+        <button class="why-btn" style="text-align:left;justify-content:flex-start;font-size:12px;padding:7px 12px;display:flex;align-items:center;gap:7px" onclick="addWhyNote('${t}')">
+          <span style="background:var(--violet-light);color:var(--violet);border-radius:4px;padding:1px 6px;font-size:10px">+</span>${t}</button>`).join('')}
+      ${whyNotes.length>=6?`<div style="font-size:11px;color:var(--text3);font-style:italic">All notes added!</div>`:''}
+    </div>
+  </div>
+  ${crowded?`<div class="think-box" style="margin-top:12px">🤔 What happens when you have <strong>100 notes</strong>? You'd need note100Title, note100Content, note100Date — that's 300 variables just for 100 notes.</div>`:''}
+  <div class="why-cta" style="margin-top:14px">
+    ${whyNotes.length>=3?`<button class="why-btn wb-go" onclick="goWhyStage('grow')">See the problem →</button>`:''}
+    <span class="why-hint">Add at least 3 notes to continue</span>
+  </div>`;
+}
+
+function addWhyNote(t){
+  whyNotes.push(t);
+  renderWhyStage('single');
+}
+
+function stageGrow(){
+  const notes=whyNotes.length>0?whyNotes:['Java Basics','OOP Concepts','Encapsulation'];
+  return `
+  <div class="why-title">Growing pains — the problem becomes visible</div>
+  <div class="why-sub">Look at the repetition. Every note has exactly the same three fields. What does that tell you?</div>
+  <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+    <div class="sc-box sc-warn" style="flex:1;min-width:220px">
+      <div class="sc-head" style="display:flex;align-items:center;gap:8px;padding:10px 14px">
+        <span>📄</span>
+        <span style="color:#BE123C;font-size:13px;font-weight:700">NotesApp.java</span>
+        <span class="overloaded-badge">Overloaded</span>
+      </div>
+      <div class="sc-body" style="padding:12px;gap:4px">
+        ${notes.map((n,i)=>`
+          <div style="margin-bottom:5px">
+            <div class="sc-field f-warn" style="animation-delay:${i*.06}s;font-size:12px">note${i+1}Title = "${n}";</div>
+            <div class="sc-field f-warn" style="animation-delay:${i*.06+.02}s;font-size:12px">note${i+1}Content = "...";</div>
+            <div class="sc-field f-warn" style="animation-delay:${i*.06+.04}s;font-size:12px">note${i+1}Date = "15-09-2026";</div>
+          </div>`).join('')}
+        <div style="height:6px;border-top:1.5px dashed #FDA4AF;margin:6px 0"></div>
+        <div class="sc-field f-ops" style="font-size:12px">addNote() — operations...</div>
+        <div class="sc-field f-store" style="font-size:12px">saveToFile() — storage...</div>
+        <div class="sc-field f-ui" style="font-size:12px">showMenu() — user interaction...</div>
+      </div>
+    </div>
+    <div style="min-width:190px;max-width:240px;display:flex;flex-direction:column;gap:10px">
+      <div style="background:#FFF1F2;border:1.5px solid #FDA4AF;border-radius:10px;overflow:hidden">
+        <div style="background:#FFF1F2;border-bottom:1.5px solid #FDA4AF;padding:10px 13px;font-size:13px;font-weight:700;color:#BE123C;display:flex;align-items:center;gap:6px">
+          <span>⚠</span> Repeated structure detected
+        </div>
+        <div style="padding:10px 13px;display:flex;flex-direction:column;gap:6px">
+          ${notes.map((n,i)=>`<div style="display:flex;gap:8px;align-items:center;font-size:12px">
+            <span style="background:#FFF1F2;border:1.5px solid #FDA4AF;border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#BE123C;white-space:nowrap">note${i+1}</span>
+            <span style="color:var(--text2)">title · content · date</span></div>`).join('')}
+        </div>
+      </div>
+      <div class="think-box" style="margin:0;font-size:13px">
+        These three fields — title, content, date — appear for every note.
+        <br><br>
+        <strong>What if we described what <em>one note is</em>?</strong>
+      </div>
+    </div>
+  </div>
+  <div class="why-cta"><button class="why-btn wb-go" onclick="goWhyStage('signal')">Discover the solution →</button></div>`;
+}
+
+function stageSignal(){
+  const notes=whyNotes.length>0?whyNotes.slice(0,3):['Java Basics','OOP Concepts','Encapsulation'];
+  return `
+  <div class="why-title">The design signal — repetition points the way</div>
+  <div class="why-sub">When the same structure repeats, Java is telling you: <em>this concept deserves its own class</em>.</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#BE123C;margin-bottom:8px">Before — repeated variables</div>
+      ${notes.map((n,i)=>`<div style="margin-bottom:7px;border:1.5px dashed #FDA4AF;border-radius:8px;padding:8px;background:#FFF1F2">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#BE123C">note${i+1}Title = "${n}"</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#BE123C">note${i+1}Content = "..."</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#BE123C">note${i+1}Date = "..."</div>
+      </div>`).join('')}
+      <div style="font-size:11px;color:var(--text3);font-style:italic">...note4, note5, note100...</div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px">After — one class, many objects</div>
+      <div class="sc-box" style="margin-bottom:10px">
+        <div class="sc-head" style="background:var(--violet-light);color:var(--violet)">🟣 Note.java</div>
+        <div class="sc-body">
+          <div class="sc-field f-note">String title;</div>
+          <div class="sc-field f-note">String content;</div>
+          <div class="sc-field f-note">String date;</div>
+          <div class="sc-field f-note">String category;</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:7px;text-align:center">↓ creates objects → stored in ArrayList&lt;Note&gt;</div>
+      <div class="obj-row">
+        ${notes.map((n,i)=>`<div class="obj-card">
+          <div class="obj-head"><span>Note #${i+1}</span><span style="font-size:9px;opacity:.7">new Note()</span></div>
+          <div class="obj-body">
+            <div class="obj-field"><span class="obj-key">title</span><span class="obj-val">"${n}"</span></div>
+            <div class="obj-field"><span class="obj-key">content</span><span class="obj-val">"..."</span></div>
+            <div class="obj-field"><span class="obj-key">date</span><span class="obj-val">"15-09"</span></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="why-cta"><button class="why-btn wb-go" onclick="goWhyStage('note')">Explore the Note class →</button></div>`;
+}
+
+function stageNote(){
+  return `
+  <div class="why-title">Note class — blueprint vs object</div>
+  <div class="why-sub">The <em>class</em> is the blueprint. An <em>object</em> is what gets created. One blueprint → unlimited objects.</div>
+  <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+    <div style="flex:0 0 152px">
+      <div style="font-size:10px;font-weight:700;color:var(--violet);margin-bottom:6px">CLASS — blueprint</div>
+      <div class="sc-box">
+        <div class="sc-head" style="background:var(--violet-light);color:var(--violet)">🟣 Note</div>
+        <div class="sc-body">
+          <div style="font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:3px">// fields</div>
+          <div class="sc-field f-note" style="font-size:10px">String title</div>
+          <div class="sc-field f-note" style="font-size:10px">String content</div>
+          <div class="sc-field f-note" style="font-size:10px">String date</div>
+          <div class="sc-field f-note" style="font-size:10px">String category</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:18px;color:var(--border2);margin:7px 0">↓</div>
+      <div style="text-align:center;font-size:10px;color:var(--text3)">creates objects</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:10px;font-weight:700;color:var(--blue);margin-bottom:7px">OBJECTS — each independent, in heap memory</div>
+      ${[{id:1,title:'Java Basics',content:'Syntax, variables, loops',cat:'Learning'},{id:2,title:'OOP Concepts',content:'Classes, objects, methods',cat:'Learning'},{id:3,title:'Encapsulation',content:'Private fields, getters',cat:'Advanced'}].map(n=>`
+        <div style="background:var(--card);border:1.5px solid var(--border2);border-radius:8px;overflow:hidden;margin-bottom:7px;animation:popIn .3s ease">
+          <div style="background:var(--violet);color:#fff;padding:4px 9px;font-size:10px;font-weight:600;display:flex;justify-content:space-between">
+            <span>Note Object #${n.id}</span><span style="opacity:.7;font-size:9px">new Note()</span></div>
+          <div style="padding:6px 9px;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px">
+            <div class="obj-field"><span class="obj-key">title</span><span class="obj-val">"${n.title}"</span></div>
+            <div class="obj-field"><span class="obj-key">content</span><span class="obj-val">"${n.content}"</span></div>
+            <div class="obj-field"><span class="obj-key">date</span><span class="obj-val">"15-09-2026"</span></div>
+            <div class="obj-field"><span class="obj-key">category</span><span class="obj-val">"${n.cat}"</span></div>
+          </div>
+        </div>`).join('')}
+      <div class="info-box">One <code style="background:rgba(255,255,255,.6);padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:10px">Note</code> class + <code style="background:rgba(255,255,255,.6);padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:10px">ArrayList&lt;Note&gt;</code> replaces 1,500 variables for 500 notes.</div>
+    </div>
+  </div>
+  <div class="why-cta"><button class="why-btn wb-go" onclick="goWhyStage('manager')">Who manages all these notes? →</button></div>`;
+}
+
+function stageManager(){
+  return `
+  <div class="why-title">NotesManager — one class, one responsibility</div>
+  <div class="why-sub">As operations grew, the single class was doing too many different jobs. Now each class gets one clear purpose.</div>
+  <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+    <div style="flex:0 0 180px">
+      <div class="arch-flow">
+        <div class="arch-node" style="background:var(--blue-light);border-color:var(--blue-border);color:var(--blue)">Main</div>
+        <div class="arch-arr">↓</div>
+        <div class="arch-node" style="background:var(--green-light);border-color:var(--green-border);color:var(--green)">NotesManager</div>
+        <div class="arch-row">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <div class="arch-arr">↓</div>
+            <div class="arch-node" style="background:var(--violet-light);border-color:var(--border2);color:var(--violet);font-size:11px">Note</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <div class="arch-arr">↓</div>
+            <div class="arch-node" style="background:var(--amber-light);border-color:var(--amber-border);color:var(--amber);font-size:11px">FileManager</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        ${[
+          {icon:'🔵',name:'Main',desc:'coordinates the app',tag:'r-ui'},
+          {icon:'🟢',name:'NotesManager',desc:'manages notes & operations',tag:'r-ops'},
+          {icon:'🟣',name:'Note',desc:'represents one note (data)',tag:'r-note'},
+          {icon:'🟡',name:'FileManager',desc:'reads & writes notes.csv',tag:'r-store'},
+        ].map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--card)">
+          <span style="font-size:16px">${r.icon}</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace">${r.name}</div>
+            <div style="font-size:11px;color:var(--text2)">→ ${r.desc}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+      <div class="sc-box" style="border-color:var(--green-border)">
+        <div class="sc-head" style="background:var(--green-light);color:var(--green)">🟢 NotesManager.java</div>
+        <div class="sc-body">
+          <div class="sc-field f-note" style="font-size:10px">ArrayList&lt;Note&gt; notes;</div>
+          <div class="sc-field f-note" style="font-size:10px">FileManager fileManager;</div>
+          <div class="sc-field f-ops" style="font-size:10px;border-style:dashed">addNote(String title, String content)</div>
+          <div class="sc-field f-ops" style="font-size:10px;border-style:dashed">deleteNote(int id)</div>
+          <div class="sc-field f-ops" style="font-size:10px;border-style:dashed">searchNotes(String query)</div>
+          <div class="sc-field f-ops" style="font-size:10px;border-style:dashed">getAllNotes() : List&lt;Note&gt;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="why-cta"><button class="why-btn wb-go" onclick="goWhyStage('flow')">▶ Watch them work together →</button></div>`;
+}
+
+function stageFlow(){
+  const fs=FLOW_STEPS[flowStep];
+  const isActive=id=>fs.active.includes(id);
+  const prevDone=flowStep>0;
+  const nodesDone=flowStep>=8?['main','nm','note','list','fm','csv']:[];
+
+  const fnState=id=>{
+    if(nodesDone.includes(id)) return 'fn-done';
+    if(isActive(id)) return 'fn-active';
+    return 'fn-idle';
+  };
+
+  const connLit=(a,b)=>(isActive(a)||isActive(b)||nodesDone.length>0)?'fc-lit':'';
+
+  const stepDots=FLOW_STEPS.map((s,i)=>`
+    <span class="sdot ${i<flowStep?'sd-done':i===flowStep?'sd-active':''}" onclick="setFlowStep(${i})">${i+1}</span>
+    ${i<FLOW_STEPS.length-1?`<div class="sdot-line ${i<flowStep?'sl-done':''}"></div>`:''}`).join('');
+
+  let memContent='';
+  if(fs.mem.note) memContent+=`<div class="mem-obj"><div class="mem-obj-head">Note object — heap</div>
+    <div class="mem-obj-body">
+      <div class="mem-field"><span class="mem-key">title</span><span>"Java"</span></div>
+      <div class="mem-field"><span class="mem-key">content</span><span>"Classes..."</span></div>
+      <div class="mem-field"><span class="mem-key">date</span><span>"15-09-2026"</span></div>
+      <div class="mem-field"><span class="mem-key">category</span><span>"Learning"</span></div>
+    </div></div>`;
+  if(fs.mem.list) memContent+=`<div class="mem-list"><div class="mem-list-head">ArrayList&lt;Note&gt;</div>
+    <div class="mem-list-body">
+      <div class="list-item">[0] Note@0x1a2b</div>
+      <div class="list-item">[1] Note@0x3c4d</div>
+      <div class="list-item li-new">[2] Note@0x5e6f ← new</div>
+    </div></div>`;
+  if(fs.mem.csv) memContent+=`<div class="mem-file"><div class="mem-file-head">📄 notes.csv</div>
+    <div class="mem-file-row">Java,Classes...,15-09-2026</div></div>`;
+  if(!memContent) memContent=`<div class="mem-empty">No objects in memory yet...</div>`;
+
+  return `
+  <div class="why-title">Object flow — step through <code style="font-family:'JetBrains Mono',monospace;font-size:14px;background:var(--violet-light);padding:1px 8px;border-radius:5px;color:var(--violet)">addNote()</code></div>
+  <div class="why-sub">Every step shows what Java actually executes — which class is running, what's in memory, what's on disk.</div>
+  <div class="step-dots">${stepDots}</div>
+  <div class="flow-canvas">
+    <div class="flow-nodes">
+      <div class="flow-node ${fnState('main')} ${isActive('main')?'':''}">
+        <div class="fn-name">Main</div>
+        <div class="fn-sub">${isActive('main')?'▶ executing':nodesDone.includes('main')?'✓ returned':'entry point'}</div>
+      </div>
+      <div class="flow-conn ${connLit('main','nm')}">↓</div>
+      <div class="flow-node ${fnState('nm')}">
+        <div class="fn-name">NotesManager</div>
+        <div class="fn-sub">${isActive('nm')?'▶ executing':nodesDone.includes('nm')?'✓ done':'waiting'}</div>
+      </div>
+      <div class="flow-conn ${connLit('nm','note')}">↓</div>
+      <div class="flow-node ${fnState('note')}">
+        <div class="fn-name">Note</div>
+        <div class="fn-sub">${isActive('note')?'▶ created!':nodesDone.includes('note')?'✓ in memory':'not yet'}</div>
+      </div>
+      <div class="flow-conn ${connLit('note','list')}">↓</div>
+      <div class="flow-node ${fnState('list')}">
+        <div class="fn-name">ArrayList</div>
+        <div class="fn-sub">${isActive('list')?'▶ adding...':nodesDone.includes('list')?'✓ stored':'waiting'}</div>
+      </div>
+      <div class="flow-conn ${connLit('list','fm')}">↓</div>
+      <div class="flow-node ${fnState('fm')}">
+        <div class="fn-name">FileManager</div>
+        <div class="fn-sub">${isActive('fm')?'▶ writing':nodesDone.includes('fm')?'✓ saved':'not yet'}</div>
+      </div>
+      <div class="flow-conn ${connLit('fm','csv')}">↓</div>
+      <div class="flow-node ${fnState('csv')}" style="border-color:${isActive('csv')||nodesDone.includes('csv')?'var(--amber-border)':'var(--border)'};background:${isActive('csv')||nodesDone.includes('csv')?'var(--amber-light)':'var(--card)'}">
+        <div class="fn-name" style="color:${isActive('csv')||nodesDone.includes('csv')?'var(--amber)':'var(--text)'}">notes.csv</div>
+        <div class="fn-sub">${isActive('csv')?'▶ writing...':nodesDone.includes('csv')?'✓ saved!':'storage'}</div>
+      </div>
+    </div>
+    <div class="flow-right">
+      <div class="explain-card">
+        <div class="ec-step">Step ${flowStep+1} of ${FLOW_STEPS.length}</div>
+        <div class="ec-title">${fs.title}</div>
+        <div class="ec-body">${fs.desc}</div>
+      </div>
+      <div class="mem-panel">
+        <div class="mem-head">🧠 Memory &amp; Storage</div>
+        <div class="mem-body">${memContent}</div>
+      </div>
+      ${fs.mem.mgr?`<div style="background:var(--green-light);border:1.5px solid var(--green-border);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green)">NotesManager: ArrayList&lt;Note&gt; — ${flowStep>=5?3:flowStep>=1?'initialised':'empty'} items</div>`:''}
+    </div>
+  </div>
+  <div class="why-cta" style="margin-top:14px">
+    ${flowStep>0?`<button class="why-btn" onclick="setFlowStep(${flowStep-1})">← Back</button>`:''}
+    ${flowStep<FLOW_STEPS.length-1?`<button class="why-btn wb-go" onclick="setFlowStep(${flowStep+1})">Next step →</button>`:
+      `<button class="why-btn wb-go" onclick="goWhyStage('compare')">See both designs →</button>`}
+    <span class="why-hint">or click any numbered dot above</span>
+  </div>`;
+}
+
+function setFlowStep(n){
+  flowStep=Math.max(0,Math.min(FLOW_STEPS.length-1,n));
+  renderWhyStage('flow');
+}
+
+function stageCompare(){
+  return `
+  <div class="why-title">Two designs — you've experienced both</div>
+  <div class="why-sub">Not "multiple classes are always better" — but as complexity grows, separating responsibilities makes each class easier to understand, change, and reuse.</div>
+  <div class="compare-grid">
+    <div class="cmp-bad">
+      <div class="cmp-title" style="color:#BE123C">❌ Version 1 — one class, everything</div>
+      <div class="sc-box sc-warn" style="margin-bottom:10px">
+        <div class="sc-head">📄 NotesApp.java</div>
+        <div class="sc-body">
+          <div class="sc-field f-warn" style="font-size:10px">note1Title, note1Content...</div>
+          <div class="sc-field f-warn" style="font-size:10px">note2Title, note2Content...</div>
+          <div class="sc-field f-warn" style="font-size:10px">addNote() — 30 lines</div>
+          <div class="sc-field f-warn" style="font-size:10px">saveToFile() — 35 lines</div>
+          <div class="sc-field f-warn" style="font-size:10px">showMenu() — 20 lines</div>
+        </div>
+      </div>
+      <div class="cmp-item"><div class="cmp-bullet" style="background:#FDA4AF"></div>A bug in file code can break search logic — they're tangled</div>
+      <div class="cmp-item"><div class="cmp-bullet" style="background:#FDA4AF"></div>Hard to find where to make changes</div>
+      <div class="cmp-item"><div class="cmp-bullet" style="background:#FDA4AF"></div>Cannot reuse any part of it elsewhere</div>
+    </div>
+    <div class="cmp-good">
+      <div class="cmp-title" style="color:var(--green)">✅ Version 2 — responsibilities separated</div>
+      <div class="arch-flow" style="margin-bottom:10px">
+        <div class="arch-node" style="background:var(--blue-light);border-color:var(--blue-border);color:var(--blue);font-size:11px">Main — coordinates</div>
+        <div class="arch-arr" style="color:var(--green-border)">↓</div>
+        <div class="arch-node" style="background:var(--green-light);border-color:var(--green-border);color:var(--green);font-size:11px">NotesManager — manages</div>
+        <div class="arch-row">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+            <div class="arch-arr" style="color:var(--green-border)">↓</div>
+            <div class="arch-node" style="background:var(--violet-light);border-color:var(--border2);color:var(--violet);font-size:10px">Note — data</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+            <div class="arch-arr" style="color:var(--green-border)">↓</div>
+            <div class="arch-node" style="background:var(--amber-light);border-color:var(--amber-border);color:var(--amber);font-size:10px">FileManager</div>
+          </div>
+        </div>
+      </div>
+      <div class="cmp-item"><div class="cmp-bullet" style="background:var(--green-border)"></div>Change file logic without touching notes operations</div>
+      <div class="cmp-item"><div class="cmp-bullet" style="background:var(--green-border)"></div>Each class is easy to read, test, and maintain</div>
+      <div class="cmp-item"><div class="cmp-bullet" style="background:var(--green-border)"></div>NotesManager reusable in any screen of the app</div>
+    </div>
+  </div>
+  <div class="final-box">
+    <div style="font-size:14px;font-weight:700;color:var(--violet);margin-bottom:8px">The goal isn't to create more classes.</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px">
+      The goal is to recognise <em>when a class is needed</em> — when a structure repeats, when one class is doing too many different jobs, or when you want to reuse something.
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);line-height:2.2;background:rgba(255,255,255,.6);border-radius:7px;padding:9px 12px;margin-bottom:10px">
+      Repeated structure &nbsp;→&nbsp; <span style="color:var(--violet)">Note</span> class<br>
+      Too many operations &nbsp;→&nbsp; <span style="color:var(--green)">NotesManager</span> class<br>
+      Infrastructure concern &nbsp;→&nbsp; <span style="color:var(--amber)">FileManager</span> class<br>
+      Entry &amp; coordination &nbsp;→&nbsp; <span style="color:var(--blue)">Main</span>
+    </div>
+    <div style="font-size:12px;color:var(--violet);font-style:italic">Don't memorise the design. Experience why the design emerged.</div>
+  </div>
+  <div class="why-cta">
+    <button class="why-btn wb-go" onclick="goWhyStage('welcome')">Start over ↺</button>
+    <button class="why-btn" onclick="goWhyStage('flow')">▶ Replay object flow</button>
+  </div>`;
+}
+
+// init
+buildStage();
+</script>
+</body>
+</html>

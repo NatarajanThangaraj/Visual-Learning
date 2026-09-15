@@ -91,6 +91,17 @@ export const courses = [
             blurb: 'Sign in as the admin or as a guest and get two different applications out of one set of classes. The admin adds rooms and vehicles, edits their prices and reads the revenue; the guest can only search what exists, book it, hand it back and leave a review. Two playgrounds, four object types, and a UML diagram that shows why it is still just one RoomBooking class.' },
           { id: 'my-expense-tracker', title: 'Expense Tracker Playground', minutes: 25,
             blurb: 'Step through the calls one at a time and watch four classes talk to each other — Main asks, ExpenseTracker delegates, Expense objects get built, FileManager writes the CSV. Then read the same program as a report and as a UML diagram.' },
+          { id: 'notes-app', title: 'Notes App — Why Multiple Classes?', minutes: 30,
+            blurb: 'Add, search and delete notes one call at a time and watch Main, NotesManager, Note and FileManager hand work to each other. Then follow the story of the one-class version that kept growing until splitting it was the only way out.', thumb: false },
+        ],
+      },
+      {
+        id: 'collections',
+        title: 'Collections',
+        summary: 'Work handled in order, and finding any one thing instantly.',
+        lessons: [
+          { id: 'assetflow', title: 'AssetFlow', minutes: 25,
+            blurb: 'Run an IT asset desk — clear the request line in order, then find any asset by its tag.', thumb: false },
         ],
       },
       {
