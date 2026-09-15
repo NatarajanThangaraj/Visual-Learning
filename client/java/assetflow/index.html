@@ -139,6 +139,29 @@ body::before{
   animation:fadeGlow 1.6s ease-out forwards;pointer-events:none;
 }
 .tile{position:relative}
+/* report a problem — only shows on hover/focus so the desk stays calm */
+.flag{
+  position:absolute;top:7px;right:7px;width:24px;height:24px;padding:0;
+  border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  background:rgba(255,255,255,.07);color:var(--tx3);
+  opacity:0;transition:opacity .22s,background .22s,color .22s,transform .22s;
+}
+.flag svg{width:13px;height:13px}
+.tile:hover .flag,.flag:focus-visible{opacity:1}
+/* no hover on a touch screen — the button has to be there to be found */
+@media (hover:none){
+  .flag{opacity:.62;width:30px;height:30px}
+  .flag svg{width:15px;height:15px}
+}
+.flag:hover{background:rgba(244,63,94,.22);color:#FB7185;transform:scale(1.12)}
+.tile .badge{
+  position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;
+  display:grid;place-items:center;color:#FB7185;background:rgba(244,63,94,.18);
+}
+.tile .badge svg{width:13px;height:13px}
+.tile.is-broken{border-color:rgba(244,63,94,.45)}
+.tile.is-broken svg{opacity:.5}
+.tile.is-broken .tag{color:#FB7185}
 .empty{
   margin:auto;text-align:center;color:var(--tx3);font-size:13.5px;
 }
@@ -238,6 +261,25 @@ body::before{
   background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:blink 1.8s ease-in-out infinite;
 }
 .req.nudge{animation:nudge .45s cubic-bezier(.3,.9,.4,1)}
+/* a reported problem reads red and sits ahead of the plain requests */
+.req.is-issue{
+  background:linear-gradient(170deg,rgba(244,63,94,.16),rgba(244,63,94,.05));
+  border-color:rgba(244,63,94,.4);
+}
+.req.is-issue.is-next{
+  border-color:rgba(244,63,94,.75);
+  box-shadow:0 0 0 1px rgba(244,63,94,.35),0 0 28px rgba(244,63,94,.4);
+}
+.req.is-issue.is-next::before{background:#FB7185;box-shadow:0 0 10px #FB7185}
+.req .badge{
+  position:absolute;top:7px;left:7px;width:20px;height:20px;border-radius:50%;
+  display:grid;place-items:center;color:#FB7185;background:rgba(244,63,94,.2);
+}
+.req .badge svg{width:11px;height:11px}
+.process.is-urgent{
+  background:linear-gradient(120deg,#F43F5E,#B4318F);
+  box-shadow:0 8px 24px rgba(0,0,0,.4),0 0 26px rgba(244,63,94,.5);
+}
 .lane-empty{margin:auto;color:var(--tx3);font-size:13px}
 
 .process{
@@ -270,11 +312,20 @@ body::before{
 .stagecard svg{width:46px;height:46px}
 .stagecard .stamp{
   margin-top:16px;padding:9px 0;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;gap:7px;
   font-size:14px;font-weight:700;letter-spacing:2px;color:#fff;
   background:linear-gradient(120deg,var(--blue),var(--purple));
   box-shadow:0 0 26px var(--glow-p);
   opacity:0;transform:scale(2.4) rotate(-8deg);
 }
+.stagecard .stamp svg{width:16px;height:16px;flex:none}
+/* a fixed thing is green, and keeps the tag it already had */
+.stagecard .stamp.ok{
+  background:linear-gradient(120deg,#10B981,#22D3EE);
+  box-shadow:0 0 26px rgba(16,185,129,.5);
+}
+.stagecard.is-fixing{box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 44px rgba(16,185,129,.35)}
+.stagecard.is-fixing .ring{border-color:#10B981}
 .ring{
   position:absolute;z-index:24;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;
   border-radius:50%;border:2px solid var(--purple);opacity:0;pointer-events:none;
@@ -461,7 +512,9 @@ var ICON = {
   shield:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5.5c0 4.3-2.9 8-7 9.5-4.1-1.5-7-5.2-7-9.5V6z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
   search:'<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.4" stroke="currentColor" stroke-width="2"/><path d="M15.8 15.8L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   box:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
-  spark:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.1 5.9L20 11l-5.9 2.1L12 19l-2.1-5.9L4 11l5.9-2.1z" fill="#fff"/></svg>'
+  spark:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.1 5.9L20 11l-5.9 2.1L12 19l-2.1-5.9L4 11l5.9-2.1z" fill="#fff"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 4.5l8.3 14.4H3.7z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 10v3.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.05" fill="currentColor"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 
 /* ════════════════════════════════════════
@@ -494,10 +547,12 @@ var assets = [
   {tag:'KBD-101', type:'keyboard', who:'Nila'}
 ];
 
+/* two kinds of card share one line. a broken thing is not put behind
+   someone who wants a second monitor — it goes in front of them. */
 var queue = [
-  {who:'Meera', type:'laptop'},
-  {who:'Arjun', type:'monitor'},
-  {who:'Ravi',  type:'headset'}
+  {who:'Meera', type:'laptop',  kind:'request'},
+  {who:'Arjun', type:'monitor', kind:'request'},
+  {who:'Ravi',  type:'headset', kind:'request'}
 ];
 
 var view = 'desk';
@@ -533,8 +588,11 @@ function renderDesk(newTag){
     return;
   }
   el.innerHTML = mine.map(function(a){
-    return '<div class="tile'+(a.tag===newTag?' is-new':'')+'">'+
-             ICON[a.type]+
+    var flagged = a.broken
+      ? '<span class="badge">'+ICON.alert+'</span>'
+      : '<button class="flag" data-flag="'+a.tag+'" aria-label="Report a problem with '+a.tag+'">'+ICON.alert+'</button>';
+    return '<div class="tile'+(a.tag===newTag?' is-new':'')+(a.broken?' is-broken':'')+'">'+
+             flagged+ICON[a.type]+
              '<div class="tag">'+a.tag+'</div>'+
            '</div>';
   }).join('');
@@ -546,7 +604,9 @@ function renderLane(){
     el.innerHTML = '<div class="lane-empty">All clear</div>';
   } else {
     el.innerHTML = queue.map(function(q,i){
-      return '<div class="req'+(i===0?' is-next':'')+'" data-i="'+i+'">'+
+      var issue = q.kind === 'issue';
+      return '<div class="req'+(i===0?' is-next':'')+(issue?' is-issue':'')+'" data-i="'+i+'">'+
+               (issue ? '<span class="badge">'+ICON.alert+'</span>' : '')+
                av(q.who)+ICON[q.type]+
                '<small>'+q.who+'</small>'+
              '</div>';
@@ -554,6 +614,7 @@ function renderLane(){
   }
   $('waiting').textContent = queue.length;
   $('process').disabled = !queue.length || busy;
+  $('process').classList.toggle('is-urgent', !!(queue.length && queue[0].kind === 'issue'));
 }
 
 function renderChips(){
@@ -601,7 +662,23 @@ function closeSheet(){ $('scrim').classList.remove('is-on'); $('sheet').classLis
 
 function request(type){
   closeSheet();
-  queue.push({who:'You', type:type});
+  /* a plain request joins the back */
+  queue.push({who:'You', type:type, kind:'request'});
+  flyOrb(function(){ renderLane(); });
+}
+
+/* a broken thing does not wait its turn: it goes in front of every plain
+   request, but still behind any problem reported before it. */
+function fileIssue(tag){
+  var asset = assets.filter(function(a){ return a.tag === tag; })[0];
+  if (!asset || asset.broken) return;
+  asset.broken = true;
+
+  var at = 0;
+  while (at < queue.length && queue[at].kind === 'issue') at++;
+  queue.splice(at, 0, {who:asset.who, type:asset.type, kind:'issue', tag:tag});
+
+  renderDesk();
   flyOrb(function(){ renderLane(); });
 }
 
@@ -617,12 +694,26 @@ function flyOrb(done){
   var x1 = to.left   - box.left + to.width/2 - 10;
   var y1 = to.top    - box.top  + to.height/2 - 10;
 
-  if (!A){ renderLane(); if (done) done(); return; }
+  /* the orb is decoration; the line must update whether or not it flies.
+     whichever comes first — the animation ending, or the timer — wins. */
+  var fired = false;
+  function finish(){
+    if (fired) return;
+    fired = true;
+    if (A) A.remove(orb);
+    orb.style.opacity = 0;
+    orb.style.transform = 'none';
+    pulseSeg();
+    if (done) done();
+  }
+
+  if (!A){ finish(); return; }
 
   orb.style.left = x0 + 'px';
   orb.style.top  = y0 + 'px';
 
   A.remove(orb);
+  setTimeout(finish, 1100);
   A({
     targets: orb,
     keyframes:[
@@ -631,12 +722,7 @@ function flyOrb(done){
       {translateX:(x1-x0), translateY:(y1-y0), scale:.5, opacity:0, duration:340}
     ],
     easing:'easeInOutQuad',
-    complete: function(){
-      orb.style.opacity = 0;
-      orb.style.transform = 'none';
-      pulseSeg();
-      if (done) done();
-    }
+    complete: finish
   });
 }
 
@@ -654,11 +740,16 @@ function process(){
   $('process').disabled = true;
 
   var req = queue.shift();
-  var tag = nextTag(req.type);
+  var isIssue = req.kind === 'issue';
+  /* a request mints a new tag; a problem keeps the tag it already had */
+  var tag = isIssue ? req.tag : nextTag(req.type);
   var card = $('stagecard'), ring = $('ring');
 
   card.innerHTML = av(req.who) + ICON[req.type] +
-                   '<div class="stamp" id="stamp">' + tag + '</div>';
+                   '<div class="stamp' + (isIssue ? ' ok' : '') + '" id="stamp">' +
+                     (isIssue ? ICON.check : '') + '<span>' + tag + '</span>' +
+                   '</div>';
+  card.classList.toggle('is-fixing', isIssue);
   card.classList.add('is-on');
 
   var stamp = $('stamp');
@@ -673,7 +764,12 @@ function process(){
     card.classList.remove('is-on');
     card.style.opacity = 0;
     card.style.transform = 'scale(.8)';
-    assets.push({tag:tag, type:req.type, who:req.who});
+    if (isIssue){
+      /* nothing new is handed out — the thing they already had is well again */
+      assets.forEach(function(a){ if (a.tag === tag) a.broken = false; });
+    } else {
+      assets.push({tag:tag, type:req.type, who:req.who});
+    }
     busy = false;
     renderAll(tag);
     if (A){
@@ -782,6 +878,10 @@ $('toggle').addEventListener('click', function(e){
 });
 
 $('fab').addEventListener('click', openSheet);
+$('tiles').addEventListener('click', function(e){
+  var f = e.target.closest('.flag');
+  if (f) fileIssue(f.getAttribute('data-flag'));
+});
 $('scrim').addEventListener('click', closeSheet);
 $('picks').addEventListener('click', function(e){
   var p = e.target.closest('.pick');
