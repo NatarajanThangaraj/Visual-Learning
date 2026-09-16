@@ -4,7 +4,8 @@
 .home-head { padding: 18px 2px 26px; max-width: 720px; }
 .home-eyebrow {
   font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--text-faint);
+  /* --text-faint is ~2.5:1 on white — below AA for text this small. */
+  text-transform: uppercase; color: var(--text-muted);
 }
 .home-title {
   margin: 10px 0 12px;
@@ -19,7 +20,7 @@
   padding: 20px 22px;
   margin-bottom: 26px;
   border: 1px solid var(--rail);
-  border-left: 4px solid var(--course-accent, var(--status-done));
+  border-left: 4px solid var(--course-accent, var(--navy-900));
   border-radius: var(--radius-card);
   background: var(--surface-raised);
   box-shadow: var(--shadow-card);
@@ -58,16 +59,28 @@
 .ccard-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px; }
 .ccard-tagline { font-size: 13.5px; line-height: 1.6; color: var(--text-muted); }
 .ccard-meta { font-size: 12px; font-weight: 600; color: var(--text-faint); }
-.ccard-progress { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-.ccard-progress .bar { flex: 1; }
+.ccard-progress { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.ccard-progress .bar { flex: 1; height: 8px; }
 .ccard-pct {
   font-size: 12px; font-weight: 700; color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
+/* The primary action on a course card, stated rather than implied. */
+.ccard-cta {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--navy-900);
+  color: #fff;
+  font-size: 13.5px; font-weight: 700;
+  text-align: center;
+  transition: background 0.15s;
+}
+.ccard:hover .ccard-cta { background: var(--navy-700); }
 
 .home-foot { margin: 34px 2px 0; font-size: 13.5px; color: var(--text-muted); }
 .home-foot a { color: var(--navy-900); font-weight: 700; }
-.home-foot a:hover { color: var(--status-done); }
+.home-foot a:hover { color: var(--navy-700); }
 
 /* ── Course icon tile ───────────────────────────────────────────────────── */
 .course-icon {
@@ -144,13 +157,16 @@
 .module-head-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .module-count { font-size: 12.5px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .module-notes-btn {
-  display: grid; place-items: center;
-  width: 34px; height: 34px;
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 11px;
   border: 1px solid var(--rail);
-  border-radius: 9px;
-  background: transparent;
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
   color: var(--text-muted);
+  font-size: 12px; font-weight: 700;
+  white-space: nowrap;
 }
+.module-notes-btn svg { flex: none; }
 .module-notes-btn:hover { border-color: var(--navy-900); color: var(--navy-900); }
 .module-notes-btn.is-on { background: var(--navy-900); border-color: var(--navy-900); color: #fff; }
 .module-notes {
@@ -161,6 +177,27 @@
   background: var(--blue-50);
   border-radius: 11px;
 }
+
+/* A module wrapping a single page doesn't need a structural bar above one
+   card — it becomes an inline label, and the full treatment is reserved for
+   modules that actually group several pages. */
+.module.is-single { margin-bottom: 26px; }
+.module.is-single .module-head {
+  padding: 0 4px 2px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.module.is-single .module-title { font-size: 14px; font-weight: 700; color: var(--text-muted); }
+.module.is-single .module-title .module-num { color: var(--text-faint); }
+.module.is-single .module-count { display: none; }
+.module.is-single .module-notes-btn {
+  height: 26px; padding: 0 9px;
+  border-color: transparent;
+  background: transparent;
+}
+.module.is-single .module-notes-btn:hover { border-color: var(--rail); }
+.module.is-single .lesson-path { margin-top: 4px; }
 
 /* ── Lesson path ────────────────────────────────────────────────────────── */
 .lesson-path { list-style: none; margin: 8px 0 0; padding: 0; }
@@ -246,9 +283,13 @@ a.lnode-card:hover {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .lnode-go { color: var(--text-faint); font-weight: 700; }
-a.lnode-card:hover .lnode-go { color: var(--status-done); }
+a.lnode-card:hover .lnode-go { color: var(--navy-700); }
 
-/* ── Lesson thumbnail ───────────────────────────────────────────────────── */
+/* ── Lesson thumbnail ─────────────────────────────────────────────────────
+   One frame for every preview. The screenshots behind them vary (light UI,
+   dark mockup, flat art), so the frame itself does the unifying: same ratio,
+   same neutral mat, same hairline, so adjacent cards read as one catalogue
+   rather than three products. */
 .lthumb {
   position: relative;
   display: block;
@@ -256,7 +297,8 @@ a.lnode-card:hover .lnode-go { color: var(--status-done); }
   aspect-ratio: 16 / 10;
   border-radius: 10px;
   overflow: hidden;
-  background: var(--blue-50);
+  background: var(--surface-subtle);
+  box-shadow: inset 0 0 0 1px rgba(15, 42, 92, 0.08);
   flex-shrink: 0;
 }
 .lthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }

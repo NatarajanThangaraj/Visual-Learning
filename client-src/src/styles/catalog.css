@@ -30,8 +30,8 @@
 }
 .cat-pill[data-cat="Java"] .dot { background: var(--java); }
 .cat-pill[data-cat="Python"] .dot { background: var(--python); }
-.cat-pill[data-cat="Others"] .dot,
-.cat-pill[data-cat="Problem Solving"] .dot { background: var(--others); }
+.cat-pill[data-cat="Others"] .dot { background: var(--others); }
+.cat-pill[data-cat="Problem Solving"] .dot { background: var(--problem-solving); }
 .cat-pill .count {
   font-size: 11px;
   font-weight: 700;
@@ -137,10 +137,14 @@
 }
 .card:active { transform: scale(0.985); }
 
+/* Same thumbnail contract as the course path: fixed ratio, neutral mat and a
+   hairline, so a light screenshot, a dark mockup and flat art still read as
+   three cards in one grid rather than three different products. */
 .card .thumb {
   aspect-ratio: 16 / 9;
   width: 100%;
-  background: var(--blue-50);
+  background: var(--surface-subtle);
+  border-bottom: 1px solid var(--rail);
   overflow: hidden;
   position: relative;
 }
@@ -155,6 +159,7 @@
   height: 100%;
   aspect-ratio: auto;
   border-radius: 0;
+  box-shadow: none;
 }
 .card .thumb .lthumb-lines { width: 78px; }
 .card .thumb .lthumb-num { font-size: 22px; right: 12px; bottom: 8px; }
@@ -171,7 +176,7 @@
 }
 .card .cat-badge[data-cat="java"] { background: var(--java-bg); color: var(--java); }
 .card .cat-badge[data-cat="python"] { background: var(--python-bg); color: var(--python); }
-.card .cat-badge[data-cat="problem-solving"] { background: var(--others-bg); color: var(--others); }
+.card .cat-badge[data-cat="problem-solving"] { background: var(--problem-solving-bg); color: var(--problem-solving); }
 
 .card .body {
   padding: 16px 18px 18px;
@@ -202,7 +207,7 @@
 }
 .card .tag {
   background: var(--blue-50);
-  color: var(--blue-500);
+  color: var(--navy-700);
   font-size: 11px;
   font-weight: 700;
   padding: 3px 9px;

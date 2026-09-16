@@ -198,8 +198,8 @@ export const courses = [
     title: 'Problem Solving',
     label: 'Problem Solving',
     tagline: 'Language-agnostic thinking — how to turn a vague request into a rule.',
-    accent: 'var(--others)',
-    accentBg: 'var(--others-bg)',
+    accent: 'var(--problem-solving)',
+    accentBg: 'var(--problem-solving-bg)',
     modules: [
       {
         id: 'thinking-in-systems',

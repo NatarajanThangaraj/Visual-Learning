@@ -61,7 +61,14 @@ export default function HomePage() {
 
               <span className="ccard-progress">
                 <span className="bar"><span style={{ width: `${p.pct}%` }} /></span>
-                <span className="ccard-pct">{p.done > 0 ? `${p.done}/${p.total}` : 'Start'}</span>
+                <span className="ccard-pct">{p.done}/{p.total}</span>
+              </span>
+
+              {/* One unmistakable action per card, instead of leaving the thin
+                  progress bar to imply it. */}
+              <span className="ccard-cta">
+                {p.done === 0 ? 'Start course' : p.done === p.total ? 'Revisit' : 'Continue'}
+                <span aria-hidden="true"> →</span>
               </span>
             </Link>
           );

@@ -90,6 +90,61 @@ const iconProps = {
   'aria-hidden': 'true',
 };
 
+/* Full screen is the mode a learner reaches for to make the lab bigger, but a
+   lab is a fixed-width card inside a full-width body: give it a 2560px screen
+   and the card stays exactly the same size and just floats in more emptiness.
+   Measuring "what the lab really wants to be" is guesswork — a full-width
+   wrapper around a narrow card measures full-width — so instead of guessing,
+   the lab is laid out at a nominal desktop width and that whole viewport is
+   scaled up to fill the screen.
+ *
+ * So on a laptop nothing changes (the screen is at or below nominal and the
+ * lab renders 1:1); on a large display everything in the lab gets bigger
+ * together, which is what asking for full screen meant. `transform` rather
+ * than `zoom`: it is uniform, it is reversible in one line, and the browser
+ * maps pointer coordinates through it, so the lab's own controls still work. */
+const NOMINAL_WIDTH = 1280;
+const MAX_SCALE = 1.6;
+
+function useFitToFrame(ref, active) {
+  useEffect(() => {
+    const frame = ref.current;
+    if (!frame) return undefined;
+
+    const reset = () => {
+      frame.style.width = '';
+      frame.style.height = '';
+      frame.style.flex = '';
+      frame.style.transform = '';
+      frame.style.transformOrigin = '';
+    };
+
+    const apply = () => {
+      reset();
+      if (!active) return;
+
+      /* Measured after the reset, so this is the box the lab would fill on
+         its own — the frame in full screen, the whole viewport standalone. */
+      const { width, height } = frame.getBoundingClientRect();
+      const scale = Math.min(width / NOMINAL_WIDTH, MAX_SCALE);
+      if (!width || scale <= 1.02) return;
+
+      frame.style.flex = 'none';
+      frame.style.width = `${width / scale}px`;
+      frame.style.height = `${height / scale}px`;
+      frame.style.transformOrigin = 'top left';
+      frame.style.transform = `scale(${scale})`;
+    };
+
+    apply();
+    window.addEventListener('resize', apply);
+    return () => {
+      window.removeEventListener('resize', apply);
+      reset();
+    };
+  }, [ref, active]);
+}
+
 /** Fetch a lab and hand it back ready for srcdoc. `enabled` is false when the
  *  lab is not going to be framed at all, so a phone never downloads it. */
 function useLabDoc(src, enabled) {
@@ -116,9 +171,14 @@ function useLabDoc(src, enabled) {
 export default function EmbeddedLab({ lesson, standalone = false }) {
   const narrow = useMediaQuery('(max-width: 900px)') && !standalone;
   const frameRef = useRef(null);
+  const labRef = useRef(null);
   const [native, pinned, toggleFull] = useFullscreen(frameRef);
   const full = native || pinned;
   const [doc, failed] = useLabDoc(lesson.src, !narrow);
+
+  /* Scale the lab to the space it has whenever it owns the screen — the
+     standalone route always, the framed lab only once it is full screen. */
+  useFitToFrame(labRef, standalone || full);
 
   /* Standalone is the hand-off target: the lab already owns the viewport, so
      there is no bar to add and nowhere further to go full screen to. */
@@ -128,7 +188,13 @@ export default function EmbeddedLab({ lesson, standalone = false }) {
         <p>This lab could not be loaded.</p>
       </div>
     ) : (
-      <iframe className="lab-iframe" srcDoc={doc ?? ''} title={lesson.title} allow="fullscreen" />
+      <iframe
+        ref={labRef}
+        className="lab-iframe"
+        srcDoc={doc ?? ''}
+        title={lesson.title}
+        allow="fullscreen"
+      />
     );
   }
 
@@ -155,7 +221,8 @@ export default function EmbeddedLab({ lesson, standalone = false }) {
           fills the frame edge to edge, so anything overlaying it sits on top of
           the lab's own UI. */}
       <div className="lab-frame-bar">
-        <span className="lab-frame-title">{lesson.title}</span>
+        {/* Not the lesson name — the page H1 two lines above already says it. */}
+        <span className="lab-frame-title">Lab</span>
 
         <div className="lab-tools">
           <Link
@@ -201,6 +268,7 @@ export default function EmbeddedLab({ lesson, standalone = false }) {
         </div>
       ) : (
         <iframe
+          ref={labRef}
           className="lab-iframe"
           srcDoc={doc ?? ''}
           title={lesson.title}

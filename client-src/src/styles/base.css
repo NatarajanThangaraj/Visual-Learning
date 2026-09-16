@@ -16,6 +16,11 @@
   --java-bg: #FBEAE7;
   --python: #2B6CB0;
   --python-bg: #E6F0FA;
+  /* Problem Solving is a course, not a leftover: it gets its own identity
+     instead of borrowing the neutral used for locked/undefined states. */
+  --problem-solving: #6D4AFF;
+  --problem-solving-bg: #EFEAFF;
+  /* Kept for genuinely category-less things (and the locked state). */
   --others: #6B7280;
   --others-bg: #EEF0F3;
 
@@ -28,9 +33,10 @@
   --rail: #E5E7EB;
   --rail-strong: #D3D7DE;
 
-  /* Lesson status */
-  --status-done: #3B82F6;
-  --status-done-bg: #DBEAFE;
+  /* Lesson status — "done" is green so it never collides with a course
+     accent. Blue stays Python's; green means finished, everywhere. */
+  --status-done: #16A34A;
+  --status-done-bg: #DCFCE7;
   --status-current: #0F2A5C;
   --status-locked: #A8A296;
 
@@ -48,7 +54,9 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--surface-canvas);
+  /* The page is the canvas; cards are white on top of it. Without this the
+     two are the same white and nothing reads as a distinct block. */
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font);
   font-size: 15px;

@@ -13,9 +13,14 @@ export default function Sidebar({ collapsed, onToggle, onNavigate }) {
   return (
     <aside className={'sidebar' + (collapsed ? ' is-collapsed' : '')}>
       <div className="sb-head">
+        {/* The brand lockup is the one thing on every page, so the parent
+            brand rides with it rather than appearing once on the home page. */}
         <Link className="sb-brand" to="/" onClick={onNavigate}>
           <img src={logo} alt="" width="30" height="30" />
-          <span className="sb-brand-text">Visual Learning</span>
+          <span className="sb-brand-lines">
+            <span className="sb-brand-text">Visual Learning</span>
+            <span className="sb-brand-sub">a Zoho Schools course</span>
+          </span>
         </Link>
         <button
           type="button"
@@ -66,7 +71,12 @@ export default function Sidebar({ collapsed, onToggle, onNavigate }) {
       </nav>
 
       <div className="sb-foot">
-        <div className="sb-progress">
+        {/* Progress is the motivational device, so the collapsed rail keeps the
+            number and the bar — only the prose sub-label folds away. */}
+        <div
+          className="sb-progress"
+          title={`${total.done} of ${total.total} pages complete`}
+        >
           <div className="sb-progress-top">
             <span>Your progress</span>
             <strong>{total.pct}%</strong>
@@ -77,8 +87,20 @@ export default function Sidebar({ collapsed, onToggle, onNavigate }) {
           <span className="sb-progress-sub">{total.done} of {total.total} pages</span>
         </div>
 
-        <label className="sb-explore" title="Unlock every lesson — useful when demonstrating a specific lab">
-          <input type="checkbox" checked={explore} onChange={e => setExplore(e.target.checked)} />
+        {/* Explore mode unlocks every lesson — a behaviour change, not a
+            cosmetic one. Collapsed, the label is clipped rather than removed
+            (so it stays in the accessibility tree) and the control carries a
+            visible on-state plus a title. */}
+        <label
+          className={'sb-explore' + (explore ? ' is-on' : '')}
+          title="Explore mode — unlock every lesson, useful when demonstrating a specific lab"
+        >
+          <input
+            type="checkbox"
+            checked={explore}
+            onChange={e => setExplore(e.target.checked)}
+            aria-label="Explore mode — unlock every lesson"
+          />
           <span>Explore mode</span>
         </label>
       </div>
