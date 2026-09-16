@@ -27,7 +27,7 @@ description: >-
   next/prev, unlocking and the Browse page all derive from it.
 - **URLs carry no file names.** A page is `/java/my-expense-tracker`; the same lab on its
   own is `/java/my-expense-tracker/full`. The file still lives at
-  `/java/my-expense-tracker/index.html` and is *fetched* into the frame, never linked to.
+  `/labs/java/my-expense-tracker/index.html` and is *fetched* into the frame, never linked to.
   You never write any of these — they are derived from the lesson `id`.
 - **Source vs deployed:** you edit `client-src/`; the build output lives in **`client/`**,
   which is **committed to Git**. **Catalyst Slate hosts `client/` verbatim and runs no build
@@ -39,7 +39,7 @@ description: >-
 Pick the course's folder (`java` / `python` / `others`, lowercase — it is the `folder`
 field on the course in `courses.js`) and a slug.
 
-1. Put the page at `client-src/public/<folder>/<slug>/index.html`. Anything under `public/`
+1. Put the page at `client-src/public/labs/<folder>/<slug>/index.html`. Anything under `public/`
    is copied into the build with the `public/` prefix stripped. Add a `thumb.png` beside it
    (a screenshot of the page) — without one the card falls back to per-course art.
 
@@ -70,7 +70,9 @@ cd client-src && npm install && npm run deploy:build && cd ..
 git add -A && git commit -m "Add <thing>" && git push origin main
 ```
 
-`deploy:build` runs `vite build`, copies `index.html`→`404.html`, wipes `client/`, and
+`deploy:build` runs `vite build`, copies `index.html`→`404.html`, wipes `client/`, repopulates
+it, and then runs `scripts/prerender-routes.mjs` to write a real `index.html` for every
+route (the host has no fallback for unknown paths, so a route without a file is a 404). It
 repopulates it from the fresh build (including your `public/` file).
 
 Then in the **Catalyst console → `visuallearning.onslate.in` Web Client Hosting (Slate) →

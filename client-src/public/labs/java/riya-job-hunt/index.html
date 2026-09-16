@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Riya's Job Hunt — Java String Methods</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f0f13;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1rem 4rem;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .header h1 {
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .header p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 6px;
+  }
+
+  .progress-wrap {
+    width: 100%;
+    max-width: 580px;
+    margin-bottom: 1.5rem;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 7px;
+  }
+  .progress-track {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s cubic-bezier(.4,.2,.2,1), background 0.5s ease;
+  }
+
+  /* ── Flip card ── */
+  .stage {
+    perspective: 1600px;
+    width: 100%;
+    max-width: 580px;
+    height: 390px;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+  }
+
+  .flipper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    /* slow, smooth flip — 1s with ease-in-out */
+    transition: transform 1s ease-in-out;
+  }
+  .flipper.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 20px;
+    padding: 2rem 2.25rem;
+    overflow: hidden;
+  }
+  .face.back {
+    transform: rotateY(180deg);
+  }
+
+  /* Front */
+  .front-glow {
+    position: absolute;
+    top: -70px; right: -70px;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    opacity: 0.14;
+    pointer-events: none;
+  }
+  .front-icon {
+    font-size: 46px;
+    display: block;
+    margin-bottom: 1rem;
+    animation: float 3.2s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+  }
+  .front-scene-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.75;
+  }
+  .front-title {
+    font-size: clamp(18px, 3vw, 22px);
+    font-weight: 600;
+    margin-bottom: 10px;
+    line-height: 1.25;
+  }
+  .front-story {
+    font-size: 13.5px;
+    line-height: 1.72;
+    color: rgba(255,255,255,0.84);
+  }
+  .front-story b { font-weight: 600; color: #fff; }
+  .flip-hint {
+    position: absolute;
+    bottom: 1.25rem; right: 1.75rem;
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Back */
+  .back-method {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 6px 18px;
+    border-radius: 99px;
+    margin-bottom: 16px;
+    letter-spacing: 0.02em;
+  }
+  .back-task-box {
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    border-left: 3px solid;
+  }
+  .back-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.65;
+  }
+  .back-task-text {
+    font-size: 13px;
+    line-height: 1.68;
+    color: rgba(255,255,255,0.88);
+  }
+  .tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 4px;
+  }
+  .tag {
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-weight: 500;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 1.5rem;
+  }
+  .nav-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    transition: background 0.18s, transform 0.1s;
+  }
+  .nav-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
+  .nav-btn:active:not(:disabled) { transform: scale(0.94); }
+  .nav-btn:disabled { opacity: 0.22; cursor: not-allowed; }
+
+  .flip-btn {
+    padding: 11px 30px;
+    border-radius: 99px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    color: #fff;
+    transition: opacity 0.18s, transform 0.1s;
+  }
+  .flip-btn:hover  { opacity: 0.82; }
+  .flip-btn:active { transform: scale(0.96); }
+
+  /* ── Dots ── */
+  .dots {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 580px;
+  }
+  .dot {
+    height: 8px;
+    width: 8px;
+    border-radius: 99px;
+    background: rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: width 0.28s ease, background 0.28s ease;
+  }
+  .dot:hover { background: rgba(255,255,255,0.35); }
+
+  @media (max-width: 480px) {
+    .stage { height: 430px; }
+    .face  { padding: 1.5rem 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Riya's Job Hunt</h1>
+  <p>13 scenes &nbsp;·&nbsp; read the story, guess the method, then flip</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-meta">
+    <span>Riya's job hunt</span>
+    <span id="sceneNum">1 / 13</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="prog"></div>
+  </div>
+</div>
+
+<div class="stage" id="stage" onclick="flipCard()">
+  <div class="flipper" id="flipper">
+    <div class="face front" id="front"></div>
+    <div class="face back"  id="back"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="nav-btn" id="prevBtn" onclick="go(-1);event.stopPropagation()" disabled aria-label="Previous">
+    <i class="ti ti-arrow-left"></i>
+  </button>
+  <button class="flip-btn" id="flipBtn" onclick="flipCard()">Reveal method</button>
+  <button class="nav-btn" id="nextBtn" onclick="go(1);event.stopPropagation()" aria-label="Next">
+    <i class="ti ti-arrow-right"></i>
+  </button>
+</div>
+
+<div class="dots" id="dots"></div>
+
+<script>
+const palettes = [
+  { bg:"#1a1a2e", accent:"#e94560", pillBg:"rgba(233,69,96,0.2)",   pillText:"#ff7096", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(233,69,96,0.18)",   tagText:"#ff9ab5" },
+  { bg:"#0f2027", accent:"#00b4db", pillBg:"rgba(0,180,219,0.2)",   pillText:"#4dd9f5", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(0,180,219,0.15)",   tagText:"#7ee8fa" },
+  { bg:"#16213e", accent:"#f5a623", pillBg:"rgba(245,166,35,0.2)",  pillText:"#ffc85c", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(245,166,35,0.15)",  tagText:"#ffd98a" },
+  { bg:"#1b1b2f", accent:"#7c4dff", pillBg:"rgba(124,77,255,0.2)",  pillText:"#ae8fff", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(124,77,255,0.15)",  tagText:"#c8b2ff" },
+  { bg:"#0d1117", accent:"#39d353", pillBg:"rgba(57,211,83,0.15)",  pillText:"#5efb7a", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(57,211,83,0.12)",   tagText:"#88fcaa" },
+  { bg:"#2d1b33", accent:"#ff6bcb", pillBg:"rgba(255,107,203,0.2)", pillText:"#ff9ddf", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(255,107,203,0.15)", tagText:"#ffbfec" },
+  { bg:"#1a1200", accent:"#ffb300", pillBg:"rgba(255,179,0,0.18)",  pillText:"#ffd54f", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(255,179,0,0.12)",   tagText:"#ffe082" },
+  { bg:"#00204a", accent:"#00e5cc", pillBg:"rgba(0,229,204,0.15)",  pillText:"#40fff0", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(0,229,204,0.1)",    tagText:"#80fff8" },
+  { bg:"#1c0a00", accent:"#ff5722", pillBg:"rgba(255,87,34,0.2)",   pillText:"#ff8a65", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(255,87,34,0.15)",   tagText:"#ffab91" },
+  { bg:"#001219", accent:"#06d6a0", pillBg:"rgba(6,214,160,0.15)",  pillText:"#3dffc0", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(6,214,160,0.1)",    tagText:"#70ffdb" },
+  { bg:"#0a0a23", accent:"#f72585", pillBg:"rgba(247,37,133,0.2)",  pillText:"#ff6aaf", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(247,37,133,0.15)",  tagText:"#ff9ecf" },
+  { bg:"#001f3f", accent:"#74b9ff", pillBg:"rgba(116,185,255,0.18)",pillText:"#a0d0ff", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(116,185,255,0.12)", tagText:"#c8e8ff" },
+  { bg:"#1a2a1a", accent:"#b5e853", pillBg:"rgba(181,232,83,0.15)", pillText:"#ccf075", sectionBg:"rgba(255,255,255,0.06)", tagBg:"rgba(181,232,83,0.1)",   tagText:"#e0f8a0" }
+];
+
+const scenes = [
+  {
+    icon:"ti-pencil", scene:"Scene 1", title:"The messy signup", method:"trim()",
+    story:"Riya fills NexaHire's registration form and types her name as <b>'&nbsp;&nbsp;Riya Sharma&nbsp;&nbsp;'</b> with spaces before and after. Before saving to the database, every input must be cleaned. <br><br>Which string method removes extra spaces from both ends of a string?",
+    task:"Accept a name from input. Remove the leading and trailing spaces. Print the raw value and the cleaned value side by side.",
+    tags:["Gmail signup","Banking KYC","Registration forms"]
+  },
+  {
+    icon:"ti-shield", scene:"Scene 2", title:"The spam detector", method:"contains()",
+    story:"A suspicious email lands in Riya's inbox. The word <b>'lottery'</b> could be buried anywhere in the message — beginning, middle, or end. The filter needs to detect it wherever it hides. <br><br>What method checks whether a string has a particular word inside it?",
+    task:"Store 4 email bodies. Define 3 spam keywords. Check each email for any keyword. Print SPAM or SAFE for each one.",
+    tags:["Gmail spam","WhatsApp filter","YouTube search"]
+  },
+  {
+    icon:"ti-car", scene:"Scene 3", title:"State filter", method:"startsWith()",
+    story:"NexaHire's fleet has vehicles from across India — MH, DL, KA, TN, UP. The manager only wants Maharashtra vehicles. Every Maharashtra number begins with <b>'MH'</b>. <br><br>What method checks how a string begins?",
+    task:"Create a list of 10 vehicle numbers. Filter and print only Maharashtra (MH) vehicles. Show the total count found.",
+    tags:["Vehicle filter","Contact search","Roll number filter"]
+  },
+  {
+    icon:"ti-mail", scene:"Scene 4", title:"The email gate", method:"endsWith()",
+    story:"NexaHire's exam portal only accepts official company emails. Riya's colleague tries entering her Gmail. Valid emails always finish with <b>'@nexahire.com'</b> — the system must check the tail of the address. <br><br>What method inspects the end of a string?",
+    task:"Accept an email address. Check if it is a valid company email. Print 'Access granted' or 'Use your official email'. Test with 3 different inputs.",
+    tags:["Email validation","File type check","URL validator"]
+  },
+  {
+    icon:"ti-lock", scene:"Scene 5", title:"Password rules", method:"length()",
+    story:"Riya's first password <b>'riya'</b> gets rejected — too short. Her next attempt, 22 characters long, also fails — too long. The system enforces <b>8 to 16 characters</b> strictly. <br><br>What method tells you exactly how many characters a string has?",
+    task:"Accept a password (8–16 chars), a username (4–12 chars), and a 6-digit OTP. Validate each field and show a specific error for any that fails.",
+    tags:["Password rules","OTP validation","Username limits"]
+  },
+  {
+    icon:"ti-id-badge", scene:"Scene 6", title:"PAN decoder", method:"substring()",
+    story:"HR scans a PAN card: <b>'ABCDE1234F'</b>. It hides three pieces of data — the first 5 letters encode the region, the next 4 digits are the serial, the last character is the check digit. <br><br>What method cuts out a specific portion of a string?",
+    task:"Accept a PAN string. Extract the Region Code (0–4), Serial Number (5–8), and Check Digit (position 9). Print each part with a label.",
+    tags:["PAN card reader","Date formatter","Email username"]
+  },
+  {
+    icon:"ti-message-2", scene:"Scene 7", title:"Chat censor", method:"replace()",
+    story:"An employee slips a banned word into company chat. Before the message reaches the group, every banned word must vanish — swapped silently with <b>'***'</b>. The rest of the sentence must stay intact. <br><br>What method swaps one piece of text with another?",
+    task:"Define 3 banned words. Accept a chat message. Swap each banned word with '***'. Print the original message and the cleaned version.",
+    tags:["Chat filter","Auto-correct","Content moderation"]
+  },
+  {
+    icon:"ti-table-import", scene:"Scene 8", title:"CSV import", method:"split()",
+    story:"HR drops a new-joiners file. Each row is one long string: <b>'Riya Sharma,Engineering,Mumbai,2024'</b>. Arjun needs to break it apart into Name, Department, City, and Year as four separate values. <br><br>What method chops a string into pieces using a separator?",
+    task:"Store 5 employee records in CSV format. Break each record into its 4 fields. Print a clean formatted output for every record.",
+    tags:["CSV importer","Email parser","File path splitter"]
+  },
+  {
+    icon:"ti-user-circle", scene:"Scene 9", title:"Avatar initials", method:"charAt()",
+    story:"No photo uploaded yet. NexaHire shows a coloured circle with the person's initials — <b>Riya Sharma → RS</b>. The system must grab the very first character of the first name and the very first character of the last name. <br><br>What method picks one character at a specific position?",
+    task:"Accept a full name. Extract the first character of each part to form initials. Display them like [RS]. Handle a single-word name gracefully.",
+    tags:["Profile avatars","Seat labels","Chess coordinates"]
+  },
+  {
+    icon:"ti-search", scene:"Scene 10", title:"Find in doc", method:"indexOf()",
+    story:"Riya presses Ctrl+F in her offer letter and types <b>'probation'</b>. The system must find exactly where in the document that word first appears. If the word is missing, a special value is returned. <br><br>What method finds the position of a word inside a string?",
+    task:"Store a paragraph of text. Accept a search word. Find and print the position of its first appearance. Handle the case where the word is not found.",
+    tags:["Document search","Text editor","Email parser"]
+  },
+  {
+    icon:"ti-key", scene:"Scene 11", title:"Login check", method:"equals()",
+    story:"Riya's saved password is <b>'Secure@2024'</b>. An intruder tries <b>'secure@2024'</b> — one letter different in case, but the system must treat them as completely different strings. After 3 wrong attempts the account locks. <br><br>What method compares two strings exactly, character by character?",
+    task:"Simulate a login with up to 3 attempts. Compare strictly. Count down remaining tries after each failure. Lock the account after 3 wrong entries.",
+    tags:["Login systems","Coupon validation","PIN check"]
+  },
+  {
+    icon:"ti-world", scene:"Scene 12", title:"Destination search", method:"equalsIgnoreCase()",
+    story:"The travel portal asks for a destination. Riya types <b>'india'</b>, her colleague types <b>'INDIA'</b>, another types <b>'India'</b> — all three must find the same flights. The comparison must completely ignore capitalisation. <br><br>What method compares strings without caring about case?",
+    task:"Store 5 country names. Accept a destination. Match it regardless of case. Print available routes or 'Destination not found'. Test with mixed-case inputs.",
+    tags:["Travel booking","Login usernames","Country search"]
+  },
+  {
+    icon:"ti-certificate", scene:"Scene 13", title:"The offer letter", method:"toUpperCase()",
+    story:"Riya gets the job! The certificate generator runs. Official documents require names in <b>FULL CAPITALS</b> — no matter how the employee registered. <b>'riya sharma'</b> and <b>'Riya Sharma'</b> must both print as <b>'RIYA SHARMA'</b>. <br><br>What method converts every letter in a string to uppercase?",
+    task:"Accept a name in any case. Format it for an official certificate. Print the full header line. Try at least 3 different input formats.",
+    tags:["Certificates","Passport","Emergency alerts"]
+  }
+];
+
+let cur = 0, flipped = false;
+
+function buildDots() {
+  document.getElementById('dots').innerHTML = scenes.map((_, i) =>
+    `<div class="dot" id="dot${i}" onclick="jumpTo(${i});event.stopPropagation()" title="Scene ${i+1}"></div>`
+  ).join('');
+}
+
+function jumpTo(i) {
+  cur = i; flipped = false;
+  document.getElementById('flipper').classList.remove('flipped');
+  document.getElementById('flipBtn').textContent = 'Reveal method';
+  render();
+}
+
+function render() {
+  const s = scenes[cur], p = palettes[cur];
+  const front = document.getElementById('front');
+  const back  = document.getElementById('back');
+
+  front.style.background = p.bg;
+  back.style.background  = p.bg;
+
+  front.innerHTML = `
+    <div class="front-glow" style="background:${p.accent}"></div>
+    <i class="ti ${s.icon} front-icon" style="color:${p.accent}"></i>
+    <div class="front-scene-tag" style="color:${p.accent}">${s.scene}</div>
+    <div class="front-title">${s.title}</div>
+    <div class="front-story">${s.story}</div>
+    <div class="flip-hint"><i class="ti ti-rotate" style="font-size:13px"></i> flip to reveal</div>`;
+
+  back.innerHTML = `
+    <div class="back-method" style="background:${p.pillBg};color:${p.pillText}">${s.method}</div>
+    <div class="back-task-box" style="background:${p.sectionBg};border-left-color:${p.accent}">
+      <div class="back-label" style="color:${p.accent}">Your task</div>
+      <div class="back-task-text">${s.task}</div>
+    </div>
+    <div class="back-label" style="color:${p.accent};font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Seen in real life</div>
+    <div class="tags-row">${s.tags.map(t =>
+      `<span class="tag" style="background:${p.tagBg};color:${p.tagText}">${t}</span>`
+    ).join('')}</div>`;
+
+  document.getElementById('prog').style.width      = `${((cur+1)/scenes.length)*100}%`;
+  document.getElementById('prog').style.background = p.accent;
+  document.getElementById('flipBtn').style.background = p.accent;
+  document.getElementById('sceneNum').textContent  = `${cur+1} / ${scenes.length}`;
+  document.getElementById('prevBtn').disabled = cur === 0;
+  document.getElementById('nextBtn').disabled = cur === scenes.length - 1;
+
+  scenes.forEach((_, i) => {
+    const d = document.getElementById('dot' + i);
+    d.style.background = i === cur ? p.accent : 'rgba(255,255,255,0.15)';
+    d.style.width = i === cur ? '22px' : '8px';
+  });
+}
+
+function flipCard() {
+  flipped = !flipped;
+  document.getElementById('flipper').classList.toggle('flipped', flipped);
+  document.getElementById('flipBtn').textContent = flipped ? 'Flip back' : 'Reveal method';
+}
+
+function go(dir) {
+  cur += dir; flipped = false;
+  document.getElementById('flipper').classList.remove('flipped');
+  document.getElementById('flipBtn').textContent = 'Reveal method';
+  render();
+}
+
+buildDots();
+render();
+</script>
+</body>
+</html>

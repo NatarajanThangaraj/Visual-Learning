@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logic Step Explorer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0F4F8;--s0:#fff;--s1:#F8FAFC;--s2:#EEF2F7;
+  --bd:#E2E8F0;--bd2:#CBD5E1;--tx:#1A202C;--tx2:#4A5568;--tx3:#94A3B8;
+  --blue:#4F46E5;--bluebg:#EEF2FF;--bluebd:#C7D2FE;
+  --green:#059669;--greenbg:#ECFDF5;--greenbd:#A7F3D0;
+  --amber:#D97706;--amberbg:#FFFBEB;--amberbd:#FDE68A;
+  --red:#DC2626;--redbg:#FEF2F2;--redbd:#FECACA;
+  --purple:#7C3AED;--purplebg:#F5F3FF;--purplebd:#DDD6FE;
+  --teal:#0891B2;--tealbg:#ECFEFF;--tealbd:#A5F3FC;
+  --pink:#DB2777;--pinkbg:#FDF2F8;--pinkbd:#FBCFE8;
+  --orange:#EA580C;--orangebg:#FFF7ED;--orangebd:#FED7AA;
+  --mono:'Courier New',monospace;
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px}
+
+/* HEADER */
+.hdr{background:var(--blue);padding:13px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:200}
+.hdr-logo{width:38px;height:38px;background:rgba(255,255,255,.18);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.hdr h1{font-size:16px;font-weight:700;color:#fff}
+.hdr p{font-size:11px;color:rgba(255,255,255,.7);margin-top:1px}
+.hdr-score{margin-left:auto;display:flex;gap:8px}
+.hsc{background:rgba(255,255,255,.15);border-radius:8px;padding:4px 13px;text-align:center}
+.hsc .sv{font-size:17px;font-weight:700;color:#fff}
+.hsc .sl{font-size:9px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.04em}
+
+/* PROGRAM SELECTOR */
+.prog-bar{background:var(--s0);border-bottom:1px solid var(--bd);padding:0 16px;display:flex;gap:2px;overflow-x:auto}
+.ptab{padding:10px 12px;font-size:11px;font-weight:600;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.15s;display:flex;align-items:center;gap:5px}
+.ptab:hover{color:var(--tx2)}
+.ptab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.ptab.done{color:var(--green)}
+.ptab .pn{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;background:var(--s2);color:var(--tx3)}
+.ptab.active .pn{background:var(--bluebg);color:var(--blue)}
+.ptab.done .pn{background:var(--greenbg);color:var(--green)}
+
+/* PHASE TABS */
+.phase-bar{background:var(--s1);border-bottom:1px solid var(--bd);padding:0 16px;display:flex;overflow-x:auto}
+.phtab{padding:8px 14px;font-size:11px;font-weight:500;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.15s;display:flex;align-items:center;gap:5px}
+.phtab:hover{color:var(--tx2)}
+.phtab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.phtab.ph-done{color:var(--green)}
+.phtab .phnum{font-size:10px;background:var(--s2);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--tx3)}
+.phtab.active .phnum{background:var(--bluebg);color:var(--blue)}
+.phtab.ph-done .phnum{background:var(--greenbg);color:var(--green)}
+
+/* MAIN CONTENT */
+.main{max-width:1060px;margin:0 auto;padding:16px}
+.phase-panel{display:none}
+.phase-panel.active{display:block}
+
+/* PROGRESS BAR */
+.prog-bar-wrap{height:4px;background:var(--bd);border-radius:2px;overflow:hidden;margin-bottom:14px}
+.prog-bar-fill{height:100%;background:var(--blue);border-radius:2px;transition:.4s}
+
+/* GENERIC CARDS */
+.card{background:var(--s0);border:1px solid var(--bd);border-radius:11px;padding:15px 17px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.card-text{font-size:12.5px;color:var(--tx2);line-height:1.75}
+.card-text p{margin-bottom:7px}
+.card-text p:last-child{margin-bottom:0}
+.slbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.slbl::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+/* QUESTION BOX */
+.qbox{background:linear-gradient(135deg,var(--bluebg),var(--purplebg));border:2px solid;border-radius:13px;padding:18px 20px;margin-bottom:14px;text-align:center}
+.qb-tag{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:7px}
+.qb-title{font-size:20px;font-weight:700;margin-bottom:8px}
+.qb-desc{font-size:13px;color:var(--tx2);line-height:1.7;max-width:560px;margin:0 auto}
+
+/* WHY BOX */
+.why-box{border-radius:10px;border:1px solid;padding:13px 15px;margin-bottom:12px;display:flex;gap:11px;align-items:flex-start}
+.why-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.why-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.why-text{font-size:12px;line-height:1.7}
+
+/* CODE BLOCKS */
+.code-box{background:#0f172a;border-radius:9px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.9;color:#e2e8f0;margin-bottom:10px;overflow-x:auto}
+.kw{color:#93c5fd}.nm{color:#fde68a}.cm{color:#475569}.ok{color:#86efac}.str{color:#fca5a5}.op{color:#f9a8d4}
+
+/* MANUAL TABLE */
+.mtbl{width:100%;border-collapse:collapse;font-size:12px;overflow-x:auto;display:block}
+.mtbl th{background:var(--s2);padding:7px 10px;border:1px solid var(--bd);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx2);font-weight:700;text-align:left}
+.mtbl td{padding:7px 10px;border:1px solid var(--bd);font-family:var(--mono);color:var(--tx);vertical-align:middle}
+.mtbl tr.highlight-row td{background:var(--amberbg);border-color:var(--amberbd)}
+
+/* STEPS GRID */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px;margin-bottom:12px}
+.sc{border-radius:9px;border:1px solid var(--bd);padding:11px 13px;background:var(--s0)}
+.sc-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.sc-title{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:3px}
+.sc-text{font-size:11px;color:var(--tx2);line-height:1.6}
+.sc-code{font-family:var(--mono);font-size:10px;background:var(--s2);border-radius:4px;padding:3px 6px;margin-top:5px;display:inline-block;color:var(--blue)}
+
+/* TRACE TABLE */
+.trace-wrap{overflow-x:auto;margin-bottom:12px}
+table.trace{width:100%;border-collapse:collapse;font-size:12px}
+table.trace th{background:var(--s2);color:var(--tx2);padding:7px 10px;border:1px solid var(--bd);font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;text-align:left}
+table.trace td{padding:7px 10px;border:1px solid var(--bd);font-family:var(--mono);color:var(--tx);vertical-align:middle}
+table.trace tr.tr-active td{background:var(--amberbg);border-color:var(--amberbd)}
+table.trace tr.tr-done td{background:var(--greenbg);border-color:var(--greenbd);color:var(--green)}
+table.trace tr.tr-final td{background:var(--bluebg);border-color:var(--bluebd);color:var(--blue);font-weight:700}
+.badge{font-size:10px;padding:2px 7px;border-radius:7px;font-weight:600;white-space:nowrap;font-family:sans-serif}
+.bmod{background:var(--amberbg);color:var(--amber)}
+.bfloor{background:var(--bluebg);color:var(--blue)}
+.bcmp{background:var(--purplebg);color:var(--purple)}
+.bok{background:var(--greenbg);color:var(--green)}
+
+/* SIMULATION PANEL */
+.sim-layout{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.panel{background:var(--s0);border:1px solid var(--bd);border-radius:11px;overflow:hidden}
+.panel-head{padding:9px 13px;border-bottom:1px solid var(--bd);background:var(--s1);font-size:11px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:7px}
+.panel-body{padding:12px 13px}
+
+/* DIGIT BOXES */
+.drow{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.dbox{width:38px;height:44px;border-radius:7px;border:1.5px solid var(--bd2);background:var(--s1);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:.3s;font-family:var(--mono)}
+.dbox .dv{font-size:15px;font-weight:700;color:var(--tx2);line-height:1}
+.dbox .dl{font-size:9px;color:var(--tx3);margin-top:2px}
+.dbox.d-active{background:var(--amberbg);border-color:var(--amber);box-shadow:0 0 0 2px var(--amberbd)}
+.dbox.d-active .dv{color:var(--amber)}
+.dbox.d-active .dl{color:var(--amber)}
+.dbox.d-used{background:var(--greenbg);border-color:var(--green)}
+.dbox.d-used .dv{color:var(--green)}
+.dbox.d-result{background:var(--bluebg);border-color:var(--blue)}
+.dbox.d-result .dv{color:var(--blue)}
+.dbox.d-dim{opacity:.3}
+.sarrow{color:var(--tx3);font-size:16px;font-weight:700;padding:0 2px}
+
+/* STEP NAV */
+.step-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.snbtn{padding:7px 15px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:.15s}
+.snbtn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.snbtn.primary:hover{background:#4338ca}
+.snbtn.secondary{background:var(--s0);color:var(--tx2);border-color:var(--bd2)}
+.snbtn.secondary:hover{background:var(--s1)}
+.snbtn:disabled{opacity:.3;cursor:default}
+.step-dots{display:flex;gap:4px;margin:0 6px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--bd2);transition:.2s}
+.sdot.active{background:var(--blue)}
+.sdot.done{background:var(--green)}
+.step-lbl{font-size:12px;color:var(--tx2);flex:1;text-align:center}
+
+/* CHECK STRIP */
+.check-strip{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-top:8px}
+.chrow{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px}
+.chrow:last-child{margin-bottom:0}
+.chlbl{flex:1;font-family:var(--mono);color:var(--tx2)}
+.chval{min-width:50px;font-weight:700;font-family:var(--mono);font-size:13px}
+.chbadge{font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600;font-family:sans-serif}
+.cbmod{background:var(--amberbg);color:var(--amber)}
+.cbfloor{background:var(--bluebg);color:var(--blue)}
+.cbcmp{background:var(--purplebg);color:var(--purple)}
+.cbres{background:var(--greenbg);color:var(--green)}
+.cbwait{background:var(--s2);color:var(--tx3)}
+
+/* OPERATION DISPLAY */
+.op-display{background:var(--s0);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.op-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:var(--mono)}
+
+/* VAR STATE */
+.var-state{background:#0f172a;border-radius:7px;padding:8px 11px;font-family:var(--mono);font-size:11px;color:#94a3b8;margin-top:8px}
+.var-state span{color:#4ade80}
+
+/* RESULT DISPLAY */
+.result-big{font-family:var(--mono);font-size:28px;font-weight:700;text-align:center;padding:10px;border-radius:8px;margin:8px 0}
+
+/* OUTPUT */
+.out-panel{background:#0f172a;border-radius:8px;padding:10px 13px;font-family:var(--mono);font-size:12px;min-height:50px;margin-top:8px}
+.ol{color:#4ade80;display:block;line-height:1.8}
+.oe{color:#f87171;display:block}
+
+/* SCAFFOLD */
+.bstep{background:var(--s0);border:1px solid var(--bd);border-radius:8px;padding:9px 12px;margin-bottom:5px;cursor:pointer;transition:.15s;display:flex;gap:9px;align-items:flex-start}
+.bstep:hover{border-color:var(--blue);background:var(--bluebg)}
+.bstep.added{border-color:var(--green);background:var(--greenbg)}
+.bsn{width:20px;height:20px;border-radius:50%;background:var(--bluebg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px}
+.bstep.added .bsn{background:var(--greenbg);color:var(--green)}
+.bst{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:2px}
+.bsw{font-size:11px;color:var(--tx2);line-height:1.5}
+.bsc{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--s2);padding:2px 6px;border-radius:4px;margin-top:4px;display:inline-block}
+.bstep.added .bsc{color:var(--green)}
+
+/* QUIZ */
+.quiz-q{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:11px;line-height:1.65}
+.quiz-opts{display:flex;flex-direction:column;gap:5px}
+.qopt{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:9px 13px;font-size:12.5px;cursor:pointer;transition:.15s;color:var(--tx2)}
+.qopt:hover{border-color:var(--blue);background:var(--bluebg)}
+.qopt.correct{background:var(--greenbg);border-color:var(--green);color:var(--green);font-weight:600}
+.qopt.wrong{background:var(--redbg);border-color:var(--redbd);color:var(--red)}
+.qexp{font-size:12px;color:var(--tx2);background:var(--s2);border-radius:7px;padding:9px 12px;line-height:1.65;display:none;margin-top:8px}
+
+/* NAV BUTTONS */
+.nav-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center}
+.nbtn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid;transition:.15s}
+.nbtn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.nbtn.primary:hover{background:#4338ca}
+.nbtn.secondary{background:var(--s0);color:var(--tx2);border-color:var(--bd2)}
+.nbtn.secondary:hover{background:var(--s1)}
+.nbtn.ghost{background:transparent;color:var(--blue);border-color:var(--bluebd)}
+.nbtn:disabled{opacity:.3;cursor:default}
+
+/* USE CASE */
+.ucbox{background:var(--greenbg);border:1px solid var(--greenbd);border-radius:9px;padding:11px 13px;margin-bottom:12px}
+.uc-title{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+.uc-item{display:flex;gap:7px;align-items:flex-start;font-size:12px;color:#065f46;margin-bottom:4px;line-height:1.5}
+.uc-item:last-child{margin-bottom:0}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;background:#1e293b;color:#f1f5f9;padding:9px 16px;border-radius:9px;font-size:13px;font-weight:600;z-index:9999;display:none;align-items:center;gap:8px;border:1px solid #334155}
+.toast.show{display:flex}
+
+/* 2-col layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.two-col,.sim-layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">🔢</div>
+  <div>
+    <h1>Logic Step Explorer</h1>
+    <p>Question → Steps → Why loop? → Watch → Build → Quiz</p>
+  </div>
+  <div class="hdr-score">
+    <div class="hsc"><div class="sv" id="hsc">0</div><div class="sl">Score</div></div>
+    <div class="hsc"><div class="sv" id="hsv">0</div><div class="sl">Done</div></div>
+  </div>
+</div>
+
+<div class="prog-bar" id="prog-bar"></div>
+<div class="phase-bar" id="phase-bar"></div>
+
+<div class="main">
+  <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progress-fill" style="width:0%"></div></div>
+  <div id="content-area"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   PROGRAM DATA BANK
+══════════════════════════════════════════════════ */
+const PROGS = [
+
+/* ─── 1. REVERSE ─── */
+{id:'reverse',icon:'🔄',title:'Reverse a Number',color:'#4F46E5',bg:'#EEF2FF',bd:'#C7D2FE',
+desc:'Peel the last digit using % 10, place it into the reversed number by multiplying by 10, then shrink the original using // 10. Repeat until nothing is left.',
+ops:['% 10 → last digit','rev × 10 + digit → build','// 10 → shrink','while n > 0'],
+uses:[{i:'💳',t:'Credit card Luhn checksum — digits processed one by one'},{i:'🔢',t:'Palindrome check — compare reversed with original'},{i:'🏦',t:'Bank routing number validation'},{i:'📱',t:'Mobile number pattern apps'}],
+manualRows:[
+  {n:1234,step:'Start',digit:4,rev:4,newN:123,note:'1234 % 10 = 4 → reversed = 0×10+4 = 4'},
+  {n:123,step:'Round 2',digit:3,rev:43,newN:12,note:'123 % 10 = 3 → reversed = 4×10+3 = 43'},
+  {n:12,step:'Round 3',digit:2,rev:432,newN:1,note:'12 % 10 = 2 → reversed = 43×10+2 = 432'},
+  {n:1,step:'Round 4',digit:1,rev:4321,newN:0,note:'1 % 10 = 1 → reversed = 432×10+1 = 4321'},
+],
+whyLoop:'For a 4-digit number we repeat the same two operations (% 10 and // 10) exactly 4 times. For a 6-digit number we do it 6 times. We do not know the digit count in advance — the while loop handles it automatically and stops when the number reaches 0.',
+concept:[
+  {icon:'%10',ibg:'#fef3c7',t:'% 10 always extracts the rightmost (last) digit',
+   code:'1234 % 10  →  4   # last digit\n 234 % 10  →  4\n  34 % 10  →  4\n   4 % 10  →  4'},
+  {icon:'×10+',ibg:'#eff6ff',t:'Build reversed: shift left (×10) then add digit',
+   code:'rev = 0×10 + 4  =    4\nrev = 4×10 + 3  =   43\nrev = 43×10 + 2 =  432\nrev = 432×10+1  = 4321'},
+],
+scaffold:[
+  {t:'Store number and reversed = 0',w:'Two variables needed before the loop.',c:'num = 1234\nreversed = 0',ins:'num = 1234\nreversed = 0\n'},
+  {t:'while loop condition',w:'Loop while digits remain.',c:'while num > 0:',ins:'while num > 0:\n'},
+  {t:'Extract last digit with % 10',w:'digit = num % 10 peels the rightmost digit.',c:'    digit = num % 10',ins:'    digit = num % 10\n'},
+  {t:'Build reversed: × 10 + digit',w:'Shift reversed left, add new digit.',c:'    reversed = reversed * 10 + digit',ins:'    reversed = reversed * 10 + digit\n'},
+  {t:'Remove last digit: // 10',w:'Floor divide shrinks the number.',c:'    num = num // 10',ins:'    num = num // 10\n'},
+  {t:'Print result',w:'Outside the loop — runs once after all digits done.',c:'print("Reversed:", reversed)',ins:'print("Reversed:", reversed)\n'},
+],
+quizzes:[
+  {q:'What does 5678 % 10 equal?',opts:['567','8','5','56'],correct:1,exp:'5678 ÷ 10 = 567 remainder 8. The % operator gives the remainder, which is always the last digit.'},
+  {q:'After one round on num=1234, what is num?',opts:['1234','123','4','12'],correct:1,exp:'num = num // 10 = 1234 // 10 = 123. Floor division removes the last digit.'},
+  {q:'If reversed=43 and digit=2, what is reversed*10+digit?',opts:['432','45','234','4302'],correct:0,exp:'43×10 = 430. 430+2 = 432. This is how we build the reversed number one digit at a time.'},
+  {q:'Why does reversed start at 0 not 1?',opts:['Tradition','0×10+digit = digit — a neutral starting point','Makes loop run once extra','Python requires it'],correct:1,exp:'0×10 = 0. So 0×10+4 = 4. Starting at 0 means the first digit sets the value correctly without distorting it.'},
+],
+genSteps(n){
+  let num=Math.abs(n),rev=0;const steps=[],orig=num;
+  while(num>0){const d=num%10,nr=rev*10+d,nn=Math.floor(num/10);steps.push({num,d,rev,nr,nn});rev=nr;num=nn;}
+  steps.push({final:true,rev,orig});return steps;
+},
+renderTrace(steps,ai){
+  let h=`<table class="trace"><tr><th>Step</th><th>num</th><th>digit (num%10)</th><th>rev×10+digit</th><th>num//10</th><th>reversed</th></tr>`;
+  steps.forEach((s,i)=>{
+    if(s.final){h+=`<tr class="tr-final"><td colspan="6" style="text-align:center">✓ num=0 → loop ends · <b>Reversed = ${s.rev}</b></td></tr>`;return;}
+    const cl=i===ai?'tr-active':i<ai?'tr-done':'';
+    h+=`<tr class="${cl}"><td>${i+1}</td><td style="font-size:14px;font-weight:700">${s.num}</td><td><span class="badge bmod">${s.num}%10=${s.d}</span></td><td><span class="badge bfloor">${s.rev}×10+${s.d}=${s.nr}</span></td><td><span class="badge bfloor">${s.num}//10=${s.nn}</span></td><td style="font-weight:700;color:var(--blue)">${s.nr}</td></tr>`;
+  });return h+'</table>';
+},
+renderVisual(steps,ai){
+  const s=steps[Math.min(ai,steps.length-2)];if(!s)return'';
+  const digits=String(steps[0].num).split(''),used=ai;
+  let h='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">';
+  h+='<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Number digits</div><div class="drow">';
+  digits.forEach((d,i)=>h+=`<div class="dbox ${i>=digits.length-used&&used>0?'d-used':''}"><div class="dv">${d}</div><div class="dl">${i>=digits.length-used&&used>0?'done':'·'}</div></div>`);
+  h+='</div></div><span class="sarrow">→</span>';
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Last digit</div><div class="dbox d-active"><div class="dv">${s.d}</div><div class="dl">%10</div></div></div>`;
+  h+='<span class="sarrow">→</span>';
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Reversed so far</div><div class="drow">`;
+  String(s.nr).split('').forEach(d=>h+=`<div class="dbox d-result"><div class="dv">${d}</div><div class="dl">rev</div></div>`);
+  h+='</div></div></div>';
+  h+=`<div class="var-state">num = <span>${s.num}</span>  |  digit = <span>${s.d}</span>  |  reversed = <span>${s.nr}</span>  |  num after = <span>${s.nn}</span></div>`;
+  return h;
+},
+sim(n){let num=Math.abs(n),rev=0;while(num>0){rev=rev*10+(num%10);num=Math.floor(num/10);}return[`Reversed: ${rev}`,`✓ ${Math.abs(n)} reversed is ${rev}`];}
+},
+
+/* ─── 2. SUM OF DIGITS ─── */
+{id:'sum_digits',icon:'➕',title:'Sum of Digits',color:'#D97706',bg:'#FFFBEB',bd:'#FDE68A',
+desc:'Extract each digit with % 10 and add it to a running total. Remove the digit with // 10. Repeat until the number is 0. The total accumulates across every loop round.',
+ops:['% 10 → extract digit','total += digit → accumulate','// 10 → remove digit','while n > 0'],
+uses:[{i:'🧬',t:'GC content — count G and C bases in DNA percentage'},{i:'💰',t:'Bank account checksum validation'},{i:'🔢',t:'Digital root — keep summing until 1 digit remains'},{i:'📊',t:'Numerology apps — sum all digits of a birth date'}],
+manualRows:[
+  {n:3456,step:'Start',digit:6,rev:6,newN:345,note:'3456 % 10 = 6 → total = 0+6 = 6'},
+  {n:345,step:'Round 2',digit:5,rev:11,newN:34,note:'345 % 10 = 5 → total = 6+5 = 11'},
+  {n:34,step:'Round 3',digit:4,rev:15,newN:3,note:'34 % 10 = 4 → total = 11+4 = 15'},
+  {n:3,step:'Round 4',digit:3,rev:18,newN:0,note:'3 % 10 = 3 → total = 15+3 = 18'},
+],
+whyLoop:'Each digit is extracted and added one at a time. We cannot know how many digits exist until we try. The while loop runs once per digit and stops when the number reaches 0. Without a loop we would write a separate line for every digit.',
+concept:[
+  {icon:'∑',ibg:'#fef3c7',t:'Accumulator: total starts at 0 and grows each round',
+   code:'total = 0\ntotal = 0 + 6 =  6\ntotal = 6 + 5 = 11\ntotal = 11+ 4 = 15\ntotal = 15+ 3 = 18'},
+],
+scaffold:[
+  {t:'Store number and total = 0',w:'total is the accumulator variable.',c:'num = 3456\ntotal = 0',ins:'num = 3456\ntotal = 0\n'},
+  {t:'while loop condition',w:'Loop while digits remain.',c:'while num > 0:',ins:'while num > 0:\n'},
+  {t:'Extract digit with % 10',w:'',c:'    digit = num % 10',ins:'    digit = num % 10\n'},
+  {t:'Add digit to total',w:'Accumulate: total grows each round.',c:'    total = total + digit',ins:'    total = total + digit\n'},
+  {t:'Remove digit with // 10',w:'',c:'    num = num // 10',ins:'    num = num // 10\n'},
+  {t:'Print total',w:'Outside loop — prints once when done.',c:'print("Sum of digits:", total)',ins:'print("Sum of digits:", total)\n'},
+],
+quizzes:[
+  {q:'What is the sum of digits of 246?',opts:['12','10','24','6'],correct:0,exp:'2+4+6=12. The loop extracts 6, then 4, then 2 and adds each to total.'},
+  {q:'What does 30 % 10 return?',opts:['3','30','0','10'],correct:2,exp:'30 ÷ 10 = 3 remainder 0. The last digit of 30 is 0.'},
+  {q:'Why does total start at 0?',opts:['Tradition','0 is the identity for addition — adding 0 changes nothing','% 10 requires it','Makes loop run once extra'],correct:1,exp:'0 is neutral for addition: 0+digit = digit. Starting at 0 means the first digit sets the value correctly.'},
+  {q:'How many times does the loop run for num=3456?',opts:['3','4','5','2'],correct:1,exp:'3456 has 4 digits. The loop runs once per digit: 3456→345→34→3→0. Four rounds.'},
+],
+genSteps(n){
+  let num=Math.abs(n),total=0;const steps=[];
+  while(num>0){const d=num%10,nt=total+d,nn=Math.floor(num/10);steps.push({num,d,total,nt,nn});total=nt;num=nn;}
+  steps.push({final:true,total,orig:Math.abs(n)});return steps;
+},
+renderTrace(steps,ai){
+  let h=`<table class="trace"><tr><th>Step</th><th>num</th><th>digit</th><th>total+digit</th><th>num//10</th><th>total</th></tr>`;
+  steps.forEach((s,i)=>{
+    if(s.final){h+=`<tr class="tr-final"><td colspan="6" style="text-align:center">✓ num=0 → loop ends · <b>Sum = ${s.total}</b></td></tr>`;return;}
+    const cl=i===ai?'tr-active':i<ai?'tr-done':'';
+    h+=`<tr class="${cl}"><td>${i+1}</td><td style="font-size:14px;font-weight:700">${s.num}</td><td><span class="badge bmod">${s.d}</span></td><td><span class="badge bfloor">${s.total}+${s.d}=${s.nt}</span></td><td><span class="badge bfloor">${s.nn}</span></td><td style="font-weight:700;color:var(--amber)">${s.nt}</td></tr>`;
+  });return h+'</table>';
+},
+renderVisual(steps,ai){
+  const s=steps[Math.min(ai,steps.length-2)];if(!s)return'';
+  let h='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">';
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Digit extracted</div><div class="dbox d-active"><div class="dv">${s.d}</div><div class="dl">%10</div></div></div>`;
+  h+=`<span class="sarrow" style="color:var(--amber);font-size:18px">+</span>`;
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Total before</div><div class="dbox" style="background:var(--amberbg);border-color:var(--amber)"><div class="dv" style="color:var(--amber)">${s.total}</div><div class="dl">total</div></div></div>`;
+  h+=`<span class="sarrow" style="color:var(--amber);font-size:18px">=</span>`;
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">New total</div><div class="dbox d-result"><div class="dv">${s.nt}</div><div class="dl">new</div></div></div>`;
+  h+='</div>';
+  h+=`<div class="var-state">num = <span>${s.num}</span>  |  digit = <span>${s.d}</span>  |  total = <span>${s.total}</span> + <span>${s.d}</span> = <span>${s.nt}</span></div>`;
+  return h;
+},
+sim(n){let num=Math.abs(n),t=0;while(num>0){t+=num%10;num=Math.floor(num/10);}return[`Sum of digits: ${t}`,`✓ ${String(Math.abs(n)).split('').join('+')} = ${t}`];}
+},
+
+/* ─── 3. COUNT DIGITS ─── */
+{id:'count_digits',icon:'🔟',title:'Count Digits',color:'#059669',bg:'#ECFDF5',bd:'#A7F3D0',
+desc:'Each // 10 removes exactly one digit. Count how many divisions we can do before reaching 0. That count equals the number of digits. No % needed — just division and a counter.',
+ops:['// 10 → remove one digit','count += 1 → one per removal','while n > 0'],
+uses:[{i:'📱',t:'Phone number must be exactly 10 digits — auto-validate'},{i:'🆔',t:'Aadhaar card is always 12 digits'},{i:'💳',t:'Credit card must be 16 digits'},{i:'🏥',t:'Patient ID format verification'}],
+manualRows:[
+  {n:4825,step:'Start',digit:null,rev:1,newN:482,note:'4825 // 10 = 482 → count = 1'},
+  {n:482,step:'Round 2',digit:null,rev:2,newN:48,note:'482 // 10 = 48 → count = 2'},
+  {n:48,step:'Round 3',digit:null,rev:3,newN:4,note:'48 // 10 = 4 → count = 3'},
+  {n:4,step:'Round 4',digit:null,rev:4,newN:0,note:'4 // 10 = 0 → count = 4 → loop stops'},
+],
+whyLoop:'We do not know how many digits the number has before starting. The loop removes one digit per round and counts each removal. When the number reaches 0, count equals the exact digit count.',
+concept:[
+  {icon:'//10',ibg:'#eff6ff',t:'// 10 removes exactly one digit each round',
+   code:'4825 // 10  → 482   # 1 removed\n 482 // 10  →  48   # 2 removed\n  48 // 10  →   4   # 3 removed\n   4 // 10  →   0   # 4th → stop'},
+],
+scaffold:[
+  {t:'Store number and count = 0',w:'count is the counter.',c:'num = 4825\ncount = 0',ins:'num = 4825\ncount = 0\n'},
+  {t:'while loop condition',w:'Loop while num has digits.',c:'while num > 0:',ins:'while num > 0:\n'},
+  {t:'Remove last digit: // 10',w:'Each division removes one digit.',c:'    num = num // 10',ins:'    num = num // 10\n'},
+  {t:'Increment count',w:'One per digit removed.',c:'    count = count + 1',ins:'    count = count + 1\n'},
+  {t:'Print count',w:'Outside loop.',c:'print("Digits:", count)',ins:'print("Digits:", count)\n'},
+],
+quizzes:[
+  {q:'How many digits does 5039 have?',opts:['3','4','5','2'],correct:1,exp:'5039→503→50→5→0. Four divisions. Answer: 4 digits.'},
+  {q:'What is 89 // 10?',opts:['8.9','9','8','0'],correct:2,exp:'Floor division drops the decimal: 89 ÷ 10 = 8.9 → floor = 8.'},
+  {q:'Does count_digits need % 10?',opts:['Yes, to extract each digit','No — // 10 alone is enough','Yes, to check even/odd','Yes, always'],correct:1,exp:'We only need to COUNT digits, not read them. // 10 removes one digit per round and we count the rounds.'},
+],
+genSteps(n){
+  let num=Math.abs(n),count=0;const steps=[];
+  while(num>0){const nn=Math.floor(num/10),nc=count+1;steps.push({num,count,nn,nc});count=nc;num=nn;}
+  steps.push({final:true,count,orig:Math.abs(n)});return steps;
+},
+renderTrace(steps,ai){
+  let h=`<table class="trace"><tr><th>Step</th><th>num</th><th>num // 10</th><th>count</th></tr>`;
+  steps.forEach((s,i)=>{
+    if(s.final){h+=`<tr class="tr-final"><td colspan="4" style="text-align:center">✓ num=0 → <b>Total digits = ${s.count}</b></td></tr>`;return;}
+    const cl=i===ai?'tr-active':i<ai?'tr-done':'';
+    h+=`<tr class="${cl}"><td>${i+1}</td><td style="font-size:14px;font-weight:700">${s.num}</td><td><span class="badge bfloor">${s.num}//10=${s.nn}</span></td><td style="font-weight:700;color:var(--green)">${s.nc}</td></tr>`;
+  });return h+'</table>';
+},
+renderVisual(steps,ai){
+  const s=steps[Math.min(ai,steps.length-2)];if(!s)return'';
+  const digits=String(steps[0].num).split(''),used=ai;
+  let h='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">';
+  h+='<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Digits remaining</div><div class="drow">';
+  digits.forEach((d,i)=>h+=`<div class="dbox ${i<digits.length-used?'':'d-dim'}"><div class="dv">${d}</div><div class="dl">${i<digits.length-used?'left':'gone'}</div></div>`);
+  h+='</div></div><span class="sarrow">→</span>';
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Count</div><div style="background:var(--greenbg);border:1.5px solid var(--green);border-radius:8px;padding:6px 18px;font-family:var(--mono);font-size:22px;font-weight:700;color:var(--green)">${s.nc}</div></div>`;
+  h+='</div>';
+  h+=`<div class="var-state">num = <span>${s.num}</span>  →  num//10 = <span>${s.nn}</span>  |  count = <span>${s.nc}</span></div>`;
+  return h;
+},
+sim(n){let num=Math.abs(n),c=0;while(num>0){num=Math.floor(num/10);c++;}return[`Digits: ${c}`,`✓ ${Math.abs(n)} has ${c} digit${c>1?'s':''}`];}
+},
+
+/* ─── 4. LARGEST DIGIT ─── */
+{id:'largest',icon:'🏆',title:'Largest Digit',color:'#7C3AED',bg:'#F5F3FF',bd:'#DDD6FE',
+desc:'Extract each digit with % 10. If it is bigger than the current largest, it becomes the new largest. Start largest at -1 so any digit beats it on the first round.',
+ops:['% 10 → extract','if digit > largest → update','// 10 → move on','while n > 0'],
+uses:[{i:'🏥',t:'Highest fever reading across patient records'},{i:'📊',t:'Peak value in a sensor data stream'},{i:'🎓',t:'Top exam mark from a class list'},{i:'💰',t:'Biggest digit in a transaction code'}],
+manualRows:[
+  {n:3927,step:'Start',digit:7,rev:-1,newN:392,note:'3927 % 10 = 7 → 7 > -1 → largest = 7'},
+  {n:392,step:'Round 2',digit:2,rev:7,newN:39,note:'392 % 10 = 2 → 2 > 7? No → largest stays 7'},
+  {n:39,step:'Round 3',digit:9,rev:9,newN:3,note:'39 % 10 = 9 → 9 > 7? YES → largest = 9'},
+  {n:3,step:'Round 4',digit:3,rev:9,newN:0,note:'3 % 10 = 3 → 3 > 9? No → largest stays 9'},
+],
+whyLoop:'We must look at every digit and compare. One look is not enough — the largest might be anywhere in the number. The while loop ensures we check EVERY digit and always keep the biggest one found so far.',
+concept:[
+  {icon:'max',ibg:'#f5f3ff',t:'Running maximum: compare each digit against the current best',
+   code:'largest = -1       # start below all digits\ndigit = 7 → 7>-1  → largest = 7\ndigit = 2 → 2>7?  No\ndigit = 9 → 9>7?  YES → largest = 9\ndigit = 3 → 3>9?  No → done'},
+],
+scaffold:[
+  {t:'Store number and largest = -1',w:'Start -1 so the first digit always wins.',c:'num = 3927\nlargest = -1',ins:'num = 3927\nlargest = -1\n'},
+  {t:'while loop',w:'',c:'while num > 0:',ins:'while num > 0:\n'},
+  {t:'Extract digit',w:'',c:'    digit = num % 10',ins:'    digit = num % 10\n'},
+  {t:'Compare and update largest',w:'Only update when new digit is bigger.',c:'    if digit > largest:\n        largest = digit',ins:'    if digit > largest:\n        largest = digit\n'},
+  {t:'Remove digit',w:'',c:'    num = num // 10',ins:'    num = num // 10\n'},
+  {t:'Print result',w:'',c:'print("Largest digit:", largest)',ins:'print("Largest digit:", largest)\n'},
+],
+quizzes:[
+  {q:'Largest digit in 4829?',opts:['4','2','9','8'],correct:2,exp:'Digits 4,8,2,9. Largest is 9.'},
+  {q:'Why start largest = -1 and not 0?',opts:['Tradition','So 0 can also be recognised as the largest digit if all digits are 0','Makes loop faster','% requires it'],correct:1,exp:'If we start at 0, a number like 5000000 would return 5 correctly, but 0000 (edge case) would wrongly skip 0. Starting at -1 lets any digit from 0-9 beat it.'},
+  {q:'Which digit is extracted FIRST from 1234?',opts:['1','4','2','3'],correct:1,exp:'% 10 always gives the rightmost digit. 1234 % 10 = 4. We process digits right to left.'},
+],
+genSteps(n){
+  let num=Math.abs(n),lg=-1;const steps=[];
+  while(num>0){const d=num%10,upd=d>lg,nlg=Math.max(lg,d),nn=Math.floor(num/10);steps.push({num,d,lg,upd,nlg,nn});lg=nlg;num=nn;}
+  steps.push({final:true,lg,orig:Math.abs(n)});return steps;
+},
+renderTrace(steps,ai){
+  let h=`<table class="trace"><tr><th>Step</th><th>num</th><th>digit</th><th>digit > largest?</th><th>largest now</th><th>num//10</th></tr>`;
+  steps.forEach((s,i)=>{
+    if(s.final){h+=`<tr class="tr-final"><td colspan="6" style="text-align:center">✓ num=0 → <b>Largest = ${s.lg}</b></td></tr>`;return;}
+    const cl=i===ai?'tr-active':i<ai?'tr-done':'';
+    h+=`<tr class="${cl}"><td>${i+1}</td><td style="font-size:14px;font-weight:700">${s.num}</td><td><span class="badge bmod">${s.d}</span></td><td><span class="badge ${s.upd?'bok':'bcmp'}">${s.d}>${s.lg<0?'-1':s.lg}? ${s.upd?'YES':'No'}</span></td><td style="font-weight:700;color:var(--purple)">${s.nlg}</td><td><span class="badge bfloor">${s.nn}</span></td></tr>`;
+  });return h+'</table>';
+},
+renderVisual(steps,ai){
+  const s=steps[Math.min(ai,steps.length-2)];if(!s)return'';
+  let h='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">';
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Current digit</div><div class="dbox d-active"><div class="dv">${s.d}</div><div class="dl">now</div></div></div>`;
+  h+=`<span class="sarrow">vs</span>`;
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Largest so far</div><div class="dbox" style="background:var(--purplebg);border-color:var(--purple)"><div class="dv" style="color:var(--purple)">${s.lg<0?'—':s.lg}</div><div class="dl">best</div></div></div>`;
+  h+=`<span class="sarrow">→</span>`;
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">${s.upd?'NEW largest!':'No change'}</div><div class="dbox ${s.upd?'d-result':''}"><div class="dv">${s.nlg}</div><div class="dl">${s.upd?'updated':'same'}</div></div></div>`;
+  h+='</div>';
+  h+=`<div class="var-state">digit = <span>${s.d}</span>  |  ${s.d} > ${s.lg<0?'-1':s.lg}? <span>${s.upd?'YES → update':'No → keep'}</span>  |  largest = <span>${s.nlg}</span></div>`;
+  return h;
+},
+sim(n){let num=Math.abs(n),lg=-1;while(num>0){const d=num%10;if(d>lg)lg=d;num=Math.floor(num/10);}return[`Largest digit: ${lg}`,`✓ In ${Math.abs(n)}, the largest digit is ${lg}`];}
+},
+
+/* ─── 5. SMALLEST DIGIT ─── */
+{id:'smallest',icon:'🔽',title:'Smallest Digit',color:'#0891B2',bg:'#ECFEFF',bd:'#A5F3FC',
+desc:'Identical pattern to largest, but we update when the digit is SMALLER. Start smallest at 10 so any digit (0-9) beats it. Only the starting value and comparison operator change.',
+ops:['% 10 → extract','if digit < smallest → update','// 10 → move on','while n > 0'],
+uses:[{i:'🌡️',t:'Lowest temperature reading in weather data'},{i:'💊',t:'Minimum dose in a drug trial record'},{i:'🏥',t:'Lowest blood pressure reading'},{i:'📈',t:'Minimum stock price digit pattern'}],
+manualRows:[
+  {n:3927,step:'Start',digit:7,rev:7,newN:392,note:'3927 % 10 = 7 → 7 < 10 → smallest = 7'},
+  {n:392,step:'Round 2',digit:2,rev:2,newN:39,note:'392 % 10 = 2 → 2 < 7? YES → smallest = 2'},
+  {n:39,step:'Round 3',digit:9,rev:2,newN:3,note:'39 % 10 = 9 → 9 < 2? No → smallest stays 2'},
+  {n:3,step:'Round 4',digit:3,rev:2,newN:0,note:'3 % 10 = 3 → 3 < 2? No → smallest stays 2'},
+],
+whyLoop:'Same reason as largest — we must check every digit. The loop goes through all digits right to left, comparing each one to the current smallest. When done, the winner is the true minimum.',
+concept:[
+  {icon:'min',ibg:'#ecfeff',t:'Running minimum: start high so the first digit always wins',
+   code:'smallest = 10     # above all single digits (0-9)\ndigit = 7 → 7<10  → smallest = 7\ndigit = 2 → 2<7?  YES → smallest = 2\ndigit = 9 → 9<2?  No\ndigit = 3 → 3<2?  No → done'},
+],
+scaffold:[
+  {t:'Store number and smallest = 10',w:'10 is above all digits (0-9) so the first digit always wins.',c:'num = 3927\nsmallest = 10',ins:'num = 3927\nsmallest = 10\n'},
+  {t:'while loop',w:'',c:'while num > 0:',ins:'while num > 0:\n'},
+  {t:'Extract digit',w:'',c:'    digit = num % 10',ins:'    digit = num % 10\n'},
+  {t:'Compare and update smallest',w:'Only update when new digit is smaller.',c:'    if digit < smallest:\n        smallest = digit',ins:'    if digit < smallest:\n        smallest = digit\n'},
+  {t:'Remove digit',w:'',c:'    num = num // 10',ins:'    num = num // 10\n'},
+  {t:'Print result',w:'',c:'print("Smallest digit:", smallest)',ins:'print("Smallest digit:", smallest)\n'},
+],
+quizzes:[
+  {q:'Smallest digit in 4829?',opts:['4','2','9','8'],correct:1,exp:'Digits 4,8,2,9. Smallest is 2.'},
+  {q:'Why start smallest = 10?',opts:['Tradition','Any digit 0-9 is less than 10 so the first digit always updates it','Makes loop faster','% requires it'],correct:1,exp:'Digits are 0–9. Starting at 10 guarantees the very first digit is less than 10 and sets smallest correctly.'},
+  {q:'Compare largest and smallest code. What two things differ?',opts:['The loop condition and the print','Starting value (-1 vs 10) and comparison (> vs <)','The variable name and the loop','Only the print statement'],correct:1,exp:'Starting value: largest=-1, smallest=10. Comparison: largest uses >, smallest uses <. Everything else is identical — same pattern, mirrored conditions.'},
+],
+genSteps(n){
+  let num=Math.abs(n),sm=10;const steps=[];
+  while(num>0){const d=num%10,upd=d<sm,nsm=Math.min(sm,d),nn=Math.floor(num/10);steps.push({num,d,sm,upd,nsm,nn});sm=nsm;num=nn;}
+  steps.push({final:true,sm,orig:Math.abs(n)});return steps;
+},
+renderTrace(steps,ai){
+  let h=`<table class="trace"><tr><th>Step</th><th>num</th><th>digit</th><th>digit < smallest?</th><th>smallest now</th><th>num//10</th></tr>`;
+  steps.forEach((s,i)=>{
+    if(s.final){h+=`<tr class="tr-final"><td colspan="6" style="text-align:center">✓ num=0 → <b>Smallest = ${s.sm}</b></td></tr>`;return;}
+    const cl=i===ai?'tr-active':i<ai?'tr-done':'';
+    h+=`<tr class="${cl}"><td>${i+1}</td><td style="font-size:14px;font-weight:700">${s.num}</td><td><span class="badge bmod">${s.d}</span></td><td><span class="badge ${s.upd?'bok':'bcmp'}">${s.d}<${s.sm===10?'10':s.sm}? ${s.upd?'YES':'No'}</span></td><td style="font-weight:700;color:var(--teal)">${s.nsm}</td><td><span class="badge bfloor">${s.nn}</span></td></tr>`;
+  });return h+'</table>';
+},
+renderVisual(steps,ai){
+  const s=steps[Math.min(ai,steps.length-2)];if(!s)return'';
+  let h='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">';
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Current digit</div><div class="dbox d-active"><div class="dv">${s.d}</div><div class="dl">now</div></div></div>`;
+  h+=`<span class="sarrow">vs</span>`;
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Smallest so far</div><div class="dbox" style="background:var(--tealbg);border-color:var(--teal)"><div class="dv" style="color:var(--teal)">${s.sm===10?'—':s.sm}</div><div class="dl">best</div></div></div>`;
+  h+=`<span class="sarrow">→</span>`;
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">${s.upd?'NEW smallest!':'No change'}</div><div class="dbox ${s.upd?'d-result':''}"><div class="dv">${s.nsm}</div><div class="dl">${s.upd?'updated':'same'}</div></div></div>`;
+  h+='</div>';
+  h+=`<div class="var-state">digit = <span>${s.d}</span>  |  ${s.d} &lt; ${s.sm===10?'10':s.sm}? <span>${s.upd?'YES → update':'No → keep'}</span>  |  smallest = <span>${s.nsm}</span></div>`;
+  return h;
+},
+sim(n){let num=Math.abs(n),sm=10;while(num>0){const d=num%10;if(d<sm)sm=d;num=Math.floor(num/10);}return[`Smallest digit: ${sm}`,`✓ In ${Math.abs(n)}, the smallest digit is ${sm}`];}
+},
+
+/* ─── 6. CHECK DIGIT EXISTS ─── */
+{id:'check_digit',icon:'🔍',title:'Check if Digit Exists',color:'#DB2777',bg:'#FDF2F8',bd:'#FBCFE8',
+desc:'Search for a target digit. Extract each digit with % 10 and compare. If it matches, set found = True and break immediately. If the loop finishes without a match, found stays False.',
+ops:['% 10 → extract','if digit == target → found = True','break → stop early','while n > 0'],
+uses:[{i:'📱',t:'Does your phone number contain the digit 7?'},{i:'🔐',t:'Reject PINs containing the digit 0'},{i:'🏦',t:'Does account number contain a routing digit?'},{i:'🎲',t:'Lucky number — does your ID contain your lucky digit?'}],
+manualRows:[
+  {n:3927,step:'Round 1',digit:7,rev:false,newN:392,note:'3927 % 10 = 7 → 7 == 9? No → continue'},
+  {n:392,step:'Round 2',digit:2,rev:false,newN:39,note:'392 % 10 = 2 → 2 == 9? No → continue'},
+  {n:39,step:'Round 3',digit:9,rev:true,newN:null,note:'39 % 10 = 9 → 9 == 9? YES → found = True, break!'},
+],
+whyLoop:'We do not know where the target digit is. It could be first, last, or absent. The loop checks every digit until it finds a match (break exits early) or exhausts all digits (found stays False).',
+concept:[
+  {icon:'flag',ibg:'#fdf2f8',t:'Flag pattern: start False, prove True, then break',
+   code:'found = False\nwhile num > 0:\n    if num % 10 == target:\n        found = True\n        break     # stop immediately!\n    num = num // 10\nif found: print("Found!")\nelse:     print("Not found")'},
+],
+scaffold:[
+  {t:'Store num, target, found = False',w:'found is the flag — assume not found until proven.',c:'num = 3927\ntarget = 9\nfound = False',ins:'num = 3927\ntarget = 9\nfound = False\n'},
+  {t:'while loop',w:'',c:'while num > 0:',ins:'while num > 0:\n'},
+  {t:'Extract digit',w:'',c:'    digit = num % 10',ins:'    digit = num % 10\n'},
+  {t:'If match: found = True, break',w:'break exits the loop immediately — no need to keep checking.',c:'    if digit == target:\n        found = True\n        break',ins:'    if digit == target:\n        found = True\n        break\n'},
+  {t:'Remove digit (no break path)',w:'Only reached when no match this round.',c:'    num = num // 10',ins:'    num = num // 10\n'},
+  {t:'Print result after loop',w:'Check the flag after the loop exits.',c:'if found:\n    print("Found!")\nelse:\n    print("Not found")',ins:'if found:\n    print("Found!")\nelse:\n    print("Not found")\n'},
+],
+quizzes:[
+  {q:'Does 4892 contain the digit 5?',opts:['Yes','No','Depends','Error'],correct:1,exp:'Digits of 4892: 4,8,9,2. None is 5. found stays False. Output: "Not found".'},
+  {q:'What does break do?',opts:['Ends the entire program','Skips to next iteration','Exits the while loop immediately','Resets the counter'],correct:2,exp:'break jumps out of the while loop immediately. Once found, there is no need to check remaining digits.'},
+  {q:'Why start found = False?',opts:['Python requires it','Assume not found until proven otherwise','False is smaller than True','Makes loop faster'],correct:1,exp:'We assume the target is absent. If any digit matches, we update found = True. If the loop ends without matching, found stays False — correctly indicating "not found".'},
+],
+genSteps(n,target=9){
+  let num=Math.abs(n),found=false;const steps=[];
+  while(num>0){const d=num%10,match=d===target,nn=match?null:Math.floor(num/10);steps.push({num,d,target,match,nn});if(match){found=true;break;}num=nn;}
+  steps.push({final:true,found,orig:Math.abs(n),target});return steps;
+},
+renderTrace(steps,ai){
+  let h=`<table class="trace"><tr><th>Step</th><th>num</th><th>digit</th><th>digit == ${steps[0]?.target??9}?</th><th>action</th></tr>`;
+  steps.forEach((s,i)=>{
+    if(s.final){const col=s.found?'var(--green)':'var(--red)';h+=`<tr class="tr-final"><td colspan="5" style="text-align:center;color:${col}"><b>${s.found?`✓ Found ${s.target} in ${s.orig}`:`✗ ${s.target} not found in ${s.orig}`}</b></td></tr>`;return;}
+    const cl=i===ai?'tr-active':i<ai?'tr-done':'';
+    h+=`<tr class="${cl}"><td>${i+1}</td><td style="font-size:14px;font-weight:700">${s.num}</td><td><span class="badge bmod">${s.d}</span></td><td><span class="badge ${s.match?'bok':'bcmp'}">${s.match?'YES ✓':'No'}</span></td><td>${s.match?'<span class="badge bok">found=True, break</span>':'<span class="badge bfloor">continue</span>'}</td></tr>`;
+  });return h+'</table>';
+},
+renderVisual(steps,ai){
+  const s=steps[Math.min(ai,steps.length-2)];if(!s)return'';
+  let h='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">';
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Current digit</div><div class="dbox d-active"><div class="dv">${s.d}</div><div class="dl">checking</div></div></div>`;
+  h+=`<span class="sarrow">==?</span>`;
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Target</div><div class="dbox" style="background:var(--pinkbg);border-color:var(--pink)"><div class="dv" style="color:var(--pink)">${s.target}</div><div class="dl">target</div></div></div>`;
+  h+=`<span class="sarrow">→</span>`;
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">${s.match?'MATCH!':'No match'}</div><div class="dbox ${s.match?'d-result':''}"><div class="dv">${s.match?'✓':'✗'}</div><div class="dl">${s.match?'found!':'keep going'}</div></div></div>`;
+  h+='</div>';
+  h+=`<div class="var-state">digit = <span>${s.d}</span>  |  digit == ${s.target}? <span>${s.match?'YES → found=True, break':'No → continue'}</span></div>`;
+  return h;
+},
+sim(n,target=9){let num=Math.abs(n),found=false;while(num>0){if(num%10===target){found=true;break;}num=Math.floor(num/10);}return found?[`Found: True`,`✓ Digit ${target} exists in ${Math.abs(n)}`]:[`Found: False`,`✗ Digit ${target} not found in ${Math.abs(n)}`];}
+},
+
+/* ─── 7. FREQUENCY ─── */
+{id:'frequency',icon:'📊',title:'Frequency of a Digit',color:'#EA580C',bg:'#FFF7ED',bd:'#FED7AA',
+desc:'Count how many times a target digit appears. Same as check_digit but WITHOUT break — we count ALL matches, not just the first. The loop must run to completion.',
+ops:['% 10 → extract','if digit == target → count++','// 10 → move on (no break)','while n > 0'],
+uses:[{i:'🧬',t:'Count A bases in a DNA digit-sequence'},{i:'🔐',t:'Reject passwords where any digit repeats 3+ times'},{i:'🎰',t:'How many lucky 7s in your number?'},{i:'📊',t:'Statistical frequency analysis of numeric data'}],
+manualRows:[
+  {n:292939,step:'Round 1',digit:9,rev:1,newN:29293,note:'292939 % 10 = 9 → 9==9? YES → count = 1'},
+  {n:29293,step:'Round 2',digit:3,rev:1,newN:2929,note:'29293 % 10 = 3 → 3==9? No → count stays 1'},
+  {n:2929,step:'Round 3',digit:9,rev:2,newN:292,note:'2929 % 10 = 9 → YES → count = 2'},
+  {n:292,step:'Round 4',digit:2,rev:2,newN:29,note:'292 % 10 = 2 → No → count stays 2'},
+  {n:29,step:'Round 5',digit:9,rev:3,newN:2,note:'29 % 10 = 9 → YES → count = 3'},
+  {n:2,step:'Round 6',digit:2,rev:3,newN:0,note:'2 % 10 = 2 → No → loop ends'},
+],
+whyLoop:'Every digit must be visited. Unlike check_digit which stops at the first match, frequency counting requires the full run. No break allowed — we accumulate count for every matching digit.',
+concept:[
+  {icon:'#',ibg:'#fff7ed',t:'Count all matches — no break, loop runs to completion',
+   code:'count = 0         # NO break here!\nwhile num > 0:\n    if num%10 == target:\n        count += 1   # count every match\n    num //= 10    # always remove\nprint("Count:", count)'},
+],
+scaffold:[
+  {t:'Store num, target, count = 0',w:'count tracks all occurrences.',c:'num = 292939\ntarget = 9\ncount = 0',ins:'num = 292939\ntarget = 9\ncount = 0\n'},
+  {t:'while loop',w:'',c:'while num > 0:',ins:'while num > 0:\n'},
+  {t:'Check and count (no break)',w:'Increment count every time the digit matches.',c:'    if num % 10 == target:\n        count = count + 1',ins:'    if num % 10 == target:\n        count = count + 1\n'},
+  {t:'Always remove digit (outside the if)',w:'num//10 runs every round regardless of match.',c:'    num = num // 10',ins:'    num = num // 10\n'},
+  {t:'Print count',w:'Outside loop.',c:'print("Frequency:", count)',ins:'print("Frequency:", count)\n'},
+],
+quizzes:[
+  {q:'How many times does 9 appear in 292939?',opts:['1','2','3','4'],correct:2,exp:'2-9-2-9-3-9. Three 9s. The loop runs 6 times and count increments on iterations 1, 3, and 5.'},
+  {q:'Key difference from "check if exists":',opts:['Uses while instead of for','No break — counts ALL matches, not just the first','Uses // instead of %','Needs two inputs'],correct:1,exp:'check_digit uses break to exit on the first match. frequency removes break and counts every occurrence by running the loop to completion.'},
+  {q:'Where must num//10 be placed?',opts:['Inside the if block only','Outside the if block so it runs every round','After the while loop','Before the if block'],correct:1,exp:'num//10 must be OUTSIDE the if so it runs every round. If placed inside the if, the loop would never advance when the digit does not match — creating an infinite loop.'},
+],
+genSteps(n,target=9){
+  let num=Math.abs(n),count=0;const steps=[];
+  while(num>0){const d=num%10,match=d===target,nn=Math.floor(num/10),nc=count+(match?1:0);steps.push({num,d,target,match,count,nc,nn});count=nc;num=nn;}
+  steps.push({final:true,count,orig:Math.abs(n),target});return steps;
+},
+renderTrace(steps,ai){
+  let h=`<table class="trace"><tr><th>Step</th><th>num</th><th>digit</th><th>== ${steps[0]?.target??9}?</th><th>count</th><th>num//10</th></tr>`;
+  steps.forEach((s,i)=>{
+    if(s.final){h+=`<tr class="tr-final"><td colspan="6" style="text-align:center">✓ num=0 → <b>Digit ${s.target} appears ${s.count} time${s.count!==1?'s':''} in ${s.orig}</b></td></tr>`;return;}
+    const cl=i===ai?'tr-active':i<ai?'tr-done':'';
+    h+=`<tr class="${cl}"><td>${i+1}</td><td style="font-size:14px;font-weight:700">${s.num}</td><td><span class="badge bmod">${s.d}</span></td><td><span class="badge ${s.match?'bok':'bcmp'}">${s.match?'YES ↑':'No'}</span></td><td style="font-weight:700;color:var(--orange)">${s.nc}</td><td><span class="badge bfloor">${s.nn}</span></td></tr>`;
+  });return h+'</table>';
+},
+renderVisual(steps,ai){
+  const s=steps[Math.min(ai,steps.length-2)];if(!s)return'';
+  let h='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">';
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Current digit</div><div class="dbox d-active"><div class="dv">${s.d}</div><div class="dl">checking</div></div></div>`;
+  h+=`<span class="sarrow">==?</span>`;
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Target</div><div class="dbox" style="background:var(--orangebg);border-color:var(--orange)"><div class="dv" style="color:var(--orange)">${s.target}</div><div class="dl">target</div></div></div>`;
+  h+=`<span class="sarrow">→</span>`;
+  h+=`<div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Count ${s.match?'↑':''}</div><div style="background:${s.match?'var(--orangebg)':'var(--s2)'};border:1.5px solid ${s.match?'var(--orange)':'var(--bd)'};border-radius:8px;padding:5px 15px;font-family:var(--mono);font-size:20px;font-weight:700;color:${s.match?'var(--orange)':'var(--tx3)'};">${s.nc}</div></div>`;
+  h+='</div>';
+  h+=`<div class="var-state">digit = <span>${s.d}</span>  |  match? <span>${s.match?'YES → count++':'No'}</span>  |  count = <span>${s.nc}</span></div>`;
+  return h;
+},
+sim(n,target=9){let num=Math.abs(n),c=0;while(num>0){if(num%10===target)c++;num=Math.floor(num/10);}return[`Frequency: ${c}`,`✓ Digit ${target} appears ${c} time${c!==1?'s':''} in ${Math.abs(n)}`];}
+}
+
+]; /* end PROGS */
+
+/* ══════════════════════════════════════════════
+   PHASE DEFINITIONS
+══════════════════════════════════════════════ */
+const PHASES=['❓ Question','📝 Think steps','🔄 Why loop?','👁 Watch it run','✏️ Build code','🧩 Quiz'];
+
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+let curProg=0,curPhase=0,stepIdx=0,simTimer=null,simRunning=false;
+let stepsData=null,simInput=null;
+let buildAdded=[],codeLines=[];
+let quizIdx=0,quizAnswered=[];
+let solved={},scores={};
+let phaseDone={};/* phaseDone[progId][phaseIdx] */
+
+function p(){return PROGS[curProg];}
+function totalScore(){return Object.values(scores).reduce((a,b)=>a+b,0)}
+function updHdr(){document.getElementById('hsc').textContent=totalScore();document.getElementById('hsv').textContent=Object.keys(solved).length}
+
+/* ══════════════════════════════════════════════
+   PROG TABS
+══════════════════════════════════════════════ */
+function buildProgBar(){
+  const c=document.getElementById('prog-bar');
+  c.innerHTML=PROGS.map((pg,i)=>`<div class="ptab${i===curProg?' active':''}${solved[pg.id]?' done':''}" id="ptab${i}" onclick="switchProg(${i})"><span class="pn">${i+1}</span>${pg.icon} ${pg.title}</div>`).join('');
+}
+function switchProg(i){
+  if(simRunning)stopSim();
+  curProg=i;curPhase=0;stepIdx=0;stepsData=null;simInput=null;
+  buildAdded=[];codeLines=[];quizIdx=0;quizAnswered=[];
+  buildProgBar();buildPhaseBar();renderPhase();
+}
+
+/* ══════════════════════════════════════════════
+   PHASE TABS
+══════════════════════════════════════════════ */
+function buildPhaseBar(){
+  const c=document.getElementById('phase-bar');
+  const key=p().id;
+  c.innerHTML=PHASES.map((ph,i)=>{
+    const done=phaseDone[key]&&phaseDone[key][i];
+    return`<div class="phtab${i===curPhase?' active':''}${done?' ph-done':''}" id="phtab${i}" onclick="switchPhase(${i})"><span class="phnum">${i+1}</span>${ph}</div>`;
+  }).join('');
+}
+function switchPhase(i){if(simRunning)stopSim();curPhase=i;stepIdx=0;buildPhaseBar();renderPhase();window.scrollTo(0,0);}
+function markPhaseDone(pi){const key=p().id;if(!phaseDone[key])phaseDone[key]={};phaseDone[key][pi]=true;buildPhaseBar();}
+function nextPhase(){markPhaseDone(curPhase);switchPhase(Math.min(curPhase+1,PHASES.length-1));}
+function prevPhase(){switchPhase(Math.max(curPhase-1,0));}
+
+/* ══════════════════════════════════════════════
+   MAIN RENDER DISPATCHER
+══════════════════════════════════════════════ */
+function renderPhase(){
+  const pct=Math.round((Object.keys(solved).length/PROGS.length)*100);
+  document.getElementById('progress-fill').style.width=pct+'%';
+  const fn=[renderQuestion,renderThinkSteps,renderWhyLoop,renderWatchRun,renderBuildCode,renderQuiz];
+  fn[curPhase]();
+}
+
+/* ══════════════════════════════════════════════
+   PHASE 0 — QUESTION
+══════════════════════════════════════════════ */
+function renderQuestion(){
+  const pg=p();
+  let h=`<div class="qbox" style="border-color:${pg.bd};background:linear-gradient(135deg,${pg.bg},#F5F3FF)">
+    <div class="qb-tag" style="color:${pg.color}">${pg.icon} Problem</div>
+    <div class="qb-title" style="color:${pg.color}">${pg.title}</div>
+    <div class="qb-desc">${pg.desc}</div>
+  </div>`;
+  h+=`<div class="slbl">Operations involved</div>
+  <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
+    ${pg.ops.map(o=>`<span style="font-family:var(--mono);font-size:12px;padding:4px 11px;border-radius:8px;border:1px solid var(--bd);background:var(--s0);color:var(--tx2)">${o}</span>`).join('')}
+  </div>`;
+  h+=`<div class="slbl">Real-world use cases</div>
+  <div class="ucbox"><div class="uc-title">📌 Where is this used?</div>
+    ${pg.uses.map(u=>`<div class="uc-item"><span style="font-size:14px;flex-shrink:0">${u.i}</span><span>${u.t}</span></div>`).join('')}
+  </div>`;
+  h+=`<div class="slbl">Before writing code — ask yourself</div>
+  <div class="card">
+    <div class="card-text">
+      <p>🤔 <strong>What operations are repeated?</strong> Look at the operation list above. These are the building blocks of your loop.</p>
+      <p>🤔 <strong>What changes each round?</strong> The number gets smaller. Everything else (the operations) stays the same.</p>
+      <p>🤔 <strong>When do we stop?</strong> When the number reaches 0 — there are no more digits to process.</p>
+      <p>🤔 <strong>What do we track?</strong> Identify the variable that accumulates or tracks the answer across rounds.</p>
+    </div>
+  </div>`;
+  h+=navRow(false,true,'Next: Think through the steps →');
+  document.getElementById('content-area').innerHTML=h;
+}
+
+/* ══════════════════════════════════════════════
+   PHASE 1 — THINK STEPS
+══════════════════════════════════════════════ */
+function renderThinkSteps(){
+  const pg=p();
+  let h=`<div class="slbl">Step 1 — do it manually for a few values first</div>
+  <div class="card">
+    <div class="card-title">Manual calculation for ${pg.id==='check_digit'||pg.id==='frequency'?'num='+pg.manualRows[0].n+', target=9':'num='+pg.manualRows[0].n} — no code yet</div>
+    <div class="trace-wrap"><table class="mtbl">
+      <tr><th>Round</th><th>Current num</th><th>Operation</th><th>Result</th><th>What happened?</th></tr>
+      ${pg.manualRows.map((r,i)=>`<tr class="${i===0?'highlight-row':''}"><td>${r.step}</td><td style="font-size:15px;font-weight:700">${r.n}</td><td style="font-family:var(--mono)">${r.digit!==null?'% 10':'// 10'}</td><td style="font-weight:700;color:var(--blue)">${r.digit!==null?r.digit:'-'} → ${r.rev}</td><td style="font-size:11px;color:var(--tx2)">${r.note}</td></tr>`).join('')}
+    </table></div>
+  </div>`;
+  h+=`<div class="slbl">Step 2 — key operations explained</div>
+  <div class="sg">
+    ${pg.concept.map(cc=>`<div class="sc" style="border-left:3px solid ${pg.color}">
+      <div style="width:26px;height:26px;border-radius:6px;background:${cc.ibg};display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:7px">${cc.icon}</div>
+      <div class="sc-title">${cc.t}</div>
+      <div class="code-box" style="margin-top:7px;font-size:11px">${cc.code}</div>
+    </div>`).join('')}
+  </div>`;
+  h+=`<div class="slbl">Step 3 — the algorithm as plain English</div>
+  <div class="sg">
+    ${pg.scaffold.map((s,i)=>`<div class="sc">
+      <div class="sc-num" style="color:${pg.color}">Step ${i+1}</div>
+      <div class="sc-title">${s.t}</div>
+      ${s.w?`<div class="sc-text">${s.w}</div>`:''}
+      <div class="sc-code">${s.c.replace(/\n/g,'<br>')}</div>
+    </div>`).join('')}
+  </div>`;
+  h+=navRow(true,true,'Next: Why do we need a loop? →');
+  document.getElementById('content-area').innerHTML=h;
+}
+
+/* ══════════════════════════════════════════════
+   PHASE 2 — WHY LOOP?
+══════════════════════════════════════════════ */
+function renderWhyLoop(){
+  const pg=p();
+  const n0=pg.manualRows[0].n;
+  const digitCount=String(n0).length;
+  h=`<div class="slbl">Without a loop — what would code look like?</div>
+  <div class="card">
+    <div class="card-text"><p>We now know HOW to do one round. But for a ${digitCount}-digit number we need to repeat the same operation ${digitCount} times. For a 6-digit number, 6 times. We cannot hardcode this.</p></div>
+    <div class="code-box" style="margin-top:10px"><span class="cm"># Without a loop — for a ${digitCount}-digit number ONLY:</span>\n${Array.from({length:digitCount},(_,i)=>`<span class="cm"># Round ${i+1}: apply % 10 and // 10...</span>`).join('\n')}\n<span class="str"># What if the number has 8 digits? We'd need 8 copies!</span>\n<span class="str"># What if we don't know the length in advance? Impossible!</span></div>
+  </div>`;
+  h+=`<div class="why-box" style="background:var(--amberbg);border-color:var(--amberbd)">
+    <div class="why-icon">🔄</div>
+    <div>
+      <div class="why-title" style="color:var(--amber)">Why while loop specifically?</div>
+      <div class="why-text" style="color:#78350f">${pg.whyLoop}</div>
+    </div>
+  </div>`;
+  h+=`<div class="slbl">The loop connects everything</div>
+  <div class="sg" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+    <div class="sc" style="border-left:3px solid var(--blue)">
+      <div class="sc-num" style="color:var(--blue)">Before loop</div>
+      <div class="sc-title">Set up variables</div>
+      <div class="sc-text">Create the number and any tracking variables (result, total, count, etc.) starting at their initial value.</div>
+    </div>
+    <div class="sc" style="border-left:3px solid var(--amber)">
+      <div class="sc-num" style="color:var(--amber)">Each iteration</div>
+      <div class="sc-title">One round = one digit</div>
+      <div class="sc-text">Extract digit (% 10), do the work (add/compare/check), remove digit (// 10). Repeat automatically.</div>
+    </div>
+    <div class="sc" style="border-left:3px solid var(--green)">
+      <div class="sc-num" style="color:var(--green)">After loop</div>
+      <div class="sc-title">Loop exits when num = 0</div>
+      <div class="sc-text">All digits processed. Print or return the answer. Code after the loop sees the final result.</div>
+    </div>
+  </div>`;
+  h+=`<div class="slbl">See the full structure</div>
+  <div class="code-box"><span class="cm"># The general pattern for ALL digit logic programs:</span>
+<span class="cm"># ── before loop ──────────────────────────────</span>
+num = <span class="nm">${n0}</span>
+result = <span class="nm">0</span>  <span class="cm"># or -1, 10, False — depends on program</span>
+<span class="cm"># ── loop ─────────────────────────────────────</span>
+<span class="kw">while</span> num > <span class="nm">0</span>:
+    digit = num % <span class="nm">10</span>      <span class="cm"># extract last digit</span>
+    <span class="cm"># ... do something with digit ...</span>
+    num = num // <span class="nm">10</span>     <span class="cm"># remove last digit</span>
+<span class="cm"># ── after loop ───────────────────────────────</span>
+<span class="ok">print</span>(result)           <span class="cm"># num is now 0, result is ready</span></div>`;
+  h+=navRow(true,true,'Next: Watch it run →');
+  document.getElementById('content-area').innerHTML=h;
+}
+
+/* ══════════════════════════════════════════════
+   PHASE 3 — WATCH IT RUN
+══════════════════════════════════════════════ */
+function initSteps(){
+  const pg=p();
+  const n=pg.manualRows[0].n;
+  const t=(pg.id==='check_digit'||pg.id==='frequency')?9:undefined;
+  stepsData=t!==undefined?pg.genSteps(n,t):pg.genSteps(n);
+  simInput={n,t};
+}
+function renderWatchRun(){
+  if(!stepsData)initSteps();
+  const pg=p();const total=stepsData.length-1;
+  let h=`<div class="slbl">Input</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <label style="font-size:12px;color:var(--tx2)">num =</label>
+    <input type="number" id="sim-num" value="${simInput.n}" min="1" max="999999" style="width:120px;font-family:var(--mono);background:var(--s0);border:1px solid var(--bd2);border-radius:7px;padding:6px 10px;font-size:14px;color:var(--tx)">
+    ${pg.id==='check_digit'||pg.id==='frequency'?`<label style="font-size:12px;color:var(--tx2)">target =</label><input type="number" id="sim-target" value="9" min="0" max="9" style="width:70px;font-family:var(--mono);background:var(--s0);border:1px solid var(--bd2);border-radius:7px;padding:6px 10px;font-size:14px;color:var(--tx)">`:``}
+    <button class="nbtn primary" onclick="regenSteps()">▶ Generate trace</button>
+  </div>`;
+
+  h+=`<div class="step-nav">
+    <button class="snbtn secondary" id="sbn-prev" onclick="prevStep()" ${stepIdx===0?'disabled':''}>← Prev</button>
+    <div class="step-dots" id="step-dots">${Array.from({length:Math.min(total+1,14)},(_,i)=>`<div class="sdot ${i===stepIdx?'active':i<stepIdx?'done':''}"></div>`).join('')}</div>
+    <div class="step-lbl" id="step-lbl">Step ${stepIdx+1} of ${total+1}</div>
+    <button class="snbtn primary" id="sbn-next" onclick="nextStep()" ${stepIdx>=total?'disabled':''}>Next step →</button>
+    <button class="snbtn secondary" onclick="autoPlay()" id="auto-btn">▶ Auto</button>
+    <button class="snbtn secondary" onclick="resetSteps()">Reset</button>
+  </div>`;
+
+  h+=`<div class="slbl">Visual — what is happening</div>
+  <div class="card" id="vis-area">${pg.renderVisual(stepsData,stepIdx)}</div>`;
+
+  h+=`<div class="slbl">Trace table — every step</div>
+  <div class="trace-wrap" id="trace-area">${pg.renderTrace(stepsData,stepIdx)}</div>`;
+
+  h+=`<div class="slbl">Output</div>
+  <div class="out-panel" id="out-area">
+    ${stepIdx>=total?pg.sim(simInput.n,simInput.t).map(l=>`<span class="ol">${esc(l)}</span>`).join(''):`<span style="color:#475569;font-size:11px">Complete all steps to see output</span>`}
+  </div>`;
+
+  h+=navRow(true,true,'Next: Build the code →');
+  document.getElementById('content-area').innerHTML=h;
+}
+function regenSteps(){
+  const pg=p();
+  const n=parseInt(document.getElementById('sim-num').value)||pg.manualRows[0].n;
+  const tel=document.getElementById('sim-target');
+  const t=tel?parseInt(tel.value)||9:undefined;
+  stepsData=t!==undefined?pg.genSteps(n,t):pg.genSteps(n);
+  simInput={n,t};stepIdx=0;renderWatchRun();
+}
+function prevStep(){if(stepIdx>0){stepIdx--;updateStepView();}}
+function nextStep(){if(stepsData&&stepIdx<stepsData.length-1){stepIdx++;updateStepView();}}
+function resetSteps(){stepIdx=0;updateStepView();}
+function autoPlay(){
+  if(simRunning){stopSim();return;}
+  simRunning=true;
+  document.getElementById('auto-btn').textContent='⏸ Stop';
+  simTimer=setInterval(()=>{
+    if(stepIdx>=stepsData.length-1){stopSim();return;}
+    stepIdx++;updateStepView();
+  },900);
+}
+function stopSim(){clearInterval(simTimer);simRunning=false;const b=document.getElementById('auto-btn');if(b)b.textContent='▶ Auto';}
+function updateStepView(){
+  const pg=p(),total=stepsData.length-1;
+  const va=document.getElementById('vis-area');if(va)va.innerHTML=pg.renderVisual(stepsData,stepIdx);
+  const ta=document.getElementById('trace-area');if(ta)ta.innerHTML=pg.renderTrace(stepsData,stepIdx);
+  const oa=document.getElementById('out-area');
+  if(oa)oa.innerHTML=stepIdx>=total?pg.sim(simInput.n,simInput.t).map(l=>`<span class="ol">${esc(l)}</span>`).join(''):'<span style="color:#475569;font-size:11px">Complete all steps to see output</span>';
+  const prev=document.getElementById('sbn-prev');if(prev)prev.disabled=stepIdx===0;
+  const next=document.getElementById('sbn-next');if(next)next.disabled=stepIdx>=total;
+  const lbl=document.getElementById('step-lbl');if(lbl)lbl.textContent=`Step ${stepIdx+1} of ${total+1}`;
+  const dots=document.getElementById('step-dots');
+  if(dots)dots.innerHTML=Array.from({length:Math.min(total+1,14)},(_,i)=>`<div class="sdot ${i===stepIdx?'active':i<stepIdx?'done':''}"></div>`).join('');
+  const ar=document.querySelector('tr.tr-active');if(ar)ar.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+
+/* ══════════════════════════════════════════════
+   PHASE 4 — BUILD CODE
+══════════════════════════════════════════════ */
+function renderBuildCode(){
+  const pg=p();
+  let h=`<div class="two-col">
+  <div>
+    <div class="slbl">Click each step to add it to your code</div>
+    <div id="build-list">
+      ${pg.scaffold.map((s,i)=>`<div class="bstep${buildAdded[i]?' added':''}" id="bs${i}" onclick="addStep(${i})">
+        <div class="bsn">${i+1}</div>
+        <div><div class="bst">${s.t}</div>${s.w?`<div class="bsw">${s.w}</div>`:''}<div class="bsc">${s.c.replace(/\n/g,' | ')}</div></div>
+      </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap">
+      <button class="nbtn secondary" onclick="clearCode()">Clear</button>
+      <button class="nbtn ghost" onclick="fillAll()">Fill all</button>
+      <button class="nbtn primary" onclick="runCode()">▶ Run</button>
+    </div>
+  </div>
+  <div>
+    <div class="slbl">Your code</div>
+    <div class="code-box" id="code-display" style="min-height:200px">${renderCodeDisplay()}</div>
+    <div class="slbl" style="margin-top:8px">Output</div>
+    <div class="out-panel" id="build-out"><span style="color:#475569;font-size:11px">Click ▶ Run to see output</span></div>
+  </div>
+  </div>`;
+  h+=navRow(true,true,'Next: Test yourself →');
+  document.getElementById('content-area').innerHTML=h;
+}
+function renderCodeDisplay(){
+  if(!codeLines.length)return'<span style="color:#475569"># Click steps on the left to build your code</span>';
+  return codeLines.map(l=>{
+    const e=l.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const col=l.includes('while')||l.includes('if ')||l.includes('elif')||l.includes('else')?'#93c5fd':l.includes('print')?'#4ade80':l.includes('= 0')||l.includes('= -1')||l.includes('= 10')||l.includes('= False')?'#fde68a':'#e2e8f0';
+    return`<span style="color:${col}">${e}</span>`;
+  }).join('<br>');
+}
+function addStep(i){
+  if(buildAdded[i])return;
+  buildAdded[i]=true;
+  codeLines.push(p().scaffold[i].ins.trimEnd());
+  document.getElementById(`bs${i}`).classList.add('added');
+  document.getElementById('code-display').innerHTML=renderCodeDisplay();
+  toast('Added: '+p().scaffold[i].t);
+}
+function clearCode(){
+  codeLines=[];buildAdded=[];
+  p().scaffold.forEach((_,i)=>{const el=document.getElementById('bs'+i);if(el)el.classList.remove('added');});
+  const cd=document.getElementById('code-display');if(cd)cd.innerHTML='<span style="color:#475569"># Click steps on the left</span>';
+  const bo=document.getElementById('build-out');if(bo)bo.innerHTML='<span style="color:#475569;font-size:11px">Click ▶ Run to see output</span>';
+}
+function fillAll(){p().scaffold.forEach((_,i)=>{if(!buildAdded[i])addStep(i);});}
+function runCode(){
+  const pg=p();
+  const n=pg.manualRows[0].n,t=(pg.id==='check_digit'||pg.id==='frequency')?9:undefined;
+  const out=pg.sim(n,t);
+  const bo=document.getElementById('build-out');
+  if(bo)bo.innerHTML=out.map(l=>`<span class="ol">${esc(l)}</span>`).join('');
+  if(!solved[pg.id]){solved[pg.id]=true;scores[pg.id]=15;updHdr();toast('🎉 +15 points!');buildProgBar();}
+  document.getElementById('progress-fill').style.width=Math.round(Object.keys(solved).length/PROGS.length*100)+'%';
+}
+
+/* ══════════════════════════════════════════════
+   PHASE 5 — QUIZ
+══════════════════════════════════════════════ */
+function renderQuiz(){
+  const pg=p(),q=pg.quizzes[quizIdx];
+  const pct=Math.round(quizIdx/pg.quizzes.length*100);
+  let h=`<div class="card" style="max-width:620px;margin:0 auto">
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Question ${quizIdx+1} of ${pg.quizzes.length} — ${pg.title}</div>
+    <div style="height:4px;background:var(--bd);border-radius:2px;overflow:hidden;margin-bottom:14px"><div style="width:${pct}%;height:100%;background:${pg.color};transition:.3s"></div></div>
+    <div class="quiz-q">${q.q}</div>
+    <div class="quiz-opts">${q.opts.map((opt,oi)=>`<div class="qopt" id="qo${oi}" onclick="ansQ(${oi})">${opt}</div>`).join('')}</div>
+    <div class="qexp" id="qexp">${q.exp}</div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px">
+      <button class="nbtn primary" id="qnext" onclick="nextQ()" style="display:none">${quizIdx<pg.quizzes.length-1?'Next question →':'See results'}</button>
+    </div>
+  </div>`;
+  if(quizAnswered[quizIdx]!==undefined)h='';/* will restore below */
+  document.getElementById('content-area').innerHTML=h;
+  if(quizAnswered[quizIdx]!==undefined){renderQuizRestore();}
+}
+function ansQ(oi){
+  if(quizAnswered[quizIdx]!==undefined)return;
+  quizAnswered[quizIdx]=oi;
+  const q=p().quizzes[quizIdx];
+  document.querySelectorAll('.qopt').forEach((el,idx)=>{
+    if(idx===q.correct)el.classList.add('correct');
+    else if(idx===oi&&oi!==q.correct)el.classList.add('wrong');
+  });
+  document.getElementById('qexp').style.display='block';
+  document.getElementById('qnext').style.display='inline-flex';
+  if(oi===q.correct){scores[p().id]=(scores[p().id]||0)+5;updHdr();toast('✓ Correct! +5 points');}
+  else toast('✗ Not quite — read the explanation');
+}
+function nextQ(){
+  quizIdx++;
+  const pg=p();
+  if(quizIdx>=pg.quizzes.length){showQuizResults();return;}
+  renderQuiz();
+}
+function renderQuizRestore(){
+  const pg=p(),q=pg.quizzes[quizIdx];
+  let h=`<div class="card" style="max-width:620px;margin:0 auto">
+    <div class="quiz-q">${q.q}</div>
+    <div class="quiz-opts">${q.opts.map((opt,oi)=>`<div class="qopt${oi===q.correct?' correct':oi===quizAnswered[quizIdx]&&quizAnswered[quizIdx]!==q.correct?' wrong':''}" onclick="ansQ(${oi})">${opt}</div>`).join('')}</div>
+    <div class="qexp" style="display:block">${q.exp}</div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="nbtn primary" onclick="nextQ()">${quizIdx<pg.quizzes.length-1?'Next question →':'See results'}</button></div>
+  </div>`;
+  document.getElementById('content-area').innerHTML=h;
+}
+function showQuizResults(){
+  const pg=p(),correct=quizAnswered.filter((a,i)=>a===pg.quizzes[i].correct).length;
+  const total=pg.quizzes.length;
+  document.getElementById('content-area').innerHTML=`
+    <div class="card" style="max-width:500px;margin:0 auto;text-align:center;padding:28px">
+      <div style="font-size:44px;margin-bottom:10px">${correct===total?'🏆':correct>=Math.ceil(total/2)?'🎉':'📚'}</div>
+      <div style="font-size:22px;font-weight:700">${correct} / ${total} correct</div>
+      <div style="font-size:13px;color:var(--tx2);margin-top:8px;line-height:1.7">${correct===total?'Perfect! You fully understand '+pg.title+'.':correct>=Math.ceil(total/2)?'Good work! Review the ones you missed.':'Go back and step through the trace again — then retry.'}</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap">
+        <button class="nbtn secondary" onclick="quizIdx=0;quizAnswered=[];renderQuiz()">Retry quiz</button>
+        <button class="nbtn primary" onclick="nextPhase()">✓ Continue</button>
+        ${curProg<PROGS.length-1?`<button class="nbtn ghost" onclick="switchProg(${curProg+1})">Next program →</button>`:''}
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════
+   NAV ROW HELPER
+══════════════════════════════════════════════ */
+function navRow(showBack,showNext,nextLabel){
+  let h='<div class="nav-row">';
+  if(showBack)h+=`<button class="nbtn secondary" onclick="prevPhase()">← Back</button>`;
+  if(showNext)h+=`<button class="nbtn primary" onclick="nextPhase()">${nextLabel}</button>`;
+  h+='</div>';return h;
+}
+
+/* ══════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════ */
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2300)}
+
+/* ── INIT ── */
+buildProgBar();buildPhaseBar();renderPhase();
+</script>
+</body>
+</html>

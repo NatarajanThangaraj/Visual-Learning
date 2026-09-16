@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design Thinking — Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #17171e;
+    --surface2: #1e1e28;
+    --surface3: #25252f;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0eff5;
+    --text2: #9b9aaa;
+    --text3: #5f5e72;
+    --accent: #7c6aff;
+    --accent2: #a594ff;
+    --accent-dim: rgba(124,106,255,0.15);
+    --teal: #2dd4bf;
+    --teal-dim: rgba(45,212,191,0.12);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.12);
+    --coral: #f87171;
+    --coral-dim: rgba(248,113,113,0.12);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.12);
+    --r: 12px;
+    --r-sm: 8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    background: rgba(15,15,19,0.9);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .header-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .header-logo span { color: var(--accent2); }
+  .phase-tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex: 1;
+  }
+  .phase-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text3);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text2); background: var(--surface2); }
+  .tab-btn.active { color: var(--text); background: var(--surface3); }
+  .tab-btn .tab-num {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--surface3);
+    color: var(--text3);
+    font-size: 0.65rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .tab-btn.active .tab-num { background: var(--accent); color: #fff; }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+  .sidebar-section-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 0 8px;
+    margin-bottom: 4px;
+  }
+  .calc-container {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .calc-display {
+    background: var(--surface3);
+    padding: 12px 14px 8px;
+    min-height: 70px;
+    position: relative;
+  }
+  .calc-expr {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text3);
+    min-height: 14px;
+  }
+  .calc-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: var(--text);
+    text-align: right;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .calc-value.error { color: var(--coral); font-size: 1.2rem; }
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+  .cb {
+    background: var(--surface2);
+    border: none;
+    color: var(--text2);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    height: 44px;
+    cursor: pointer;
+    transition: background .12s, color .12s;
+    position: relative;
+  }
+  .cb:hover { background: var(--surface3); color: var(--text); }
+  .cb:active { background: #2a2a38; }
+  .cb.op { color: var(--accent2); }
+  .cb.eq { background: var(--accent); color: #fff; }
+  .cb.eq:hover { background: var(--accent2); }
+  .cb.cl { color: var(--teal); }
+  .cb.wide { grid-column: span 2; text-align: left; padding-left: 20px; }
+  .cb.highlight-btn { outline: 2px solid var(--amber); outline-offset: -2px; }
+
+  /* State panel in sidebar */
+  .state-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 12px;
+  }
+  .state-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 8px;
+    border-radius: 6px;
+    margin-bottom: 3px;
+    transition: background .2s;
+  }
+  .state-row.changed { background: var(--accent-dim); animation: flash .4s ease; }
+  @keyframes flash { 0%{background:rgba(124,106,255,0.35)} 100%{background:var(--accent-dim)} }
+  .state-key {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text3);
+  }
+  .state-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--accent2);
+  }
+  .state-val.null-val { color: var(--text3); font-weight: 400; }
+
+  /* Event log */
+  .event-log {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 10px;
+    max-height: 140px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface3) transparent;
+  }
+  .event-log::-webkit-scrollbar { width: 4px; }
+  .event-log::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
+  .log-line {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text3);
+    padding: 2px 0;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.4;
+  }
+  .log-line:last-child { border: none; }
+  .log-line.ev-digit { color: var(--text2); }
+  .log-line.ev-op { color: var(--accent2); }
+  .log-line.ev-eq { color: var(--green); }
+  .log-line.ev-err { color: var(--coral); }
+  .log-line.ev-clear { color: var(--teal); }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    padding: 2rem;
+    overflow-y: auto;
+  }
+
+  /* Phase panels */
+  .phase-panel { display: none; }
+  .phase-panel.active { display: block; }
+
+  /* Phase header */
+  .phase-header {
+    margin-bottom: 2rem;
+  }
+  .phase-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .phase-tag.observe { background: var(--teal-dim); color: var(--teal); }
+  .phase-tag.design { background: var(--accent-dim); color: var(--accent2); }
+  .phase-tag.dataflow { background: var(--amber-dim); color: var(--amber); }
+  .phase-tag.prompt { background: var(--green-dim); color: var(--green); }
+  .phase-tag.critique { background: var(--coral-dim); color: var(--coral); }
+  .phase-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  .phase-subtitle {
+    font-size: 0.9rem;
+    color: var(--text2);
+    line-height: 1.6;
+    max-width: 620px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 1rem;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+  }
+
+  /* Observe phase — question cards */
+  .q-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 14px;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .q-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--teal);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .q-card:hover { border-color: var(--border2); }
+  .q-card:hover::before { opacity: 1; }
+  .q-card.answered { border-color: rgba(45,212,191,0.3); }
+  .q-card.answered::before { opacity: 1; }
+  .q-question {
+    font-size: 0.85rem;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  .q-answer {
+    font-size: 0.8rem;
+    color: var(--text2);
+    line-height: 1.5;
+    display: none;
+  }
+  .q-card.answered .q-answer { display: block; }
+  .q-hint {
+    font-size: 0.72rem;
+    color: var(--text3);
+    font-style: italic;
+  }
+  .q-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    background: var(--teal-dim);
+    color: var(--teal);
+    margin-bottom: 6px;
+  }
+  .progress-bar {
+    background: var(--surface3);
+    border-radius: 4px;
+    height: 4px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--teal);
+    border-radius: 4px;
+    transition: width .4s ease;
+  }
+  .progress-label {
+    font-size: 0.72rem;
+    color: var(--text3);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Design phase — component map */
+  .component-map {
+    position: relative;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.5rem;
+    min-height: 300px;
+  }
+  .comp-node {
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: var(--r-sm);
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all .2s;
+    margin-bottom: 8px;
+  }
+  .comp-node:hover { border-color: var(--accent); }
+  .comp-node.selected { border-color: var(--accent); background: var(--accent-dim); }
+  .comp-node-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .comp-node-desc { font-size: 0.75rem; color: var(--text3); }
+  .comp-detail {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.25rem;
+  }
+  .comp-detail-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent2);
+    margin-bottom: 0.75rem;
+  }
+  .prop-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+  }
+  .prop-row:last-child { border: none; }
+  .prop-key {
+    font-family: 'DM Mono', monospace;
+    color: var(--accent2);
+    min-width: 110px;
+    font-size: 0.75rem;
+  }
+  .prop-val { color: var(--text2); line-height: 1.5; }
+
+  /* Data flow stepper */
+  .flow-stepper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .flow-step {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+  }
+  .flow-step-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .flow-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text3);
+    flex-shrink: 0;
+    transition: all .3s;
+    z-index: 1;
+  }
+  .flow-dot.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .flow-dot.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .flow-line {
+    width: 1px;
+    flex: 1;
+    background: var(--border);
+    margin: 2px 0;
+    min-height: 24px;
+  }
+  .flow-content {
+    flex: 1;
+    padding-bottom: 1.5rem;
+  }
+  .flow-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    padding-top: 5px;
+  }
+  .flow-desc { font-size: 0.8rem; color: var(--text2); line-height: 1.6; }
+  .flow-code {
+    margin-top: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent2);
+    line-height: 1.7;
+  }
+  .flow-step-btn {
+    margin-top: 1rem;
+    padding: 8px 18px;
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .flow-step-btn:hover { opacity: 0.85; }
+  .flow-step-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* Prompt AI phase */
+  .prompt-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .prompt-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.25rem;
+  }
+  .prompt-box.bad { border-color: rgba(248,113,113,0.3); }
+  .prompt-box.good { border-color: rgba(74,222,128,0.3); }
+  .prompt-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .prompt-label .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .prompt-label.bad-lbl { color: var(--coral); }
+  .prompt-label.bad-lbl .dot { background: var(--coral); }
+  .prompt-label.good-lbl { color: var(--green); }
+  .prompt-label.good-lbl .dot { background: var(--green); }
+  .prompt-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text2);
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .prompt-why {
+    margin-top: 10px;
+    font-size: 0.75rem;
+    color: var(--text3);
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .prompt-builder {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.25rem;
+  }
+  .prompt-section {
+    margin-bottom: 1rem;
+  }
+  .prompt-section-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 6px;
+  }
+  .tag-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all .15s;
+    user-select: none;
+  }
+  .tag.selected { background: var(--accent-dim); border-color: var(--accent); color: var(--accent2); }
+  .generated-prompt {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text2);
+    line-height: 1.8;
+    min-height: 120px;
+    margin-top: 1rem;
+    white-space: pre-wrap;
+  }
+
+  /* Critique phase */
+  .critique-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .critique-item.open { border-color: var(--border2); }
+  .critique-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  .critique-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .critique-icon.pass { background: var(--green-dim); color: var(--green); }
+  .critique-icon.fail { background: var(--coral-dim); color: var(--coral); }
+  .critique-icon.warn { background: var(--amber-dim); color: var(--amber); }
+  .critique-icon.unknown { background: var(--surface3); color: var(--text3); }
+  .critique-q { font-size: 0.85rem; color: var(--text); flex: 1; }
+  .critique-toggle { color: var(--text3); font-size: 0.8rem; transition: transform .2s; }
+  .critique-item.open .critique-toggle { transform: rotate(180deg); }
+  .critique-body {
+    display: none;
+    padding: 0 16px 14px;
+    border-top: 1px solid var(--border);
+  }
+  .critique-item.open .critique-body { display: block; }
+  .critique-code {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 12px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-top: 10px;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .critique-fix {
+    margin-top: 10px;
+    background: var(--green-dim);
+    border: 1px solid rgba(74,222,128,0.2);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+    font-size: 0.78rem;
+    color: var(--green);
+    line-height: 1.6;
+  }
+  .critique-note {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  /* Status indicator */
+  .status-chips {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .chip {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+  .chip.pass { background: var(--green-dim); color: var(--green); border-color: rgba(74,222,128,0.2); }
+  .chip.fail { background: var(--coral-dim); color: var(--coral); border-color: rgba(248,113,113,0.2); }
+  .chip.warn { background: var(--amber-dim); color: var(--amber); border-color: rgba(251,191,36,0.2); }
+  .chip.info { background: var(--accent-dim); color: var(--accent2); border-color: rgba(124,106,255,0.2); }
+
+  /* Nav buttons */
+  .nav-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .btn-primary {
+    padding: 9px 22px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary {
+    padding: 9px 22px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text2);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-secondary:hover { background: var(--surface2); color: var(--text); }
+
+  /* Callout */
+  .callout {
+    border-radius: var(--r-sm);
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+  }
+  .callout.info { background: var(--accent-dim); color: var(--accent2); border-color: rgba(124,106,255,0.2); }
+  .callout.tip { background: var(--teal-dim); color: var(--teal); border-color: rgba(45,212,191,0.2); }
+  .callout.warn { background: var(--amber-dim); color: var(--amber); border-color: rgba(251,191,36,0.2); }
+
+  .inline-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78em;
+    background: var(--surface3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--accent2);
+  }
+
+  /* Scrollbar global */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: relative; top: 0; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .two-col, .three-col, .prompt-compare { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">System<span>Think</span></div>
+  <nav class="phase-tabs">
+    <button class="tab-btn active" onclick="showPhase(0)">
+      <span class="tab-num">1</span> Observe
+    </button>
+    <button class="tab-btn" onclick="showPhase(1)">
+      <span class="tab-num">2</span> Design
+    </button>
+    <button class="tab-btn" onclick="showPhase(2)">
+      <span class="tab-num">3</span> Data Flow
+    </button>
+    <button class="tab-btn" onclick="showPhase(3)">
+      <span class="tab-num">4</span> Prompt AI
+    </button>
+    <button class="tab-btn" onclick="showPhase(4)">
+      <span class="tab-num">5</span> Critique
+    </button>
+  </nav>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR: Live Calculator -->
+  <aside class="sidebar">
+    <div class="sidebar-section-label">Live Calculator</div>
+    <div class="calc-container">
+      <div class="calc-display">
+        <div class="calc-expr" id="expr">&nbsp;</div>
+        <div class="calc-value" id="display">0</div>
+      </div>
+      <div class="calc-grid">
+        <button class="cb cl" onclick="press('C')">C</button>
+        <button class="cb op" onclick="press('+/-')">+/−</button>
+        <button class="cb op" onclick="press('%')">%</button>
+        <button class="cb op" onclick="press('/')">÷</button>
+        <button class="cb" onclick="press('7')">7</button>
+        <button class="cb" onclick="press('8')">8</button>
+        <button class="cb" onclick="press('9')">9</button>
+        <button class="cb op" onclick="press('*')">×</button>
+        <button class="cb" onclick="press('4')">4</button>
+        <button class="cb" onclick="press('5')">5</button>
+        <button class="cb" onclick="press('6')">6</button>
+        <button class="cb op" onclick="press('-')">−</button>
+        <button class="cb" onclick="press('1')">1</button>
+        <button class="cb" onclick="press('2')">2</button>
+        <button class="cb" onclick="press('3')">3</button>
+        <button class="cb op" onclick="press('+')">+</button>
+        <button class="cb wide" onclick="press('0')">0</button>
+        <button class="cb" onclick="press('.')">.</button>
+        <button class="cb eq" onclick="press('=')">=</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">State Machine</div>
+    <div class="state-panel">
+      <div class="state-row" id="sr-display">
+        <span class="state-key">display</span>
+        <span class="state-val" id="sv-display">"0"</span>
+      </div>
+      <div class="state-row" id="sr-op1">
+        <span class="state-key">operand1</span>
+        <span class="state-val null-val" id="sv-op1">null</span>
+      </div>
+      <div class="state-row" id="sr-oper">
+        <span class="state-key">operator</span>
+        <span class="state-val null-val" id="sv-oper">null</span>
+      </div>
+      <div class="state-row" id="sr-op2">
+        <span class="state-key">operand2</span>
+        <span class="state-val null-val" id="sv-op2">null</span>
+      </div>
+      <div class="state-row" id="sr-await">
+        <span class="state-key">awaiting2nd</span>
+        <span class="state-val null-val" id="sv-await">false</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">Event Log</div>
+    <div class="event-log" id="event-log">
+      <div class="log-line" style="color:var(--text3);font-style:italic">Press buttons to see events…</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══ PHASE 1: OBSERVE ══ -->
+    <section class="phase-panel active" id="phase-0">
+      <div class="phase-header">
+        <div class="phase-tag observe">Phase 1</div>
+        <h1 class="phase-title">Observe & Experience</h1>
+        <p class="phase-subtitle">Before writing a single line of code, use the calculator on the left like a real user. Then answer these observation questions — each one trains you to think like a system designer, not just a coder.</p>
+      </div>
+
+      <div class="callout tip">Try pressing buttons on the calculator first, then come back and answer these questions. Watch how the State Machine panel updates in real time.</div>
+
+      <div class="progress-label">
+        <span>Observation progress</span>
+        <span id="q-count">0 / 6 answered</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="q-progress" style="width:0%"></div></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+        <div class="q-card" id="q0" onclick="toggleQ(0)">
+          <span class="q-badge">Display</span>
+          <div class="q-question">What happens on screen when you press the "7" button?</div>
+          <div class="q-answer">The display element updates to show "7". The <span class="inline-code">display</span> field in state changes from "0" to "7". This is a <strong>DOM update triggered by a click event</strong> — the UI reacts to state change, not directly to the button press.</div>
+          <div class="q-hint" id="qh0">→ Click to reveal answer</div>
+        </div>
+
+        <div class="q-card" id="q1" onclick="toggleQ(1)">
+          <span class="q-badge">State</span>
+          <div class="q-question">Press 5, then ×, then look at the state panel. What changed and what stayed the same?</div>
+          <div class="q-answer"><span class="inline-code">operand1</span> is now "5", <span class="inline-code">operator</span> is "×", and <span class="inline-code">awaiting2nd</span> flipped to true. The display still shows "5" — the <strong>state remembers context</strong> the display cannot show visually.</div>
+          <div class="q-hint" id="qh1">→ Click to reveal answer</div>
+        </div>
+
+        <div class="q-card" id="q2" onclick="toggleQ(2)">
+          <span class="q-badge">Events</span>
+          <div class="q-question">What is the name of the event triggered when you click a button? What information does it carry?</div>
+          <div class="q-answer">A <span class="inline-code">click</span> event fires on the button element. The handler receives the key value ("7", "+", "=", etc.). The handler's job is to <strong>classify the key type</strong> — digit, operator, equals, or special — and update state accordingly.</div>
+          <div class="q-hint" id="qh2">→ Click to reveal answer</div>
+        </div>
+
+        <div class="q-card" id="q3" onclick="toggleQ(3)">
+          <span class="q-badge">Edge Case</span>
+          <div class="q-question">Press = twice after a calculation (e.g. 4 + 3 = then = again). What happens? Why?</div>
+          <div class="q-answer">The calculator repeats the last operation — pressing = again adds 3 to the result again. This is the <strong>"repeat operation" edge case</strong>. The state must remember <span class="inline-code">lastOperand</span> and <span class="inline-code">lastOperator</span> specifically to support this behavior.</div>
+          <div class="q-hint" id="qh3">→ Click to reveal answer</div>
+        </div>
+
+        <div class="q-card" id="q4" onclick="toggleQ(4)">
+          <span class="q-badge">Error</span>
+          <div class="q-question">Try dividing by zero (e.g. 5 ÷ 0 =). What is displayed? What should the system do with the state?</div>
+          <div class="q-answer">The display shows "Error". The system must <strong>detect the edge case</strong> before computing, reset operands to null, and prevent further operations until C is pressed. This is <em>defensive system design</em> — anticipating impossible inputs.</div>
+          <div class="q-hint" id="qh4">→ Click to reveal answer</div>
+        </div>
+
+        <div class="q-card" id="q5" onclick="toggleQ(5)">
+          <span class="q-badge">Data Flow</span>
+          <div class="q-question">Trace the journey of pressing "3 + 4 =". Name every system action that happens in order.</div>
+          <div class="q-answer">① Click "3" → handler classifies as digit → state.display = "3" → UI updates. ② Click "+" → operand1 = "3", operator = "+", awaiting2nd = true. ③ Click "4" → operand2 building → display = "4". ④ Click "=" → compute(3,+,4) → result = 7 → display = "7" → state resets.</div>
+          <div class="q-hint" id="qh5">→ Click to reveal answer</div>
+        </div>
+
+      </div>
+
+      <div class="nav-btns">
+        <button class="btn-primary" onclick="showPhase(1)">Next: System Design →</button>
+      </div>
+    </section>
+
+    <!-- ══ PHASE 2: DESIGN ══ -->
+    <section class="phase-panel" id="phase-1">
+      <div class="phase-header">
+        <div class="phase-tag design">Phase 2</div>
+        <h1 class="phase-title">System Design Thinking</h1>
+        <p class="phase-subtitle">Now that you've observed the app's behavior, name every component and describe its responsibility. This is architecture thinking — understanding what exists before deciding how to build it.</p>
+      </div>
+
+      <div class="callout info">In the AI era, this is the most important step. A student who can clearly name and describe components can write a precise AI prompt. A student who cannot will get unpredictable output.</div>
+
+      <div class="two-col" style="margin-bottom:1rem">
+        <div>
+          <div class="card-title" style="margin-bottom:10px;font-size:0.7rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3)">Select a component</div>
+          <div class="comp-node selected" id="cn-0" onclick="selectComp(0)">
+            <div class="comp-node-title">Display Component</div>
+            <div class="comp-node-desc">Shows values to the user</div>
+          </div>
+          <div class="comp-node" id="cn-1" onclick="selectComp(1)">
+            <div class="comp-node-title">Button Grid</div>
+            <div class="comp-node-desc">User input surface</div>
+          </div>
+          <div class="comp-node" id="cn-2" onclick="selectComp(2)">
+            <div class="comp-node-title">Event Handler</div>
+            <div class="comp-node-desc">Processes button presses</div>
+          </div>
+          <div class="comp-node" id="cn-3" onclick="selectComp(3)">
+            <div class="comp-node-title">State Engine</div>
+            <div class="comp-node-desc">Remembers calculation context</div>
+          </div>
+          <div class="comp-node" id="cn-4" onclick="selectComp(4)">
+            <div class="comp-node-title">Compute Unit</div>
+            <div class="comp-node-desc">Evaluates expressions</div>
+          </div>
+        </div>
+        <div class="comp-detail" id="comp-detail">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Architecture principle</div>
+        <div class="three-col">
+          <div style="background:var(--surface2);border-radius:var(--r-sm);padding:14px;border:1px solid var(--border)">
+            <div style="font-size:0.75rem;font-weight:600;color:var(--accent2);margin-bottom:6px">Separation of concerns</div>
+            <div style="font-size:0.78rem;color:var(--text2);line-height:1.6">Each component has ONE job. The display doesn't compute. The state doesn't render. This makes debugging, testing, and AI-assisted generation far cleaner.</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:var(--r-sm);padding:14px;border:1px solid var(--border)">
+            <div style="font-size:0.75rem;font-weight:600;color:var(--teal);margin-bottom:6px">Single source of truth</div>
+            <div style="font-size:0.78rem;color:var(--text2);line-height:1.6">State is the single source of truth. The display always reads from state — it never maintains its own data. This prevents inconsistency between what's shown and what's stored.</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:var(--r-sm);padding:14px;border:1px solid var(--border)">
+            <div style="font-size:0.75rem;font-weight:600;color:var(--amber);margin-bottom:6px">Pure compute functions</div>
+            <div style="font-size:0.78rem;color:var(--text2);line-height:1.6">The compute unit is a pure function — same inputs always return the same output, with no side effects. This concept scales from a calculator all the way to backend services.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-btns">
+        <button class="btn-secondary" onclick="showPhase(0)">← Observe</button>
+        <button class="btn-primary" onclick="showPhase(2)">Next: Data Flow →</button>
+      </div>
+    </section>
+
+    <!-- ══ PHASE 3: DATA FLOW ══ -->
+    <section class="phase-panel" id="phase-2">
+      <div class="phase-header">
+        <div class="phase-tag dataflow">Phase 3</div>
+        <h1 class="phase-title">Tracing Data Flow</h1>
+        <p class="phase-subtitle">Step through exactly what happens when a user presses "3 + 4 =". Every real system has this kind of traceable data journey — understanding it is the foundation of debugging and architecture.</p>
+      </div>
+
+      <div class="callout warn">Step through each stage using the button below. Watch the state panel on the left change as you progress — this is the data flow becoming visible.</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div class="flow-stepper" id="flow-stepper">
+          <!-- filled by JS -->
+        </div>
+        <div>
+          <div class="card" style="position:sticky;top:80px">
+            <div class="card-title">Current state snapshot</div>
+            <div id="flow-state-display" style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text2);line-height:2;background:var(--bg);border-radius:var(--r-sm);padding:14px;border:1px solid var(--border)">
+              Press "Start trace" to begin
+            </div>
+            <div style="margin-top:1rem">
+              <button class="btn-primary" id="flow-next-btn" onclick="flowNext()">Start trace →</button>
+              <button class="btn-secondary" style="margin-left:8px" onclick="flowReset()">Reset</button>
+            </div>
+            <div style="margin-top:1rem;font-size:0.75rem;color:var(--text3);line-height:1.6" id="flow-insight"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-btns">
+        <button class="btn-secondary" onclick="showPhase(1)">← Design</button>
+        <button class="btn-primary" onclick="showPhase(3)">Next: Prompt AI →</button>
+      </div>
+    </section>
+
+    <!-- ══ PHASE 4: PROMPT AI ══ -->
+    <section class="phase-panel" id="phase-3">
+      <div class="phase-header">
+        <div class="phase-tag prompt">Phase 4</div>
+        <h1 class="phase-title">Prompting AI Effectively</h1>
+        <p class="phase-subtitle">The quality of your system design thinking directly determines the quality of AI-generated code. Vague prompts produce vague code. Precise architecture thinking produces usable implementation.</p>
+      </div>
+
+      <div class="card-title" style="margin-bottom:10px">Weak vs strong prompts</div>
+      <div class="prompt-compare">
+        <div class="prompt-box bad">
+          <div class="prompt-label bad-lbl"><span class="dot"></span> Weak prompt</div>
+          <div class="prompt-text">Write a calculator in JavaScript.</div>
+          <div class="prompt-why">No component structure specified. No state model. No edge cases. No architecture. The AI must guess everything — and its guesses may not match your mental model.</div>
+        </div>
+        <div class="prompt-box good">
+          <div class="prompt-label good-lbl"><span class="dot"></span> System-design prompt</div>
+          <div class="prompt-text">Build a calculator with these components:
+- Display: reads from state.display
+- State: { operand1, operator, operand2, awaiting2nd, lastOp, lastOperand }
+- Handler: classifies key as digit | operator | equals | clear | special
+- Compute: pure function (a, op, b) → result
+
+Edge cases:
+- Divide by zero → show "Error", reset state
+- Double equals → repeat last operation
+- Chained operators → compute before storing next op</div>
+          <div class="prompt-why">The AI receives a complete specification. The component boundaries, state shape, and edge cases are already decided. Output will match your architecture.</div>
+        </div>
+      </div>
+
+      <div class="card-title" style="margin-top:1.5rem;margin-bottom:10px">Build your own prompt</div>
+      <div class="prompt-builder">
+        <div class="prompt-section">
+          <div class="prompt-section-label">Components to include</div>
+          <div class="tag-group" id="comp-tags">
+            <span class="tag selected" data-key="display" onclick="toggleTag(this)">Display</span>
+            <span class="tag selected" data-key="state" onclick="toggleTag(this)">State engine</span>
+            <span class="tag selected" data-key="handler" onclick="toggleTag(this)">Event handler</span>
+            <span class="tag selected" data-key="compute" onclick="toggleTag(this)">Compute unit</span>
+            <span class="tag" data-key="history" onclick="toggleTag(this)">History log</span>
+            <span class="tag" data-key="keyboard" onclick="toggleTag(this)">Keyboard input</span>
+          </div>
+        </div>
+        <div class="prompt-section">
+          <div class="prompt-section-label">Edge cases to handle</div>
+          <div class="tag-group" id="edge-tags">
+            <span class="tag selected" data-key="divzero" onclick="toggleTag(this)">Divide by zero</span>
+            <span class="tag selected" data-key="repeat" onclick="toggleTag(this)">Double equals</span>
+            <span class="tag" data-key="chain" onclick="toggleTag(this)">Chained operators</span>
+            <span class="tag" data-key="overflow" onclick="toggleTag(this)">Number overflow</span>
+            <span class="tag" data-key="dot" onclick="toggleTag(this)">Double decimal</span>
+          </div>
+        </div>
+        <div class="prompt-section">
+          <div class="prompt-section-label">Output format</div>
+          <div class="tag-group" id="format-tags">
+            <span class="tag selected" data-key="vanilla" onclick="toggleTag(this)">Vanilla JS</span>
+            <span class="tag" data-key="react" onclick="toggleTag(this)">React</span>
+            <span class="tag" data-key="comments" onclick="toggleTag(this)">With comments</span>
+            <span class="tag" data-key="tests" onclick="toggleTag(this)">With unit tests</span>
+          </div>
+        </div>
+        <div class="generated-prompt" id="generated-prompt">Select options above to generate your prompt…</div>
+      </div>
+
+      <div class="nav-btns">
+        <button class="btn-secondary" onclick="showPhase(2)">← Data Flow</button>
+        <button class="btn-primary" onclick="showPhase(4)">Next: Critique →</button>
+      </div>
+    </section>
+
+    <!-- ══ PHASE 5: CRITIQUE ══ -->
+    <section class="phase-panel" id="phase-4">
+      <div class="phase-header">
+        <div class="phase-tag critique">Phase 5</div>
+        <h1 class="phase-title">Critique AI-Generated Code</h1>
+        <p class="phase-subtitle">AI generated this calculator code. Your job is to review it as a system designer — not just ask "does it run?" but "does it match the architecture we designed?" Open each check to see the analysis.</p>
+      </div>
+
+      <div class="status-chips">
+        <span class="chip pass">3 Passed</span>
+        <span class="chip fail">2 Issues</span>
+        <span class="chip warn">1 Warning</span>
+      </div>
+
+      <div id="critique-list">
+
+        <div class="critique-item" id="ci-0">
+          <div class="critique-header" onclick="toggleCritique(0)">
+            <div class="critique-icon pass">✓</div>
+            <div class="critique-q">Does the compute unit work as a pure function?</div>
+            <div class="critique-toggle">▾</div>
+          </div>
+          <div class="critique-body">
+            <div class="critique-note">A pure function has no side effects — same input always gives the same output. This is critical for testability and correctness.</div>
+            <div class="critique-code">function compute(a, op, b) {
+  a = parseFloat(a);
+  b = parseFloat(b);
+  if (op === '+') return a + b;
+  if (op === '-') return a - b;
+  if (op === '*') return a * b;
+  if (op === '/') return b === 0 ? 'Error' : a / b;
+  return a;
+}</div>
+            <div class="critique-fix">✓ This is correct. The function reads no external state, modifies nothing outside itself, and handles the divide-by-zero edge case inline. It can be unit-tested independently.</div>
+          </div>
+        </div>
+
+        <div class="critique-item" id="ci-1">
+          <div class="critique-header" onclick="toggleCritique(1)">
+            <div class="critique-icon fail">✗</div>
+            <div class="critique-q">Is the state mutation controlled in one place?</div>
+            <div class="critique-toggle">▾</div>
+          </div>
+          <div class="critique-body">
+            <div class="critique-note">State should only change inside the handler function. If state is mutated in multiple places, bugs become very hard to trace.</div>
+            <div class="critique-code">// BAD: AI scattered state mutation across multiple functions
+function updateDisplay(val) {
+  state.display = val;        // ← mutates state here
+  document.getElementById('display').textContent = val;
+}
+function handleEquals() {
+  state.operand1 = null;      // ← also mutates state here
+  state.operator = null;      // ← and here
+  updateDisplay(result);      // ← which then mutates again
+}</div>
+            <div class="critique-fix">Fix needed: All state.* writes should happen in one handler function. The render function should only READ from state, never write to it. This is the single-source-of-truth principle from Phase 2.</div>
+          </div>
+        </div>
+
+        <div class="critique-item" id="ci-2">
+          <div class="critique-header" onclick="toggleCritique(2)">
+            <div class="critique-icon fail">✗</div>
+            <div class="critique-q">Does the equals key repeat the last operation when pressed twice?</div>
+            <div class="critique-toggle">▾</div>
+          </div>
+          <div class="critique-body">
+            <div class="critique-note">Real calculators repeat the last operation on double-equals. This requires storing lastOperator and lastOperand in state.</div>
+            <div class="critique-code">// AI-generated code — missing lastOperand/lastOp storage
+function handleEquals() {
+  if (!state.operator) return;
+  const result = compute(state.operand1, state.operator, state.display);
+  state.display = String(result);
+  state.operand1 = null;   // ← clears everything, double-equals is broken
+  state.operator = null;
+  state.awaiting = false;
+}</div>
+            <div class="critique-fix">Fix: Before resetting, store state.lastOp = state.operator and state.lastOperand = state.operand2. On the next equals press, use these stored values to repeat the computation. This is the edge case you identified in Phase 1.</div>
+          </div>
+        </div>
+
+        <div class="critique-item" id="ci-3">
+          <div class="critique-header" onclick="toggleCritique(3)">
+            <div class="critique-icon warn">!</div>
+            <div class="critique-q">Does the display update reactively from state, or directly from logic?</div>
+            <div class="critique-toggle">▾</div>
+          </div>
+          <div class="critique-body">
+            <div class="critique-note">The display should always reflect state.display — it should never be updated directly. This keeps the system predictable.</div>
+            <div class="critique-code">// AI-generated — partially correct, but updateDisplay is called
+// in multiple places which may drift from state
+function render() {
+  document.getElementById('display').textContent = state.display;
+  document.getElementById('expr').textContent = state.operand1
+    ? state.operand1 + ' ' + (state.operator || '')
+    : '';
+}</div>
+            <div class="critique-fix">Warning: The render function itself is correct. However the AI calls it inconsistently — sometimes after every state update, sometimes not. Enforce a rule: state changes → render() is ALWAYS called once at the end of the handler. Never render mid-operation.</div>
+          </div>
+        </div>
+
+        <div class="critique-item" id="ci-4">
+          <div class="critique-header" onclick="toggleCritique(4)">
+            <div class="critique-icon pass">✓</div>
+            <div class="critique-q">Is the divide-by-zero edge case correctly handled?</div>
+            <div class="critique-toggle">▾</div>
+          </div>
+          <div class="critique-body">
+            <div class="critique-note">Error states must be caught before computing, displayed clearly, and require a C press to recover from.</div>
+            <div class="critique-code">// From compute() — b === 0 check before division
+if (op === '/') return b === 0 ? 'Error' : a / b;
+
+// In handler — Error propagation check
+if (result === 'Error') {
+  state.display = 'Error';
+  state.operand1 = null;
+  state.operator = null;
+  state.awaiting = false;
+  render();
+  return;
+}</div>
+            <div class="critique-fix">✓ Correct. The error is caught in compute(), propagated cleanly, state is reset, and the UI reflects "Error". Further operations are blocked until C is pressed. This matches our Phase 2 design.</div>
+          </div>
+        </div>
+
+        <div class="critique-item" id="ci-5">
+          <div class="critique-header" onclick="toggleCritique(5)">
+            <div class="critique-icon pass">✓</div>
+            <div class="critique-q">Is the code structured so that specific bugs can be found in specific files?</div>
+            <div class="critique-toggle">▾</div>
+          </div>
+          <div class="critique-body">
+            <div class="critique-note">Good architecture means knowing exactly WHERE to look when something breaks. If the display is wrong, look in render(). If the result is wrong, look in compute(). If state transitions are wrong, look in the handler.</div>
+            <div class="critique-code">// File structure AI produced — evaluating:
+// calculator.js
+//   ├── state object (single source of truth)   ✓
+//   ├── compute(a, op, b)                       ✓ pure
+//   ├── handler(key)                            ✓ one entry point
+//   └── render()                                ✓ reads from state only</div>
+            <div class="critique-fix">✓ The file structure maps directly to our Phase 2 component design. When you find a bug, the component name tells you the file to open. This is the payoff of top-down design thinking.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="callout info" style="margin-top:1.5rem">
+        This critique process — checking structure, edge cases, state purity, and debuggability — is what separates a system-design thinker from a syntax memorizer. These are the skills that remain valuable when AI handles 90% of code generation.
+      </div>
+
+      <div class="nav-btns">
+        <button class="btn-secondary" onclick="showPhase(3)">← Prompt AI</button>
+        <button class="btn-primary" onclick="showPhase(0)">Start over from Phase 1 ↺</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ══ CALCULATOR ENGINE ══
+var state = {
+  display: '0', operand1: null, operator: null,
+  operand2: null, awaiting: false, lastOp: null, lastOperand: null
+};
+var prevState = {};
+var logEntries = [];
+
+function compute(a, op, b) {
+  a = parseFloat(a); b = parseFloat(b);
+  if (op === '+') return a + b;
+  if (op === '-') return a - b;
+  if (op === '*') return a * b;
+  if (op === '/') return b === 0 ? 'Error' : a / b;
+  return a;
+}
+
+function fmt(n) {
+  if (n === 'Error') return 'Error';
+  var s = parseFloat(parseFloat(n).toPrecision(10));
+  return String(s);
+}
+
+function render() {
+  var dEl = document.getElementById('display');
+  dEl.textContent = state.display;
+  dEl.className = 'calc-value' + (state.display === 'Error' ? ' error' : '');
+  var expr = '';
+  if (state.operand1 !== null) {
+    expr = state.operand1;
+    if (state.operator) expr += ' ' + state.operator;
+  }
+  document.getElementById('expr').textContent = expr || '\u00a0';
+
+  var keys = ['display','op1','oper','op2','await'];
+  var vals = [
+    '"' + state.display + '"',
+    state.operand1 === null ? 'null' : state.operand1,
+    state.operator === null ? 'null' : '"' + state.operator + '"',
+    state.operand2 === null ? 'null' : state.operand2,
+    String(state.awaiting)
+  ];
+  keys.forEach(function(k, i) {
+    var el = document.getElementById('sv-' + k);
+    var row = document.getElementById('sr-' + k);
+    el.textContent = vals[i];
+    el.className = 'state-val' + (vals[i] === 'null' || vals[i] === 'false' ? ' null-val' : '');
+    if (prevState[k] !== vals[i]) {
+      row.classList.add('changed');
+      setTimeout(function() { row.classList.remove('changed'); }, 500);
+    }
+    prevState[k] = vals[i];
+  });
+}
+
+function addLog(msg, cls) {
+  cls = cls || 'ev-digit';
+  logEntries.unshift({ msg: msg, cls: cls });
+  if (logEntries.length > 30) logEntries.pop();
+  var el = document.getElementById('event-log');
+  el.innerHTML = logEntries.map(function(e) {
+    return '<div class="log-line ' + e.cls + '">' + e.msg + '</div>';
+  }).join('');
+}
+
+function press(key) {
+  var s = state;
+  if (key === 'C') {
+    state = { display:'0', operand1:null, operator:null, operand2:null, awaiting:false, lastOp:null, lastOperand:null };
+    addLog('C → state reset', 'ev-clear');
+    render(); return;
+  }
+  if (key === '+/-') {
+    if (s.display !== '0' && s.display !== 'Error') {
+      s.display = String(-parseFloat(s.display));
+      addLog('+/- → negate: ' + s.display, 'ev-digit');
+    }
+    render(); return;
+  }
+  if (key === '%') {
+    if (s.display !== 'Error') {
+      s.display = fmt(parseFloat(s.display) / 100);
+      addLog('% → ' + s.display, 'ev-digit');
+    }
+    render(); return;
+  }
+  var isDigit = /^[0-9]$/.test(key);
+  var isDot = key === '.';
+  var isOp = ['+','-','*','/'].includes(key);
+  var isEq = key === '=';
+
+  if (isDigit || isDot) {
+    if (s.display === 'Error') return;
+    if (s.awaiting) { s.display = isDot ? '0.' : key; s.awaiting = false; s.operand2 = null; }
+    else {
+      if (isDot && s.display.includes('.')) return;
+      s.display = s.display === '0' && !isDot ? key : s.display + key;
+    }
+    addLog('digit "' + key + '" → display: ' + s.display, 'ev-digit');
+    render(); return;
+  }
+
+  if (isOp) {
+    if (s.display === 'Error') return;
+    if (s.operator !== null && !s.awaiting && s.operand1 !== null) {
+      var res = compute(s.operand1, s.operator, s.display);
+      if (res === 'Error') { s.display = 'Error'; s.operand1 = null; s.operator = null; s.awaiting = false; addLog('ERROR ÷0', 'ev-err'); render(); return; }
+      s.operand1 = fmt(res); s.display = s.operand1;
+      addLog('chain → ' + s.operand1, 'ev-op');
+    } else { s.operand1 = s.display; }
+    s.operator = key; s.awaiting = true; s.operand2 = null;
+    addLog('operator "' + key + '" → op1=' + s.operand1, 'ev-op');
+    render(); return;
+  }
+
+  if (isEq) {
+    if (s.display === 'Error') return;
+    var op1, op, op2;
+    if (s.operator === null) {
+      if (s.lastOp !== null) { op1 = s.display; op = s.lastOp; op2 = s.lastOperand; }
+      else { render(); return; }
+    } else {
+      op1 = s.operand1; op = s.operator;
+      op2 = s.awaiting ? (s.lastOperand || s.display) : s.display;
+    }
+    s.lastOp = op; s.lastOperand = op2;
+    var result = compute(op1, op, op2);
+    if (result === 'Error') { s.display = 'Error'; s.operand1 = null; s.operator = null; s.awaiting = false; addLog('ERROR ÷0', 'ev-err'); render(); return; }
+    var rStr = fmt(result);
+    addLog('= ' + op1 + ' ' + op + ' ' + op2 + ' = ' + rStr, 'ev-eq');
+    s.display = rStr; s.operand1 = null; s.operator = null; s.awaiting = false; s.operand2 = null;
+    render();
+  }
+}
+
+// ══ PHASE NAVIGATION ══
+function showPhase(n) {
+  document.querySelectorAll('.phase-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('phase-' + n).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(function(b, i) {
+    b.classList.toggle('active', i === n);
+  });
+  window.scrollTo(0, 0);
+}
+
+// ══ OBSERVE: Questions ══
+var answered = new Array(6).fill(false);
+function toggleQ(n) {
+  var card = document.getElementById('q' + n);
+  var hint = document.getElementById('qh' + n);
+  if (!answered[n]) {
+    card.classList.add('answered');
+    if (hint) hint.style.display = 'none';
+    answered[n] = true;
+    var count = answered.filter(Boolean).length;
+    document.getElementById('q-count').textContent = count + ' / 6 answered';
+    document.getElementById('q-progress').style.width = (count / 6 * 100) + '%';
+  }
+}
+
+// ══ DESIGN: Component details ══
+var compData = [
+  {
+    title: 'Display Component',
+    color: 'var(--teal)',
+    props: [
+      { k: 'Responsibility', v: 'Render the current value and expression to the user. It never stores data — it only reads from state.' },
+      { k: 'HTML element', v: '<div id="display"> and <div id="expr"> — two separate elements for value and expression string.' },
+      { k: 'Updates when', v: 'The render() function is called after every state mutation.' },
+      { k: 'Design rule', v: 'The display component must never write to state. It is read-only.' },
+      { k: 'Real-world analog', v: 'React render(), Vue template, or any declarative UI layer.' }
+    ]
+  },
+  {
+    title: 'Button Grid',
+    color: 'var(--accent2)',
+    props: [
+      { k: 'Responsibility', v: 'Provide the user input surface — 19 buttons organized in a 4-column grid.' },
+      { k: 'Key types', v: 'Digit (0-9), Operator (+−×÷), Equals (=), Clear (C), Special (+/−, %).' },
+      { k: 'How it works', v: 'Each button calls press(key) with its label as the argument. No logic lives inside the button.' },
+      { k: 'Design rule', v: 'Buttons are dumb — they only pass their key value to the handler. All decisions happen in the handler.' },
+      { k: 'Real-world analog', v: 'Any input surface: keyboard, touchpad, API endpoint, voice command.' }
+    ]
+  },
+  {
+    title: 'Event Handler',
+    color: 'var(--amber)',
+    props: [
+      { k: 'Responsibility', v: 'The brain of the system. Receives every key press and decides how state should change.' },
+      { k: 'First action', v: 'Classify the key: is it a digit, operator, equals, clear, or special? Classification drives all following logic.' },
+      { k: 'State transitions', v: 'Digit → update display string. Operator → save operand1, set operator, set awaiting=true. Equals → compute and reset.' },
+      { k: 'Design rule', v: 'All state mutations happen here, and only here. This makes the system debuggable — you know exactly where state changes.' },
+      { k: 'Real-world analog', v: 'Redux reducer, event bus subscriber, command handler in CQRS architecture.' }
+    ]
+  },
+  {
+    title: 'State Engine',
+    color: 'var(--coral)',
+    props: [
+      { k: 'Responsibility', v: 'Remember the calculation context between key presses — the "memory" of the system.' },
+      { k: 'Fields', v: 'display (string), operand1 (number|null), operator (string|null), operand2 (number|null), awaiting2nd (boolean), lastOp, lastOperand.' },
+      { k: 'awaiting2nd', v: 'Becomes true after an operator is pressed. Tells the handler that the next digit starts a new number, not appends to the current one.' },
+      { k: 'lastOp/lastOperand', v: 'Enables the "double-equals repeats last operation" behavior — the edge case from Phase 1.' },
+      { k: 'Real-world analog', v: 'Redux store, React useState, a database session, server-side session object.' }
+    ]
+  },
+  {
+    title: 'Compute Unit',
+    color: 'var(--green)',
+    props: [
+      { k: 'Responsibility', v: 'Evaluate a mathematical expression given two operands and an operator. Nothing else.' },
+      { k: 'Signature', v: 'compute(operand1, operator, operand2) → result (number | "Error").' },
+      { k: 'Pure function', v: 'Takes input, returns output, touches nothing external. Same inputs always return same result. This makes it trivially testable.' },
+      { k: 'Edge cases handled', v: 'Divide by zero returns the string "Error" rather than Infinity or NaN — a deliberate design decision made in Phase 2.' },
+      { k: 'Real-world analog', v: 'A business logic service, a pricing engine, a tax calculator — any computation separated from UI concerns.' }
+    ]
+  }
+];
+
+function selectComp(n) {
+  document.querySelectorAll('.comp-node').forEach(function(el, i) {
+    el.classList.toggle('selected', i === n);
+  });
+  var d = compData[n];
+  var html = '<div class="comp-detail-title" style="color:' + d.color + '">' + d.title + '</div>';
+  d.props.forEach(function(p) {
+    html += '<div class="prop-row"><span class="prop-key">' + p.k + '</span><span class="prop-val">' + p.v + '</span></div>';
+  });
+  document.getElementById('comp-detail').innerHTML = html;
+}
+selectComp(0);
+
+// ══ DATA FLOW STEPPER ══
+var flowSteps = [
+  {
+    title: 'User presses "3"',
+    desc: 'A click event fires on the button element. The handler receives the key value "3".',
+    code: 'press("3")\n// key classified as: DIGIT\n// state.display was "0"\n// state.awaiting is false',
+    state: { display: '"3"', operand1: 'null', operator: 'null', awaiting2nd: 'false' },
+    insight: 'The handler checks awaiting2nd first. Since it\'s false, "3" is appended to the display string rather than starting fresh.'
+  },
+  {
+    title: 'User presses "+"',
+    desc: 'The handler classifies "+" as an OPERATOR. It saves the current display as operand1, stores the operator, and sets awaiting2nd to true.',
+    code: 'press("+")\n// key classified as: OPERATOR\n// state.operand1 = "3"\n// state.operator = "+"\n// state.awaiting = true',
+    state: { display: '"3"', operand1: '"3"', operator: '"+"', awaiting2nd: 'true' },
+    insight: 'The display still shows "3" — it hasn\'t changed. But state now holds the full context of what happened. awaiting2nd=true tells the handler the NEXT digit starts a new number.'
+  },
+  {
+    title: 'User presses "4"',
+    desc: 'Because awaiting2nd is true, the handler starts a fresh number — it sets display to "4" rather than appending to "3".',
+    code: 'press("4")\n// awaiting2nd is TRUE → fresh start\n// state.display = "4"\n// state.awaiting = false',
+    state: { display: '"4"', operand1: '"3"', operator: '"+"', awaiting2nd: 'false' },
+    insight: 'This is why awaiting2nd exists. Without it, pressing 4 would turn "3" into "34" instead of starting operand2. The flag controls the digit-handling behavior.'
+  },
+  {
+    title: 'User presses "="',
+    desc: 'The handler reads operand1, operator, and the current display as operand2. It calls compute() and writes the result back to state.',
+    code: 'press("=")\n// op1 = "3", op = "+", op2 = "4"\n// result = compute(3, "+", 4) = 7\n// state.display = "7"\n// state resets',
+    state: { display: '"7"', operand1: 'null', operator: 'null', awaiting2nd: 'false' },
+    insight: 'After equals, state is reset — operand1 and operator are cleared. But lastOp="+" and lastOperand="4" are saved so double-equals can repeat the operation.'
+  },
+  {
+    title: 'render() is called',
+    desc: 'After every state change, render() reads from state and updates the DOM. The display shows "7". The cycle is complete.',
+    code: 'render()\n// reads state.display → "7"\n// document.getElementById("display")\n//   .textContent = "7"\n// UI updated ✓',
+    state: { display: '"7"', operand1: 'null', operator: 'null', awaiting2nd: 'false' },
+    insight: 'render() is always the LAST step. It never computes — it only reflects. This is the single-source-of-truth principle: state owns the data, UI reflects it.'
+  }
+];
+
+var currentFlowStep = -1;
+
+function buildFlowStepper() {
+  var html = '';
+  flowSteps.forEach(function(s, i) {
+    html += '<div class="flow-step">';
+    html += '<div class="flow-step-left">';
+    html += '<div class="flow-dot" id="fd-' + i + '">' + (i + 1) + '</div>';
+    if (i < flowSteps.length - 1) html += '<div class="flow-line"></div>';
+    html += '</div>';
+    html += '<div class="flow-content">';
+    html += '<div class="flow-title" style="color:var(--text3)" id="ft-' + i + '">' + s.title + '</div>';
+    html += '<div class="flow-desc" id="fb-' + i + '" style="display:none">' + s.desc + '</div>';
+    html += '<div class="flow-code" id="fc-' + i + '" style="display:none">' + s.code + '</div>';
+    html += '</div></div>';
+  });
+  document.getElementById('flow-stepper').innerHTML = html;
+}
+buildFlowStepper();
+
+function flowNext() {
+  currentFlowStep++;
+  if (currentFlowStep >= flowSteps.length) return;
+  var s = flowSteps[currentFlowStep];
+  // update dot
+  for (var i = 0; i < flowSteps.length; i++) {
+    var dot = document.getElementById('fd-' + i);
+    if (i < currentFlowStep) dot.className = 'flow-dot done';
+    else if (i === currentFlowStep) dot.className = 'flow-dot active';
+    else dot.className = 'flow-dot';
+  }
+  // show content
+  var titleEl = document.getElementById('ft-' + currentFlowStep);
+  titleEl.style.color = 'var(--text)';
+  document.getElementById('fb-' + currentFlowStep).style.display = 'block';
+  document.getElementById('fc-' + currentFlowStep).style.display = 'block';
+  // update state display
+  var stateHtml = '';
+  Object.keys(s.state).forEach(function(k) {
+    var isNull = s.state[k] === 'null' || s.state[k] === 'false';
+    stateHtml += '<span style="color:var(--text3)">' + k + '</span>  <span style="color:' + (isNull ? 'var(--text3)' : 'var(--accent2)') + '">' + s.state[k] + '</span>\n';
+  });
+  document.getElementById('flow-state-display').innerHTML = stateHtml;
+  document.getElementById('flow-insight').textContent = s.insight;
+  if (currentFlowStep >= flowSteps.length - 1) {
+    document.getElementById('flow-next-btn').textContent = 'Complete ✓';
+    document.getElementById('flow-next-btn').disabled = true;
+  } else {
+    document.getElementById('flow-next-btn').textContent = 'Next step →';
+  }
+}
+
+function flowReset() {
+  currentFlowStep = -1;
+  buildFlowStepper();
+  document.getElementById('flow-state-display').textContent = 'Press "Start trace" to begin';
+  document.getElementById('flow-insight').textContent = '';
+  document.getElementById('flow-next-btn').textContent = 'Start trace →';
+  document.getElementById('flow-next-btn').disabled = false;
+}
+
+// ══ PROMPT BUILDER ══
+var selectedTags = { display:true, state:true, handler:true, compute:true, divzero:true, repeat:true, vanilla:true };
+
+function toggleTag(el) {
+  var key = el.dataset.key;
+  selectedTags[key] = !selectedTags[key];
+  el.classList.toggle('selected', selectedTags[key]);
+  generatePrompt();
+}
+
+function generatePrompt() {
+  var lines = [];
+  lines.push('Build a calculator with the following specification:\n');
+
+  var comps = [];
+  if (selectedTags.display) comps.push('- Display: reads from state.display and state.operand1+operator for expression');
+  if (selectedTags.state) comps.push('- State: { display, operand1, operator, operand2, awaiting2nd' + (selectedTags.repeat ? ', lastOp, lastOperand' : '') + ' }');
+  if (selectedTags.handler) comps.push('- Handler: classifies key as digit | operator | equals | clear | special, mutates state, calls render()');
+  if (selectedTags.compute) comps.push('- Compute: pure function compute(a, op, b) → result — no side effects');
+  if (selectedTags.history) comps.push('- History: array of { expression, result } — updated after each equals press');
+  if (selectedTags.keyboard) comps.push('- Keyboard: listen for keydown events, map keys to press() calls');
+  if (comps.length) { lines.push('Components:\n' + comps.join('\n')); }
+
+  var edges = [];
+  if (selectedTags.divzero) edges.push('- Divide by zero: compute() returns "Error", state resets, C required to continue');
+  if (selectedTags.repeat) edges.push('- Double equals: repeat last operator and operand (store lastOp and lastOperand)');
+  if (selectedTags.chain) edges.push('- Chained operators: compute previous result before storing new operator');
+  if (selectedTags.overflow) edges.push('- Number overflow: cap at 12 significant digits, show scientific notation if needed');
+  if (selectedTags.dot) edges.push('- Double decimal point: ignore second "." press if display already contains one');
+  if (edges.length) { lines.push('\nEdge cases to handle:\n' + edges.join('\n')); }
+
+  var fmt = [];
+  if (selectedTags.vanilla) fmt.push('- Vanilla JS (no frameworks)');
+  if (selectedTags.react) fmt.push('- React with useState hook');
+  if (selectedTags.comments) fmt.push('- Include inline comments explaining each state transition');
+  if (selectedTags.tests) fmt.push('- Include unit tests for the compute() function covering all operators and edge cases');
+  if (fmt.length) { lines.push('\nOutput format:\n' + fmt.join('\n')); }
+
+  document.getElementById('generated-prompt').textContent = lines.join('\n');
+}
+generatePrompt();
+
+// ══ CRITIQUE TOGGLE ══
+function toggleCritique(n) {
+  var item = document.getElementById('ci-' + n);
+  item.classList.toggle('open');
+}
+
+// init
+render();
+</script>
+</body>
+</html>

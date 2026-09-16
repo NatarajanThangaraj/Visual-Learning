@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Drop — Learn by Playing</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#03040C;--s1:#070A1C;--s2:#0B0F28;--s3:#0F1434;
+  --bd:#182048;--bd2:#243268;
+  --tx:#EEF4FF;--tx2:#7A9CC8;--tx3:#344870;
+  --blue:#3B82F6;--bluebg:#030D20;--bluebd:#1A3460;
+  --green:#10B981;--greenbg:#020E08;--greenbd:#0A4028;
+  --amber:#F59E0B;--amberbg:#130A00;
+  --red:#EF4444;--redbg:#110304;
+  --purple:#8B5CF6;--purplebg:#07051E;
+  --teal:#06B6D4;--tealbg:#021416;
+  --gold:#FFD60A;--goldbg:#110E00;
+  --pink:#EC4899;--pinkbg:#130410;
+  --mono:'Courier New',monospace;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);
+     height:100vh;overflow:hidden;display:flex;flex-direction:column;user-select:none}
+
+/* ─── TOPBAR ─── */
+.topbar{background:var(--s1);border-bottom:1px solid var(--bd);padding:8px 16px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;height:50px}
+.tb-logo{font-size:20px}
+.tb-title{font-size:14px;font-weight:700;color:var(--tx)}
+.tb-sub{font-size:10px;color:var(--tx3);margin-top:1px}
+.tb-right{margin-left:auto;display:flex;gap:5px;align-items:center}
+.cat-btn{padding:4px 13px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;
+  border:1px solid var(--bd2);color:var(--tx3);background:var(--s2);transition:.13s;user-select:none}
+.cat-btn:hover{border-color:var(--blue);color:var(--tx2)}
+.cat-btn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.score-pill{background:var(--s2);border:1px solid var(--bd);border-radius:20px;
+  padding:4px 13px;font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:5px;margin-left:6px}
+.score-pill .sv{font-weight:700;color:var(--gold);font-size:13px;transition:transform .2s}
+
+/* ─── GAMEBAR ─── */
+.gamebar{background:var(--s2);border-bottom:1px solid var(--bd);padding:0 16px;
+  display:flex;align-items:center;gap:8px;flex-shrink:0;height:38px}
+.gb-topic{font-size:12px;font-weight:600;color:var(--tx)}
+.gb-badge{font-size:10px;padding:2px 9px;border-radius:10px;font-weight:600;border:1px solid;margin-left:4px}
+.gb-badge.t1{border-color:var(--bluebd);color:var(--blue);background:var(--bluebg)}
+.gb-badge.t2{border-color:var(--purple);color:var(--purple);background:var(--purplebg)}
+.gb-badge.t3{border-color:var(--teal);color:var(--teal);background:var(--tealbg)}
+.gb-dots{display:flex;gap:5px;align-items:center;margin-left:auto}
+.gdot{width:8px;height:8px;border-radius:50%;background:var(--bd);transition:.2s;cursor:pointer}
+.gdot.dn{background:var(--green)}.gdot.cr{background:var(--blue);transform:scale(1.3)}
+.gb-nav{display:flex;gap:5px;margin-left:8px}
+.gnbtn{padding:4px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;
+  border:1px solid var(--bd);color:var(--tx2);background:var(--s2);transition:.13s}
+.gnbtn:hover{border-color:var(--blue);color:var(--tx)}
+.gnbtn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ─── LAYOUT ─── */
+.main{flex:1;display:flex;overflow:hidden;min-height:0}
+.game-area{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:12px 14px;gap:10px}
+.side-panel{width:190px;border-left:1px solid var(--bd);background:var(--s1);
+  display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sp-head{padding:7px 12px;border-bottom:1px solid var(--bd);background:var(--s2);
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3)}
+.sp-body{flex:1;overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:6px}
+.sp-body::-webkit-scrollbar{width:3px}
+.sp-body::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+
+/* ─── TOPIC HEADER ─── */
+.topic-hdr{background:var(--s2);border:1px solid var(--bd);border-radius:10px;
+  padding:10px 13px;display:flex;align-items:center;gap:9px;flex-shrink:0}
+.th-icon{font-size:22px}
+.th-title{font-size:13px;font-weight:700;color:var(--tx)}
+.th-desc{font-size:11px;color:var(--tx2);margin-top:2px;line-height:1.5}
+.th-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.err-count{font-size:11px;color:var(--tx3)}
+
+/* ─── CODE BLOCK ─── */
+.code-block{background:#0D1117;border:1px solid var(--bd2);border-radius:11px;
+  padding:14px 16px;font-family:var(--mono);font-size:13px;
+  line-height:2.2;flex:1;overflow-y:auto;position:relative;min-height:0}
+.code-block::-webkit-scrollbar{width:3px}
+.code-block::-webkit-scrollbar-thumb{background:var(--bd2)}
+.cline{display:flex;align-items:center;flex-wrap:wrap;min-height:30px}
+/* syntax colours — applied directly in HTML strings, no regex */
+.ck{color:#89b4fa}   /* keyword */
+.cv{color:#fab387}   /* variable */
+.cg{color:#a6e3a1}   /* number/value */
+.cs{color:#f38ba8}   /* string */
+.cc{color:#6c7086;font-style:italic} /* comment */
+.cn{color:#e2e8f0}   /* plain */
+
+/* ─── DROP SLOT ─── */
+.drop-slot{display:inline-flex;align-items:center;justify-content:center;
+  min-width:80px;height:28px;border:2px dashed var(--bd2);border-radius:6px;
+  background:rgba(255,255,255,.03);vertical-align:middle;margin:0 4px;
+  transition:all .2s;cursor:default}
+.drop-slot.hovered{border-color:var(--blue);background:var(--bluebg);transform:scale(1.04)}
+.drop-slot.filled{border-style:solid;border-color:var(--green);background:var(--greenbg);cursor:pointer}
+.drop-slot.wrong{animation:shake .4s ease;border-color:var(--red);background:var(--redbg)}
+.drop-slot.correct{border-color:var(--green);background:var(--greenbg)}
+.slot-val{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--green);padding:0 8px}
+.slot-ph{font-size:10px;color:var(--tx3);padding:0 8px}
+@keyframes shake{0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-5px)}40%{transform:translateX(5px)}
+  60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+/* ─── DRAGGABLE BLOCK ─── */
+.dblock{padding:7px 12px;border-radius:8px;font-family:var(--mono);font-size:12px;
+  font-weight:700;border:1.5px solid;cursor:grab;transition:all .2s;text-align:center}
+.dblock:hover{transform:translateY(-2px) scale(1.04);filter:brightness(1.15)}
+.dblock:active{cursor:grabbing}
+.dblock.used{opacity:.22;cursor:not-allowed;pointer-events:none}
+.db-blue  {color:var(--blue);  border-color:var(--bluebd); background:var(--bluebg)}
+.db-amber {color:var(--amber); border-color:var(--amber);  background:var(--amberbg)}
+.db-green {color:var(--green); border-color:var(--greenbd);background:var(--greenbg)}
+.db-purple{color:var(--purple);border-color:var(--purple); background:var(--purplebg)}
+.db-red   {color:var(--red);   border-color:var(--red);    background:var(--redbg)}
+.db-teal  {color:var(--teal);  border-color:var(--teal);   background:var(--tealbg)}
+.db-gold  {color:var(--gold);  border-color:var(--goldbd); background:var(--goldbg)}
+.db-pink  {color:var(--pink);  border-color:var(--pink);   background:var(--pinkbg)}
+
+/* ─── DRAG GHOST ─── */
+.drag-ghost{position:fixed;pointer-events:none;z-index:9999;
+  padding:7px 14px;border-radius:8px;font-family:var(--mono);font-size:12px;
+  font-weight:700;opacity:.9;transform:rotate(3deg) scale(1.08);
+  box-shadow:0 8px 24px rgba(0,0,0,.5);display:none}
+
+/* ─── SORT GAME ─── */
+.sort-wrap{display:flex;gap:12px;flex:1;overflow:hidden;min-height:0}
+.sort-col{flex:1;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.sort-col::-webkit-scrollbar{width:3px}
+.sort-col::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+.col-label{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--tx3);margin-bottom:3px;flex-shrink:0}
+.sort-card{padding:9px 12px;border-radius:9px;border:1.5px solid;
+  font-family:var(--mono);font-size:12px;font-weight:600;cursor:grab;
+  transition:all .2s;display:flex;align-items:flex-start;gap:8px}
+.sort-card:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.sort-card:active{cursor:grabbing}
+.sort-card.used{opacity:.2;pointer-events:none}
+.sc-ico{font-size:15px;flex-shrink:0;margin-top:1px}
+.sc-txt{flex:1;line-height:1.5}
+.sc-note{font-size:9px;opacity:.6;margin-top:2px;font-family:'Segoe UI',sans-serif;font-weight:400}
+.sort-zone{min-height:44px;border:2px dashed var(--bd2);border-radius:9px;
+  background:rgba(255,255,255,.02);display:flex;align-items:center;
+  padding:0 12px;font-size:11px;color:var(--tx3);transition:all .2s}
+.sort-zone.hovered{border-color:var(--blue);background:var(--bluebg)}
+.sort-zone.correct{border-style:solid;border-color:var(--green);background:var(--greenbg)}
+.sort-zone.wrong{border-color:var(--red);background:var(--redbg);animation:shake .4s ease}
+.zone-num{font-size:10px;font-weight:700;color:var(--tx3);min-width:18px;flex-shrink:0}
+
+/* ─── FILL GAME ─── */
+.thought-box{background:var(--s2);border:2px solid var(--bd2);border-radius:14px;
+  padding:16px 18px;position:relative;flex-shrink:0}
+.thought-box::before{content:'💭';font-size:20px;position:absolute;top:-13px;left:14px}
+.tb-lbl{font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--tx3);margin-bottom:6px;margin-top:4px}
+.tb-txt{font-size:13px;color:var(--tx);line-height:2.3}
+.t-blank{display:inline-block;min-width:75px;height:26px;border-bottom:2px solid var(--bd2);
+  vertical-align:middle;margin:0 5px;text-align:center;cursor:pointer;
+  font-family:var(--mono);font-size:12px;font-weight:700;
+  color:var(--green);line-height:26px;transition:.2s;padding:0 6px;border-radius:4px 4px 0 0}
+.t-blank.active{border-bottom-color:var(--blue);background:var(--bluebg)}
+.t-blank.done{border-bottom-color:var(--green);background:var(--greenbg)}
+.t-blank.wrong{border-bottom-color:var(--red);animation:shake .4s ease}
+.chips-box{background:var(--s2);border:1px solid var(--bd);border-radius:10px;
+  padding:10px 13px;flex-shrink:0}
+.chips-lbl{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--tx3);margin-bottom:7px}
+.chips-row{display:flex;gap:7px;flex-wrap:wrap}
+.chip{padding:6px 15px;border-radius:20px;font-family:var(--mono);font-size:12px;
+  font-weight:600;border:1.5px solid;cursor:pointer;transition:all .2s}
+.chip:hover{transform:translateY(-2px) scale(1.05);filter:brightness(1.15)}
+.chip.used{opacity:.2;pointer-events:none}
+.chip.chip-ok{animation:pop .3s ease}
+.chip.chip-err{animation:shake .4s ease}
+.oc-blue  {color:var(--blue);  border-color:var(--bluebd); background:var(--bluebg)}
+.oc-amber {color:var(--amber); border-color:var(--amber);  background:var(--amberbg)}
+.oc-green {color:var(--green); border-color:var(--greenbd);background:var(--greenbg)}
+.oc-purple{color:var(--purple);border-color:var(--purple); background:var(--purplebg)}
+.oc-red   {color:var(--red);   border-color:var(--red);    background:var(--redbg)}
+.oc-teal  {color:var(--teal);  border-color:var(--teal);   background:var(--tealbg)}
+.oc-gold  {color:var(--gold);  border-color:var(--goldbd); background:var(--goldbg)}
+
+/* ─── REFACTOR BOX ─── */
+.refactor-box{background:var(--purplebg);border:1px solid var(--purple);
+  border-radius:9px;padding:9px 13px;font-size:12px;color:var(--tx2);
+  line-height:1.65;flex-shrink:0}
+.refactor-box strong{color:var(--purple)}
+
+/* ─── HINT BOX ─── */
+.hint-box{background:var(--amberbg);border:1px solid var(--amber);border-radius:9px;
+  padding:8px 13px;font-size:12px;color:var(--amber);line-height:1.6;
+  flex-shrink:0;display:none}
+.hint-box.show{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── SUCCESS BANNER ─── */
+.ok-banner{background:var(--greenbg);border:2px solid var(--green);border-radius:9px;
+  padding:10px 14px;text-align:center;font-size:13px;font-weight:600;color:var(--green);
+  flex-shrink:0;display:none;animation:pop .4s cubic-bezier(.26,1.6,.54,1)}
+.ok-banner.show{display:block}
+
+/* ─── CONFETTI ─── */
+.confwrap{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:600}
+.cbit{position:absolute;border-radius:2px;animation:cfall linear forwards}
+@keyframes cfall{0%{opacity:1;transform:translateY(-10px) rotate(0)}
+  100%{opacity:0;transform:translateY(100vh) rotate(540deg)}}
+@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+
+@media(max-width:640px){
+  .sort-wrap{flex-direction:column}
+  .side-panel{width:100%;height:130px;border-left:none;border-top:1px solid var(--bd)}
+  .sp-body{flex-direction:row;flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-logo">🎮</div>
+  <div><div class="tb-title">Code Drop</div>
+       <div class="tb-sub">drag · sort · fill — learn by doing</div></div>
+  <div class="tb-right">
+    <div class="cat-btn on"  onclick="setCat('all')">All</div>
+    <div class="cat-btn"     onclick="setCat('string')">🔤 String</div>
+    <div class="cat-btn"     onclick="setCat('list')">📋 List</div>
+    <div class="score-pill">⭐ <span class="sv" id="score-el">0</span></div>
+  </div>
+</div>
+
+<!-- GAMEBAR -->
+<div class="gamebar">
+  <span class="gb-topic" id="gb-topic">—</span>
+  <span class="gb-badge t1" id="gb-badge">Drop</span>
+  <div class="gb-dots" id="gb-dots"></div>
+  <div class="gb-nav">
+    <div class="gnbtn"         onclick="prevQ()">← Prev</div>
+    <div class="gnbtn primary" onclick="nextQ()">Next →</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="game-area"  id="game-area"></div>
+  <div class="side-panel" id="side-panel">
+    <div class="sp-head" id="sp-head">Blocks</div>
+    <div class="sp-body" id="sp-body"></div>
+  </div>
+</div>
+
+<!-- DRAG GHOST -->
+<div class="drag-ghost" id="drag-ghost"></div>
+
+<!-- CONFETTI CANVAS -->
+<div class="confwrap" id="confwrap"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   HELPERS — code line HTML builder
+   Avoids any runtime regex on code strings.
+   Tags: {k} keyword  {v} variable  {g} number/value
+         {s} string   {c} comment   plain text = no tag
+═══════════════════════════════════════════ */
+function kw(t){return'<span class="ck">'+t+'</span>'}
+function vr(t){return'<span class="cv">'+t+'</span>'}
+function vl(t){return'<span class="cg">'+t+'</span>'}
+function st(t){return'<span class="cs">'+t+'</span>'}
+function cm(t){return'<span class="cc">'+t+'</span>'}
+
+/* Builds one complete <div class="cline"> row.
+   segments = array of strings (already tagged or plain).
+   blanks   = array of {id, answer, width} inserted inline.
+   Usage: row([kw('for'),' i ',kw('in'),' numbers:']) */
+function row(segs, blanks){
+  blanks = blanks || [];
+  var h = '<div class="cline">';
+  segs.forEach(function(seg){
+    if(typeof seg === 'object'){
+      /* blank marker */
+      h += '<div class="drop-slot" id="slot-'+seg.id
+          +'" data-ans="'+seg.ans
+          +'" style="min-width:'+( seg.w||70)+'px"'
+          +' onmouseup="onSlotUp(event,\''+seg.id+'\')">'
+          +'<span class="slot-ph">drop here</span></div>';
+    } else {
+      h += '<span class="cn">'+seg+'</span>';
+    }
+  });
+  h += '</div>';
+  return h;
+}
+function blank(id, ans, w){ return {id:id, ans:ans, w:w||70}; }
+
+/* ═══════════════════════════════════════════
+   QUESTION BANK
+═══════════════════════════════════════════ */
+var ALL_Q = [
+
+/* ───────────────────────────────────
+   GAME 1 — DROP THE BLOCK  (type:1)
+─────────────────────────────────────*/
+{
+  id:'find_char', cat:'string', type:1,
+  icon:'🔍', topic:'Find a Character',
+  desc:'Find the first position where the target character appears.',
+  hint:'Walk every letter. The moment you find a match, save the index and stop.',
+  refactor:'Once this works, you can shorten it: Python\'s built-in str.find(target) does the same thing in one line. Understanding the loop first teaches you what find() is doing inside.',
+  buildCode: function(){
+    return [
+      row(['word = ',st('"programming"')]),
+      row(['target = ',st('"a"')]),
+      row(['position = ',vl('-1'),'    ',cm('# -1 means not found yet')]),
+      row([kw('for'),' i ',kw('in'),' ',kw('range'),'(',kw('len'),'(word)):']),
+      row(['    ',kw('if'),' word[i] == ', blank('target_blank','target',80),':']),
+      row(['        position = i']),
+      row(['        ',kw('break'),'    ',cm('# stop at first match')]),
+    ].join('');
+  },
+  blocks:[
+    {id:'target_blank', label:'target',  cls:'db-amber', correct:true},
+    {id:'wrong_word',   label:'word',    cls:'db-blue',  correct:false},
+    {id:'wrong_i',      label:'i',       cls:'db-purple',correct:false},
+    {id:'wrong_pos',    label:'position',cls:'db-red',   correct:false},
+  ]
+},
+
+{
+  id:'count_char', cat:'string', type:1,
+  icon:'🔢', topic:'Count Occurrences',
+  desc:'Count how many times a character appears in a string.',
+  hint:'count starts at 0. No break allowed — you must visit every letter to get an accurate total.',
+  refactor:'str.count(target) is the built-in shortcut. But knowing the loop means you can count with any condition — not just equality.',
+  buildCode: function(){
+    return [
+      row(['word = ',st('"mississippi"')]),
+      row(['target = ',st('"s"')]),
+      row(['count = ', blank('zero_blank','0',40),'    ',cm('# tally starts at zero')]),
+      row([kw('for'),' letter ',kw('in'),' word:']),
+      row(['    ',kw('if'),' letter == target:']),
+      row(['        count = count + ', blank('one_blank','1',40),'    ',cm('# no break!')]),
+    ].join('');
+  },
+  blocks:[
+    {id:'zero_blank', label:'0',         cls:'db-amber', correct:true},
+    {id:'one_blank',  label:'1',         cls:'db-green', correct:true},
+    {id:'wrong_len',  label:'len(word)', cls:'db-blue',  correct:false},
+    {id:'wrong_cnt',  label:'count',     cls:'db-red',   correct:false},
+    {id:'wrong_neg',  label:'-1',        cls:'db-purple',correct:false},
+  ]
+},
+
+{
+  id:'find_max', cat:'list', type:1,
+  icon:'🏆', topic:'Find Maximum',
+  desc:'Find the largest number in a list.',
+  hint:'champion starts at list[0] — a real value, not zero. It is replaced only when something bigger arrives.',
+  refactor:'max(numbers) is the built-in. Write the loop first so you understand why starting champion at list[0] matters (hint: what if all numbers are negative?).',
+  buildCode: function(){
+    return [
+      row(['numbers = [',vl('3'),',',vl('7'),',',vl('1'),',',vl('9'),',',vl('2'),',',vl('8'),',',vl('4'),']']),
+      row(['champion = numbers[', blank('zero_idx','0',40),']    ',cm('# first element, not zero')]),
+      row([kw('for'),' num ',kw('in'),' numbers:']),
+      row(['    ',kw('if'),' num > ', blank('champion_blank','champion',90),':']),
+      row(['        champion = ', blank('num_blank','num',60)]),
+    ].join('');
+  },
+  blocks:[
+    {id:'zero_idx',       label:'0',        cls:'db-amber', correct:true},
+    {id:'champion_blank', label:'champion', cls:'db-gold',  correct:true},
+    {id:'num_blank',      label:'num',      cls:'db-blue',  correct:true},
+    {id:'wrong_one',      label:'1',        cls:'db-red',   correct:false},
+    {id:'wrong_numbers',  label:'numbers',  cls:'db-purple',correct:false},
+  ]
+},
+
+{
+  id:'sum_list', cat:'list', type:1,
+  icon:'➕', topic:'Sum of List',
+  desc:'Add all numbers in a list.',
+  hint:'total starts at 0. Every number drops into the jar. No break — every element must contribute.',
+  refactor:'sum(numbers) is the built-in. The loop version teaches you that sum is just repeated addition — and you can extend it (e.g. sum only evens) in ways the built-in cannot.',
+  buildCode: function(){
+    return [
+      row(['numbers = [',vl('10'),',',vl('3'),',',vl('7'),',',vl('1'),',',vl('9'),']']),
+      row(['total = ', blank('zero_blank','0',40),'    ',cm('# jar starts empty')]),
+      row([kw('for'),' num ',kw('in'),' numbers:']),
+      row(['    total = total + ', blank('num_blank','num',60),'    ',cm('# drop into jar')]),
+      row([kw('print'),'(total)']),
+    ].join('');
+  },
+  blocks:[
+    {id:'zero_blank', label:'0',       cls:'db-amber', correct:true},
+    {id:'num_blank',  label:'num',     cls:'db-blue',  correct:true},
+    {id:'wrong_1',    label:'1',       cls:'db-red',   correct:false},
+    {id:'wrong_tot',  label:'total',   cls:'db-purple',correct:false},
+    {id:'wrong_lst',  label:'numbers', cls:'db-teal',  correct:false},
+  ]
+},
+
+{
+  id:'even_filter', cat:'list', type:1,
+  icon:'🔵', topic:'Even Numbers Filter',
+  desc:'Collect all even numbers from a list into a new list.',
+  hint:'% 2 gives the remainder after dividing by 2. Remainder = 0 means the number divides evenly — it is even.',
+  refactor:'[n for n in numbers if n % 2 == 0] is a list comprehension — one line. Writing the loop first makes the comprehension instantly readable.',
+  buildCode: function(){
+    return [
+      row(['numbers = [',vl('3'),',',vl('8'),',',vl('5'),',',vl('2'),',',vl('9'),',',vl('4'),']']),
+      row(['evens = []']),
+      row([kw('for'),' num ',kw('in'),' numbers:']),
+      row(['    ',kw('if'),' num % ', blank('two_blank','2',40),' == ',vl('0'),':']),
+      row(['        evens.append(', blank('num_blank','num',60),')']),
+    ].join('');
+  },
+  blocks:[
+    {id:'two_blank', label:'2',    cls:'db-amber', correct:true},
+    {id:'num_blank', label:'num',  cls:'db-blue',  correct:true},
+    {id:'wrong_1',   label:'1',    cls:'db-red',   correct:false},
+    {id:'wrong_evs', label:'evens',cls:'db-purple',correct:false},
+    {id:'wrong_0',   label:'0',    cls:'db-teal',  correct:false},
+  ]
+},
+
+{
+  id:'find_dup', cat:'list', type:1,
+  icon:'👥', topic:'Find First Duplicate',
+  desc:'Find the first number that appears more than once.',
+  hint:'seen is a notebook. Every checked number gets written in. If it is already written there — that is your duplicate.',
+  refactor:'For large lists, use a set instead of a list for seen — checking "in set" is much faster. Same logic, better performance.',
+  buildCode: function(){
+    return [
+      row(['numbers = [',vl('3'),',',vl('1'),',',vl('4'),',',vl('1'),',',vl('5'),',',vl('9'),']']),
+      row(['seen = ', blank('empty_list','[]',45),'    ',cm('# the notebook')]),
+      row([kw('for'),' num ',kw('in'),' numbers:']),
+      row(['    ',kw('if'),' num ',kw('in'),' ', blank('seen_blank','seen',55),':']),
+      row(['        ',kw('print'),'(num)    ',cm('# duplicate found')]),
+      row(['        ',kw('break')]),
+      row(['    seen.append(', blank('num_blank','num',55),')']),
+    ].join('');
+  },
+  blocks:[
+    {id:'empty_list', label:'[]',   cls:'db-amber', correct:true},
+    {id:'seen_blank', label:'seen', cls:'db-gold',  correct:true},
+    {id:'num_blank',  label:'num',  cls:'db-blue',  correct:true},
+    {id:'wrong_num',  label:'numbers',cls:'db-red', correct:false},
+    {id:'wrong_set',  label:'{}',   cls:'db-purple',correct:false},
+  ]
+},
+
+/* ───────────────────────────────────
+   GAME 2 — SORT THE STEPS  (type:2)
+─────────────────────────────────────*/
+{
+  id:'sort_reverse', cat:'string', type:2,
+  icon:'🔄', topic:'Reverse a String',
+  desc:'Drag the steps into the correct order to reverse a string.',
+  hint:'You need an empty result first, then walk backwards through the characters.',
+  refactor:'"".join(reversed(word)) or word[::-1] achieves the same in one line. The loop shows you exactly how the characters are collected in reverse.',
+  steps:[
+    {id:'r1', ico:'📦', txt:'result = ""',
+     note:'start with empty result string', col:'db-amber'},
+    {id:'r2', ico:'🔄', txt:'for i in range(len(word)-1, -1, -1):',
+     note:'walk index from last to first', col:'db-blue'},
+    {id:'r3', ico:'➕', txt:'    result = result + word[i]',
+     note:'add each letter to the right end', col:'db-green'},
+    {id:'r4', ico:'📢', txt:'print(result)',
+     note:'show the reversed word', col:'db-purple'},
+  ]
+},
+
+{
+  id:'sort_min', cat:'list', type:2,
+  icon:'🥇', topic:'Find Minimum',
+  desc:'Put the steps in the correct order to find the smallest number.',
+  hint:'champion starts at the first element. It only updates when something smaller appears.',
+  refactor:'min(numbers) is the built-in. Notice it is identical to max() — only the comparison flips from > to <.',
+  steps:[
+    {id:'m1', ico:'🎯', txt:'champion = numbers[0]',
+     note:'first element is starting champion', col:'db-gold'},
+    {id:'m2', ico:'🔄', txt:'for num in numbers:',
+     note:'visit every number', col:'db-blue'},
+    {id:'m3', ico:'⚖️', txt:'    if num < champion:',
+     note:'is this smaller than current champion?', col:'db-amber'},
+    {id:'m4', ico:'🏅', txt:'        champion = num',
+     note:'update champion to the smaller value', col:'db-green'},
+    {id:'m5', ico:'📢', txt:'print(champion)',
+     note:'report the minimum', col:'db-purple'},
+  ]
+},
+
+{
+  id:'sort_odd', cat:'list', type:2,
+  icon:'🟣', topic:'Odd Numbers Filter',
+  desc:'Put the steps in the correct order to collect odd numbers.',
+  hint:'% 2 == 1 catches odd numbers. Build the odds list inside the loop.',
+  refactor:'[n for n in numbers if n % 2 == 1] compresses this to one line. The pattern is identical to even filter — just the remainder check flips from 0 to 1.',
+  steps:[
+    {id:'o1', ico:'📋', txt:'odds = []',
+     note:'empty list — will hold odd numbers', col:'db-purple'},
+    {id:'o2', ico:'🔄', txt:'for num in numbers:',
+     note:'visit every element', col:'db-blue'},
+    {id:'o3', ico:'❓', txt:'    if num % 2 == 1:',
+     note:'remainder 1 means odd', col:'db-amber'},
+    {id:'o4', ico:'✅', txt:'        odds.append(num)',
+     note:'add to odds list', col:'db-green'},
+    {id:'o5', ico:'📢', txt:'print(odds)',
+     note:'show result', col:'db-teal'},
+  ]
+},
+
+/* ───────────────────────────────────
+   GAME 3 — FILL THE THOUGHT  (type:3)
+─────────────────────────────────────*/
+{
+  id:'fill_search', cat:'string', type:3,
+  icon:'🕵️', topic:'Search a Word',
+  desc:'Fill the blanks in the detective\'s thought bubble.',
+  hint:'The detective splits the sentence into words, then checks each word for an exact match.',
+  refactor:'"coding" in sentence.split() is the one-line version. Or "coding" in sentence checks if the substring exists anywhere.',
+  parts:[
+    {t:'I need to find the word '},
+    {b:0, ans:'"coding"', cls:'oc-amber',
+     opts:['"coding"','"love"','"python"','"i"']},
+    {t:' in the sentence.'},
+    {t:'\nI split the sentence into '},
+    {b:1, ans:'words', cls:'oc-blue',
+     opts:['words','letters','numbers','parts']},
+    {t:'. I walk one item at a time.'},
+    {t:'\nAt position [2] = "coding". Does it match? '},
+    {b:2, ans:'YES', cls:'oc-green',
+     opts:['YES','NO','SKIP','MAYBE']},
+    {t:'!'},
+    {t:'\nSo I '},
+    {b:3, ans:'stop', cls:'oc-purple',
+     opts:['stop','continue','restart','ignore']},
+    {t:' and report '},
+    {b:4, ans:'"Found!"', cls:'oc-teal',
+     opts:['"Found!"','"Not found"','"Error"','"Done"']},
+    {t:'.'},
+  ]
+},
+
+{
+  id:'fill_max', cat:'list', type:3,
+  icon:'🏆', topic:'Max — Champion Logic',
+  desc:'Fill the blanks in the champion variable\'s thought bubble.',
+  hint:'The champion starts at the first element, not at zero. It only updates when a bigger challenger appears.',
+  refactor:'The running maximum pattern appears everywhere in programming — tracking highest score, latest timestamp, biggest file. Same shape, different data.',
+  parts:[
+    {t:'I start with champion = '},
+    {b:0, ans:'list[0]', cls:'oc-gold',
+     opts:['list[0]','0','list[1]','None']},
+    {t:' = 3. This is my first reference point.'},
+    {t:'\nI visit box [1] = 7. Is 7 > 3? '},
+    {b:1, ans:'YES', cls:'oc-green',
+     opts:['YES','NO','EQUAL','SKIP']},
+    {t:'. New champion = '},
+    {b:2, ans:'7', cls:'oc-amber',
+     opts:['7','3','9','1']},
+    {t:'.'},
+    {t:'\nI visit box [2] = 1. Is 1 > 7? '},
+    {b:3, ans:'NO', cls:'oc-red',
+     opts:['NO','YES','EQUAL','SKIP']},
+    {t:'. Champion '},
+    {b:4, ans:'stays', cls:'oc-blue',
+     opts:['stays','resets','clears','doubles']},
+    {t:' at 7.'},
+  ]
+},
+
+{
+  id:'fill_sum', cat:'list', type:3,
+  icon:'➕', topic:'Sum — Running Total',
+  desc:'Fill the blanks in the sum collector\'s thought bubble.',
+  hint:'total starts at 0. Every number must be added. No break — stopping early gives a wrong answer.',
+  refactor:'sum(numbers) is the built-in. But you can only extend it with a loop — e.g. "sum of evens only" cannot be expressed with the plain sum() call without a list comprehension.',
+  parts:[
+    {t:'My total starts at '},
+    {b:0, ans:'0', cls:'oc-amber',
+     opts:['0','1','-1','None']},
+    {t:'. The jar is empty.'},
+    {t:'\nI visit EVERY number. No '},
+    {b:1, ans:'break', cls:'oc-red',
+     opts:['break','continue','return','pass']},
+    {t:' allowed — I must add them all.'},
+    {t:'\nAt each number: total = total '},
+    {b:2, ans:'+', cls:'oc-blue',
+     opts:['+','-','*','/']},
+    {t:' num.'},
+    {t:'\nAfter the loop, total holds the '},
+    {b:3, ans:'sum', cls:'oc-green',
+     opts:['sum','max','count','average']},
+    {t:' of all numbers.'},
+  ]
+},
+
+]; /* end ALL_Q */
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+var filtered = ALL_Q.slice();
+var curIdx   = 0;
+var score    = 0;
+var errors   = {};   /* qId -> error count */
+var filled   = {};   /* slotId -> filled value */
+var sorted   = {};   /* zoneIndex -> stepId */
+var tfilled  = {};   /* blankIndex -> value */
+var curFillBlank = 0;
+
+/* drag state */
+var drag = null;   /* {id, label, cls} */
+
+/* ═══════════════════════════════════════════
+   FILTER + NAV
+═══════════════════════════════════════════ */
+function setCat(cat){
+  document.querySelectorAll('.cat-btn').forEach(function(b,i){
+    b.className='cat-btn'+(['all','string','list'][i]===cat?' on':'');
+  });
+  filtered = cat==='all'?ALL_Q.slice():ALL_Q.filter(function(q){return q.cat===cat;});
+  curIdx = 0;
+  renderQ();
+}
+function prevQ(){curIdx=Math.max(0,curIdx-1);renderQ();}
+function nextQ(){curIdx=Math.min(filtered.length-1,curIdx+1);renderQ();}
+
+function buildDots(){
+  document.getElementById('gb-dots').innerHTML=filtered.map(function(_,i){
+    return'<div class="gdot '+(i<curIdx?'dn':i===curIdx?'cr':'fu')+'" onclick="curIdx='+i+';renderQ()"></div>';
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════
+   MAIN RENDER DISPATCHER
+═══════════════════════════════════════════ */
+function renderQ(){
+  var q = filtered[curIdx];
+  if(!q) return;
+  filled={};sorted={};tfilled={};curFillBlank=0;
+  errors[q.id] = errors[q.id]||0;
+
+  var badges = ['','Drop the Block','Sort the Steps','Fill the Thought'];
+  var btypes  = ['','t1','t2','t3'];
+  document.getElementById('gb-topic').textContent = q.icon+' '+q.topic;
+  var badge = document.getElementById('gb-badge');
+  badge.textContent = badges[q.type];
+  badge.className   = 'gb-badge '+btypes[q.type];
+  buildDots();
+
+  if(q.type===1) renderDrop(q);
+  else if(q.type===2) renderSort(q);
+  else renderFill(q);
+}
+
+/* ═══════════════════════════════════════════
+   SHARED: topic header HTML
+═══════════════════════════════════════════ */
+function topicHdr(q){
+  return'<div class="topic-hdr">'
+    +'<div class="th-icon">'+q.icon+'</div>'
+    +'<div><div class="th-title">'+q.topic+'</div>'
+    +'<div class="th-desc">'+q.desc+'</div></div>'
+    +'<div class="th-right">'
+    +'<span class="err-count" id="err-el">Errors: 0</span>'
+    +'</div></div>';
+}
+
+/* ═══════════════════════════════════════════
+   GAME 1 — DROP THE BLOCK
+═══════════════════════════════════════════ */
+function renderDrop(q){
+  document.getElementById('side-panel').style.display='flex';
+  document.getElementById('sp-head').textContent='Available blocks';
+
+  var ga = document.getElementById('game-area');
+  ga.innerHTML = topicHdr(q)
+    +'<div class="code-block" id="code-blk">'+q.buildCode()+'</div>'
+    +'<div class="hint-box" id="hint-el">💡 '+q.hint+'</div>'
+    +'<div class="refactor-box">💡 <strong>Refactor idea:</strong> '+q.refactor+'</div>'
+    +'<div class="ok-banner" id="ok-el">✅ Perfect! All blocks placed correctly. +10 points 🎉</div>';
+
+  /* side panel blocks */
+  document.getElementById('sp-body').innerHTML=q.blocks.map(function(b){
+    return'<div class="dblock '+b.cls+'" id="blk-'+b.id+'"'
+      +' onmousedown="dragStart(event,\''+b.id+'\',\''+b.label+'\',\''+b.cls+'\')">'
+      +b.label+'</div>';
+  }).join('');
+}
+
+/* drag & drop */
+function dragStart(ev, id, label, cls){
+  drag = {id:id, label:label, cls:cls};
+  var g = document.getElementById('drag-ghost');
+  g.textContent = label;
+  g.className   = 'drag-ghost '+cls;
+  g.style.display = 'block';
+  ghostMove(ev);
+  document.addEventListener('mousemove', ghostMove);
+  document.addEventListener('mouseup',   dragEnd);
+  ev.preventDefault();
+}
+function ghostMove(ev){
+  var g = document.getElementById('drag-ghost');
+  g.style.left = (ev.clientX-40)+'px';
+  g.style.top  = (ev.clientY-16)+'px';
+  /* highlight hovered slot */
+  document.querySelectorAll('.drop-slot').forEach(function(s){s.classList.remove('hovered');});
+  var target = document.elementFromPoint(ev.clientX, ev.clientY);
+  var slot = target && (target.classList.contains('drop-slot')?target:target.closest('.drop-slot'));
+  if(slot && !slot.classList.contains('correct')) slot.classList.add('hovered');
+}
+function dragEnd(ev){
+  document.removeEventListener('mousemove', ghostMove);
+  document.removeEventListener('mouseup',   dragEnd);
+  document.getElementById('drag-ghost').style.display='none';
+  document.querySelectorAll('.drop-slot').forEach(function(s){s.classList.remove('hovered');});
+  var target = document.elementFromPoint(ev.clientX, ev.clientY);
+  var slot = target && (target.classList.contains('drop-slot')?target:target.closest('.drop-slot'));
+  if(slot) handleDrop(slot);
+  drag = null;
+}
+function onSlotUp(ev, slotId){
+  ev.stopPropagation();
+  if(!drag) return;
+  var slot = document.getElementById('slot-'+slotId);
+  if(slot) handleDrop(slot);
+}
+function handleDrop(slot){
+  if(!drag || slot.classList.contains('correct')) return;
+  var q = filtered[curIdx];
+  var isCorrect = (drag.label === slot.getAttribute('data-ans'));
+  if(isCorrect){
+    slot.innerHTML = '<span class="slot-val">'+drag.label+'</span>';
+    slot.className = 'drop-slot correct';
+    var blk = document.getElementById('blk-'+drag.id);
+    if(blk) blk.classList.add('used');
+    filled[slot.id] = drag.label;
+    addScore(5);
+    checkAllDrop(q);
+  } else {
+    recordError(q);
+    slot.className = 'drop-slot wrong';
+    setTimeout(function(){
+      if(!filled[slot.id]){
+        slot.className = 'drop-slot';
+        slot.innerHTML = '<span class="slot-ph">drop here</span>';
+      }
+    }, 600);
+  }
+}
+function checkAllDrop(q){
+  /* collect all slot ids from the rendered HTML */
+  var allSlots = document.querySelectorAll('#code-blk .drop-slot');
+  var allDone  = Array.prototype.every.call(allSlots, function(s){return s.classList.contains('correct');});
+  if(allDone){
+    showOK(); addScore(10); showConfetti();
+    setTimeout(nextQ, 2200);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   GAME 2 — SORT THE STEPS
+═══════════════════════════════════════════ */
+var sortDrag = null;
+
+function renderSort(q){
+  document.getElementById('side-panel').style.display='none';
+  var shuffled = q.steps.slice().sort(function(){return Math.random()-.5;});
+  var ga = document.getElementById('game-area');
+
+  var sourceCards = shuffled.map(function(step){
+    return'<div class="sort-card '+step.col+'" id="sc-'+step.id+'"'
+      +' onmousedown="sortDragStart(event,\''+step.id+'\',\''+step.col+'\')">'
+      +'<span class="sc-ico">'+step.ico+'</span>'
+      +'<div class="sc-txt">'+step.txt
+      +'<div class="sc-note">'+step.note+'</div>'
+      +'</div></div>';
+  }).join('');
+
+  var targetZones = q.steps.map(function(_, zi){
+    return'<div class="sort-zone" id="zone-'+zi+'"'
+      +' onmouseup="sortDropZone(event,'+zi+')">'
+      +'<span class="zone-num">'+(zi+1)+'.</span>'
+      +'<span style="margin-left:8px;font-size:11px;color:var(--tx3)">drop step '+(zi+1)+' here</span>'
+      +'</div>';
+  }).join('');
+
+  ga.innerHTML = topicHdr(q)
+    +'<div class="sort-wrap">'
+    +'<div class="sort-col"><div class="col-label">Drag from here</div>'+sourceCards+'</div>'
+    +'<div class="sort-col"><div class="col-label">Drop in correct order</div>'+targetZones+'</div>'
+    +'</div>'
+    +'<div class="hint-box" id="hint-el">💡 '+q.hint+'</div>'
+    +'<div class="refactor-box">💡 <strong>Refactor idea:</strong> '+q.refactor+'</div>'
+    +'<div class="ok-banner" id="ok-el">✅ Correct order! +10 points 🎉</div>';
+}
+
+function sortDragStart(ev, stepId, cls){
+  sortDrag = {id:stepId, cls:cls};
+  var q    = filtered[curIdx];
+  var step = q.steps.find(function(s){return s.id===stepId;});
+  var g    = document.getElementById('drag-ghost');
+  g.textContent   = step ? step.txt.slice(0,32)+(step.txt.length>32?'…':'') : stepId;
+  g.className     = 'drag-ghost '+cls;
+  g.style.display = 'block';
+  ghostMove(ev);
+  document.addEventListener('mousemove', sortGhostMove);
+  document.addEventListener('mouseup',   sortDragEnd);
+  ev.preventDefault();
+}
+function sortGhostMove(ev){
+  var g = document.getElementById('drag-ghost');
+  g.style.left = (ev.clientX-40)+'px';
+  g.style.top  = (ev.clientY-16)+'px';
+  document.querySelectorAll('.sort-zone').forEach(function(z){z.classList.remove('hovered');});
+  var target = document.elementFromPoint(ev.clientX, ev.clientY);
+  var zone = target&&(target.classList.contains('sort-zone')?target:target.closest('.sort-zone'));
+  if(zone && !zone.classList.contains('correct')) zone.classList.add('hovered');
+}
+function sortDragEnd(ev){
+  document.removeEventListener('mousemove', sortGhostMove);
+  document.removeEventListener('mouseup',   sortDragEnd);
+  document.getElementById('drag-ghost').style.display='none';
+  document.querySelectorAll('.sort-zone').forEach(function(z){z.classList.remove('hovered');});
+  var target = document.elementFromPoint(ev.clientX, ev.clientY);
+  var zone = target&&(target.classList.contains('sort-zone')?target:target.closest('.sort-zone'));
+  if(zone){
+    var zi = parseInt(zone.id.split('-')[1]);
+    doSortDrop(zi);
+  }
+  sortDrag = null;
+}
+function sortDropZone(ev, zi){ if(sortDrag) doSortDrop(zi); }
+function doSortDrop(zi){
+  if(!sortDrag) return;
+  var q    = filtered[curIdx];
+  var zone = document.getElementById('zone-'+zi);
+  if(!zone || zone.classList.contains('correct')) return;
+  var isCorrect = (sortDrag.id === q.steps[zi].id);
+  if(isCorrect){
+    var step = q.steps[zi];
+    zone.innerHTML = '<span class="zone-num">'+(zi+1)+'.</span>'
+      +'<span style="font-family:var(--mono);font-size:12px;font-weight:600;'
+      +'color:var(--green);margin-left:8px">'+step.ico+' '+step.txt+'</span>';
+    zone.className = 'sort-zone correct';
+    var card = document.getElementById('sc-'+sortDrag.id);
+    if(card) card.classList.add('used');
+    sorted[zi] = sortDrag.id;
+    addScore(5);
+    checkAllSort(q);
+  } else {
+    recordError(q);
+    zone.className = 'sort-zone wrong';
+    setTimeout(function(){
+      if(!sorted[zi]){
+        zone.className = 'sort-zone';
+        zone.innerHTML = '<span class="zone-num">'+(zi+1)+'.</span>'
+          +'<span style="margin-left:8px;font-size:11px;color:var(--tx3)">drop step '+(zi+1)+' here</span>';
+      }
+    }, 700);
+  }
+}
+function checkAllSort(q){
+  var allDone = q.steps.every(function(_,i){return sorted[i]!==undefined;});
+  if(allDone){ showOK(); addScore(10); showConfetti(); setTimeout(nextQ,2200); }
+}
+
+/* ═══════════════════════════════════════════
+   GAME 3 — FILL THE THOUGHT
+═══════════════════════════════════════════ */
+function renderFill(q){
+  document.getElementById('side-panel').style.display='none';
+  var ga = document.getElementById('game-area');
+
+  /* build thought text with inline blanks */
+  var thoughtHTML = '';
+  q.parts.forEach(function(p){
+    if(p.t !== undefined){
+      thoughtHTML += p.t.replace(/\n/g,'<br>');
+    } else {
+      thoughtHTML += '<span class="t-blank active" id="tb-'+p.b+'"'
+        +' onclick="setFillBlank('+p.b+')">'
+        +'<span id="tbv-'+p.b+'">____</span>'
+        +'</span>';
+    }
+  });
+
+  var blanks = q.parts.filter(function(p){return p.b!==undefined;});
+  curFillBlank = blanks.length>0 ? blanks[0].b : 0;
+
+  ga.innerHTML = topicHdr(q)
+    +'<div class="thought-box">'
+    +'<div class="tb-lbl">💭 Agent thinking...</div>'
+    +'<div class="tb-txt">'+thoughtHTML+'</div>'
+    +'</div>'
+    +'<div class="chips-box">'
+    +'<div class="chips-lbl">Choose the answer for blank <span id="blank-num">1</span></div>'
+    +'<div class="chips-row" id="chips-row"></div>'
+    +'</div>'
+    +'<div class="hint-box" id="hint-el">💡 '+q.hint+'</div>'
+    +'<div class="refactor-box">💡 <strong>Refactor idea:</strong> '+q.refactor+'</div>'
+    +'<div class="ok-banner" id="ok-el">✅ All blanks filled correctly! +10 points 🎉</div>';
+
+  setFillBlank(curFillBlank);
+}
+
+function setFillBlank(bi){
+  var q = filtered[curIdx];
+  curFillBlank = bi;
+  /* update all blank styles */
+  q.parts.forEach(function(p){
+    if(p.b===undefined) return;
+    var el = document.getElementById('tb-'+p.b);
+    if(!el) return;
+    if(tfilled[p.b]!==undefined) el.className='t-blank done';
+    else el.className='t-blank'+(p.b===bi?' active':'');
+  });
+  var bn = document.getElementById('blank-num');
+  if(bn) bn.textContent = bi+1;
+  /* show chips for this blank */
+  var part = q.parts.find(function(p){return p.b===bi;});
+  if(!part) return;
+  var opts = part.opts.slice().sort(function(){return Math.random()-.5;});
+  var cr = document.getElementById('chips-row');
+  if(!cr) return;
+  cr.innerHTML = opts.map(function(o){
+    return'<div class="chip '+(part.cls||'oc-blue')+'" onclick="pickChip('+bi+',this,\''+o.replace(/'/g,"\\'")+'\')">'
+      +o+'</div>';
+  }).join('');
+}
+
+function pickChip(bi, chipEl, val){
+  var q    = filtered[curIdx];
+  var part = q.parts.find(function(p){return p.b===bi;});
+  if(!part || tfilled[bi]!==undefined) return;
+  var isCorrect = (val === part.ans);
+  if(isCorrect){
+    tfilled[bi] = val;
+    var vEl = document.getElementById('tbv-'+bi);
+    if(vEl) vEl.textContent = val;
+    var bEl = document.getElementById('tb-'+bi);
+    if(bEl) bEl.className = 't-blank done';
+    chipEl.classList.add('chip-ok');
+    chipEl.classList.add('used');
+    addScore(5);
+    /* move to next unfilled blank */
+    var remaining = q.parts.filter(function(p){return p.b!==undefined && tfilled[p.b]===undefined;});
+    if(remaining.length > 0){
+      setTimeout(function(){ setFillBlank(remaining[0].b); }, 350);
+    } else {
+      showOK(); addScore(10); showConfetti(); setTimeout(nextQ, 2200);
+    }
+  } else {
+    recordError(q);
+    chipEl.classList.add('chip-err');
+    setTimeout(function(){ chipEl.classList.remove('chip-err'); }, 500);
+    var bEl2 = document.getElementById('tb-'+bi);
+    if(bEl2){ bEl2.className='t-blank wrong'; setTimeout(function(){bEl2.className='t-blank active';},500); }
+  }
+}
+
+/* ═══════════════════════════════════════════
+   SHARED HELPERS
+═══════════════════════════════════════════ */
+function recordError(q){
+  errors[q.id] = (errors[q.id]||0)+1;
+  var el = document.getElementById('err-el');
+  if(el) el.textContent = 'Errors: '+errors[q.id];
+  if(errors[q.id]>=2){
+    var h = document.getElementById('hint-el');
+    if(h) h.classList.add('show');
+  }
+}
+function showOK(){
+  var el = document.getElementById('ok-el');
+  if(el) el.classList.add('show');
+}
+function addScore(n){
+  score += n;
+  var el = document.getElementById('score-el');
+  if(!el) return;
+  el.textContent = score;
+  el.style.transform = 'scale(1.4)';
+  setTimeout(function(){ el.style.transform='scale(1)'; }, 220);
+}
+function showConfetti(){
+  var cw = document.getElementById('confwrap');
+  var cols = ['#FFD60A','#3B82F6','#10B981','#8B5CF6','#EF4444','#EC4899'];
+  var html = '';
+  for(var i=0;i<32;i++){
+    var s = 5+Math.random()*6;
+    html += '<div class="cbit" style="left:'+(Math.random()*100)+'%;'
+      +'width:'+s+'px;height:'+s+'px;background:'+cols[i%6]+';'
+      +'animation-duration:'+(1+Math.random()*1.2)+'s;'
+      +'animation-delay:'+(Math.random()*.5)+'s"></div>';
+  }
+  cw.innerHTML = html;
+  setTimeout(function(){ cw.innerHTML=''; }, 3500);
+}
+
+/* ── BOOT ── */
+renderQ();
+</script>
+</body>
+</html>

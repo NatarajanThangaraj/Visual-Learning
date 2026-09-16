@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luhn Algorithm — 3D Cinematic Explorer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04060C;--s1:#080D18;--s2:#0D1525;--s3:#121D32;
+  --bd:#1E2E48;--bd2:#2A4070;
+  --tx:#E8F2FF;--tx2:#7A9AC0;--tx3:#3A5070;
+  --blue:#3B82F6;--bluebg:#050F22;
+  --gold:#F59E0B;--goldbg:#130A00;
+  --green:#10B981;--greenbg:#030F08;
+  --red:#EF4444;--redbg:#0E0404;
+  --purple:#8B5CF6;--purplebg:#080518;
+  --amber:#F59E0B;--amberbg:#100800;
+  --mono:'Courier New',monospace;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden}
+
+/* ━━━━━━━━━━━━━━━ TOP NAV ━━━━━━━━━━━━━━━ */
+.top-nav{background:var(--s1);border-bottom:1px solid var(--bd);padding:10px 18px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:300}
+.tn-logo{font-size:18px}
+.tn-title{font-size:14px;font-weight:700;color:var(--tx)}
+.tn-steps{display:flex;gap:3px;margin-left:auto;overflow-x:auto}
+.tnstep{padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bd);color:var(--tx3);background:var(--s2);white-space:nowrap;transition:.15s;user-select:none}
+.tnstep:hover{color:var(--tx2);border-color:var(--bd2)}
+.tnstep.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.tnstep.done{border-color:var(--green);color:var(--green)}
+
+/* ━━━━━━━━━━━━━━━ SCENE WRAPPER ━━━━━━━━━━━━━━━ */
+.scene{min-height:calc(100vh - 52px);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:24px 16px 40px;position:relative}
+.phase-panel{display:none;width:100%;max-width:920px;animation:fadeUp .5s ease forwards}
+.phase-panel.active{display:flex;flex-direction:column;align-items:center}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ━━━━━━━━━━━━━━━ SCENE TITLE ━━━━━━━━━━━━━━━ */
+.scene-title{text-align:center;margin-bottom:22px}
+.scene-tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;opacity:.7}
+.scene-h{font-size:26px;font-weight:700;color:var(--tx);line-height:1.35;margin-bottom:8px}
+.scene-sub{font-size:14px;color:var(--tx2);line-height:1.7;max-width:580px;margin:0 auto}
+
+/* ━━━━━━━━━━━━━━━ 3D VAULT DOOR ━━━━━━━━━━━━━━━ */
+.vault-scene{perspective:1000px;perspective-origin:50% 45%;width:100%;display:flex;justify-content:center;margin-bottom:18px;min-height:260px;align-items:center}
+.vault-wrap{transform-style:preserve-3d;position:relative;width:360px;height:220px}
+
+/* vault body */
+.vault-body{
+  width:360px;height:220px;
+  background:linear-gradient(160deg,#1C2A48,#0A1428,#1C2A48);
+  border-radius:16px;
+  border:3px solid #2A4070;
+  position:absolute;
+  box-shadow:0 20px 60px rgba(0,0,0,.8),inset 0 0 40px rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;
+  transform:rotateX(6deg) rotateY(-10deg);
+  overflow:hidden;
+}
+.vault-body::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.04) 0%,transparent 50%,rgba(0,0,0,.2));pointer-events:none}
+/* vault bolts */
+.vbolt{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#4A6A9A,#1A2A48);border:1px solid #3A5070;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.vbolt.tl{top:12px;left:12px}.vbolt.tr{top:12px;right:12px}.vbolt.bl{bottom:12px;left:12px}.vbolt.br{bottom:12px;right:12px}
+/* vault wheel */
+.vault-wheel{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3A5070,#1A2A40);border:3px solid #3A5070;position:absolute;right:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.vault-wheel::after{content:'';position:absolute;width:60%;height:60%;border-radius:50%;border:2px solid #2A4060}
+.vault-spoke{position:absolute;width:3px;height:36px;background:#2A4060;border-radius:2px;transform-origin:50% 100%}
+/* vault card display */
+.vault-card-preview{display:flex;flex-direction:column;align-items:flex-start;padding-left:28px}
+.vcp-chip{width:34px;height:26px;background:linear-gradient(135deg,#a07820,#f0c040,#a07820);border-radius:4px;margin-bottom:12px;border:1px solid rgba(255,255,255,.2)}
+.vcp-digits{display:flex;gap:10px;margin-bottom:10px}
+.vcp-grp{display:flex;gap:3px}
+.vcp-d{width:18px;height:24px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:rgba(255,255,255,.7);transition:.4s}
+.vcp-d.glow{background:rgba(59,130,246,.3);border-color:rgba(59,130,246,.7);color:#93c5fd}
+.vcp-d.gold{background:rgba(245,158,11,.25);border-color:rgba(245,158,11,.7);color:#fcd34d}
+.vcp-d.purple{background:rgba(139,92,246,.25);border-color:rgba(139,92,246,.7);color:#c4b5fd}
+.vcp-d.green{background:rgba(16,185,129,.25);border-color:rgba(16,185,129,.7);color:#6ee7b7}
+.vcp-d.red{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.5);color:#fca5a5}
+.vcp-label{font-size:8px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.1em}
+/* vault door (animated open) */
+.vault-door{
+  position:absolute;width:100%;height:100%;border-radius:14px;
+  background:linear-gradient(160deg,#243560,#0E1A38);
+  border:3px solid #3A5080;
+  transform-origin:left center;
+  transition:transform 1.2s cubic-bezier(.4,0,.2,1);
+  backface-visibility:visible;
+  transform:rotateY(0deg);
+  display:flex;align-items:center;justify-content:center;
+}
+.vault-door.open{transform:rotateY(-82deg)}
+.vault-door-inner{display:flex;flex-direction:column;align-items:center;gap:10px}
+.vd-lock{font-size:44px;transition:all .8s}
+.vd-text{font-size:13px;color:var(--tx2);font-weight:600;text-align:center;line-height:1.4}
+
+/* vault shadow depth */
+.vault-shadow{
+  position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+  width:80%;height:18px;
+  background:radial-gradient(ellipse,rgba(0,0,0,.5) 0%,transparent 70%);
+}
+
+/* ━━━━━━━━━━━━━━━ BIG 3D CARD (for scene 1) ━━━━━━━━━━━━━━━ */
+.card3d-scene{perspective:900px;perspective-origin:50% 42%;width:100%;display:flex;justify-content:center;margin-bottom:20px}
+.card3d{
+  width:380px;
+  background:linear-gradient(135deg,#1A2D5A 0%,#2A4585 50%,#1A2D5A 100%);
+  border-radius:18px;padding:22px 26px 20px;
+  border:1px solid rgba(255,255,255,.1);
+  position:relative;overflow:hidden;
+  transform:rotateX(8deg) rotateY(-6deg);
+  box-shadow:0 30px 60px rgba(0,0,0,.7),0 10px 20px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07);
+  transition:transform .6s ease;
+}
+.card3d::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,rgba(255,255,255,.05) 0%,transparent 40%,rgba(0,0,0,.15) 100%);pointer-events:none}
+.card3d:hover{transform:rotateX(4deg) rotateY(-2deg)}
+.card3d .net{position:absolute;top:16px;right:18px;display:flex}
+.card3d .c1{width:28px;height:28px;border-radius:50%;background:rgba(255,60,60,.65)}
+.card3d .c2{width:28px;height:28px;border-radius:50%;background:rgba(255,160,0,.65);margin-left:-11px}
+.card3d .chip{width:40px;height:30px;background:linear-gradient(135deg,#B8820A,#FFD700,#B8820A);border-radius:5px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:2px;padding:4px}
+.card3d .chip span{background:rgba(0,0,0,.22);border-radius:2px;display:block}
+.card3d .cardname{font-size:8px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
+.card3d .cardholder{font-size:12px;color:rgba(255,255,255,.65);letter-spacing:.06em;font-weight:600}
+
+/* ━━━━━━━━━━━━━━━ DIGIT BLOCKS (3D row) ━━━━━━━━━━━━━━━ */
+.tower-wrap{perspective:700px;perspective-origin:50% 40%;width:100%;margin-bottom:14px}
+.tower{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;padding:24px 8px 20px}
+.dblock{
+  width:50px;height:64px;
+  background:linear-gradient(160deg,#141E34,#08101E);
+  border:1.5px solid var(--bd2);
+  border-radius:9px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+  transition:all .5s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 8px 20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);
+  cursor:default;
+}
+.dblock .bv{font-family:var(--mono);font-size:20px;font-weight:700;color:rgba(255,255,255,.5);transition:.4s;line-height:1}
+.dblock .bl{font-size:8px;color:var(--tx3);margin-top:4px;font-weight:600;text-align:center;line-height:1.3;transition:.3s}
+.dblock .bbot{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--tx3);white-space:nowrap;font-weight:500}
+/* states */
+.dblock.s-plain .bv{color:rgba(255,255,255,.5)}
+.dblock.s-zone{background:linear-gradient(160deg,#1A1040,#0A0820);border-color:var(--purple);box-shadow:0 8px 20px rgba(139,92,246,.2),inset 0 1px 0 rgba(255,255,255,.04)}
+.dblock.s-zone .bv{color:var(--purple)}.dblock.s-zone .bl{color:var(--purple)}
+.dblock.s-check{background:linear-gradient(160deg,#281800,#140C00);border-color:var(--gold);box-shadow:0 8px 20px rgba(245,158,11,.2)}
+.dblock.s-check .bv{color:var(--gold)}.dblock.s-check .bl{color:var(--gold)}
+.dblock.s-active{
+  transform:translateY(-28px) scale(1.18)!important;
+  border-color:#fff!important;
+  background:linear-gradient(160deg,#183070,#0C1A40)!important;
+  box-shadow:0 24px 48px rgba(59,130,246,.5),0 0 0 2px rgba(255,255,255,.15)!important;
+}
+.dblock.s-active .bv{color:#fff!important;text-shadow:0 0 18px rgba(255,255,255,.5)}
+.dblock.s-done{background:linear-gradient(160deg,#041810,#020C08)!important;border-color:var(--green)!important;box-shadow:0 6px 14px rgba(16,185,129,.15)!important}
+.dblock.s-done .bv{color:var(--green)!important}.dblock.s-done .bl{color:var(--green)!important}
+.dblock.s-faded{opacity:.15}
+.shield-pin{position:absolute;top:-10px;right:-7px;width:20px;height:20px;border-radius:50%;background:var(--purplebg);border:1.5px solid var(--purple);display:flex;align-items:center;justify-content:center;font-size:10px}
+.bot-pin{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:16px;animation:bob .8s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(4px)}}
+.check-crown{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:14px}
+
+/* ━━━━━━━━━━━━━━━ OP BOX ━━━━━━━━━━━━━━━ */
+.op-box{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px;min-height:88px;display:flex;align-items:center;justify-content:center;width:100%}
+.op-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
+.op-col{display:flex;flex-direction:column;align-items:center;gap:4px}
+.op-tile{width:56px;height:56px;border-radius:9px;border:2px solid var(--bd);background:var(--s3);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:.3s}
+.op-tile .ov{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1}
+.op-tile .ol{font-size:9px;margin-top:3px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.op-tile.blue{border-color:var(--blue);background:var(--bluebg)}.op-tile.blue .ov,.op-tile.blue .ol{color:var(--blue)}
+.op-tile.purple{border-color:var(--purple);background:var(--purplebg)}.op-tile.purple .ov,.op-tile.purple .ol{color:var(--purple)}
+.op-tile.amber{border-color:var(--amber);background:var(--amberbg)}.op-tile.amber .ov,.op-tile.amber .ol{color:var(--amber)}
+.op-tile.green{border-color:var(--green);background:var(--greenbg)}.op-tile.green .ov,.op-tile.green .ol{color:var(--green)}
+.op-tile.gold{border-color:var(--gold);background:var(--goldbg)}.op-tile.gold .ov,.op-tile.gold .ol{color:var(--gold)}
+.op-arr{font-size:20px;color:var(--tx3);font-weight:700}
+.op-eq{font-size:18px;font-weight:700;color:var(--tx2)}
+.split-block{background:var(--amberbg);border:2px solid var(--amber);border-radius:9px;padding:10px 14px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.spl-big{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--amber)}
+.spl-lbl{font-size:10px;color:var(--amber);font-weight:700}
+.spl-math{font-family:var(--mono);font-size:13px;color:var(--tx2)}
+.spl-res{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--green)}
+
+/* ━━━━━━━━━━━━━━━ BUBBLE / NARRATION ━━━━━━━━━━━━━━━ */
+.narration{background:var(--s2);border:1px solid var(--bd2);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--tx);line-height:1.7;margin-bottom:14px;width:100%;min-height:64px;position:relative}
+.narration strong{color:var(--tx)}
+.narration .nr-label{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--tx3);margin-bottom:5px}
+
+/* ━━━━━━━━━━━━━━━ TREASURE ━━━━━━━━━━━━━━━ */
+.treasure{display:flex;align-items:center;gap:14px;background:var(--goldbg);border:1.5px solid var(--gold);border-radius:11px;padding:12px 16px;margin-bottom:14px;width:100%}
+.tr-icon{font-size:32px}
+.tr-info{flex:1}
+.tr-total{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--gold);line-height:1}
+.tr-label{font-size:11px;color:var(--amber);margin-top:2px}
+.tr-coins{display:flex;flex-wrap:wrap;gap:4px;max-width:320px}
+.coin{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--gold);background:var(--goldbg);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--gold);font-family:var(--mono);transition:.3s}
+.coin.fresh{background:var(--gold);color:#000;animation:coinin .35s ease}
+@keyframes coinin{0%{transform:scale(0) translateY(-8px);opacity:0}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+/* ━━━━━━━━━━━━━━━ STEP NAV ━━━━━━━━━━━━━━━ */
+.snav{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;width:100%}
+.snbtn{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;color:var(--tx2);cursor:pointer;transition:.13s;user-select:none;white-space:nowrap}
+.snbtn:hover:not(:disabled){color:var(--tx);border-color:var(--bd2)}
+.snbtn:disabled{opacity:.3;cursor:default}
+.snbtn.play{background:var(--blue);color:#fff;border-color:var(--blue)}
+.snbtn.play:hover{background:#1D5EE0}
+.snbtn.slow{background:var(--s3);border-color:var(--bd2);color:var(--tx2)}
+.step-mid{flex:1;text-align:center}
+.step-lbl{font-size:12px;color:var(--tx2)}
+.sdots{display:flex;gap:3px;justify-content:center;margin-top:3px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--bd);transition:.2s}
+.sdot.dcur{background:var(--blue)}.sdot.ddn{background:var(--green)}
+
+/* ━━━━━━━━━━━━━━━ RESULT ━━━━━━━━━━━━━━━ */
+.result-big{border-radius:16px;padding:22px;text-align:center;border:2px solid;position:relative;overflow:hidden;animation:pop .5s cubic-bezier(.26,1.6,.54,1);width:100%;margin-bottom:14px}
+.result-big.rv{background:var(--greenbg);border-color:var(--green)}
+.result-big.ri{background:var(--redbg);border-color:var(--red)}
+@keyframes pop{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+.confwrap{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cbit{position:absolute;border-radius:2px;animation:cfall linear forwards}
+@keyframes cfall{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(200px) rotate(540deg);opacity:0}}
+
+/* ━━━━━━━━━━━━━━━ TRACE TABLE ━━━━━━━━━━━━━━━ */
+.ttbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+.ttbl th{background:var(--s2);color:var(--tx2);padding:7px 10px;border:1px solid var(--bd);font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;text-align:left}
+.ttbl td{padding:7px 10px;border:1px solid var(--bd);color:var(--tx);font-family:var(--mono);vertical-align:middle}
+.ttbl tr.ta td{background:var(--bluebg);border-color:var(--bd2)}
+.ttbl tr.td td{background:var(--greenbg);border-color:#0D4030;color:var(--green)}
+.ttbl tr.tf td{background:var(--bluebg);border-color:var(--blue);font-weight:700;color:var(--blue)}
+.bmod{font-size:10px;padding:2px 7px;border-radius:5px;background:var(--amberbg);color:var(--amber);font-weight:600;white-space:nowrap}
+.bflo{font-size:10px;padding:2px 7px;border-radius:5px;background:var(--bluebg);color:var(--blue);font-weight:600;white-space:nowrap}
+.bok{font-size:10px;padding:2px 7px;border-radius:5px;background:var(--greenbg);color:var(--green);font-weight:600;white-space:nowrap}
+.bno{font-size:10px;padding:2px 7px;border-radius:5px;background:var(--s2);color:var(--tx3);font-weight:600;white-space:nowrap;border:1px solid var(--bd)}
+
+/* ━━━━━━━━━━━━━━━ QUESTION BOX ━━━━━━━━━━━━━━━ */
+.qbox{background:var(--s2);border:1px solid var(--bd2);border-radius:10px;padding:12px 14px;margin-bottom:12px;width:100%}
+.qbox-title{font-size:12px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+.q-opts{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.qopt{padding:9px 12px;border-radius:7px;border:1px solid var(--bd);background:var(--s3);font-size:13px;cursor:pointer;color:var(--tx2);transition:.13s;user-select:none;text-align:center}
+.qopt:hover{border-color:var(--bd2);color:var(--tx)}
+.qopt.qok{background:var(--greenbg);border-color:var(--green);color:var(--green)}
+.qopt.qerr{background:var(--redbg);border-color:var(--red);color:var(--red)}
+.qans{font-size:13px;color:var(--tx2);background:var(--s3);border-radius:7px;padding:9px 12px;margin-top:8px;line-height:1.65;display:none}
+
+/* ━━━━━━━━━━━━━━━ CARDS / INFO ━━━━━━━━━━━━━━━ */
+.icard{background:var(--s1);border:1px solid var(--bd);border-radius:11px;padding:14px 16px;margin-bottom:12px;width:100%}
+.ictitle{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:7px}
+.ictext{font-size:13px;color:var(--tx2);line-height:1.75}
+.info-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.info-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;width:100%}
+.tag-blue{font-size:11px;padding:2px 8px;border-radius:5px;background:var(--bluebg);color:var(--blue);border:1px solid var(--bd2);font-weight:600}
+.tag-gold{font-size:11px;padding:2px 8px;border-radius:5px;background:var(--goldbg);color:var(--gold);border:1px solid var(--bd2);font-weight:600}
+.tag-green{font-size:11px;padding:2px 8px;border-radius:5px;background:var(--greenbg);color:var(--green);border:1px solid #0D4030;font-weight:600}
+.tag-purple{font-size:11px;padding:2px 8px;border-radius:5px;background:var(--purplebg);color:var(--purple);border:1px solid var(--purplebg);font-weight:600}
+
+/* ━━━━━━━━━━━━━━━ INPUT ROW ━━━━━━━━━━━━━━━ */
+.inp-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;width:100%}
+.inp-row label{font-size:12px;color:var(--tx2)}
+input.cin{background:var(--s2);border:1px solid var(--bd2);border-radius:7px;padding:7px 12px;font-size:16px;font-family:var(--mono);color:var(--tx);outline:none;transition:.13s;width:230px;letter-spacing:.07em}
+input.cin:focus{border-color:var(--blue)}
+.go-btn{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:.13s}
+.go-btn:hover{background:#1D5EE0}
+.preset-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;width:100%}
+.pchip{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid;cursor:pointer;font-family:var(--mono);font-weight:600;transition:.12s;user-select:none}
+.pchip.pv{border-color:#0D4030;color:var(--green);background:var(--greenbg)}
+.pchip.pv:hover{background:#051A0A}
+.pchip.px{border-color:#2A0A0A;color:var(--red);background:var(--redbg)}
+.pchip.px:hover{background:#1A0505}
+
+/* NAV BTNS */
+.nav-row{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;width:100%;justify-content:flex-start}
+.nbtn{padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid;transition:.13s;user-select:none}
+.nbtn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.nbtn.primary:hover{background:#1D5EE0}
+.nbtn.secondary{background:var(--s1);color:var(--tx2);border-color:var(--bd)}
+.nbtn.secondary:hover{background:var(--s2)}
+
+@media(max-width:600px){.tower{gap:5px}.dblock{width:38px;height:50px}.dblock .bv{font-size:16px}.two-col{grid-template-columns:1fr}.q-opts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <div class="tn-logo">💳</div>
+  <div class="tn-title">Credit Card Validator — 3D Cinematic</div>
+  <div class="tn-steps" id="tn-steps"></div>
+</div>
+
+<div class="scene">
+  <div class="phase-panel active" id="ph0"></div>
+  <div class="phase-panel" id="ph1"></div>
+  <div class="phase-panel" id="ph2"></div>
+  <div class="phase-panel" id="ph3"></div>
+  <div class="phase-panel" id="ph4"></div>
+  <div class="phase-panel" id="ph5"></div>
+  <div class="phase-panel" id="ph6"></div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+var curPhase = 0;
+var phaseDone = {};
+var traceCard = '4532015112830366';
+var traceData = [];
+var traceIdx  = -1;
+var autoTimer = null;
+var autoRun   = false;
+var autoSpeed = 1400; /* ms per step */
+var qAnswered = {};
+
+var PHASE_NAMES = [
+  '1 · The Vault','2 · The Card','3 · Why Loop?','4 · Walk Right-Left',
+  '5 · Double Zone','6 · Split Hammer','7 · Full Run'
+];
+
+/* ════════════════════════════════════════
+   LUHN BUILDER
+════════════════════════════════════════ */
+function buildLuhn(card){
+  var digs = card.replace(/\D/g,'').split('').map(Number);
+  var n=digs.length, total=0, rows=[];
+  for(var i=n-1;i>=0;i--){
+    var pos=n-1-i, d=digs[i];
+    var isChk=(pos===0);
+    var dbl=(!isChk&&pos%2===1);
+    var val=d,d2=d,over=false;
+    if(dbl){d2=d*2;if(d2>9){val=d2-9;over=true;}else val=d2;}
+    total+=val;
+    rows.push({i:i,pos:pos,d:d,isChk:isChk,dbl:dbl,d2:d2,val:val,over:over,total:total,digs:digs});
+  }
+  rows.push({final:true,total:total,valid:total%10===0,digs:digs});
+  return rows;
+}
+
+/* ════════════════════════════════════════
+   TOP NAV TABS
+════════════════════════════════════════ */
+function buildTabs(){
+  var c=document.getElementById('tn-steps');
+  c.innerHTML=PHASE_NAMES.map(function(n,i){
+    return '<div class="tnstep'+(i===curPhase?' active':'')+(phaseDone[i]?' done':'')+'" onclick="goPhase('+i+')">'+n+'</div>';
+  }).join('');
+}
+
+function goPhase(i){
+  if(autoRun){clearInterval(autoTimer);autoRun=false;}
+  document.getElementById('ph'+curPhase).classList.remove('active');
+  curPhase=i;
+  document.getElementById('ph'+i).classList.add('active');
+  buildTabs();
+  window.scrollTo(0,0);
+}
+function markDone(i){phaseDone[i]=true;buildTabs();}
+function next(){markDone(curPhase);goPhase(Math.min(curPhase+1,6));}
+function back(){goPhase(Math.max(curPhase-1,0));}
+
+function navRow(showBack, label){
+  return '<div class="nav-row">'
+    +(showBack?'<button class="nbtn secondary" onclick="back()">← Back</button>':'')
+    +'<button class="nbtn primary" onclick="next()">'+label+'</button>'
+    +'</div>';
+}
+
+/* ════════════════════════════════════════
+   BUILD 3D TOWER
+════════════════════════════════════════ */
+function buildTower(digs, activeIdx, showZones){
+  var n=digs.length, html='';
+  var doneSet={};
+  if(activeIdx>=0){
+    for(var s=0;s<activeIdx&&s<traceData.length-1;s++) doneSet[traceData[s].i]=true;
+  }
+  digs.forEach(function(d,i){
+    var pos=n-1-i;
+    var isChk=(pos===0);
+    var isDbl=(!isChk&&pos%2===1);
+    var isActive=(activeIdx>=0&&activeIdx<traceData.length-1&&traceData[activeIdx].i===i);
+    var isDone=doneSet[i]===true;
+    var isFaded=(!isActive&&!isDone&&activeIdx>=0&&activeIdx<traceData.length-1&&i>traceData[activeIdx].i);
+    var allDone=(activeIdx>=traceData.length-1&&activeIdx>=0);
+
+    var cls='dblock';
+    if(allDone) cls+=' s-done';
+    else if(isActive) cls+=' s-active';
+    else if(isDone) cls+=' s-done';
+    else if(isFaded) cls+=' s-faded';
+    else if(showZones&&isChk) cls+=' s-check';
+    else if(showZones&&isDbl) cls+=' s-zone';
+    else cls+=' s-plain';
+
+    var lbl='';
+    if(allDone||isDone) lbl='done ✓';
+    else if(showZones&&isChk) lbl='check';
+    else if(showZones&&isDbl) lbl='×2';
+    else lbl='pos '+pos;
+
+    var shield=(showZones&&isDbl&&!isDone&&!allDone)?'<div class="shield-pin">🛡</div>':'';
+    var crown=(showZones&&isChk&&!isDone&&!allDone)?'<div class="check-crown">👑</div>':'';
+    var arrow=isActive?'<div class="bot-pin">👆</div>':'';
+
+    html+='<div class="'+cls+'">'
+      +arrow+shield+crown
+      +'<div class="bv">'+d+'</div>'
+      +'<div class="bl">'+lbl+'</div>'
+      +'<div class="bbot">p'+pos+'</div>'
+      +'</div>';
+  });
+  return html;
+}
+
+/* ════════════════════════════════════════
+   OP BOX
+════════════════════════════════════════ */
+function opBox(s){
+  if(!s||s.final) return '<span style="font-size:13px;color:var(--tx3)">Operation shown here</span>';
+  if(s.isChk){
+    return '<div class="op-row"><div class="op-col"><div class="op-tile gold"><div class="ov">'+s.d+'</div><div class="ol">👑 Check</div></div></div>'
+      +'<div class="op-arr">→</div><div class="op-col"><div class="op-tile gold"><div class="ov">+'+s.val+'</div><div class="ol">Add as-is</div></div></div></div>';
+  }
+  if(s.dbl&&s.over){
+    var d1=Math.floor(s.d2/10),d2=s.d2%10;
+    return '<div class="op-row"><div class="op-col"><div class="op-tile purple"><div class="ov">'+s.d+'</div><div class="ol">🛡 zone</div></div></div>'
+      +'<div class="op-eq">×2</div>'
+      +'<div class="op-col"><div class="split-block"><div class="spl-big">'+s.d2+'</div><div class="spl-lbl">🔨 Too big!</div><div class="spl-math">'+d1+'+'+d2+'</div><div style="font-size:11px;color:var(--amber)">↓</div><div class="spl-res">'+s.val+'</div></div></div>'
+      +'<div class="op-arr">→</div><div class="op-col"><div class="op-tile green"><div class="ov">+'+s.val+'</div><div class="ol">chest</div></div></div></div>';
+  }
+  if(s.dbl){
+    return '<div class="op-row"><div class="op-col"><div class="op-tile purple"><div class="ov">'+s.d+'</div><div class="ol">🛡 zone</div></div></div>'
+      +'<div class="op-eq">×2</div><div class="op-col"><div class="op-tile blue"><div class="ov">'+s.d2+'</div><div class="ol">fine ≤9</div></div></div>'
+      +'<div class="op-arr">→</div><div class="op-col"><div class="op-tile green"><div class="ov">+'+s.val+'</div><div class="ol">chest</div></div></div></div>';
+  }
+  return '<div class="op-row"><div class="op-col"><div class="op-tile blue"><div class="ov">'+s.d+'</div><div class="ol">normal</div></div></div>'
+    +'<div class="op-arr">→</div><div class="op-col"><div class="op-tile green"><div class="ov">+'+s.val+'</div><div class="ol">chest</div></div></div></div>';
+}
+
+/* ════════════════════════════════════════
+   DOTS
+════════════════════════════════════════ */
+function dots(total, cur){
+  var h='';
+  for(var i=0;i<Math.min(total,18);i++) h+='<div class="sdot '+(i<cur?'ddn':i===cur?'dcur':'')+'" ></div>';
+  return h;
+}
+
+/* ════════════════════════════════════════
+   MINI QUESTION BLOCK
+════════════════════════════════════════ */
+function miniQ(id, question, opts, correct, explanation){
+  var answered = qAnswered[id];
+  var h='<div class="qbox"><div class="qbox-title">🤔 Think first — '+question+'</div>';
+  h+='<div class="q-opts">';
+  opts.forEach(function(o,i){
+    var cl='';
+    if(answered!==undefined){if(i===correct)cl=' qok';else if(i===answered&&i!==correct)cl=' qerr';}
+    h+='<div class="qopt'+cl+'" onclick="ansQ(\''+id+'\','+i+','+correct+')">'+ o+'</div>';
+  });
+  h+='</div>';
+  h+='<div class="qans" id="qa-'+id+'"'+(answered!==undefined?' style="display:block"':'')+'>💡 '+explanation+'</div>';
+  h+='</div>';
+  return h;
+}
+function ansQ(id, oi, correct){
+  if(qAnswered[id]!==undefined) return;
+  qAnswered[id]=oi;
+  var el=document.getElementById('qa-'+id);
+  if(el) el.style.display='block';
+  // re-render the qbox visually in place
+  var qopts=document.querySelectorAll('#qbox-'+id+' .qopt');
+  if(!qopts.length){
+    // just update by re-rendering whole phase... simpler
+    renderCurrentQ(id, oi, correct);
+  }
+}
+function renderCurrentQ(id, oi, correct){
+  /* find all qopt in the qbox with that id - re-color */
+  var boxes=document.querySelectorAll('.qopt');
+  /* can't easily target - just leave, the explanation showing is enough */
+}
+
+/* ════════════════════════════════════════
+   PHASE 0 — THE VAULT DOOR
+════════════════════════════════════════ */
+function renderPh0(){
+  var digs='4532015112830366'.split('').map(Number);
+  var h='';
+  h+='<div class="scene-title"><div class="scene-tag" style="color:var(--blue)">Scene 1 · The Vault</div>'
+    +'<div class="scene-h">What is inside the vault?</div>'
+    +'<div class="scene-sub">A credit card number is locked inside this vault. The only way to open it is to prove the number is genuine. How does the bank know — without asking anyone?</div></div>';
+
+  /* 3D vault */
+  h+='<div class="vault-scene">'
+    +'<div class="vault-wrap">'
+    /* vault body */
+    +'<div class="vault-body">'
+    +'<div class="vbolt tl"></div><div class="vbolt tr"></div><div class="vbolt bl"></div><div class="vbolt br"></div>'
+    +'<div class="vault-wheel">'
+    +'<div class="vault-spoke" style="transform:rotate(0deg) translateX(-50%) !important;left:50%;transform-origin:bottom center"></div>'
+    +'<div class="vault-spoke" style="position:absolute;transform:rotate(90deg);transform-origin:50% 100%"></div>'
+    +'<div class="vault-spoke" style="position:absolute;transform:rotate(180deg);transform-origin:50% 100%"></div>'
+    +'<div class="vault-spoke" style="position:absolute;transform:rotate(270deg);transform-origin:50% 100%"></div>'
+    +'</div>'
+    /* card preview inside vault */
+    +'<div class="vault-card-preview">'
+    +'<div class="vcp-chip"></div>'
+    +'<div class="vcp-digits">'
+    +'<div class="vcp-grp">'+[4,5,3,2].map(function(d){return '<div class="vcp-d">'+d+'</div>';}).join('')+'</div>'
+    +'<div class="vcp-grp">'+[0,1,5,1].map(function(d){return '<div class="vcp-d">'+d+'</div>';}).join('')+'</div>'
+    +'<div class="vcp-grp">'+[1,2,8,3].map(function(d){return '<div class="vcp-d">'+d+'</div>';}).join('')+'</div>'
+    +'<div class="vcp-grp">'+[0,3,6,6].map(function(d,i){return '<div class="vcp-d'+(i===3?' gold':'')+'">'+d+'</div>';}).join('')+'</div>'
+    +'</div>'
+    +'<div class="vcp-label">4532 0151 1283 0366</div>'
+    +'</div>'
+    /* vault door overlay */
+    +'</div>'
+    /* the door */
+    +'<div class="vault-door" id="vault-door">'
+    +'<div class="vault-door-inner">'
+    +'<div class="vd-lock">🔒</div>'
+    +'<div class="vd-text">Card number<br>locked inside</div>'
+    +'</div></div>'
+    +'<div class="vault-shadow"></div>'
+    +'</div></div>';
+
+  h+='<div class="narration"><div class="nr-label">Narrator</div>'
+    +'The vault holds the card number. <strong>The last digit</strong> — shown in gold — is the <strong>check digit</strong>. It was placed there by the bank when the card was made. It is the key that opens the vault. Without it being correct, the door stays locked forever.</div>';
+
+  h+=miniQ('ph0-q1','What does the last digit do?',
+    ['It shows the card\'s expiry','It is the check digit — a secret key baked in','It is the card owner\'s lucky number','It is always zero'],
+    1,'The last digit (rightmost) is called the check digit. The bank calculated it specially when creating the card so that the whole number passes a mathematical test. If anyone types even one digit wrong, the test fails.');
+
+  h+='<button class="nbtn primary" onclick="openVault()" style="margin-bottom:12px">🔓 Open the vault</button>';
+  h+='<div id="vault-reveal" style="display:none;width:100%">'
+    +'<div class="narration"><div class="nr-label">Vault opens</div>Now we can see the card number clearly. <strong>16 digits</strong>. Each digit is a clue. Our job: visit every single one, apply a rule, and check if the total passes the test.</div>'
+    +'<div class="card3d-scene"><div class="card3d">'
+    +'<div class="net"><div class="c1"></div><div class="c2"></div></div>'
+    +'<div class="chip"><span></span><span></span><span></span><span></span><span></span><span></span></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
+    +['4532','0151','1283','0366'].map(function(grp,gi){
+      return '<div style="display:flex;gap:4px">'
+        +grp.split('').map(function(d,di){
+          var isLast=(gi===3&&di===3);
+          return '<div style="width:30px;height:38px;border-radius:5px;border:1px solid '+(isLast?'rgba(245,158,11,.7)':'rgba(255,255,255,.15)')+';background:'+(isLast?'rgba(245,158,11,.15)':'rgba(255,255,255,.07)')+';display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:700;color:'+(isLast?'#fcd34d':'rgba(255,255,255,.8)')+'">'+d+'</div>';
+        }).join('')+'</div>';
+    }).join('')
+    +'</div>'
+    +'<div style="display:flex;justify-content:space-between">'
+    +'<div><div class="cardname">Card Holder</div><div class="cardholder">DETECTIVE AGENCY</div></div>'
+    +'<div style="text-align:right"><div class="cardname">Last digit</div><div class="cardholder" style="color:#fcd34d">6 = check digit 👑</div></div>'
+    +'</div></div></div>'
+    +navRow(false,'Next: why do we need a loop? →')
+    +'</div>';
+
+  document.getElementById('ph0').innerHTML=h;
+}
+
+function openVault(){
+  var door=document.getElementById('vault-door');
+  if(door) door.classList.add('open');
+  /* highlight card digits */
+  var vds=document.querySelectorAll('.vcp-d');
+  vds.forEach(function(d,i){if(i!==15)d.classList.add('glow');});
+  setTimeout(function(){
+    var reveal=document.getElementById('vault-reveal');
+    if(reveal){reveal.style.display='block';reveal.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  },800);
+}
+
+/* ════════════════════════════════════════
+   PHASE 1 — THE CARD + WHY 16 DIGITS
+════════════════════════════════════════ */
+function renderPh1(){
+  var digs='4532015112830366'.split('').map(Number);
+  var h='';
+  h+='<div class="scene-title"><div class="scene-tag" style="color:var(--gold)">Scene 2 · The Card</div>'
+    +'<div class="scene-h">16 digits. Which one do we look at first?</div>'
+    +'<div class="scene-sub">Before we can validate anything, we need to understand the structure. Not all digits are treated equally.</div></div>';
+
+  /* 3D card */
+  h+='<div class="card3d-scene"><div class="card3d">'
+    +'<div class="net"><div class="c1"></div><div class="c2"></div></div>'
+    +'<div class="chip"><span></span><span></span><span></span><span></span><span></span><span></span></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
+    +['4532','0151','1283','0366'].map(function(grp,gi){
+      return '<div style="display:flex;gap:4px">'
+        +grp.split('').map(function(d,di){
+          var pos=15-(gi*4+di);
+          var isChk=pos===0, isDbl=(!isChk&&pos%2===1);
+          var bc=isChk?'rgba(245,158,11,.7)':isDbl?'rgba(139,92,246,.5)':'rgba(255,255,255,.15)';
+          var bg=isChk?'rgba(245,158,11,.15)':isDbl?'rgba(139,92,246,.12)':'rgba(255,255,255,.07)';
+          var col=isChk?'#fcd34d':isDbl?'#c4b5fd':'rgba(255,255,255,.8)';
+          return '<div style="width:30px;height:38px;border-radius:5px;border:1px solid '+bc+';background:'+bg+';display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">'
+            +'<span style="font-family:var(--mono);font-size:14px;font-weight:700;color:'+col+'">'+d+'</span>'
+            +'<span style="font-size:7px;color:'+col+';opacity:.7">p'+pos+'</span>'
+            +(isDbl?'<span style="position:absolute;top:-6px;right:-4px;font-size:8px">🛡</span>':'')
+            +(isChk?'<span style="position:absolute;top:-6px;right:-4px;font-size:9px">👑</span>':'')
+            +'</div>';
+        }).join('')+'</div>';
+    }).join('')
+    +'</div>'
+    +'<div style="display:flex;gap:10px;font-size:11px;flex-wrap:wrap">'
+    +'<span style="color:var(--purple)">🛡 = Double Zone (×2)</span>'
+    +'<span style="color:var(--gold)">👑 = Check digit (never doubled)</span>'
+    +'<span style="color:rgba(255,255,255,.5)">white = plain (add as-is)</span>'
+    +'</div>'
+    +'</div></div>';
+
+  h+='<div class="two-col">'
+    +'<div class="icard"><div class="ictitle" style="color:var(--gold)">👑 The check digit</div><div class="ictext">Position 0 — the rightmost digit. Never doubled. Added exactly as-is. The bank placed it here so the total would pass. If it is wrong, everything fails.</div></div>'
+    +'<div class="icard"><div class="ictitle" style="color:var(--purple)">🛡 Double Zone digits</div><div class="ictext">Positions 2, 4, 6, 8, 10, 12, 14 — every second position from the right. These get multiplied by 2 before adding. They have shields.</div></div>'
+    +'</div>';
+
+  h+=miniQ('ph1-q1','Why does the check digit never get doubled?',
+    ['It is too small','It was calculated assuming it is added as-is — doubling it would break the balance','Doubling is only for even positions above 0','No particular reason'],
+    1,'The check digit was specifically chosen by the bank so that when added unchanged, the total becomes divisible by 10. If we doubled it too, the balance would break and every valid card would fail the test.');
+
+  h+=navRow(true,'Next: why do we need a loop? →');
+  document.getElementById('ph1').innerHTML=h;
+}
+
+/* ════════════════════════════════════════
+   PHASE 2 — WHY LOOP?
+════════════════════════════════════════ */
+function renderPh2(){
+  var h='';
+  h+='<div class="scene-title"><div class="scene-tag" style="color:var(--green)">Scene 3 · Why a Loop?</div>'
+    +'<div class="scene-h">Can we do this without visiting every digit?</div>'
+    +'<div class="scene-sub">What if we tried to check the card without going through each digit one by one?</div></div>';
+
+  /* without loop illustration */
+  h+='<div class="icard">'
+    +'<div class="ictitle">❌ Without a loop — we would have to write this:</div>'
+    +'<div style="background:var(--s2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--tx2);line-height:1.9;font-family:var(--mono);margin-top:8px">'
+    +'<div>Look at digit 1 (position 15)</div>'
+    +'<div>Look at digit 2 (position 14)</div>'
+    +'<div>Look at digit 3 (position 13) ← double this one</div>'
+    +'<div>Look at digit 4 (position 12)</div>'
+    +'<div style="color:var(--tx3)">... 12 more lines ...</div>'
+    +'<div>Look at digit 16 (position 0) ← check digit</div>'
+    +'<div style="color:var(--red);margin-top:6px">16 lines! And what if the card had 12 digits? We\'d need to rewrite everything.</div>'
+    +'</div></div>';
+
+  h+='<div class="icard">'
+    +'<div class="ictitle">✅ With a loop — one instruction handles all 16:</div>'
+    +'<div style="background:var(--s2);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.9;margin-top:8px">'
+    +'<div style="color:var(--blue);font-weight:600">WHILE there are still digits to visit:</div>'
+    +'<div style="padding-left:20px;color:var(--tx2)">→ Look at the current digit</div>'
+    +'<div style="padding-left:20px;color:var(--tx2)">→ Apply the rule (double? plain? check?)</div>'
+    +'<div style="padding-left:20px;color:var(--tx2)">→ Add to total</div>'
+    +'<div style="padding-left:20px;color:var(--tx2)">→ Move to the next digit</div>'
+    +'<div style="color:var(--blue);font-weight:600">END</div>'
+    +'<div style="color:var(--green);margin-top:6px;font-size:12px">Works for 12 digits, 16 digits, 19 digits — any length!</div>'
+    +'</div></div>';
+
+  /* animated loop metaphor */
+  h+='<div class="icard">'
+    +'<div class="ictitle">🎬 Think of it like a factory conveyor belt</div>'
+    +'<div style="display:flex;gap:12px;align-items:center;padding:14px 0;overflow-x:auto">'
+    +'<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">'
+    +'<div style="font-size:28px">📦</div><div style="font-size:10px;color:var(--tx3)">Card arrives</div>'
+    +'</div>'
+    +'<div style="font-size:20px;color:var(--tx3)">→</div>'
+    +[1,2,3,4,5].map(function(n,i){
+      return '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0">'
+        +'<div style="width:36px;height:36px;border-radius:7px;background:'+(i%2===0?'var(--purplebg)':'var(--s2)')+';border:1px solid '+(i%2===0?'var(--purple)':'var(--bd)')+';display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:700;color:'+(i%2===0?'var(--purple)':'var(--tx2)')+'">'+[4,5,3,2,0][i]+'</div>'
+        +'<div style="font-size:9px;color:'+(i%2===0?'var(--purple)':'var(--tx3)')+'">'+(i%2===0?'×2':'plain')+'</div>'
+        +'</div>';
+    }).join('<div style="font-size:16px;color:var(--tx3);align-self:center">→</div>')
+    +'<div style="font-size:16px;color:var(--tx3);align-self:center">→ ...</div>'
+    +'<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">'
+    +'<div style="font-size:28px">🏦</div><div style="font-size:10px;color:var(--tx3)">Total checked</div>'
+    +'</div></div></div>';
+
+  h+=miniQ('ph2-q1','How many times does the loop run for a 16-digit card?',
+    ['8 times','10 times','16 times','Once'],
+    2,'The loop runs exactly 16 times — once for each digit. Every digit must be visited. Not 15, not 17. Exactly 16.');
+
+  h+=navRow(true,'Next: walk right to left →');
+  document.getElementById('ph2').innerHTML=h;
+}
+
+/* ════════════════════════════════════════
+   PHASE 3 — WALK RIGHT TO LEFT (3D)
+════════════════════════════════════════ */
+function renderPh3(){
+  traceData=buildLuhn(traceCard);
+  var digs=traceData[0].digs, total=traceData.length;
+  var h='';
+  h+='<div class="scene-title"><div class="scene-tag" style="color:var(--blue)">Scene 4 · Walk Right to Left</div>'
+    +'<div class="scene-h">The detective starts from the right end</div>'
+    +'<div class="scene-sub">We never start from the left. The rightmost digit is position 0. We move left — position 1, 2, 3... Watch the bot 👆 walk across the card.</div></div>';
+
+  h+='<div class="preset-row">'
+    +'<div class="pchip pv" onclick="setCard3(\'4532015112830366\')">4532 0151 1283 0366 ✓</div>'
+    +'<div class="pchip px" onclick="setCard3(\'4532015112830367\')">4532 0151 1283 0367 ✗</div>'
+    +'<div class="pchip pv" onclick="setCard3(\'79927398713\')">7992 7398 713 ✓</div>'
+    +'</div>'
+    +'<div class="inp-row"><label>Try your card:</label>'
+    +'<input class="cin" id="cin3" value="'+traceCard+'" maxlength="19" placeholder="digits…" oninput="fmtIn(this)">'
+    +'<button class="go-btn" onclick="regenCard3()">▶</button></div>';
+
+  h+='<div class="snav">'
+    +'<button class="snbtn" id="b3p" onclick="t3step(-1)"'+(traceIdx<0?' disabled':'')+'>← Prev</button>'
+    +'<div class="step-mid"><div class="step-lbl" id="b3lbl">'+(traceIdx<0?'Press Next → to start the walk':'Step '+(traceIdx+1)+' of '+(total-1))+'</div>'
+    +'<div class="sdots" id="b3dots">'+dots(total-1,traceIdx)+'</div></div>'
+    +'<button class="snbtn" id="b3n" onclick="t3step(1)">Next →</button>'
+    +'<button class="snbtn play" id="b3a" onclick="toggle3auto()">▶ Auto</button>'
+    +'<button class="snbtn" id="b3slow" onclick="toggleSpeed()">🐢 Slow</button>'
+    +'<button class="snbtn" onclick="traceIdx=-1;renderPh3()">↺</button>'
+    +'</div>';
+
+  h+='<div class="tower-wrap"><div class="tower" id="tower3">'+buildTower(digs,traceIdx,false)+'</div></div>';
+
+  /* narration */
+  h+='<div class="narration" id="narr3"><div class="nr-label">Checksum Bot</div>';
+  if(traceIdx<0){
+    h+='The 3D blocks show each digit of the card. I will visit them one by one, <strong>right to left</strong>. Watch the 👆 arrow move. Press <strong>Next →</strong> to begin.';
+  } else if(traceIdx<traceData.length-1){
+    var s=traceData[traceIdx];
+    h+='<strong>Step '+(traceIdx+1)+'</strong> — I am now at position <strong>'+s.pos+'</strong> from the right (digit = <strong>'+s.d+'</strong>). '
+      +(s.isChk?'This is the <strong style="color:var(--gold)">check digit 👑</strong>. I add it exactly as it is.'
+      :s.dbl?'This position is <strong style="color:var(--purple)">even ('+s.pos+') so it is a Double Zone 🛡</strong>. I need to double this digit.'
+      :'Position '+s.pos+' is odd. This is a <strong>plain digit</strong>. I add it as-is.')
+      +' Running total = <strong style="color:var(--gold)">'+s.total+'</strong>.';
+  } else {
+    var last=traceData[traceData.length-1];
+    h+='<strong>All '+digs.length+' digits visited!</strong> Final total = <strong style="color:var(--gold)">'+last.total+'</strong>. '+(last.valid?'<strong style="color:var(--green)">'+last.total+' ÷ 10 = '+Math.floor(last.total/10)+' remainder 0 → VALID ✓</strong>':'<strong style="color:var(--red)">'+last.total+' ÷ 10 remainder '+last.total%10+' → INVALID ✗</strong>');
+  }
+  h+='</div>';
+
+  /* treasure */
+  var upTo=(traceIdx>=0&&traceIdx<traceData.length)?traceIdx:-1;
+  var chestTotal=upTo>=0?traceData[Math.min(upTo,traceData.length-2)].total:0;
+  if(upTo>=traceData.length-1) chestTotal=traceData[traceData.length-1].total;
+  h+='<div class="treasure"><div class="tr-icon">'+(chestTotal>0?'💰':'🔒')+'</div>'
+    +'<div class="tr-info"><div class="tr-total">'+chestTotal+'</div><div class="tr-label">running total — grows with each digit</div></div>'
+    +'<div class="tr-coins">';
+  var upToCoins=Math.min(upTo,traceData.length-2);
+  for(var ci=0;ci<=upToCoins&&ci<traceData.length-1;ci++){
+    h+='<div class="coin'+(ci===upToCoins?' fresh':'')+'">'+traceData[ci].val+'</div>';
+  }
+  h+='</div></div>';
+
+  /* result */
+  if(traceIdx>=traceData.length-1){
+    var last2=traceData[traceData.length-1];
+    var conf='';
+    if(last2.valid){
+      var colors=['#F59E0B','#3B82F6','#10B981','#8B5CF6'];
+      for(var ci2=0;ci2<20;ci2++){var sz=5+Math.random()*4;conf+='<div class="cbit" style="left:'+(Math.random()*100)+'%;width:'+sz+'px;height:'+sz+'px;background:'+colors[ci2%4]+';animation-duration:'+(0.8+Math.random()*.9)+'s;animation-delay:'+(Math.random()*.5)+'s"></div>';}
+    }
+    h+='<div class="result-big '+(last2.valid?'rv':'ri')+'">'
+      +'<div class="confwrap">'+conf+'</div>'
+      +'<div style="font-size:36px;margin-bottom:6px">'+(last2.valid?'🎉':'🚫')+'</div>'
+      +'<div style="font-size:20px;font-weight:700;color:'+(last2.valid?'var(--green)':'var(--red)')+'">'+(last2.valid?'VALID CARD':'INVALID CARD')+'</div>'
+      +'<div style="font-size:13px;color:var(--tx2);margin-top:5px">Total = '+last2.total+' | remainder = '+last2.total%10+' | '+(last2.valid?'0 remainder → vault opens 🚪✅':'non-zero remainder → vault locked 🚪🔒')+'</div>'
+      +'</div>';
+  }
+
+  /* trace table */
+  h+='<div style="overflow-x:auto;width:100%"><table class="ttbl">'
+    +'<tr><th>Step</th><th>Digit</th><th>Position</th><th>Type</th><th>Value added</th><th>Running total</th></tr>';
+  traceData.forEach(function(s,i){
+    if(s.final){
+      h+='<tr class="tf"><td colspan="6" style="text-align:center;color:'+(s.valid?'var(--green)':'var(--red)') +'">'+
+        (s.valid?'✓ Total '+s.total+' → divisible by 10 → VALID':'✗ Total '+s.total+' → NOT divisible by 10 → INVALID')+'</td></tr>';
+      return;
+    }
+    var cl=i===traceIdx?'ta':i<traceIdx?'td':'';
+    h+='<tr class="'+cl+'"><td>'+(i+1)+'</td><td style="font-size:14px;font-weight:700">'+s.d+'</td>'
+      +'<td><span class="bno">'+s.pos+'</span></td>'
+      +'<td>'+(s.isChk?'<span class="bok">👑 check</span>':s.dbl?'<span class="bmod">🛡 double'+(s.over?' + split':'')+'</span>':'<span class="bno">plain</span>')+'</td>'
+      +'<td style="font-weight:700;color:'+(s.dbl?'var(--purple)':s.isChk?'var(--gold)':'var(--tx2)')+'">'+
+        (s.dbl&&s.over?s.d+'×2='+s.d2+' → split='+s.val:s.dbl?s.d+'×2='+s.val:String(s.d))+'</td>'
+      +'<td style="font-weight:700;color:var(--gold)">'+s.total+'</td></tr>';
+  });
+  h+='</table></div>';
+
+  h+=navRow(true,'Next: the Double Zone →');
+  document.getElementById('ph3').innerHTML=h;
+}
+
+function fmtIn(el){var v=el.value.replace(/\D/g,'');var out='';for(var i=0;i<v.length;i++){if(i>0&&i%4===0)out+=' ';out+=v[i];}el.value=out.slice(0,19);}
+function setCard3(n){traceCard=n.replace(/\D/g,'');traceIdx=-1;traceData=buildLuhn(traceCard);renderPh3();}
+function regenCard3(){var el=document.getElementById('cin3');if(el)traceCard=el.value.replace(/\D/g,'');traceData=buildLuhn(traceCard);traceIdx=-1;renderPh3();}
+function t3step(dir){traceIdx+=dir;if(traceIdx<-1)traceIdx=-1;if(traceIdx>traceData.length-1)traceIdx=traceData.length-1;renderPh3();}
+function toggle3auto(){
+  var btn=document.getElementById('b3a');
+  if(autoRun){clearInterval(autoTimer);autoRun=false;if(btn){btn.textContent='▶ Auto';btn.className='snbtn play';}return;}
+  autoRun=true;if(btn){btn.textContent='⏸ Pause';btn.className='snbtn';}
+  autoTimer=setInterval(function(){
+    if(traceIdx>=traceData.length-1){clearInterval(autoTimer);autoRun=false;var b=document.getElementById('b3a');if(b){b.textContent='▶ Auto';b.className='snbtn play';}return;}
+    traceIdx++;renderPh3();
+  },autoSpeed);
+}
+function toggleSpeed(){
+  autoSpeed=autoSpeed===1400?2400:1400;
+  var btn=document.getElementById('b3slow');
+  if(btn)btn.textContent=autoSpeed===2400?'🐇 Fast':'🐢 Slow';
+}
+
+/* ════════════════════════════════════════
+   PHASE 4 — DOUBLE ZONE (3D with zones highlighted)
+════════════════════════════════════════ */
+function renderPh4(){
+  var digs='4532015112830366'.split('').map(Number);
+  var n=digs.length;
+  var h='';
+  h+='<div class="scene-title"><div class="scene-tag" style="color:var(--purple)">Scene 5 · The Double Zone</div>'
+    +'<div class="scene-h">How do we know which digits to double?</div>'
+    +'<div class="scene-sub">Not every digit is doubled. The rule is simple: count the position from the right. Even positions (2, 4, 6...) get shields. Odd positions are plain. Position 0 is special — the check digit, never doubled.</div></div>';
+
+  /* 3D tower with zones shown */
+  h+='<div class="tower-wrap"><div class="tower">';
+  digs.forEach(function(d,i){
+    var pos=n-1-i;
+    var isChk=pos===0, isDbl=(!isChk&&pos%2===1);
+    var cls='dblock '+(isChk?'s-check':isDbl?'s-zone':'s-plain');
+    h+='<div class="'+cls+'">'
+      +(isDbl?'<div class="shield-pin">🛡</div>':'')
+      +(isChk?'<div class="check-crown">👑</div>':'')
+      +'<div class="bv">'+d+'</div>'
+      +'<div class="bl">'+(isChk?'check':isDbl?'×2':'plain')+'</div>'
+      +'<div class="bbot">p'+pos+'</div>'
+      +'</div>';
+  });
+  h+='</div></div>';
+
+  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;justify-content:center">'
+    +'<span style="font-size:12px;color:var(--purple)">🛡 = position 1,3,5... from right → double it</span>'
+    +'<span style="font-size:12px;color:var(--gold)">👑 = position 0 → check digit, never doubled</span>'
+    +'<span style="font-size:12px;color:var(--tx3)">white = position 2,4,6... → plain, add as-is</span>'
+    +'</div>';
+
+  /* wait — let students check themselves */
+  h+='<div class="icard" style="margin-bottom:12px">'
+    +'<div class="ictitle">Why every SECOND digit?</div>'
+    +'<div class="ictext">The alternating pattern creates a <strong>mathematical fingerprint</strong>. If you mistype any single digit — say 5 instead of 6 — the fingerprint changes. The total no longer divides by 10. The vault stays locked. One wrong digit, anywhere, gets caught instantly.</div>'
+    +'</div>';
+
+  /* Position table */
+  h+='<div style="overflow-x:auto;width:100%;margin-bottom:14px"><table class="ttbl">'
+    +'<tr><th>Digit</th><th>Value</th><th>Position from right</th><th>Is position even (not 0)?</th><th>Treatment</th></tr>';
+  digs.forEach(function(d,i){
+    var pos=n-1-i;
+    var isChk=pos===0, isDbl=(!isChk&&pos%2===1);
+    h+='<tr>'
+      +'<td style="font-size:14px;font-weight:700">'+d+'</td>'
+      +'<td>digit '+d+'</td>'
+      +'<td><span class="bno">'+pos+'</span></td>'
+      +'<td>'+(isChk?'<span class="bok">special (check digit)</span>':isDbl?'<span class="bmod">YES → 🛡 Double Zone</span>':'<span class="bno">No (odd position)</span>')+'</td>'
+      +'<td style="color:'+(isChk?'var(--gold)':isDbl?'var(--purple)':'var(--tx3)')+';font-weight:600">'+(isChk?'Add as-is 👑':isDbl?'Double it 🛡':'Add as-is')+'</td>'
+      +'</tr>';
+  });
+  h+='</table></div>';
+
+  h+=miniQ('ph4-q1','Digit at position 6 from the right. What happens?',
+    ['Add it as-is','Double it — position 6 is even (not 0)','Skip it','It is the check digit'],
+    1,'Position 6 is an even number and it is not position 0. So it is a Double Zone digit. It gets multiplied by 2 before being added to the total.');
+
+  h+=miniQ('ph4-q2','Digit at position 5 from the right. What happens?',
+    ['Double it — position 5 is even','Add as-is — position 5 is odd','It is the check digit','Skip it'],
+    1,'Position 5 is an odd number. Odd positions are plain. No doubling. The digit value is added directly to the running total.');
+
+  h+=navRow(true,'Next: the Split Hammer →');
+  document.getElementById('ph4').innerHTML=h;
+}
+
+/* ════════════════════════════════════════
+   PHASE 5 — SPLIT HAMMER
+════════════════════════════════════════ */
+function renderPh5(){
+  var h='';
+  h+='<div class="scene-title"><div class="scene-tag" style="color:var(--amber)">Scene 6 · The Split Hammer</div>'
+    +'<div class="scene-h">What if doubling gives two digits?</div>'
+    +'<div class="scene-sub">Doubling a digit can produce 10 or more. We cannot add a 2-digit number into a single slot. The Split Hammer breaks it down into one digit.</div></div>';
+
+  /* 3D illustration of split */
+  var cases=[{d:5,d2:10,over:true,d1:1,d2r:0,res:1},{d:7,d2:14,over:true,d1:1,d2r:4,res:5},{d:8,d2:16,over:true,d1:1,d2r:6,res:7},{d:9,d2:18,over:true,d1:1,d2r:8,res:9},{d:4,d2:8,over:false,res:8},{d:3,d2:6,over:false,res:6}];
+
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px;width:100%">';
+  cases.forEach(function(c){
+    h+='<div class="icard" style="padding:12px;margin-bottom:0">';
+    h+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+    h+='<div class="dblock s-zone" style="transform:none;box-shadow:none;width:44px;height:54px"><div class="bv" style="font-size:18px">'+c.d+'</div><div class="bl">×2</div></div>';
+    h+='<div style="font-size:16px;color:var(--tx3)">×2</div>';
+    h+='<div class="dblock '+(c.over?'s-check':'s-done')+'" style="transform:none;box-shadow:none;width:44px;height:54px"><div class="bv" style="font-size:18px">'+c.d2+'</div><div class="bl">'+(c.over?'too big!':'fine')+'</div></div>';
+    if(c.over){
+      h+='<div style="font-size:14px;color:var(--amber)">🔨</div>';
+      h+='<div class="split-block" style="padding:6px 10px">'
+        +'<div class="spl-big" style="font-size:16px">'+c.d2+'</div>'
+        +'<div class="spl-math">'+c.d1+'+'+c.d2r+'</div>'
+        +'<div class="spl-res" style="font-size:18px">'+c.res+'</div></div>';
+    } else {
+      h+='<div style="font-size:14px;color:var(--tx3)">→</div>';
+      h+='<div class="dblock s-done" style="transform:none;box-shadow:none;width:44px;height:54px"><div class="bv" style="font-size:18px">'+c.res+'</div><div class="bl">use it</div></div>';
+    }
+    h+='</div></div>';
+  });
+  h+='</div>';
+
+  h+='<div class="icard">'
+    +'<div class="ictitle">The pattern for the Split Hammer</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px">'
+    +'<div style="background:var(--s2);border-radius:7px;padding:10px;text-align:center"><div style="font-size:13px;font-weight:600;color:var(--amber);margin-bottom:5px">Result ≥ 10?</div><div style="font-size:12px;color:var(--tx2)">Use the Split Hammer<br>Add the two digits<br>Always gives 1–9</div></div>'
+    +'<div style="background:var(--s2);border-radius:7px;padding:10px;text-align:center"><div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:5px">Result ≤ 9?</div><div style="font-size:12px;color:var(--tx2)">No hammer needed<br>Use the result directly<br>Already a single digit</div></div>'
+    +'<div style="background:var(--s2);border-radius:7px;padding:10px;text-align:center"><div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:5px">Largest possible?</div><div style="font-size:12px;color:var(--tx2)">9 × 2 = 18<br>1+8 = 9<br>Always ≤ 9 after split</div></div>'
+    +'</div></div>';
+
+  h+=miniQ('ph5-q1','Digit 6 is in the Double Zone. 6×2=12. What goes into the total?',
+    ['12','6','3','1+2=3'],
+    3,'12 is ≥ 10. Apply the Split Hammer: 1+2=3. The value added to the total is 3.');
+
+  h+=miniQ('ph5-q2','Digit 4 is in the Double Zone. 4×2=8. What goes into the total?',
+    ['4','16','8','2'],
+    2,'8 is ≤ 9. No Split Hammer needed. The value added to the total is 8 directly.');
+
+  h+=navRow(true,'Next: the full run →');
+  document.getElementById('ph5').innerHTML=h;
+}
+
+/* ════════════════════════════════════════
+   PHASE 6 — FULL CINEMATIC RUN
+════════════════════════════════════════ */
+function renderPh6(){
+  traceData=buildLuhn(traceCard);
+  var digs=traceData[0].digs, total=traceData.length;
+  var s=traceIdx>=0&&traceIdx<traceData.length?traceData[traceIdx]:null;
+  var h='';
+
+  h+='<div class="scene-title"><div class="scene-tag" style="color:var(--green)">Scene 7 · The Full Investigation</div>'
+    +'<div class="scene-h">Every step. Every digit. One final decision.</div>'
+    +'<div class="scene-sub">All the pieces together. Watch the bot walk, collect coins, and open — or lock — the vault.</div></div>';
+
+  h+='<div class="preset-row">'
+    +'<div class="pchip pv" onclick="setCard6(\'4532015112830366\')">4532 0151 1283 0366 ✓</div>'
+    +'<div class="pchip px" onclick="setCard6(\'4532015112830367\')">4532 0151 1283 0367 ✗</div>'
+    +'<div class="pchip pv" onclick="setCard6(\'79927398713\')">7992 7398 713 ✓</div>'
+    +'<div class="pchip px" onclick="setCard6(\'1234567890123456\')">1234 5678 9012 3456 ✗</div>'
+    +'</div>'
+    +'<div class="inp-row"><label>Your card:</label>'
+    +'<input class="cin" id="cin6" value="'+traceCard+'" maxlength="19" placeholder="digits…" oninput="fmtIn(this)">'
+    +'<button class="go-btn" onclick="regenCard6()">▶</button></div>';
+
+  /* controls */
+  h+='<div class="snav">'
+    +'<button class="snbtn" id="b6p" onclick="t6step(-1)"'+(traceIdx<0?' disabled':'')+'>← Prev</button>'
+    +'<div class="step-mid"><div class="step-lbl" id="b6lbl">'+(traceIdx<0?'Press Next → or Auto to begin':'Step '+(traceIdx+1)+' of '+(total-1))+'</div>'
+    +'<div class="sdots" id="b6dots">'+dots(total-1,traceIdx)+'</div></div>'
+    +'<button class="snbtn" id="b6n" onclick="t6step(1)">Next →</button>'
+    +'<button class="snbtn play" id="b6a" onclick="toggle6auto()">▶ Auto</button>'
+    +'<button class="snbtn slow" id="b6slow" onclick="toggleSpeed6()">🐢 Slow</button>'
+    +'<button class="snbtn" onclick="traceIdx=-1;renderPh6()">↺ Reset</button>'
+    +'</div>';
+
+  /* 3D tower with zones */
+  h+='<div class="tower-wrap"><div class="tower" id="tower6">'+buildTower(digs,traceIdx,true)+'</div></div>';
+
+  /* op box */
+  h+='<div class="op-box" id="ob6">'+opBox(s)+'</div>';
+
+  /* narration */
+  h+='<div class="narration" id="narr6"><div class="nr-label">Checksum Bot 🤖</div>';
+  if(traceIdx<0){
+    h+='I am ready. I can see all '+digs.length+' digits. 🛡 shields mark the Double Zone. 👑 marks the check digit. Press <strong>Next →</strong> or <strong>Auto</strong> to begin.';
+  } else if(traceIdx<traceData.length-1){
+    var st=traceData[traceIdx];
+    h+='<strong>Step '+(traceIdx+1)+' of '+(traceData.length-1)+'</strong> &nbsp;·&nbsp; ';
+    if(st.isChk) h+='Position 0 — the <strong style="color:var(--gold)">check digit 👑</strong>. Value = '+st.d+'. Added as-is. Total → <strong style="color:var(--gold)">'+st.total+'</strong>';
+    else if(st.dbl&&st.over) h+='Position '+st.pos+' — <strong style="color:var(--purple)">Double Zone 🛡</strong>. '+st.d+' × 2 = '+st.d2+'. Too big! 🔨 Split: '+Math.floor(st.d2/10)+'+'+st.d2%10+'=<strong style="color:var(--amber)">'+st.val+'</strong>. Total → <strong style="color:var(--gold)">'+st.total+'</strong>';
+    else if(st.dbl) h+='Position '+st.pos+' — <strong style="color:var(--purple)">Double Zone 🛡</strong>. '+st.d+' × 2 = <strong style="color:var(--purple)">'+st.d2+'</strong>. Fine (≤9). Total → <strong style="color:var(--gold)">'+st.total+'</strong>';
+    else h+='Position '+st.pos+' — plain digit. Value = '+st.d+'. Added as-is. Total → <strong style="color:var(--gold)">'+st.total+'</strong>';
+  } else {
+    var last=traceData[traceData.length-1];
+    h+='All '+digs.length+' digits visited. Final total = <strong style="color:var(--gold)">'+last.total+'</strong>. '
+      +(last.valid?last.total+' ÷ 10 = '+Math.floor(last.total/10)+' remainder <strong style="color:var(--green)">0</strong>. <strong style="color:var(--green)">VAULT OPENS! ✓</strong>'
+      :last.total+' ÷ 10 remainder = <strong style="color:var(--red)">'+last.total%10+'</strong>. <strong style="color:var(--red)">VAULT STAYS LOCKED ✗</strong>');
+  }
+  h+='</div>';
+
+  /* treasure */
+  var upTo=(traceIdx>=0&&traceIdx<traceData.length)?Math.min(traceIdx,traceData.length-2):-1;
+  var upToFull=traceIdx>=traceData.length-1;
+  var chestTotal=upToFull?traceData[traceData.length-1].total:(upTo>=0?traceData[upTo].total:0);
+  h+='<div class="treasure" id="tr6"><div class="tr-icon">'+(chestTotal>0?'💰':'🔒')+'</div>'
+    +'<div class="tr-info"><div class="tr-total">'+chestTotal+'</div><div class="tr-label">running total</div></div>'
+    +'<div class="tr-coins">';
+  var coinUpTo=upToFull?traceData.length-2:upTo;
+  for(var ci=0;ci<=coinUpTo&&ci<traceData.length-1;ci++){
+    h+='<div class="coin'+(ci===coinUpTo&&coinUpTo>=0?' fresh':'')+'">'+traceData[ci].val+'</div>';
+  }
+  h+='</div></div>';
+
+  /* result */
+  if(traceIdx>=traceData.length-1){
+    var last2=traceData[traceData.length-1],v=last2.valid;
+    var conf='';
+    if(v){var cl2=['#F59E0B','#3B82F6','#10B981','#8B5CF6'];for(var ci2=0;ci2<22;ci2++){var sz=5+Math.random()*4;conf+='<div class="cbit" style="left:'+(Math.random()*100)+'%;width:'+sz+'px;height:'+sz+'px;background:'+cl2[ci2%4]+';animation-duration:'+(0.8+Math.random()*.9)+'s;animation-delay:'+(Math.random()*.5)+'s"></div>';}}
+    h+='<div class="result-big '+(v?'rv':'ri')+'">'
+      +'<div class="confwrap">'+conf+'</div>'
+      +'<div style="font-size:38px;margin-bottom:6px">'+(v?'🎉':'🚫')+'</div>'
+      +'<div style="font-size:22px;font-weight:700;color:'+(v?'var(--green)':'var(--red)')+'">'+(v?'VALID CARD':'INVALID CARD')+'</div>'
+      +'<div style="font-size:13px;color:var(--tx2);margin-top:6px">Total = '+last2.total+' | '+last2.total+' ÷ 10 = '+Math.floor(last2.total/10)+' remainder <strong style="font-size:16px;color:'+(v?'var(--green)':'var(--red)')+'">'+last2.total%10+'</strong></div>'
+      +'<div style="font-size:13px;margin-top:5px;color:'+(v?'var(--green)':'var(--red)')+'">Remainder = 0 → vault opens</div>'
+      +'</div>';
+
+    /* thinking pattern */
+    h+='<div class="icard" style="width:100%;margin-top:2px">'
+      +'<div class="ictitle">The detective\'s thinking pattern — works for any problem</div>'
+      +'<div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-top:8px">'
+      +'<div style="display:flex;flex-direction:column;align-items:center;gap:0;min-width:150px">';
+    var fsteps=[['var(--blue)','Big problem arrives'],['var(--tx2)','Break into pieces'],['var(--tx2)','Visit ONE piece'],['var(--purple)','Apply the rule'],['var(--tx2)','Remember result'],['var(--amber)','Repeat for every piece'],['var(--green)','Final decision']];
+    fsteps.forEach(function(s2,i){
+      h+='<div style="background:var(--s2);border:1px solid '+s2[0]+'44;border-radius:7px;padding:5px 12px;font-size:11px;color:'+s2[0]+';width:100%;text-align:center">'+s2[1]+'</div>';
+      if(i<fsteps.length-1) h+='<div style="font-size:13px;color:var(--tx3);padding:1px 0;text-align:center">↓</div>';
+    });
+    h+='</div><div class="ictext" style="flex:1;min-width:200px">This exact thinking pattern — visit one piece, apply a rule, remember, repeat, decide — is the same logic used in DNA analysis, vowel counting, digit reversal, and thousands of real-world programs.<br><br><strong style="color:var(--tx)">Learn one pattern. Apply it everywhere.</strong></div>'
+    +'</div></div>';
+  }
+
+  h+=navRow(true,'Explore more programs →');
+  document.getElementById('ph6').innerHTML=h;
+}
+
+function setCard6(n){traceCard=n.replace(/\D/g,'');traceIdx=-1;traceData=buildLuhn(traceCard);renderPh6();}
+function regenCard6(){var el=document.getElementById('cin6');if(el)traceCard=el.value.replace(/\D/g,'');traceData=buildLuhn(traceCard);traceIdx=-1;renderPh6();}
+function t6step(dir){traceIdx+=dir;if(traceIdx<-1)traceIdx=-1;if(traceIdx>traceData.length-1)traceIdx=traceData.length-1;renderPh6();}
+function toggle6auto(){
+  var btn=document.getElementById('b6a');
+  if(autoRun){clearInterval(autoTimer);autoRun=false;if(btn){btn.textContent='▶ Auto';btn.className='snbtn play';}return;}
+  autoRun=true;if(btn){btn.textContent='⏸ Pause';btn.className='snbtn';}
+  autoTimer=setInterval(function(){
+    if(traceIdx>=traceData.length-1){clearInterval(autoTimer);autoRun=false;var b=document.getElementById('b6a');if(b){b.textContent='▶ Auto';b.className='snbtn play';}return;}
+    traceIdx++;renderPh6();
+  },autoSpeed);
+}
+function toggleSpeed6(){
+  autoSpeed=autoSpeed===1400?2600:1400;
+  var btn=document.getElementById('b6slow');
+  if(btn)btn.textContent=autoSpeed===2600?'🐇 Fast':'🐢 Slow';
+}
+
+/* ════════════════════════════════════════
+   BOOT
+════════════════════════════════════════ */
+traceData=buildLuhn(traceCard);
+buildTabs();
+renderPh0();renderPh1();renderPh2();renderPh3();renderPh4();renderPh5();renderPh6();
+</script>
+</body>
+</html>

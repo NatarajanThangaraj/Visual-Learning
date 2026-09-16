@@ -18,10 +18,11 @@ Vercel would.
 Visual-Learning/
 ├── catalyst.json        # Slate config — hosts the client/ folder
 ├── client-src/          # ← React + Vite SOURCE (you develop here)
+│   ├── scripts/         # prerender-routes.mjs — a real page per route
 │   ├── package.json     # scripts: dev / build / preview / deploy:build
 │   ├── vite.config.js   # base '/' (VITE_BASE_PATH override), outDir dist
 │   ├── index.html       # dev entry
-│   ├── public/          # the projects: <category>/<slug>/index.html + thumb.png
+│   ├── public/labs/     # the projects: <category>/<slug>/index.html + thumb.png
 │   └── src/
 │       ├── main.jsx     # BrowserRouter (basename from BASE_URL)
 │       ├── App.jsx      # routes — all wrapped in AppShell
@@ -55,15 +56,27 @@ So a page is `/java/my-expense-tracker`, and the module is not in the URL: lesso
 unique within a course, and leaving the module out means reorganising the modules never
 breaks a link.
 
-**No URL ends in a file name.** The pages are still real files under `public/`
-(`/java/my-expense-tracker/index.html`), but nothing links to that path — the lab is
-*fetched* and handed to the frame as `srcdoc` (the host sends `X-Frame-Options: DENY`, so
-a plain `<iframe src>` would be blocked). "New tab" and the mobile hand-off go to the
-`/full` route instead. Those direct file URLs still resolve, so old links stay valid.
+**No URL ends in a file name.** The pages are still real files, under
+`public/labs/` (`/labs/java/my-expense-tracker/index.html`), but nothing links to that path
+— the lab is *fetched* and handed to the frame as `srcdoc` (the host sends
+`X-Frame-Options: DENY`, so a plain `<iframe src>` would be blocked). "New tab" and the
+mobile hand-off go to the `/full` route instead.
 
-Catalyst Slate serves an exact file if one is there and falls back to `404.html` (a copy of
-`index.html`) otherwise — it never serves a directory index. That fallback is what makes
-`/java/my-expense-tracker` reach the app at all.
+### How a route reaches the app
+
+The host does exactly two things: it serves a file that exists, and it serves a directory's
+`index.html`. There is **no fallback for unknown paths** — the `404` key in
+`client-package.json` is not a Catalyst feature, and the live site answered `/browse` and
+`/java` with its own 404 page rather than ours.
+
+So `scripts/prerender-routes.mjs` writes a real `index.html` into a directory for every
+route — the courses, every lesson, every `/full`, the `/learn/…` redirects and the `others/`
+spelling. `deploy:build` runs it after the copy into `client/`. Add a lesson and its routes
+appear on the next build; nothing to maintain by hand.
+
+This is also why the labs live under `public/labs/`. A lab sitting at `java/<id>/index.html`
+would occupy the lesson's own URL, and the host would answer `/java/<id>` with the bare lab
+instead of the app — which is exactly what it used to do.
 
 ### Old URLs
 
@@ -109,7 +122,7 @@ cd ../client && python3 -m http.server 4599
 
 Everything is registered in **one file**: `client-src/src/data/courses.js`.
 
-1. Drop the self-contained folder at `client-src/public/<folder>/<id>/index.html`
+1. Drop the self-contained folder at `client-src/public/labs/<folder>/<id>/index.html`
    (plus a `thumb.png` screenshot beside it), where `<folder>` is the course's `folder`
    field — `java`, `python` or `others`.
 2. Add one entry to the right module's `lessons` array — identity only, no paths:
@@ -144,8 +157,8 @@ full checklist.
 
 > If assets 404 because Catalyst mounts the client under a subpath, rebuild with
 > `VITE_BASE_PATH=/app/ npm run deploy:build`, commit, push, Sync. The router adapts
-> automatically. Deep links / refreshes work via `client/404.html` (a copy of
-> `index.html`) registered in `client/client-package.json`.
+> automatically. Deep links and refreshes work because every route is a real
+> `index.html` on disk — see **How a route reaches the app** above.
 
 ---
 

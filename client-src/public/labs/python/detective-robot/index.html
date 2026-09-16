@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detective Robot</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060810;--s1:#0A0F1C;--s2:#0F1728;--s3:#151F38;
+  --bd:#1E2E50;--bd2:#2A4070;
+  --tx:#E8F2FF;--tx2:#7A9AC0;--tx3:#3A5070;
+  --blue:#3B82F6;--bluebg:#05101E;--bluebd:#1E3A6E;
+  --green:#10B981;--greenbg:#030E08;--greenbd:#0D4030;
+  --amber:#F59E0B;--amberbg:#120900;
+  --red:#EF4444;--redbg:#0E0404;
+  --purple:#8B5CF6;--purplebg:#070518;
+  --teal:#06B6D4;--tealbg:#021618;
+  --gold:#FFD60A;--goldbg:#120E00;
+  --mono:'Courier New',monospace;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── TOP BAR ── */
+.topbar{background:var(--s1);border-bottom:1px solid var(--bd);padding:9px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;height:52px}
+.tb-logo{font-size:20px}
+.tb-title{font-size:14px;font-weight:700;color:var(--tx)}
+.tb-sub{font-size:10px;color:var(--tx3);margin-top:1px}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.score-pill{background:var(--s2);border:1px solid var(--bd);border-radius:20px;padding:3px 12px;font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:5px}
+.score-pill span{font-weight:700;color:var(--gold)}
+
+/* ── MISSION TABS ── */
+.mission-bar{background:var(--s1);border-bottom:1px solid var(--bd);padding:0 14px;display:flex;gap:1px;flex-shrink:0;overflow-x:auto;height:40px;align-items:stretch}
+.mtab{padding:0 12px;font-size:11px;font-weight:600;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.12s;user-select:none;display:flex;align-items:center;gap:5px}
+.mtab:hover{color:var(--tx2)}
+.mtab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.mtab.done{color:var(--green)}
+
+/* ── PHASE PILLS ── */
+.phase-bar{background:var(--s2);border-bottom:1px solid var(--bd);padding:0 14px;display:flex;gap:4px;align-items:center;flex-shrink:0;height:38px;overflow-x:auto}
+.ppill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;color:var(--tx3);cursor:pointer;border:1px solid var(--bd);transition:.12s;user-select:none;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.ppill:hover{color:var(--tx2);border-color:var(--bd2)}
+.ppill.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.ppill.ph-done{border-color:var(--greenbd);color:var(--green)}
+.ppill .phn{width:14px;height:14px;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1)}
+
+/* ── TWO PANEL BODY ── */
+.body-wrap{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;min-height:0}
+
+/* ── LEFT PANEL ── */
+.left-panel{border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.lp-header{padding:10px 14px;border-bottom:1px solid var(--bd);background:var(--s1);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.lp-header h2{font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.07em}
+.lp-content{flex:1;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px}
+
+/* ── RIGHT PANEL ── */
+.right-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--s1)}
+.rp-header{padding:10px 14px;border-bottom:1px solid var(--bd);background:var(--s2);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.rp-header h2{font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.07em}
+.rp-content{flex:1;overflow-y:auto;padding:12px 14px}
+.rp-content::-webkit-scrollbar{width:4px}
+.rp-content::-webkit-scrollbar-track{background:var(--s2)}
+.rp-content::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+
+/* ── 3D AIRPORT ── */
+.airport-3d{perspective:700px;perspective-origin:50% 38%;width:100%;margin-bottom:8px}
+.airport-floor{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;transform:rotateX(6deg)}
+
+/* ── PASSENGER BLOCK ── */
+.pblock{
+  width:48px;height:64px;
+  background:linear-gradient(160deg,#111828,#070C18);
+  border:1.5px solid var(--bd2);border-radius:9px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;transition:all .4s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 6px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);
+  cursor:default;flex-shrink:0;
+}
+.pblock .pico{font-size:18px;line-height:1;transition:.3s}
+.pblock .pnm{font-size:8px;color:var(--tx3);margin-top:4px;font-weight:600;text-align:center;line-height:1.2;font-family:var(--mono)}
+.pblock .pidx{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--tx3);white-space:nowrap}
+/* states */
+.pblock.ps-active{transform:translateY(-24px) scale(1.18)!important;border-color:#fff!important;background:linear-gradient(160deg,#1A3575,#0C1A40)!important;box-shadow:0 20px 40px rgba(59,130,246,.5),0 0 0 2px rgba(255,255,255,.12)!important}
+.pblock.ps-active .pnm{color:var(--blue)}
+.pblock.ps-match{background:linear-gradient(160deg,#0A2A18,#040E08)!important;border-color:var(--green)!important;box-shadow:0 8px 20px rgba(16,185,129,.25)!important}
+.pblock.ps-match .pnm{color:var(--green)}
+.pblock.ps-no{opacity:.35}
+.pblock.ps-done{background:linear-gradient(160deg,#040E08,#020608)!important;border-color:var(--greenbd)!important}
+.pblock.ps-done .pnm{color:var(--greenbd)}
+.pblock.ps-faded{opacity:.12}
+.pblock.ps-dup{background:linear-gradient(160deg,#120830,#070318)!important;border-color:var(--purple)!important;box-shadow:0 8px 20px rgba(139,92,246,.3)!important}
+.pblock.ps-dup .pnm{color:var(--purple)}
+.bot-pin{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:14px;animation:bob .75s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(3px)}}
+.found-pin{position:absolute;top:-9px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--greenbg);border:1.5px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:9px}
+
+/* ── OP DISPLAY (left panel) ── */
+.op-display{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:10px;width:100%;margin-bottom:6px;min-height:64px;display:flex;align-items:center;justify-content:center}
+.op-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+.op-tile{width:52px;height:52px;border-radius:8px;border:2px solid var(--bd);background:var(--s3);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.op-tile .ov{font-family:var(--mono);font-size:14px;font-weight:700;line-height:1}
+.op-tile .ol{font-size:8px;margin-top:3px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.op-tile.blue{border-color:var(--blue);background:var(--bluebg)}.op-tile.blue .ov,.op-tile.blue .ol{color:var(--blue)}
+.op-tile.green{border-color:var(--green);background:var(--greenbg)}.op-tile.green .ov,.op-tile.green .ol{color:var(--green)}
+.op-tile.amber{border-color:var(--amber);background:var(--amberbg)}.op-tile.amber .ov,.op-tile.amber .ol{color:var(--amber)}
+.op-tile.purple{border-color:var(--purple);background:var(--purplebg)}.op-tile.purple .ov,.op-tile.purple .ol{color:var(--purple)}
+.op-tile.red{border-color:var(--red);background:var(--redbg)}.op-tile.red .ov,.op-tile.red .ol{color:var(--red)}
+.op-arr{font-size:16px;color:var(--tx3);font-weight:700}
+
+/* ── STEP NAV (left panel) ── */
+.step-nav{display:flex;align-items:center;gap:6px;width:100%;flex-wrap:wrap}
+.snbtn{background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;color:var(--tx2);cursor:pointer;transition:.12s;user-select:none;white-space:nowrap}
+.snbtn:hover:not(:disabled){color:var(--tx);border-color:var(--bd2)}
+.snbtn:disabled{opacity:.3;cursor:default}
+.snbtn.play{background:var(--blue);color:#fff;border-color:var(--blue)}
+.snbtn.play:hover{background:#1D5EE0}
+.step-ctr{flex:1;text-align:center;min-width:60px}
+.step-lbl{font-size:11px;color:var(--tx2)}
+.sdots{display:flex;gap:3px;justify-content:center;margin-top:2px}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--bd);transition:.2s}
+.sdot.dcur{background:var(--blue)}.sdot.ddn{background:var(--green)}
+
+/* ── RIGHT PANEL CONTENT ── */
+.sec-lbl{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--tx3);margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--bd)}
+.narr-box{background:var(--s2);border:1px solid var(--bd2);border-radius:9px;padding:10px 12px;font-size:12px;color:var(--tx);line-height:1.7;margin-bottom:10px}
+.narr-label{font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+
+/* trace table */
+.ttbl{width:100%;border-collapse:collapse;font-size:11px}
+.ttbl th{background:var(--s3);color:var(--tx2);padding:5px 8px;border:1px solid var(--bd);font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;text-align:left}
+.ttbl td{padding:5px 8px;border:1px solid var(--bd);font-family:var(--mono);color:var(--tx);font-size:11px;vertical-align:middle}
+.ttbl tr.ta td{background:var(--bluebg);border-color:var(--bluebd)}
+.ttbl tr.td td{background:var(--greenbg);border-color:var(--greenbd);color:var(--green)}
+.ttbl tr.tf td{background:var(--bluebg);border-color:var(--blue);font-weight:700;color:var(--blue)}
+.bok{font-size:9px;padding:1px 5px;border-radius:4px;background:var(--greenbg);color:var(--green);font-weight:600;white-space:nowrap}
+.bno{font-size:9px;padding:1px 5px;border-radius:4px;background:var(--s2);color:var(--tx3);font-weight:600;white-space:nowrap;border:1px solid var(--bd)}
+.bred{font-size:9px;padding:1px 5px;border-radius:4px;background:var(--redbg);color:var(--red);font-weight:600;white-space:nowrap}
+.bpur{font-size:9px;padding:1px 5px;border-radius:4px;background:var(--purplebg);color:var(--purple);font-weight:600;white-space:nowrap}
+.bamb{font-size:9px;padding:1px 5px;border-radius:4px;background:var(--amberbg);color:var(--amber);font-weight:600;white-space:nowrap}
+
+/* result */
+.result-box{border-radius:10px;padding:12px;text-align:center;border:2px solid;margin-bottom:10px;position:relative;overflow:hidden;animation:pop .4s cubic-bezier(.26,1.6,.54,1)}
+.rb-v{background:var(--greenbg);border-color:var(--green)}
+.rb-x{background:var(--redbg);border-color:var(--red)}
+@keyframes pop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+.confwrap{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cbit{position:absolute;border-radius:2px;animation:cfall linear forwards}
+@keyframes cfall{0%{transform:translateY(-6px) rotate(0);opacity:1}100%{transform:translateY(120px) rotate(540deg);opacity:0}}
+
+/* input section */
+.input-section{background:var(--s3);border:1px solid var(--bd);border-radius:9px;padding:10px 12px;margin-bottom:10px}
+.input-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+.input-row:last-child{margin-bottom:0}
+.input-row label{font-size:11px;color:var(--tx2);min-width:70px;font-family:var(--mono)}
+input.fin{background:var(--s2);border:1px solid var(--bd2);border-radius:6px;padding:5px 9px;font-size:13px;font-family:var(--mono);color:var(--tx);outline:none;transition:.12s;width:170px}
+input.fin:focus{border-color:var(--blue)}
+input.fin.short{width:70px}
+.run-btn{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:6px 13px;font-size:11px;font-weight:700;cursor:pointer;transition:.12s}
+.run-btn:hover{background:#1D5EE0}
+
+/* pseudo */
+.pseudo-box{background:var(--s2);border:1px solid var(--bd2);border-radius:9px;padding:11px 13px;font-size:12px;line-height:1.85;margin-bottom:10px}
+.pl{display:flex;align-items:flex-start;gap:7px;margin:1px 0}
+.pl-num{width:16px;text-align:right;color:var(--tx3);font-size:10px;margin-top:2px;font-family:var(--mono);flex-shrink:0}
+.pl-txt{flex:1;line-height:1.6}
+.i1{padding-left:16px}.i2{padding-left:32px}
+.kw{color:var(--blue);font-weight:600}.vv{color:var(--amber);font-weight:600}.rr{color:var(--green);font-weight:600}.cm{color:var(--tx3);font-style:italic}
+
+/* code builder */
+.build-step{background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:7px 10px;cursor:pointer;transition:.12s;display:flex;gap:8px;align-items:flex-start;margin-bottom:4px;user-select:none}
+.build-step:hover{border-color:var(--blue);background:var(--bluebg)}
+.build-step.added{border-color:var(--green);background:var(--greenbg)}
+.bs-n{width:18px;height:18px;border-radius:50%;background:var(--bluebg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px}
+.build-step.added .bs-n{background:var(--greenbg);color:var(--green)}
+.bs-t{font-size:11px;font-weight:600;color:var(--tx);margin-bottom:2px}
+.bs-c{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--s2);padding:2px 5px;border-radius:3px;margin-top:3px;display:inline-block}
+.build-step.added .bs-c{color:var(--green)}
+.code-display{background:#030810;border:1px solid var(--bd);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.85;color:#e2e8f0;min-height:80px;overflow-x:auto;margin-bottom:7px}
+.code-btns{display:flex;gap:6px;margin-bottom:8px}
+.cbtn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:.12s;user-select:none}
+.cbtn.run{background:var(--green);color:#fff;border-color:var(--green)}
+.cbtn.clr{background:var(--s2);color:var(--tx2);border-color:var(--bd)}
+.cbtn.fill{background:var(--s2);color:var(--blue);border-color:var(--bluebd)}
+.out-box{background:#030810;border:1px solid var(--bd);border-radius:7px;padding:8px 11px;font-family:var(--mono);font-size:12px;min-height:36px}
+.out-ok{color:var(--green)}.out-no{color:var(--red)}.out-dim{color:var(--tx3)}
+
+/* quiz */
+.q-card{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:11px 13px;margin-bottom:8px}
+.q-q{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:8px;line-height:1.55}
+.q-opts{display:flex;flex-direction:column;gap:4px}
+.qopt{background:var(--s3);border:1px solid var(--bd);border-radius:6px;padding:7px 10px;font-size:12px;cursor:pointer;color:var(--tx2);transition:.12s;user-select:none}
+.qopt:hover{border-color:var(--bd2);color:var(--tx)}
+.qopt.qok{background:var(--greenbg);border-color:var(--green);color:var(--green)}
+.qopt.qerr{background:var(--redbg);border-color:var(--red);color:var(--red)}
+.qexp{font-size:11px;color:var(--tx2);background:var(--s3);border-radius:5px;padding:7px 9px;margin-top:6px;line-height:1.6;display:none}
+
+/* info cards */
+.info-card{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:10px 12px;margin-bottom:8px}
+.ic-title{font-size:11px;font-weight:700;color:var(--tx);margin-bottom:5px}
+.ic-body{font-size:11px;color:var(--tx2);line-height:1.65}
+.ib-row{display:flex;gap:7px;margin-bottom:7px}
+.ib-row:last-child{margin-bottom:0}
+.ib-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.mission-banner{padding:12px;border-radius:10px;border:1px solid;margin-bottom:10px;text-align:center}
+
+/* nav btns at bottom of right panel */
+.nav-btns{display:flex;gap:7px;margin-top:10px;padding-top:8px;border-top:1px solid var(--bd)}
+.nbtn{padding:7px 15px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:.12s;user-select:none}
+.nbtn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.nbtn.primary:hover{background:#1D5EE0}
+.nbtn.secondary{background:var(--s2);color:var(--tx2);border-color:var(--bd)}
+.nbtn.secondary:hover{background:var(--s3)}
+.nbtn:disabled{opacity:.3;cursor:default}
+
+@media(max-width:700px){
+  .body-wrap{grid-template-columns:1fr}
+  .left-panel{height:45vh;border-right:none;border-bottom:1px solid var(--bd)}
+  .right-panel{height:calc(55vh - 130px)}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-logo">🤖</div>
+  <div>
+    <div class="tb-title">Detective Robot</div>
+    <div class="tb-sub">Find · Count · Search · Detect</div>
+  </div>
+  <div class="tb-right">
+    <div class="score-pill">Score <span id="score-val">0</span></div>
+    <div class="score-pill">Solved <span id="solved-val">0/6</span></div>
+  </div>
+</div>
+
+<!-- MISSION TABS -->
+<div class="mission-bar" id="mission-bar"></div>
+
+<!-- PHASE PILLS -->
+<div class="phase-bar" id="phase-bar"></div>
+
+<!-- TWO PANEL BODY -->
+<div class="body-wrap">
+  <!-- LEFT: 3D visual -->
+  <div class="left-panel">
+    <div class="lp-header">
+      <h2 id="lp-title">3D View</h2>
+      <span id="lp-badge" style="font-size:10px;color:var(--tx3)"></span>
+    </div>
+    <div class="lp-content" id="lp-content"></div>
+  </div>
+  <!-- RIGHT: details -->
+  <div class="right-panel">
+    <div class="rp-header">
+      <h2 id="rp-title">Details</h2>
+      <span id="rp-badge" style="font-size:10px;color:var(--tx3)"></span>
+    </div>
+    <div class="rp-content" id="rp-content"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   PROGRAMS
+═══════════════════════════════════════ */
+var PROGS=[
+{id:'find_char',icon:'🔡',title:'Find a Character',color:'#3B82F6',
+ story:'Airport gate. Find the letter "a" in "programming". The detective checks each letter one by one. The moment it finds "a" — it stops.',
+ question:'Where is the first "a" in "programming"?',
+ defaultVal:{hay:'programming',tgt:'a'},
+ items:['p','r','o','g','r','a','m','m','i','n','g'],
+ icons:['📘','📗','📙','📕','📗','⭐','📘','📘','📙','📕','📗'],
+ stopOnFirst:true, type:'char',
+ run:function(hay,tgt){
+   var items=hay.split(''),steps=[],count=0;
+   for(var i=0;i<items.length;i++){
+     var m=(items[i]===tgt);if(m)count++;
+     steps.push({i:i,item:items[i],match:m,count:count});
+     if(m&&this.stopOnFirst)break;
+   }
+   steps.push({final:true,found:count>0,pos:count>0?steps[steps.length-1].i:-1,count:count,items:items,tgt:tgt});
+   return steps;
+ },
+ pseudo:[
+   {t:'Target: find first "<span class="vv">a</span>" in the word',i:0},
+   {t:'<span class="kw">FOR EACH</span> letter in the word:',i:0},
+   {t:'<span class="kw">IF</span> letter == <span class="vv">target</span>:',i:1},
+   {t:'Report position → <span class="rr">STOP</span>',i:2},
+   {t:'<span class="kw">ELSE:</span> move to next letter',i:1},
+ ],
+ scaffold:[
+   {t:'Set word and target',c:'word = "programming"\ntarget = "a"',ins:'word = "programming"\ntarget = "a"\n'},
+   {t:'Walk each letter with its position',c:'for i in range(len(word)):\n    letter = word[i]',ins:'for i in range(len(word)):\n    letter = word[i]\n'},
+   {t:'Ask: is this the target?',c:'    if letter == target:',ins:'    if letter == target:\n'},
+   {t:'YES — report and stop',c:'        print("Found at position", i)\n        break',ins:'        print("Found at position", i)\n        break\n'},
+ ],
+ quizzes:[
+   {q:'What position is the first "a" in "programming"?',opts:['3','5','6','2'],correct:1,exp:'p(0)r(1)o(2)g(3)r(4)a(5). Position 5.'},
+   {q:'Why does the detective STOP after finding "a"?',opts:['It gets tired','Mission says FIND — one match is enough','The word ends','Random'],correct:1,exp:'A FIND mission stops at the first match. Only COUNT missions keep going.'},
+ ]
+},
+{id:'count_occ',icon:'🔢',title:'Count Occurrences',color:'#10B981',
+ story:'Count every "s" in "mississippi". Unlike finding, counting NEVER stops. The detective must visit every single letter and click the tally counter each time it finds a match.',
+ question:'How many times does "s" appear in "mississippi"?',
+ defaultVal:{hay:'mississippi',tgt:'s'},
+ items:['m','i','s','s','i','s','s','i','p','p','i'],
+ icons:['🎪','💡','⭐','⭐','💡','⭐','⭐','💡','🎈','🎈','💡'],
+ stopOnFirst:false, type:'char',
+ run:function(hay,tgt){
+   var items=hay.split(''),steps=[],count=0;
+   for(var i=0;i<items.length;i++){
+     var m=(items[i]===tgt);if(m)count++;
+     steps.push({i:i,item:items[i],match:m,count:count});
+   }
+   steps.push({final:true,found:count>0,count:count,items:items,tgt:tgt});
+   return steps;
+ },
+ pseudo:[
+   {t:'<span class="vv">count = 0</span> <span class="cm">← tally starts at zero</span>',i:0},
+   {t:'<span class="kw">FOR EACH</span> letter (visit ALL — no stopping):',i:0},
+   {t:'<span class="kw">IF</span> letter == <span class="vv">target</span>:',i:1},
+   {t:'<span class="vv">count = count + 1</span> <span class="cm">← click the tally</span>',i:2},
+   {t:'<span class="rr">Report count</span> after all letters visited',i:0},
+ ],
+ scaffold:[
+   {t:'Set word, target, count = 0',c:'word = "mississippi"\ntarget = "s"\ncount = 0',ins:'word = "mississippi"\ntarget = "s"\ncount = 0\n'},
+   {t:'Walk every letter (no break!)',c:'for letter in word:',ins:'for letter in word:\n'},
+   {t:'If it matches, click counter',c:'    if letter == target:\n        count = count + 1',ins:'    if letter == target:\n        count = count + 1\n'},
+   {t:'Print total (outside loop)',c:'print("Count:", count)',ins:'print("Count:", count)\n'},
+ ],
+ quizzes:[
+   {q:'How many times does "s" appear in "mississippi"?',opts:['2','3','4','5'],correct:2,exp:'m-i-s-s-i-s-s-i-p-p-i. Positions 2,3,5,6 — four "s" letters.'},
+   {q:'Why no break in count missions?',opts:['Break is not allowed in Python','Must count ALL matches — stopping early would give wrong answer','Break only works in while loops','No particular reason'],correct:1,exp:'COUNT missions must visit every single item. A break would stop early and miss some matches, giving a wrong total.'},
+ ]
+},
+{id:'search_word',icon:'🔍',title:'Search a Word',color:'#8B5CF6',
+ story:'Scan the sentence "I love coding in python" word by word. Does "coding" appear? The detective compares each whole word — partial matches do not count.',
+ question:'Is "coding" in "I love coding in python"?',
+ defaultVal:{hay:'I love coding in python',tgt:'coding'},
+ items:['I','love','coding','in','python'],
+ icons:['🙋','❤️','💻','📍','🐍'],
+ stopOnFirst:true, type:'word',
+ run:function(hay,tgt){
+   var items=hay.split(' '),steps=[],count=0;
+   for(var i=0;i<items.length;i++){
+     var m=(items[i]===tgt);if(m)count++;
+     steps.push({i:i,item:items[i],match:m,count:count});
+     if(m&&this.stopOnFirst)break;
+   }
+   steps.push({final:true,found:count>0,pos:count>0?steps[steps.length-1].i:-1,count:count,items:items,tgt:tgt});
+   return steps;
+ },
+ pseudo:[
+   {t:'Split sentence into <span class="vv">individual words</span>',i:0},
+   {t:'<span class="kw">FOR EACH</span> word:',i:0},
+   {t:'<span class="kw">IF</span> word == <span class="vv">target</span> (exact match):',i:1},
+   {t:'Report "Found!" → <span class="rr">STOP</span>',i:2},
+   {t:'<span class="kw">ELSE:</span> next word',i:1},
+ ],
+ scaffold:[
+   {t:'Split sentence into words',c:'words = "I love coding in python".split()\ntarget = "coding"',ins:'words = "I love coding in python".split()\ntarget = "coding"\n'},
+   {t:'Walk each word',c:'for word in words:',ins:'for word in words:\n'},
+   {t:'Exact match check',c:'    if word == target:',ins:'    if word == target:\n'},
+   {t:'Found — stop',c:'        print("Found!")\n        break',ins:'        print("Found!")\n        break\n'},
+ ],
+ quizzes:[
+   {q:'Is "cod" the same as "coding"?',opts:['Yes — contains the letters','No — exact word match only','Yes if at start','Depends'],correct:1,exp:'"cod" ≠ "coding". Word search needs exact whole-word match.'},
+   {q:'What does .split() do?',opts:['Removes vowels','Breaks sentence into list of words','Sorts words','Counts words'],correct:1,exp:'.split() breaks "I love coding in python" into ["I","love","coding","in","python"].'},
+ ]
+},
+{id:'find_num',icon:'🎰',title:'Find a Number',color:'#F59E0B',
+ story:'Scan boarding pass numbers [15, 88, 42, 7, 23, 99]. Find 42. Same thinking as finding a character — only the data type changed.',
+ question:'Where is 42 in [15, 88, 42, 7, 23, 99]?',
+ defaultVal:{hay:'15,88,42,7,23,99',tgt:'42'},
+ items:[15,88,42,7,23,99],
+ icons:['🎫','🎫','⭐','🎫','🎫','🎫'],
+ stopOnFirst:true, type:'num',
+ run:function(hay,tgt){
+   var nums=hay.split(',').map(function(x){return parseInt(x.trim())||0;});
+   var n=parseInt(tgt)||42,steps=[],count=0;
+   for(var i=0;i<nums.length;i++){
+     var m=(nums[i]===n);if(m)count++;
+     steps.push({i:i,item:nums[i],match:m,count:count});
+     if(m&&this.stopOnFirst)break;
+   }
+   steps.push({final:true,found:count>0,pos:count>0?steps[steps.length-1].i:-1,count:count,items:nums,tgt:n});
+   return steps;
+ },
+ pseudo:[
+   {t:'<span class="kw">FOR EACH</span> number in the list:',i:0},
+   {t:'<span class="kw">IF</span> number == <span class="vv">target</span>:',i:1},
+   {t:'Report index → <span class="rr">STOP</span>',i:2},
+   {t:'<span class="kw">ELSE:</span> next number',i:1},
+ ],
+ scaffold:[
+   {t:'Set list and target',c:'numbers = [15, 88, 42, 7, 23, 99]\ntarget = 42',ins:'numbers = [15, 88, 42, 7, 23, 99]\ntarget = 42\n'},
+   {t:'Walk with index',c:'for i in range(len(numbers)):\n    num = numbers[i]',ins:'for i in range(len(numbers)):\n    num = numbers[i]\n'},
+   {t:'Match?',c:'    if num == target:',ins:'    if num == target:\n'},
+   {t:'Found — stop',c:'        print("Found at index", i)\n        break',ins:'        print("Found at index", i)\n        break\n'},
+ ],
+ quizzes:[
+   {q:'First index of 42 in [15,88,42,7,23,99]?',opts:['1','2','3','0'],correct:1,exp:'Index 0=15, 1=88, 2=42. First match at index 2.'},
+   {q:'How is this different from finding a character?',opts:['Completely different','Only data type changed — thinking is identical','Needs a different loop','Must sort first'],correct:1,exp:'Same pattern — walk, compare, stop. Only the items changed from letters to numbers.'},
+ ]
+},
+{id:'check_digit',icon:'🕵️',title:'Check if Digit Exists',color:'#EC4899',
+ story:'Does the digit 9 exist inside 3927? The detective extracts digits one at a time from the right end — the "last digit rule" — and checks each one.',
+ question:'Does digit 9 exist in 3927?',
+ defaultVal:{hay:'3927',tgt:'9'},
+ items:[7,2,9,3],
+ icons:['🔑','🔑','⭐','🔑'],
+ stopOnFirst:true, type:'digit',
+ run:function(hay,tgtStr){
+   var num=Math.abs(parseInt(hay)||3927),tgt=parseInt(tgtStr)||9,steps=[],found=false;
+   var orig=num;
+   while(num>0){
+     var d=num%10,m=(d===tgt),nn=Math.floor(num/10);
+     steps.push({i:steps.length,item:d,match:m,num:num,nn:nn,pos:steps.length});
+     num=nn;
+     if(m){found=true;break;}
+   }
+   steps.push({final:true,found:found,tgt:tgt,orig:orig});
+   return steps;
+ },
+ pseudo:[
+   {t:'<span class="vv">found = False</span> <span class="cm">← assume not found</span>',i:0},
+   {t:'<span class="kw">WHILE</span> number > 0:',i:0},
+   {t:'Last digit = <span class="vv">number ÷ 10 leftover</span>',i:1},
+   {t:'<span class="kw">IF</span> digit == <span class="vv">target</span>: found=True → <span class="rr">STOP</span>',i:1},
+   {t:'Shrink: <span class="vv">number = number ÷ 10 whole part</span>',i:1},
+ ],
+ scaffold:[
+   {t:'Set number, target, found=False',c:'num = 3927\ntarget = 9\nfound = False',ins:'num = 3927\ntarget = 9\nfound = False\n'},
+   {t:'Loop while digits remain',c:'while num > 0:',ins:'while num > 0:\n'},
+   {t:'Extract last digit',c:'    digit = num % 10',ins:'    digit = num % 10\n'},
+   {t:'Match? Set found and stop',c:'    if digit == target:\n        found = True\n        break',ins:'    if digit == target:\n        found = True\n        break\n'},
+   {t:'Remove last digit',c:'    num = num // 10',ins:'    num = num // 10\n'},
+   {t:'Print result',c:'print("Found:", found)',ins:'print("Found:", found)\n'},
+ ],
+ quizzes:[
+   {q:'What does 3927 % 10 give?',opts:['3','9','2','7'],correct:3,exp:'% 10 gives the last (rightmost) digit. 3927 % 10 = 7.'},
+   {q:'After finding digit 9, why do we stop?',opts:['Number is zero','Mission is "check if exists" — one match is enough','We found all digits','% 10 breaks'],correct:1,exp:'"Check if exists" only needs one match. break exits the loop immediately.'},
+ ]
+},
+{id:'find_dup',icon:'👥',title:'Find a Duplicate',color:'#8B5CF6',
+ story:'Find any number that appears twice in [3,1,4,1,5,9,2,6,5]. The detective uses a notebook — every checked number is written in. If the next number is already in the notebook: duplicate!',
+ question:'Find a duplicate in [3,1,4,1,5,9,2,6,5]',
+ defaultVal:{hay:'3,1,4,1,5,9,2,6,5',tgt:''},
+ items:[3,1,4,1,5,9,2,6,5],
+ icons:['🟢','🔵','🟡','🔵','🔴','⚫','🟤','🟠','🔴'],
+ stopOnFirst:true, type:'dup',
+ run:function(hay){
+   var nums=hay.split(',').map(function(x){return parseInt(x.trim());});
+   var steps=[],seen=[],dup=null;
+   for(var i=0;i<nums.length;i++){
+     var isdup=seen.indexOf(nums[i])>=0;
+     if(isdup&&dup===null)dup=nums[i];
+     steps.push({i:i,item:nums[i],isdup:isdup,seen:seen.slice()});
+     if(!isdup)seen.push(nums[i]);
+     if(isdup)break;
+   }
+   steps.push({final:true,found:dup!==null,dup:dup,items:nums});
+   return steps;
+ },
+ pseudo:[
+   {t:'<span class="vv">seen = []</span> <span class="cm">← empty notebook</span>',i:0},
+   {t:'<span class="kw">FOR EACH</span> number:',i:0},
+   {t:'<span class="kw">IF</span> number already in <span class="vv">seen</span>: → <span class="rr">DUPLICATE! STOP</span>',i:1},
+   {t:'<span class="kw">ELSE:</span> add number to seen notebook',i:1},
+ ],
+ scaffold:[
+   {t:'Set list, empty notebook',c:'numbers = [3, 1, 4, 1, 5, 9, 2, 6, 5]\nseen = []',ins:'numbers = [3, 1, 4, 1, 5, 9, 2, 6, 5]\nseen = []\n'},
+   {t:'Walk each number',c:'for num in numbers:',ins:'for num in numbers:\n'},
+   {t:'Already seen?',c:'    if num in seen:',ins:'    if num in seen:\n'},
+   {t:'Yes — duplicate found, stop',c:'        print("Duplicate:", num)\n        break',ins:'        print("Duplicate:", num)\n        break\n'},
+   {t:'No — write in notebook',c:'    else:\n        seen.append(num)',ins:'    else:\n        seen.append(num)\n'},
+ ],
+ quizzes:[
+   {q:'First duplicate in [3,1,4,1,5,9,2,6,5]?',opts:['5','3','1','9'],correct:2,exp:'3→seen, 1→seen, 4→seen, 1 again → already in seen! Duplicate = 1.'},
+   {q:'What is the "seen" list for?',opts:['Sorts numbers','Remembers every checked number so we can detect repeats','Removes duplicates','Counts items'],correct:1,exp:'The seen list is the notebook. Every checked number gets added. If the new number is already there — duplicate found!'},
+ ]
+}
+];
+
+var PHASES=[
+  {icon:'🤔',label:'Mission'},
+  {icon:'💡',label:'Think'},
+  {icon:'👁',label:'3D Walk'},
+  {icon:'📋',label:'Logic'},
+  {icon:'✏️',label:'Code'},
+  {icon:'🧩',label:'Quiz'},
+];
+
+/* ═══════ STATE ═══════ */
+var curProg=0,curPhase=0;
+var stepsData=[],stepIdx=-1;
+var autoTimer=null,autoRun=false,autoSpeed=1300;
+var buildAdded=[],codeLines=[];
+var quizIdx=0,quizAns=[];
+var score=0,solved={},phaseDone={};
+var inputVals={};
+
+function p(){return PROGS[curProg];}
+function addScore(n){score=Math.max(0,score+n);document.getElementById('score-val').textContent=score;}
+function updSolved(){document.getElementById('solved-val').textContent=Object.keys(solved).length+'/6';}
+
+/* ═══════ TABS ═══════ */
+function buildMissionBar(){
+  var c=document.getElementById('mission-bar');
+  c.innerHTML=PROGS.map(function(pg,i){
+    return '<div class="mtab'+(i===curProg?' active':'')+(solved[pg.id]?' done':'')+'" onclick="switchProg('+i+')">'
+      +pg.icon+' '+pg.title+'</div>';
+  }).join('');
+}
+function buildPhaseBar(){
+  var c=document.getElementById('phase-bar'),key=p().id;
+  c.innerHTML=PHASES.map(function(ph,i){
+    var done=phaseDone[key]&&phaseDone[key][i];
+    return '<div class="ppill'+(i===curPhase?' active':'')+(done?' ph-done':'')+'" onclick="goPhase('+i+')">'
+      +'<span class="phn">'+(i+1)+'</span>'+ph.icon+' '+ph.label+'</div>';
+  }).join('');
+}
+function switchProg(i){
+  if(autoRun){clearInterval(autoTimer);autoRun=false;}
+  curProg=i;curPhase=0;stepIdx=-1;stepsData=[];
+  buildAdded=[];codeLines=[];quizIdx=0;quizAns=[];
+  inputVals={hay:p().defaultVal.hay,tgt:p().defaultVal.tgt};
+  buildMissionBar();buildPhaseBar();renderBoth();
+}
+function goPhase(i){
+  if(autoRun){clearInterval(autoTimer);autoRun=false;}
+  curPhase=i;stepIdx=-1;buildPhaseBar();renderBoth();
+}
+function markDone(pi){var key=p().id;if(!phaseDone[key])phaseDone[key]={};phaseDone[key][pi]=true;buildPhaseBar();}
+function nextPhase(){markDone(curPhase);goPhase(Math.min(curPhase+1,PHASES.length-1));}
+function prevPhase(){goPhase(Math.max(curPhase-1,0));}
+
+/* ═══════ RENDER DISPATCHER ═══════ */
+function renderBoth(){
+  var ph=curPhase;
+  if(ph===0){renderMissionLeft();renderMissionRight();}
+  else if(ph===1){renderThinkLeft();renderThinkRight();}
+  else if(ph===2){renderWalkLeft();renderWalkRight();}
+  else if(ph===3){renderLogicLeft();renderLogicRight();}
+  else if(ph===4){renderCodeLeft();renderCodeRight();}
+  else if(ph===5){renderQuizLeft();renderQuizRight();}
+}
+
+/* ═══════ PHASE 0 — MISSION ═══════ */
+function renderMissionLeft(){
+  var pg=p();
+  document.getElementById('lp-title').textContent='All Passengers';
+  document.getElementById('lp-badge').textContent=pg.items.length+' items';
+  var html='<div class="airport-3d"><div class="airport-floor">';
+  pg.items.forEach(function(item,i){
+    html+='<div class="pblock ps-idle" style="border-color:'+pg.color+'33">'
+      +'<div class="pico">'+pg.icons[i]+'</div>'
+      +'<div class="pnm">'+String(item)+'</div>'
+      +'<div class="pidx">#'+i+'</div></div>';
+  });
+  html+='</div></div>';
+  html+='<div class="mission-banner" style="background:'+pg.color+'10;border-color:'+pg.color+'44;width:100%;max-width:400px">'
+    +'<div style="font-size:11px;font-weight:700;color:'+pg.color+';margin-bottom:4px">🎯 Mission</div>'
+    +'<div style="font-size:13px;font-weight:600;color:var(--tx)">'+pg.question+'</div>'
+    +'</div>';
+  document.getElementById('lp-content').innerHTML=html;
+}
+function renderMissionRight(){
+  var pg=p();
+  document.getElementById('rp-title').textContent='Mission Brief';
+  document.getElementById('rp-badge').textContent=pg.icon+' '+pg.title;
+  var html='<div class="sec-lbl">The story</div>';
+  html+='<div class="info-card"><div class="ic-body">'+pg.story+'</div></div>';
+  html+='<div class="sec-lbl">The detective\'s single question</div>';
+  html+='<div class="info-card">'
+    +'<div class="ib-row"><div class="ib-icon">🤖</div><div style="font-size:13px;font-family:var(--mono);color:var(--amber);font-weight:600">'
+    +'Is this item == '+(pg.defaultVal.tgt||'already seen?')+'?'
+    +'</div></div>'
+    +'<div class="ib-row"><div class="ib-icon">✅</div><div class="ic-body">YES → '+(pg.stopOnFirst?'Report + STOP immediately':'Count +1, keep going')+'</div></div>'
+    +'<div class="ib-row"><div class="ib-icon">❌</div><div class="ic-body">NO → Move to the next item</div></div>'
+    +'</div>';
+  html+='<div class="sec-lbl">Mission type</div>';
+  html+='<div class="info-card">'
+    +'<div style="display:flex;gap:8px">'
+    +'<div style="flex:1;padding:8px;border-radius:7px;border:1px solid '+(pg.stopOnFirst?'var(--greenbd)':'var(--bd)')+';background:'+(pg.stopOnFirst?'var(--greenbg)':'var(--s3)')+';text-align:center">'
+    +'<div style="font-size:10px;font-weight:700;color:'+(pg.stopOnFirst?'var(--green)':'var(--tx3)')+'">FIND / SEARCH</div>'
+    +'<div style="font-size:10px;color:var(--tx3);margin-top:3px">stop at first match</div></div>'
+    +'<div style="flex:1;padding:8px;border-radius:7px;border:1px solid '+(!pg.stopOnFirst?'var(--teal)':'var(--bd)')+';background:'+(!pg.stopOnFirst?'var(--tealbg)':'var(--s3)')+';text-align:center">'
+    +'<div style="font-size:10px;font-weight:700;color:'+(!pg.stopOnFirst?'var(--teal)':'var(--tx3)')+'">COUNT ALL</div>'
+    +'<div style="font-size:10px;color:var(--tx3);margin-top:3px">visit every item</div></div>'
+    +'</div></div>';
+  html+='<div class="nav-btns"><button class="nbtn primary" onclick="nextPhase()">Next: how to think →</button></div>';
+  document.getElementById('rp-content').innerHTML=html;
+}
+
+/* ═══════ PHASE 1 — THINK ═══════ */
+function renderThinkLeft(){
+  var pg=p();
+  document.getElementById('lp-title').textContent='Decision Flow';
+  document.getElementById('lp-badge').textContent='the question at each step';
+  var flow=[
+    [pg.color,'Receive mission'],
+    ['var(--tx2)','Move to item #0'],
+    ['var(--amber)','Is this the target?'],
+    ['var(--green)','YES → '+(pg.stopOnFirst?'stop':'count+1')],
+    ['var(--red)','NO → next item'],
+    ['var(--tx2)','Repeat until done'],
+    ['var(--blue)','Report answer'],
+  ];
+  var html='<div style="display:flex;flex-direction:column;align-items:center;gap:0;width:180px">';
+  flow.forEach(function(f,i){
+    html+='<div style="background:var(--s2);border:1px solid '+f[0]+'55;border-radius:7px;padding:6px 14px;font-size:11px;color:'+f[0]+';width:100%;text-align:center">'+f[1]+'</div>';
+    if(i<flow.length-1)html+='<div style="font-size:12px;color:var(--tx3);padding:2px 0;text-align:center">↓</div>';
+  });
+  html+='</div>';
+  document.getElementById('lp-content').innerHTML=html;
+}
+function renderThinkRight(){
+  var pg=p();
+  document.getElementById('rp-title').textContent='Thinking Model';
+  document.getElementById('rp-badge').textContent='one question, two paths';
+  var html='<div class="sec-lbl">The two mission types</div>';
+  html+='<div class="info-card" style="border-color:var(--greenbd)">'
+    +'<div class="ic-title" style="color:var(--green)">FIND / SEARCH / CHECK — stop at first</div>'
+    +'<div class="ic-body">Ask the question. If YES — report and use <span style="color:var(--green);font-weight:600">break</span> to exit immediately. One match is enough. Faster — does not check remaining items.</div></div>';
+  html+='<div class="info-card" style="border-color:var(--teal)">'
+    +'<div class="ic-title" style="color:var(--teal)">COUNT / FIND ALL — visit every item</div>'
+    +'<div class="ic-body">NO break allowed. Must check every single item. Use a counter. The loop runs to the very end before reporting.</div></div>';
+  var mcolor=pg.stopOnFirst?'var(--green)':'var(--teal)';
+  var mtype=pg.stopOnFirst?'FIND / STOP':'COUNT ALL';
+  html+='<div class="info-card" style="border-color:'+mcolor+'">'
+    +'<div class="ic-body">This mission — <strong style="color:'+mcolor+'">'+mtype+'</strong>. '
+    +(pg.stopOnFirst?'Stops the moment the first match is found.':'Visits EVERY item. Tallies all matches. No early exit.')+'</div></div>';
+  html+='<div class="nav-btns"><button class="nbtn secondary" onclick="prevPhase()">← Back</button><button class="nbtn primary" onclick="nextPhase()">Next: 3D walk →</button></div>';
+  document.getElementById('rp-content').innerHTML=html;
+}
+
+/* ═══════ PHASE 2 — 3D WALK ═══════ */
+function regenSteps(){
+  var pg=p();
+  var hay=inputVals.hay||pg.defaultVal.hay;
+  var tgt=inputVals.tgt||pg.defaultVal.tgt;
+  if(pg.id==='find_dup') stepsData=pg.run(hay);
+  else stepsData=pg.run(hay,tgt);
+}
+
+function renderWalkLeft(){
+  var pg=p();
+  if(!stepsData.length) regenSteps();
+  var digs=stepsData[0]&&stepsData[0].digs;
+  var items=stepsData[0]&&stepsData[0].items||pg.items;
+
+  document.getElementById('lp-title').textContent='3D Walk-through';
+  document.getElementById('lp-badge').textContent=(stepIdx<0?'not started':'step '+(stepIdx+1)+' of '+(stepsData.length-1));
+
+  var html='<div class="airport-3d"><div class="airport-floor" id="afl">'+buildFloor()+'</div></div>';
+  html+='<div class="op-display" id="op-disp">'+buildOpDisp()+'</div>';
+  html+='<div class="step-nav">'
+    +'<button class="snbtn" id="sp" onclick="tStep(-1)"'+(stepIdx<0?' disabled':'')+'>← Prev</button>'
+    +'<div class="step-ctr"><div class="step-lbl" id="slbl">'+(stepIdx<0?'Press Next →':'Step '+(stepIdx+1)+' of '+(stepsData.length-1))+'</div>'
+    +'<div class="sdots" id="sdots">'+buildDots()+'</div></div>'
+    +'<button class="snbtn" id="sn" onclick="tStep(1)"'+(stepIdx>=stepsData.length-1?' disabled':'')+'>Next →</button>'
+    +'<button class="snbtn play" id="sa" onclick="toggleAuto()">▶ Auto</button>'
+    +'<button class="snbtn" onclick="toggleSpeed()" id="ssp">🐢</button>'
+    +'<button class="snbtn" onclick="stepIdx=-1;renderWalkLeft();renderWalkRight()">↺</button>'
+    +'</div>';
+  document.getElementById('lp-content').innerHTML=html;
+}
+
+function renderWalkRight(){
+  var pg=p();
+  document.getElementById('rp-title').textContent='Step Details';
+  document.getElementById('rp-badge').textContent=stepIdx<0?'waiting':'examining item '+(stepIdx+1);
+
+  var html='<div class="sec-lbl">Input</div>';
+  html+='<div class="input-section">';
+  if(pg.id==='find_dup'){
+    html+='<div class="input-row"><label>list =</label><input class="fin" id="inp-hay" value="'+(inputVals.hay||pg.defaultVal.hay)+'" oninput="inputVals.hay=this.value"></div>';
+  } else {
+    html+='<div class="input-row"><label>'+( pg.type==='digit'?'number':'text')+' =</label><input class="fin" id="inp-hay" value="'+(inputVals.hay||pg.defaultVal.hay)+'" oninput="inputVals.hay=this.value"></div>';
+    html+='<div class="input-row"><label>target =</label><input class="fin short" id="inp-tgt" value="'+(inputVals.tgt||pg.defaultVal.tgt)+'" oninput="inputVals.tgt=this.value"></div>';
+  }
+  html+='<button class="run-btn" onclick="regenSteps();stepIdx=-1;renderWalkLeft();renderWalkRight()">▶ Regenerate trace</button>';
+  html+='</div>';
+
+  html+='<div class="sec-lbl">What happened now</div>';
+  html+='<div class="narr-box" id="narr-box"><div class="narr-label">Detective Robot 🤖</div>'+getNarr()+'</div>';
+
+  /* result if done */
+  if(stepIdx>=stepsData.length-1){
+    var last=stepsData[stepsData.length-1];
+    var ok=last.found;
+    var conf='';
+    if(ok){var cl=['#F59E0B','#3B82F6','#10B981','#8B5CF6'];for(var ci=0;ci<14;ci++){var sz=4+Math.random()*4;conf+='<div class="cbit" style="left:'+(Math.random()*100)+'%;width:'+sz+'px;height:'+sz+'px;background:'+cl[ci%4]+';animation-duration:'+(0.7+Math.random()*.8)+'s;animation-delay:'+(Math.random()*.4)+'s"></div>';}}
+    html+='<div class="result-box '+(ok?'rb-v':'rb-x')+'">'
+      +'<div class="confwrap">'+conf+'</div>'
+      +'<div style="font-size:26px;margin-bottom:4px">'+(ok?'✅':'❌')+'</div>'
+      +'<div style="font-size:14px;font-weight:700;color:'+(ok?'var(--green)':'var(--red)')+'">'+getResultText(last)+'</div>'
+      +'</div>';
+  }
+
+  html+='<div class="sec-lbl" style="margin-top:4px">Trace log</div>';
+  html+='<div style="overflow-x:auto">'+buildTrace()+'</div>';
+  html+='<div class="nav-btns"><button class="nbtn secondary" onclick="prevPhase()">← Back</button><button class="nbtn primary" onclick="nextPhase()">Next: logic steps →</button></div>';
+  document.getElementById('rp-content').innerHTML=html;
+}
+
+function buildFloor(){
+  var pg=p(),html='';
+  var doneSet={};
+  if(stepIdx>=0){
+    for(var s=0;s<stepIdx&&s<stepsData.length-1;s++) if(stepsData[s].i!==undefined) doneSet[stepsData[s].i]=true;
+  }
+  pg.items.forEach(function(item,i){
+    var isActive=(stepIdx>=0&&stepIdx<stepsData.length-1&&stepsData[stepIdx].i===i);
+    var isDone=doneSet[i]===true;
+    var isFaded=(!isActive&&!isDone&&stepIdx>=0&&stepIdx<stepsData.length-1&&i>stepsData[stepIdx].i);
+    var allDone=(stepIdx>=stepsData.length-1&&stepIdx>=0);
+    var isMatch=isDone&&stepsData.slice(0,stepIdx).some(function(s){return s.i===i&&s.match;});
+    var isActive_match=isActive&&stepIdx>=0&&stepIdx<stepsData.length-1&&(stepsData[stepIdx].match||stepsData[stepIdx].isdup);
+    var isDupItem=isDone&&stepsData.slice(0,stepIdx).some(function(s){return s.i===i&&s.isdup;});
+    var cls='pblock';
+    if(allDone)cls+=' ps-done';
+    else if(isActive&&isActive_match)cls+=' ps-match';
+    else if(isActive)cls+=' ps-active';
+    else if(isDone&&isMatch)cls+=' ps-match';
+    else if(isDone&&isDupItem)cls+=' ps-dup';
+    else if(isDone)cls+=' ps-no';
+    else if(isFaded)cls+=' ps-faded';
+    var arrow=isActive?'<div class="bot-pin">👆</div>':'';
+    var badge=(isDone&&isMatch)?'<div class="found-pin">✓</div>':'';
+    html+='<div class="'+cls+'">'+arrow+badge
+      +'<div class="pico">'+pg.icons[i]+'</div>'
+      +'<div class="pnm">'+String(item)+'</div>'
+      +'<div class="pidx">#'+i+'</div></div>';
+  });
+  return html;
+}
+
+function buildOpDisp(){
+  if(stepIdx<0||stepIdx>=stepsData.length-1)return'<span style="font-size:12px;color:var(--tx3)">operation shown here</span>';
+  var s=stepsData[stepIdx],pg=p();
+  if(pg.id==='find_dup'){
+    return'<div class="op-row"><div class="op-tile amber"><div class="ov">'+s.item+'</div><div class="ol">current</div></div>'
+      +'<span style="font-size:13px;color:var(--tx3)">in?</span>'
+      +'<div class="op-tile purple"><div class="ov" style="font-size:9px">['+s.seen.join(',')+']</div><div class="ol">notebook</div></div>'
+      +'<div class="op-arr">→</div>'
+      +'<div class="op-tile '+(s.isdup?'green':'amber')+'"><div class="ov">'+(s.isdup?'DUP':'NEW')+'</div><div class="ol">'+(s.isdup?'stop':'add')+'</div></div></div>';
+  }
+  return'<div class="op-row">'
+    +'<div class="op-tile blue"><div class="ov" style="font-size:12px">'+String(s.item)+'</div><div class="ol">current</div></div>'
+    +'<span style="font-size:13px;font-weight:700;color:var(--tx3)">==</span>'
+    +'<div class="op-tile amber"><div class="ov" style="font-size:12px">'+String(p().defaultVal.tgt||'?')+'</div><div class="ol">target</div></div>'
+    +'<div class="op-arr">→</div>'
+    +'<div class="op-tile '+(s.match?'green':'red')+'"><div class="ov">'+(s.match?'YES':'NO')+'</div><div class="ol">'+(s.match?(p().stopOnFirst?'stop':'count++'):'skip')+'</div></div>'
+    +'</div>';
+}
+
+function getNarr(){
+  var pg=p();
+  if(stepIdx<0) return'Ready. '+pg.items.length+' items to check. Target: <strong style="color:var(--amber)">'+(pg.defaultVal.tgt||'any duplicate')+'</strong>. Press <strong>Next →</strong>.';
+  if(stepIdx>=stepsData.length-1){var last=stepsData[stepsData.length-1];return'<strong>All done!</strong> '+getResultText(last);}
+  var s=stepsData[stepIdx];
+  if(pg.id==='find_dup'){
+    return'<strong>Item '+s.item+'</strong> — Checking notebook ['+s.seen.join(',')+']... '+(s.isdup?'<strong style="color:var(--purple)">Already seen! DUPLICATE! Stopping.</strong>':'<strong style="color:var(--green)">First time. Writing in notebook.</strong>');
+  }
+  return'<strong>Step '+(stepIdx+1)+'</strong> — item = <strong style="color:var(--amber)">'+String(s.item)+'</strong> at position '+s.i+'. '
+    +(s.match?'<strong style="color:var(--green)">MATCH!'+(pg.stopOnFirst?' Stopping now.':' count = '+s.count)+'</strong>':'<strong style="color:var(--red)">No match.</strong> Moving on.');
+}
+
+function getResultText(last){
+  var pg=p();
+  if(pg.id==='count_occ') return'"'+pg.defaultVal.tgt+'" found '+last.count+' times';
+  if(pg.id==='find_dup') return last.found?'First duplicate: '+last.dup:'No duplicates found';
+  if(pg.id==='check_digit') return last.found?'Digit '+pg.defaultVal.tgt+' EXISTS in '+pg.defaultVal.hay:'Digit '+pg.defaultVal.tgt+' NOT found';
+  return last.found?'Found at position '+last.pos:'"'+pg.defaultVal.tgt+'" not found';
+}
+
+function buildTrace(){
+  var pg=p();
+  var hs=pg.id==='find_dup'?['#','Item','In notebook?','Action']:
+    pg.id==='check_digit'?['#','Digit','== '+pg.defaultVal.tgt+'?','Action']:
+    pg.id==='count_occ'?['#','Item','Match?','Count']:
+    ['#','Item','Match?','Action'];
+  var h='<table class="ttbl"><tr>'+hs.map(function(x){return'<th>'+x+'</th>';}).join('')+'</tr>';
+  stepsData.forEach(function(s,i){
+    if(s.final){
+      h+='<tr class="tf"><td colspan="'+hs.length+'" style="text-align:center">'+getResultText(s)+'</td></tr>';return;
+    }
+    var cl=i===stepIdx?'ta':i<stepIdx?'td':'';
+    if(pg.id==='find_dup'){
+      h+='<tr class="'+cl+'"><td>'+(i+1)+'</td><td style="font-weight:700">'+s.item+'</td>'
+        +'<td><span class="'+(s.isdup?'bpur':'bno')+'">'+(s.isdup?'YES!':'No')+'</span></td>'
+        +'<td>'+(s.isdup?'<span class="bpur">STOP</span>':'<span class="bok">add to notebook</span>')+'</td></tr>';
+    } else if(pg.id==='check_digit'){
+      h+='<tr class="'+cl+'"><td>'+(i+1)+'</td><td style="font-weight:700">'+s.item+'</td>'
+        +'<td><span class="'+(s.match?'bok':'bno')+'">'+(s.match?'YES':'No')+'</span></td>'
+        +'<td>'+(s.match?'<span class="bok">found, stop</span>':'<span class="bno">shrink</span>')+'</td></tr>';
+    } else if(pg.id==='count_occ'){
+      h+='<tr class="'+cl+'"><td>'+(i+1)+'</td><td style="font-weight:700">'+s.item+'</td>'
+        +'<td><span class="'+(s.match?'bok':'bno')+'">'+(s.match?'YES':'No')+'</span></td>'
+        +'<td style="font-weight:700;color:var(--green)">'+s.count+'</td></tr>';
+    } else {
+      h+='<tr class="'+cl+'"><td>'+(i+1)+'</td><td style="font-weight:700">'+s.item+'</td>'
+        +'<td><span class="'+(s.match?'bok':'bno')+'">'+(s.match?'YES':'No')+'</span></td>'
+        +'<td>'+(s.match?'<span class="bok">pos '+s.i+'</span>':'<span class="bno">skip</span>')+'</td></tr>';
+    }
+  });
+  return h+'</table>';
+}
+
+function buildDots(){
+  var n=Math.min(stepsData.length-1,14),h='';
+  for(var i=0;i<n;i++) h+='<div class="sdot '+(i<stepIdx?'ddn':i===stepIdx?'dcur':'')+'" ></div>';
+  return h;
+}
+
+function tStep(dir){
+  if(!stepsData.length) regenSteps();
+  stepIdx+=dir;
+  if(stepIdx<-1)stepIdx=-1;
+  if(stepIdx>stepsData.length-1)stepIdx=stepsData.length-1;
+  renderWalkLeft();renderWalkRight();
+}
+function toggleAuto(){
+  var btn=document.getElementById('sa');
+  if(autoRun){clearInterval(autoTimer);autoRun=false;if(btn){btn.textContent='▶ Auto';btn.className='snbtn play';}return;}
+  autoRun=true;if(btn){btn.textContent='⏸';btn.className='snbtn';}
+  autoTimer=setInterval(function(){
+    if(stepIdx>=stepsData.length-1){clearInterval(autoTimer);autoRun=false;var b=document.getElementById('sa');if(b){b.textContent='▶ Auto';b.className='snbtn play';}return;}
+    stepIdx++;renderWalkLeft();renderWalkRight();
+  },autoSpeed);
+}
+function toggleSpeed(){
+  autoSpeed=autoSpeed===1300?2200:1300;
+  var btn=document.getElementById('ssp');
+  if(btn)btn.textContent=autoSpeed===2200?'🐇':'🐢';
+}
+
+/* ═══════ PHASE 3 — LOGIC ═══════ */
+function renderLogicLeft(){
+  var pg=p();
+  document.getElementById('lp-title').textContent='Plain Language Logic';
+  document.getElementById('lp-badge').textContent='no code — just thinking';
+  var html='<div class="pseudo-box" style="width:100%;max-width:360px;font-size:11px">';
+  pg.pseudo.forEach(function(line,i){
+    html+='<div class="pl"><div class="pl-num">'+(i+1)+'</div>'
+      +'<div class="pl-txt'+(line.i===2?' i2':line.i===1?' i1':'')+'">' +line.t+'</div></div>';
+  });
+  html+='</div>';
+  document.getElementById('lp-content').innerHTML=html;
+}
+function renderLogicRight(){
+  var pg=p();
+  document.getElementById('rp-title').textContent='Step-by-Step Thinking';
+  document.getElementById('rp-badge').textContent='inner monologue';
+  var steps=[
+    {q:'What is the mission?',a:'Find '+( pg.defaultVal.tgt||'a duplicate')+' in the given input.'},
+    {q:'Where does the detective start?',a:'At the very first item (position 0, left end).'},
+    {q:'What question does it ask at every stop?',a:'Is this item equal to the target?'+(pg.id==='find_dup'?' Or: have I seen this before?':'')},
+    {q:'What happens on YES?',a:pg.stopOnFirst?'Report the answer and stop immediately.':'Increment the counter. Keep going — do not stop!'},
+    {q:'What happens on NO?',a:'Move to the next item. Nothing else.'},
+    {q:'When does the loop end?',a:pg.stopOnFirst?'The moment a match is found (break), or after all items if no match.':'After visiting every single item — no exceptions.'},
+    {q:'What is the final answer?',a:pg.id==='count_occ'?'The count value.':pg.id==='find_dup'?'The first duplicate found, or "none".':'The position of the match, or "not found".'},
+  ];
+  var html='<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">';
+  steps.forEach(function(s,i){
+    html+='<div class="info-card" style="padding:7px 10px">'
+      +'<div style="display:flex;gap:8px;align-items:flex-start">'
+      +'<div style="width:18px;height:18px;border-radius:50%;background:var(--bluebg);border:1px solid var(--bluebd);color:var(--blue);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">'+(i+1)+'</div>'
+      +'<div><div style="font-size:11px;font-weight:600;color:var(--tx2)">'+s.q+'</div>'
+      +'<div style="font-size:11px;color:var(--tx);margin-top:2px">'+s.a+'</div>'
+      +'</div></div></div>';
+  });
+  html+='</div>';
+  html+='<div class="nav-btns"><button class="nbtn secondary" onclick="prevPhase()">← Back</button><button class="nbtn primary" onclick="nextPhase()">Next: write the code →</button></div>';
+  document.getElementById('rp-content').innerHTML=html;
+}
+
+/* ═══════ PHASE 4 — CODE ═══════ */
+function renderCodeLeft(){
+  document.getElementById('lp-title').textContent='Your Code';
+  document.getElementById('lp-badge').textContent='builds here';
+  var html='<div style="width:100%;max-width:380px">';
+  html+='<div class="code-btns"><button class="cbtn clr" onclick="clearCode()">Clear</button><button class="cbtn fill" onclick="fillAll()">Fill all</button><button class="cbtn run" onclick="runCode()">▶ Run</button></div>';
+  html+='<div class="code-display" id="cdisp">'+renderCodeDisp()+'</div>';
+  html+='<div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">Output</div>';
+  html+='<div class="out-box" id="obox"><span class="out-dim">click ▶ Run</span></div>';
+  html+='</div>';
+  document.getElementById('lp-content').innerHTML=html;
+}
+function renderCodeRight(){
+  var pg=p();
+  document.getElementById('rp-title').textContent='Build Steps';
+  document.getElementById('rp-badge').textContent='click each to add';
+  var html='<div class="sec-lbl">Click each step — add it to your code</div>';
+  html+='<div class="build-steps">';
+  pg.scaffold.forEach(function(s,i){
+    html+='<div class="build-step'+(buildAdded[i]?' added':'')+'" id="bs'+i+'" onclick="addStep('+i+')">'
+      +'<div class="bs-n">'+(i+1)+'</div>'
+      +'<div><div class="bs-t">'+s.t+'</div><div class="bs-c">'+s.c.replace(/\n/g,' | ')+'</div></div>'
+      +'</div>';
+  });
+  html+='</div>';
+  html+='<div class="nav-btns"><button class="nbtn secondary" onclick="prevPhase()">← Back</button><button class="nbtn primary" onclick="nextPhase()">Next: quiz →</button></div>';
+  document.getElementById('rp-content').innerHTML=html;
+}
+function renderCodeDisp(){
+  if(!codeLines.length)return'<span style="color:#334155">// click steps on the right →</span>';
+  return codeLines.map(function(l){
+    var e=l.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var col=l.includes('while')||l.includes('for ')||l.includes('if ')||l.includes('else')?'#93c5fd':l.includes('print')?'#4ade80':l.includes('= 0')||l.includes('= []')||l.includes('= False')?'#fde68a':'#e2e8f0';
+    return'<span style="color:'+col+'">'+e+'</span>';
+  }).join('<br>');
+}
+function addStep(i){
+  if(buildAdded[i])return;
+  buildAdded[i]=true;
+  codeLines.push(p().scaffold[i].ins.trimEnd());
+  var el=document.getElementById('bs'+i);if(el)el.classList.add('added');
+  var cd=document.getElementById('cdisp');if(cd)cd.innerHTML=renderCodeDisp();
+}
+function clearCode(){
+  codeLines=[];buildAdded=[];
+  p().scaffold.forEach(function(_,i){var el=document.getElementById('bs'+i);if(el)el.classList.remove('added');});
+  var cd=document.getElementById('cdisp');if(cd)cd.innerHTML='<span style="color:#334155">// click steps on the right →</span>';
+  var ob=document.getElementById('obox');if(ob)ob.innerHTML='<span class="out-dim">click ▶ Run</span>';
+}
+function fillAll(){p().scaffold.forEach(function(_,i){if(!buildAdded[i])addStep(i);});}
+function runCode(){
+  var pg=p(),ob=document.getElementById('obox');if(!ob)return;
+  var hay=inputVals.hay||pg.defaultVal.hay;
+  var tgt=inputVals.tgt||pg.defaultVal.tgt;
+  var steps=pg.id==='find_dup'?pg.run(hay):pg.run(hay,tgt);
+  var last=steps[steps.length-1];
+  var out='<span class="'+(last.found?'out-ok':'out-no')+'">'+getResultText(last)+'</span>';
+  ob.innerHTML=out;
+  if(!solved[pg.id]){solved[pg.id]=true;addScore(15);updSolved();buildMissionBar();}
+}
+
+/* ═══════ PHASE 5 — QUIZ ═══════ */
+function renderQuizLeft(){
+  var pg=p();
+  document.getElementById('lp-title').textContent='Quiz';
+  document.getElementById('lp-badge').textContent=pg.title;
+  var q=pg.quizzes[quizIdx>=pg.quizzes.length?pg.quizzes.length-1:quizIdx];
+  if(quizIdx>=pg.quizzes.length){
+    document.getElementById('lp-content').innerHTML='<div style="text-align:center"><div style="font-size:44px;margin-bottom:10px">🏆</div><div style="font-size:15px;font-weight:700;color:var(--green)">All done!</div></div>';
+    return;
+  }
+  var correct=quizAns[quizIdx]===q.correct;
+  document.getElementById('lp-content').innerHTML='<div style="text-align:center;padding:20px">'
+    +'<div style="font-size:48px;margin-bottom:12px">'+(quizAns[quizIdx]===undefined?'🤔':correct?'🎉':'📚')+'</div>'
+    +'<div style="font-size:13px;color:var(--tx2)">Question '+(quizIdx+1)+' of '+pg.quizzes.length+'</div>'
+    +'<div style="height:4px;background:var(--bd);border-radius:2px;overflow:hidden;margin:10px 0">'
+    +'<div style="width:'+Math.round(quizIdx/pg.quizzes.length*100)+'%;height:100%;background:'+pg.color+'"></div></div>'
+    +'</div>';
+}
+function renderQuizRight(){
+  var pg=p();
+  document.getElementById('rp-title').textContent='Test Yourself';
+  document.getElementById('rp-badge').textContent=pg.quizzes.length+' questions';
+  if(quizIdx>=pg.quizzes.length){showQuizEnd();return;}
+  var q=pg.quizzes[quizIdx];
+  var html='<div class="q-card"><div class="q-q">'+q.q+'</div><div class="q-opts">';
+  q.opts.forEach(function(opt,oi){
+    var cl='';
+    if(quizAns[quizIdx]!==undefined){if(oi===q.correct)cl=' qok';else if(oi===quizAns[quizIdx]&&oi!==q.correct)cl=' qerr';}
+    html+='<div class="qopt'+cl+'" onclick="ansQ('+oi+')">'+opt+'</div>';
+  });
+  html+='</div><div class="qexp" id="qexp"'+(quizAns[quizIdx]!==undefined?' style="display:block"':'')+'>'+q.exp+'</div>';
+  if(quizAns[quizIdx]!==undefined){
+    html+='<div style="display:flex;justify-content:flex-end;margin-top:8px">'
+      +'<button class="nbtn primary" onclick="nextQ()">'+(quizIdx<pg.quizzes.length-1?'Next →':'See results')+'</button>'
+      +'</div>';
+  }
+  html+='</div>';
+  html+='<div class="nav-btns"><button class="nbtn secondary" onclick="prevPhase()">← Back</button></div>';
+  document.getElementById('rp-content').innerHTML=html;
+}
+function ansQ(oi){
+  if(quizAns[quizIdx]!==undefined)return;
+  quizAns[quizIdx]=oi;
+  var q=p().quizzes[quizIdx];
+  if(oi===q.correct)addScore(10);
+  renderQuizLeft();renderQuizRight();
+}
+function nextQ(){quizIdx++;renderQuizLeft();renderQuizRight();}
+function showQuizEnd(){
+  var pg=p(),correct=0;
+  quizAns.forEach(function(a,i){if(a===pg.quizzes[i].correct)correct++;});
+  markDone(5);
+  document.getElementById('rp-content').innerHTML='<div class="info-card" style="text-align:center;padding:18px">'
+    +'<div style="font-size:36px;margin-bottom:8px">'+(correct===pg.quizzes.length?'🏆':correct>0?'🎉':'📚')+'</div>'
+    +'<div style="font-size:16px;font-weight:700;margin-bottom:5px">'+correct+' / '+pg.quizzes.length+'</div>'
+    +'<div class="ic-body" style="margin-bottom:14px">'+(correct===pg.quizzes.length?'Perfect!':'Go back and try the 3D walk again.')+'</div>'
+    +'<div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap">'
+    +'<button class="nbtn secondary" onclick="quizIdx=0;quizAns=[];renderQuizLeft();renderQuizRight()">Retry</button>'
+    +(curProg<PROGS.length-1?'<button class="nbtn primary" onclick="switchProg('+(curProg+1)+')">Next mission →</button>':'')
+    +'</div></div>';
+}
+
+/* ═══════ BOOT ═══════ */
+PROGS.forEach(function(pg){inputVals[pg.id]={hay:pg.defaultVal.hay,tgt:pg.defaultVal.tgt};});
+inputVals={hay:p().defaultVal.hay,tgt:p().defaultVal.tgt};
+buildMissionBar();buildPhaseBar();renderBoth();
+</script>
+</body>
+</html>

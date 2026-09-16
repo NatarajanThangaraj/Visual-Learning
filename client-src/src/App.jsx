@@ -16,10 +16,14 @@ import { findLesson } from './data/courses';
  *   /java/my-expense-tracker         a lab inside the course chrome
  *   /java/my-expense-tracker/full    that lab on its own, no chrome
  *
- * The labs are also real files under public/, served at
- * /java/my-expense-tracker/index.html. Nothing links to that path — it is
- * fetched, not navigated to — but it stays valid, so every URL that was ever
- * handed out still resolves.
+ * The labs are real files under public/labs/, served at
+ * /labs/java/my-expense-tracker/index.html. Nothing links to that path — it is
+ * fetched, not navigated to. They sit under /labs/ so they do not occupy the
+ * lesson URLs: the host answers a directory with its index.html, so a lab at
+ * /java/<id>/ would be served in place of the app.
+ *
+ * Every route below is also a real directory + index.html in the build, written
+ * by scripts/prerender-routes.mjs — the host has no fallback for unknown paths.
  *
  * Ordering below doesn't decide matching: React Router ranks a static segment
  * above a dynamic one, so /browse and /learn/* win over /:courseId even though

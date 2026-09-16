@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👾 Monster Battle Academy</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg:       #0F0A1E;
+  --surface:  #1A1330;
+  --surface2: #221B3D;
+  --border:   #2E2456;
+  --border2:  #3D3070;
+  --text:     #EDE9FF;
+  --muted:    #8B7FB5;
+  --dim:      #B0A8D0;
+  --purple:   #7C3AED;
+  --purple2:  #A855F7;
+  --pink:     #EC4899;
+  --cyan:     #06B6D4;
+  --green:    #10B981;
+  --amber:    #F59E0B;
+  --red:      #EF4444;
+  --orange:   #F97316;
+  --indigo:   #6366F1;
+  --r: 12px;
+  --r2: 20px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+
+body{
+  font-family:'Space Grotesk',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── STARS BG ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(124,58,237,.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,.08) 0%, transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+/* ── TOP NAV ── */
+.topbar{
+  position:sticky;top:0;z-index:300;
+  background:rgba(15,10,30,.85);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.tb-brand{
+  display:flex;align-items:center;gap:10px;
+  font-family:'Nunito',sans-serif;
+  font-weight:900;font-size:18px;
+  letter-spacing:-.01em;
+}
+.tb-brand-icon{font-size:22px;}
+.tb-brand span{
+  background:linear-gradient(135deg,var(--purple2),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.tb-right{display:flex;align-items:center;gap:12px;}
+.mode-toggle{
+  display:flex;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:30px;
+  padding:3px;
+}
+.mode-btn{
+  padding:5px 14px;border-radius:26px;
+  font-size:12px;font-weight:700;cursor:pointer;
+  border:none;background:transparent;color:var(--muted);
+  font-family:'Space Grotesk',sans-serif;
+  transition:all .2s;
+}
+.mode-btn.active{
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  color:white;
+}
+.stage-counter{
+  font-size:12px;font-weight:700;
+  color:var(--muted);
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:20px;padding:5px 14px;
+}
+.stage-counter span{color:var(--purple2);}
+
+/* ── PROGRESS ── */
+.progress-strip{
+  height:3px;background:var(--surface2);
+  position:sticky;top:58px;z-index:299;
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--purple),var(--pink),var(--cyan));
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── SCREENS ── */
+.screen{
+  display:none;
+  min-height:calc(100vh - 61px);
+  position:relative;z-index:1;
+}
+.screen.active{display:flex;flex-direction:column;}
+
+/* ── TEACHER PANEL ── */
+.teacher-panel{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:linear-gradient(135deg,#0D0A1F,#1A0D2E);
+  border-top:2px solid var(--purple);
+  padding:20px 32px 24px;
+  z-index:500;
+  max-height:55vh;overflow-y:auto;
+  animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.teacher-panel.open{display:block;}
+.tp-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.tp-title{
+  font-family:'Nunito',sans-serif;
+  font-size:16px;font-weight:900;
+  color:var(--purple2);
+  display:flex;align-items:center;gap:8px;
+}
+.tp-close{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:5px 12px;
+  color:var(--muted);font-size:12px;cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;
+}
+.tp-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:14px;
+}
+.tp-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px;
+}
+.tp-card-label{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--purple2);margin-bottom:6px;
+}
+.tp-card-text{font-size:13px;color:var(--dim);line-height:1.6;}
+.tp-code{
+  background:#0A0712;border:1px solid var(--border);
+  border-radius:10px;padding:14px;margin-top:12px;
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:#C4B5FD;line-height:1.7;overflow-x:auto;
+}
+
+/* ── SHARED COMPONENTS ── */
+.pm-bubble{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r2);
+  border-top-left-radius:4px;
+  padding:18px 22px;
+  position:relative;
+  max-width:600px;
+}
+.pm-bubble::before{
+  content:'👔';
+  position:absolute;left:-44px;top:0;
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--purple),var(--indigo));
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;line-height:36px;text-align:center;
+}
+.pm-name{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--purple2);margin-bottom:6px;
+}
+.pm-text{font-size:15px;color:var(--text);line-height:1.6;}
+.pm-text strong{color:var(--cyan);}
+
+.screen-center{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 24px;gap:32px;
+  text-align:center;
+}
+
+.big-question{
+  font-family:'Nunito',sans-serif;
+  font-size:clamp(22px,4vw,32px);font-weight:900;
+  line-height:1.3;
+  background:linear-gradient(135deg,var(--text),var(--dim));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+/* ── CARDS ── */
+.card-grid{
+  display:flex;flex-wrap:wrap;gap:14px;
+  justify-content:center;max-width:800px;
+}
+.sel-card{
+  background:var(--surface);
+  border:2px solid var(--border);
+  border-radius:16px;padding:16px 20px;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;gap:12px;
+  min-width:140px;
+  user-select:none;
+}
+.sel-card:hover{border-color:var(--purple2);background:var(--surface2);transform:translateY(-2px);}
+.sel-card.selected{
+  border-color:var(--purple2);
+  background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(168,85,247,.15));
+  box-shadow:0 0 0 4px rgba(124,58,237,.15);
+}
+.sel-card.selected .card-icon{animation:bounce .4s ease;}
+@keyframes bounce{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}
+.card-icon{font-size:24px;}
+.card-label{font-size:14px;font-weight:700;color:var(--text);}
+.card-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ── BIG ACTION BUTTON ── */
+.action-btn{
+  padding:14px 36px;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  color:white;border:none;border-radius:14px;
+  font-size:16px;font-weight:800;cursor:pointer;
+  font-family:'Nunito',sans-serif;
+  transition:all .22s;
+  box-shadow:0 6px 24px rgba(124,58,237,.35);
+  letter-spacing:.02em;
+}
+.action-btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(124,58,237,.45);}
+.action-btn:disabled{opacity:.4;cursor:default;transform:none;}
+
+.action-btn.green-btn{
+  background:linear-gradient(135deg,var(--green),#059669);
+  box-shadow:0 6px 24px rgba(16,185,129,.3);
+}
+.action-btn.green-btn:hover{box-shadow:0 10px 32px rgba(16,185,129,.4);}
+
+.action-btn.amber-btn{
+  background:linear-gradient(135deg,var(--amber),var(--orange));
+  box-shadow:0 6px 24px rgba(245,158,11,.3);
+}
+
+/* ── MONSTER CARD ── */
+.monster-card{
+  background:var(--surface);
+  border:2px solid var(--border);
+  border-radius:24px;
+  padding:24px;width:200px;
+  transition:all .3s;
+  position:relative;
+  overflow:hidden;
+}
+.monster-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent 60%,rgba(255,255,255,.03));
+  border-radius:24px;
+}
+.monster-card.goblin{border-color:#22C55E;box-shadow:0 0 20px rgba(34,197,94,.15);}
+.monster-card.dragon{border-color:#EF4444;box-shadow:0 0 20px rgba(239,68,68,.15);}
+.monster-card.zombie{border-color:#84CC16;box-shadow:0 0 20px rgba(132,204,22,.15);}
+.monster-card.skeleton{border-color:#94A3B8;box-shadow:0 0 20px rgba(148,163,184,.15);}
+.monster-card.fire{border-color:#F97316;box-shadow:0 0 20px rgba(249,115,22,.15);}
+.monster-card.ice{border-color:#06B6D4;box-shadow:0 0 20px rgba(6,182,212,.15);}
+.monster-card.stone{border-color:#78716C;box-shadow:0 0 20px rgba(120,113,108,.15);}
+.monster-card.boss{border-color:#A855F7;box-shadow:0 0 30px rgba(168,85,247,.25);}
+
+.monster-emoji{font-size:56px;text-align:center;display:block;margin-bottom:10px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4));}
+.monster-name{font-family:'Nunito',sans-serif;font-weight:900;font-size:18px;text-align:center;margin-bottom:14px;}
+.monster-stats{display:flex;flex-direction:column;gap:7px;}
+.stat-row{display:flex;align-items:center;gap:8px;}
+.stat-icon{font-size:14px;width:20px;text-align:center;}
+.stat-label{font-size:11px;color:var(--muted);width:55px;}
+.stat-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:7px;overflow:hidden;}
+.stat-bar{height:100%;border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.stat-val{font-size:11px;font-weight:700;color:var(--text);width:28px;text-align:right;}
+
+/* hp bar special */
+.hp-wrap{background:var(--border);border-radius:6px;height:10px;overflow:hidden;flex:1;}
+.hp-fill{height:100%;background:linear-gradient(90deg,#22C55E,#86EFAC);border-radius:6px;transition:width .6s ease;}
+.hp-fill.mid{background:linear-gradient(90deg,var(--amber),#FCD34D);}
+.hp-fill.low{background:linear-gradient(90deg,var(--red),#FCA5A5);}
+
+/* ── BATTLE ARENA ── */
+.battle-arena{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:28px;
+  width:100%;max-width:720px;
+  position:relative;
+  overflow:hidden;
+}
+.arena-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 25% 50%,rgba(34,197,94,.06) 0%,transparent 50%),
+    radial-gradient(circle at 75% 50%,rgba(239,68,68,.06) 0%,transparent 50%);
+}
+.fighters{
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;z-index:1;gap:16px;
+}
+.fighter-side{flex:1;text-align:center;}
+.fighter-emoji{
+  font-size:72px;display:block;
+  filter:drop-shadow(0 6px 16px rgba(0,0,0,.5));
+  transition:transform .15s;
+}
+.fighter-emoji.shake{animation:shake .3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}50%{transform:translateX(6px);}60%{transform:translateX(-6px);}}
+.fighter-emoji.hit{animation:hitFlash .4s ease;}
+@keyframes hitFlash{0%,100%{filter:drop-shadow(0 6px 16px rgba(0,0,0,.5));}50%{filter:drop-shadow(0 6px 24px rgba(239,68,68,.8)) brightness(1.5);}}
+.fighter-emoji.defeated{animation:fadeOut .6s ease forwards;}
+@keyframes fadeOut{to{opacity:0;transform:scale(0) rotate(20deg);}}
+.fighter-name{font-family:'Nunito',sans-serif;font-weight:900;font-size:15px;margin:8px 0 6px;}
+.fighter-hp-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.fighter-hp-label{font-size:11px;color:var(--muted);white-space:nowrap;}
+.fighter-hp-val{font-size:12px;font-weight:700;}
+.vs-badge{
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:28px;
+  color:var(--purple2);text-shadow:0 0 20px rgba(168,85,247,.5);
+  flex-shrink:0;
+}
+.attack-log{
+  margin-top:16px;position:relative;z-index:1;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;
+  min-height:48px;
+  font-size:13px;color:var(--dim);line-height:1.6;
+  max-height:120px;overflow-y:auto;
+}
+.log-entry{animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.log-entry.damage{color:#FCA5A5;}
+.log-entry.heal{color:#86EFAC;}
+.log-entry.win{color:var(--amber);font-weight:700;}
+
+.dmg-float{
+  position:absolute;font-family:'Nunito',sans-serif;font-weight:900;font-size:24px;
+  color:var(--red);text-shadow:0 2px 8px rgba(239,68,68,.5);
+  pointer-events:none;animation:floatUp .8s ease forwards;z-index:10;
+}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-50px);}}
+
+/* ── SHOP ── */
+.shop-grid{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;max-width:700px;}
+.shop-item{
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:20px;padding:20px;width:150px;
+  text-align:center;cursor:pointer;transition:all .2s;
+}
+.shop-item:hover{border-color:var(--amber);transform:translateY(-3px);}
+.shop-item.bought{border-color:var(--green);background:rgba(16,185,129,.1);}
+.shop-emoji{font-size:40px;margin-bottom:10px;display:block;}
+.shop-name{font-family:'Nunito',sans-serif;font-weight:900;font-size:15px;margin-bottom:4px;}
+.shop-cost{font-size:13px;color:var(--amber);font-weight:700;}
+.shop-desc{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* ── INVENTORY BAR ── */
+.inventory-bar{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:12px 20px;
+}
+.inv-label{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+.inv-items{display:flex;gap:8px;flex-wrap:wrap;}
+.inv-item{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:10px;padding:6px 12px;
+  font-size:14px;display:flex;align-items:center;gap:6px;
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{opacity:0;transform:scale(.6);}to{opacity:1;transform:scale(1);}}
+.coins-badge{
+  background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);
+  border-radius:10px;padding:6px 14px;
+  font-size:14px;font-weight:800;color:var(--amber);
+  display:flex;align-items:center;gap:6px;
+}
+
+/* ── MONSTER ROSTER ── */
+.roster-grid{
+  display:flex;flex-wrap:wrap;gap:10px;
+  justify-content:center;max-width:900px;
+  padding:8px;
+}
+.mini-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:10px 14px;
+  display:flex;align-items:center;gap:8px;
+  cursor:grab;transition:all .2s;
+  user-select:none;
+}
+.mini-card:hover{border-color:var(--purple2);transform:scale(1.03);}
+.mini-card.dragging{opacity:.5;transform:scale(.95);}
+.mini-emoji{font-size:22px;}
+.mini-info h4{font-size:12px;font-weight:700;color:var(--text);}
+.mini-info p{font-size:10px;color:var(--muted);}
+
+/* ── STATS DASHBOARD ── */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;max-width:780px;width:100%;
+}
+.stat-tile{
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:20px;padding:22px;text-align:center;
+  cursor:pointer;transition:all .25s;
+}
+.stat-tile:hover{transform:translateY(-3px);}
+.stat-tile.selected-stat{box-shadow:0 0 0 3px var(--purple2);border-color:var(--purple2);}
+.stat-tile-icon{font-size:36px;margin-bottom:10px;display:block;}
+.stat-tile-num{
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:36px;
+  background:linear-gradient(135deg,var(--purple2),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.stat-tile-label{font-size:12px;color:var(--muted);margin-top:4px;}
+
+/* ── COMPLETION ── */
+.completion-card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:28px;padding:40px;text-align:center;
+  max-width:620px;width:100%;
+  position:relative;overflow:hidden;
+}
+.completion-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.2),transparent 70%);
+}
+.confetti-emoji{font-size:48px;display:block;margin-bottom:12px;animation:spin 2s linear infinite;}
+@keyframes spin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+.completion-title{
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:32px;
+  background:linear-gradient(135deg,var(--purple2),var(--pink),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:12px;position:relative;
+}
+.completion-sub{font-size:15px;color:var(--dim);line-height:1.7;margin-bottom:28px;position:relative;}
+
+/* ── COMPARE TABLE ── */
+.compare-table{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;width:100%;max-width:560px;
+}
+.compare-row{
+  display:grid;grid-template-columns:1fr 120px 120px;
+  padding:13px 20px;border-bottom:1px solid var(--border);
+  align-items:center;
+}
+.compare-row:last-child{border-bottom:none;}
+.compare-row.header{background:var(--surface2);font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.compare-stat-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.compare-val{text-align:center;font-family:'Nunito',sans-serif;font-weight:900;font-size:18px;}
+.compare-val.winner{color:var(--green);}
+.compare-val.loser{color:var(--muted);}
+
+/* ── ORDER LIST ── */
+.order-list{
+  display:flex;flex-direction:column;gap:8px;
+  width:100%;max-width:400px;
+}
+.order-item{
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:14px;padding:14px 18px;
+  display:flex;align-items:center;gap:14px;
+  cursor:grab;transition:all .2s;user-select:none;
+}
+.order-item:hover{border-color:var(--purple2);}
+.order-item.dragging{opacity:.4;border-style:dashed;}
+.order-num{
+  width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(135deg,var(--purple),var(--purple2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;
+  flex-shrink:0;
+}
+.order-monster{font-size:24px;}
+.order-name{font-weight:700;font-size:15px;}
+.order-drag-hint{font-size:11px;color:var(--muted);}
+
+/* ── RULE BUILDER ── */
+.rule-monster{
+  background:var(--surface);border:2px solid var(--border2);
+  border-radius:20px;padding:20px;width:200px;text-align:center;
+}
+.rule-btns{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
+.rule-btn{
+  padding:7px 10px;border-radius:9px;border:1px solid var(--border2);
+  background:var(--surface2);color:var(--dim);font-size:12px;
+  cursor:pointer;font-family:'Space Grotesk',sans-serif;
+  transition:all .2s;font-weight:600;
+}
+.rule-btn.active-rule{
+  border-color:var(--cyan);background:rgba(6,182,212,.12);color:var(--cyan);
+}
+.rule-btn:hover{border-color:var(--purple2);}
+
+/* ── ANIMATIONS ── */
+.slide-up{animation:slideUpAnim .4s cubic-bezier(.4,0,.2,1);}
+@keyframes slideUpAnim{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.pop{animation:popIn .35s cubic-bezier(.34,1.56,.64,1);}
+.pulse-glow{animation:pulseGlow 2s ease infinite;}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 20px rgba(124,58,237,.2);}50%{box-shadow:0 0 40px rgba(124,58,237,.5);}}
+
+/* ── TOOLTIP TAG ── */
+.tag{
+  display:inline-block;
+  background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);
+  color:var(--purple2);border-radius:6px;
+  font-size:11px;font-weight:700;padding:2px 8px;
+  margin:2px;
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .fighters{flex-direction:column;gap:20px;}
+  .vs-badge{transform:rotate(90deg);}
+  .compare-row{grid-template-columns:1fr 80px 80px;}
+  .card-grid{gap:8px;}
+  .sel-card{min-width:120px;padding:12px 14px;}
+}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topbar">
+  <div class="tb-brand">
+    <span class="tb-brand-icon">👾</span>
+    <span>Monster Battle Academy</span>
+  </div>
+  <div class="tb-right">
+    <div class="stage-counter">Stage <span id="stageNum">1</span> / 10</div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="studentModeBtn" onclick="setMode('student')">👾 Student</button>
+      <button class="mode-btn" id="teacherModeBtn" onclick="setMode('teacher')">🎓 Teacher</button>
+    </div>
+  </div>
+</div>
+<div class="progress-strip"><div class="progress-fill" id="progressBar" style="width:10%"></div></div>
+
+<!-- ════════════════════════════════ -->
+<!-- STAGE 1: Design a Monster       -->
+<!-- ════════════════════════════════ -->
+<div class="screen active" id="s1">
+  <div class="screen-center">
+    <div style="display:flex;justify-content:center;margin-left:44px;">
+      <div class="pm-bubble slide-up">
+        <div class="pm-name">👔 Product Manager — Day 1</div>
+        <div class="pm-text">We need our <strong>first monster</strong> for the game!<br>Before we build it, we need to decide what a monster <em>actually is</em>.</div>
+      </div>
+    </div>
+    <div class="big-question">"What information should every monster have?"</div>
+    <div style="font-size:14px;color:var(--muted);">Select everything a monster needs. Think carefully — you're designing the game!</div>
+    <div class="card-grid" id="s1cards">
+      <div class="sel-card" data-val="name" onclick="toggleCard(this,'s1')"><span class="card-icon">🏷️</span><div><div class="card-label">Name</div><div class="card-sub">What it's called</div></div></div>
+      <div class="sel-card" data-val="health" onclick="toggleCard(this,'s1')"><span class="card-icon">❤️</span><div><div class="card-label">Health</div><div class="card-sub">How much damage it can take</div></div></div>
+      <div class="sel-card" data-val="attack" onclick="toggleCard(this,'s1')"><span class="card-icon">⚔️</span><div><div class="card-label">Attack</div><div class="card-sub">How much damage it deals</div></div></div>
+      <div class="sel-card" data-val="defence" onclick="toggleCard(this,'s1')"><span class="card-icon">🛡️</span><div><div class="card-label">Defence</div><div class="card-sub">How well it blocks attacks</div></div></div>
+      <div class="sel-card" data-val="speed" onclick="toggleCard(this,'s1')"><span class="card-icon">💨</span><div><div class="card-label">Speed</div><div class="card-sub">How fast it moves</div></div></div>
+      <div class="sel-card" data-val="magic" onclick="toggleCard(this,'s1')"><span class="card-icon">✨</span><div><div class="card-label">Magic</div><div class="card-sub">Special abilities</div></div></div>
+      <div class="sel-card" data-val="image" onclick="toggleCard(this,'s1')"><span class="card-icon">🖼️</span><div><div class="card-label">Image</div><div class="card-sub">How it looks</div></div></div>
+      <div class="sel-card" data-val="coins" onclick="toggleCard(this,'s1')"><span class="card-icon">🪙</span><div><div class="card-label">Reward Coins</div><div class="card-sub">What the player earns</div></div></div>
+    </div>
+    <div id="s1preview" style="display:none;" class="slide-up">
+      <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:12px;">Your monster card — built from your choices!</div>
+      <div class="monster-card goblin" id="s1monsterCard" style="width:220px;margin:0 auto;"></div>
+    </div>
+    <button class="action-btn" id="s1btn" onclick="s1Build()" disabled>Build the Monster Card →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- STAGE 2: Compare Monsters       -->
+<!-- ════════════════════════════════ -->
+<div class="screen" id="s2">
+  <div class="screen-center">
+    <div style="display:flex;justify-content:center;margin-left:44px;">
+      <div class="pm-bubble slide-up">
+        <div class="pm-name">👔 Product Manager — Day 2</div>
+        <div class="pm-text">We created <strong>two monsters</strong> — a Goblin and a Dragon.<br>Our game needs to know which one is stronger. How do we decide?</div>
+      </div>
+    </div>
+    <div class="big-question">"Which monster looks stronger — and why?"</div>
+    <div style="display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;">
+      <div class="monster-card goblin" style="width:200px;">
+        <span class="monster-emoji">👺</span>
+        <div class="monster-name" style="color:#22C55E;">Goblin</div>
+        <div class="monster-stats" id="goblinStats"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px 0;">
+        <div style="font-size:32px;color:var(--purple2);">VS</div>
+        <div id="s2winner" style="display:none;"></div>
+      </div>
+      <div class="monster-card dragon" style="width:200px;">
+        <span class="monster-emoji">🐉</span>
+        <div class="monster-name" style="color:#EF4444;">Dragon</div>
+        <div class="monster-stats" id="dragonStats"></div>
+      </div>
+    </div>
+    <div class="compare-table slide-up">
+      <div class="compare-row header"><div>Stat</div><div style="text-align:center;">Goblin</div><div style="text-align:center;">Dragon</div></div>
+      <div class="compare-row"><div class="compare-stat-name">❤️ Health</div><div class="compare-val" id="cg-hp">80</div><div class="compare-val" id="cd-hp">200</div></div>
+      <div class="compare-row"><div class="compare-stat-name">⚔️ Attack</div><div class="compare-val" id="cg-atk">25</div><div class="compare-val" id="cd-atk">60</div></div>
+      <div class="compare-row"><div class="compare-stat-name">💨 Speed</div><div class="compare-val" id="cg-spd">70</div><div class="compare-val" id="cd-spd">30</div></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted);">Tap the stat you think matters most in a battle.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <button class="sel-card" style="min-width:auto;" onclick="s2Pick('health')"><span class="card-icon">❤️</span><div class="card-label">Health wins</div></button>
+      <button class="sel-card" style="min-width:auto;" onclick="s2Pick('attack')"><span class="card-icon">⚔️</span><div class="card-label">Attack wins</div></button>
+      <button class="sel-card" style="min-width:auto;" onclick="s2Pick('speed')"><span class="card-icon">💨</span><div class="card-label">Speed wins</div></button>
+      <button class="sel-card" style="min-width:auto;" onclick="s2Pick('all')"><span class="card-icon">🤔</span><div class="card-label">All together</div></button>
+    </div>
+    <div id="s2feedback" style="display:none;max-width:500px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;font-size:14px;color:var(--dim);line-height:1.6;"></div>
+    <button class="action-btn" id="s2btn" style="display:none;" onclick="nextStage(3)">Head to the Battle Arena →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- STAGE 3: Battle Arena           -->
+<!-- ════════════════════════════════ -->
+<div class="screen" id="s3">
+  <div class="screen-center">
+    <div style="display:flex;justify-content:center;margin-left:44px;">
+      <div class="pm-bubble slide-up">
+        <div class="pm-name">👔 Product Manager — Day 3</div>
+        <div class="pm-text">The Goblin and Hero are in the <strong>Battle Arena</strong>.<br>Every attack must change something. What exactly should change?</div>
+      </div>
+    </div>
+    <div class="big-question">"What should happen after every attack?"</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
+      <div class="sel-card selected" data-val="hp" onclick="s3ToggleRule(this)"><span class="card-icon">❤️</span><div class="card-label">Health decreases</div></div>
+      <div class="sel-card" data-val="atk" onclick="s3ToggleRule(this)"><span class="card-icon">⚔️</span><div class="card-label">Attack increases</div></div>
+      <div class="sel-card" data-val="speed" onclick="s3ToggleRule(this)"><span class="card-icon">💨</span><div class="card-label">Speed changes</div></div>
+      <div class="sel-card" data-val="turn" onclick="s3ToggleRule(this)"><span class="card-icon">🔄</span><div class="card-label">Turn switches</div></div>
+    </div>
+    <div class="battle-arena" id="s3arena" style="max-width:640px;">
+      <div class="arena-bg"></div>
+      <div class="fighters">
+        <div class="fighter-side">
+          <span class="fighter-emoji" id="s3hero">🦸</span>
+          <div class="fighter-name">Hero</div>
+          <div class="fighter-hp-row">
+            <span class="fighter-hp-label">HP</span>
+            <div class="hp-wrap" style="flex:1;"><div class="hp-fill" id="s3heroHp" style="width:100%"></div></div>
+            <span class="fighter-hp-val" id="s3heroVal">100</span>
+          </div>
+        </div>
+        <div class="vs-badge">⚔️</div>
+        <div class="fighter-side">
+          <span class="fighter-emoji" id="s3goblin">👺</span>
+          <div class="fighter-name">Goblin</div>
+          <div class="fighter-hp-row">
+            <span class="fighter-hp-label">HP</span>
+            <div class="hp-wrap" style="flex:1;"><div class="hp-fill" id="s3goblinHp" style="width:100%"></div></div>
+            <span class="fighter-hp-val" id="s3goblinVal">80</span>
+          </div>
+        </div>
+      </div>
+      <div class="attack-log" id="s3log"><span style="color:var(--muted)">Battle begins! Watch what changes after each attack...</span></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <button class="action-btn amber-btn" onclick="s3Attack()">⚔️ Hero Attacks!</button>
+      <button class="action-btn" style="background:linear-gradient(135deg,#4B5563,#374151);" onclick="s3GoblinAttack()">👺 Goblin Attacks!</button>
+    </div>
+    <button class="action-btn green-btn" id="s3next" style="display:none;" onclick="nextStage(4)">See what happens when HP hits zero →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- STAGE 4: Game Over Logic        -->
+<!-- ════════════════════════════════ -->
+<div class="screen" id="s4">
+  <div class="screen-center">
+    <div style="display:flex;justify-content:center;margin-left:44px;">
+      <div class="pm-bubble slide-up">
+        <div class="pm-name">👔 Product Manager — Day 4</div>
+        <div class="pm-text">Great news — the battle system works!<br>But what should happen when a monster's <strong>health reaches zero</strong>?</div>
+      </div>
+    </div>
+    <div class="big-question">"Health = 0. What now?"</div>
+    <div style="font-size:14px;color:var(--muted);">Pick everything that should happen. You're designing the game rules!</div>
+    <div class="card-grid" id="s4cards">
+      <div class="sel-card" data-val="disappear" onclick="toggleCard(this,'s4')"><span class="card-icon">💨</span><div><div class="card-label">Monster disappears</div></div></div>
+      <div class="sel-card" data-val="win" onclick="toggleCard(this,'s4')"><span class="card-icon">🏆</span><div><div class="card-label">Player wins</div></div></div>
+      <div class="sel-card" data-val="next" onclick="toggleCard(this,'s4')"><span class="card-icon">➡️</span><div><div class="card-label">Next monster appears</div></div></div>
+      <div class="sel-card" data-val="coins" onclick="toggleCard(this,'s4')"><span class="card-icon">🪙</span><div><div class="card-label">Reward coins drop</div></div></div>
+      <div class="sel-card" data-val="score" onclick="toggleCard(this,'s4')"><span class="card-icon">⭐</span><div><div class="card-label">Score increases</div></div></div>
+      <div class="sel-card" data-val="revive" onclick="toggleCard(this,'s4')"><span class="card-icon">💊</span><div><div class="card-label">Monster can revive</div></div></div>
+    </div>
+    <div id="s4arena" style="display:none;width:100%;max-width:520px;" class="slide-up">
+      <div class="battle-arena">
+        <div class="arena-bg"></div>
+        <div class="fighters">
+          <div class="fighter-side">
+            <span class="fighter-emoji" id="s4hero">🦸</span>
+            <div class="fighter-name" style="color:var(--green);">Hero</div>
+          </div>
+          <div class="vs-badge">🏆</div>
+          <div class="fighter-side">
+            <span class="fighter-emoji" id="s4goblin" style="transition:all .6s;">👺</span>
+            <div class="fighter-name">Goblin</div>
+          </div>
+        </div>
+        <div class="attack-log" id="s4log"></div>
+      </div>
+    </div>
+    <button class="action-btn" id="s4btn" onclick="s4Demo()" disabled>Simulate the Defeat! →</button>
+    <button class="action-btn green-btn" id="s4next" style="display:none;" onclick="nextStage(5)">Now face 3 monsters in a row →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- STAGE 5: Fight Order            -->
+<!-- ════════════════════════════════ -->
+<div class="screen" id="s5">
+  <div class="screen-center">
+    <div style="display:flex;justify-content:center;margin-left:44px;">
+      <div class="pm-bubble slide-up">
+        <div class="pm-name">👔 Product Manager — Day 5</div>
+        <div class="pm-text">The game now has <strong>three monsters</strong> in sequence.<br>Players must fight them one by one — but which order?</div>
+      </div>
+    </div>
+    <div class="big-question">"Drag to arrange the fight order!"</div>
+    <div style="font-size:14px;color:var(--muted);">Think about difficulty. Should the hardest come first or last?</div>
+    <div class="order-list" id="s5list">
+      <div class="order-item" draggable="true" data-monster="goblin" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropOrder(event)">
+        <div class="order-num" id="on-goblin">1</div>
+        <span class="order-monster">👺</span>
+        <div><div class="order-name">Goblin</div><div class="order-drag-hint">HP:80 · ATK:25 · Easy</div></div>
+        <span style="margin-left:auto;font-size:18px;color:var(--muted);">⠿</span>
+      </div>
+      <div class="order-item" draggable="true" data-monster="zombie" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropOrder(event)">
+        <div class="order-num" id="on-zombie">2</div>
+        <span class="order-monster">🧟</span>
+        <div><div class="order-name">Zombie</div><div class="order-drag-hint">HP:120 · ATK:35 · Medium</div></div>
+        <span style="margin-left:auto;font-size:18px;color:var(--muted);">⠿</span>
+      </div>
+      <div class="order-item" draggable="true" data-monster="skeleton" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropOrder(event)">
+        <div class="order-num" id="on-skeleton">3</div>
+        <span class="order-monster">💀</span>
+        <div><div class="order-name">Skeleton</div><div class="order-drag-hint">HP:60 · ATK:45 · Tricky</div></div>
+        <span style="margin-left:auto;font-size:18px;color:var(--muted);">⠿</span>
+      </div>
+    </div>
+    <div id="s5battles" style="display:none;width:100%;max-width:640px;" class="slide-up">
+      <div class="battle-arena">
+        <div class="arena-bg"></div>
+        <div class="fighters">
+          <div class="fighter-side">
+            <span class="fighter-emoji" id="s5hero">🦸</span>
+            <div class="fighter-name">Hero</div>
+            <div class="fighter-hp-row">
+              <span class="fighter-hp-label">HP</span>
+              <div class="hp-wrap" style="flex:1;"><div class="hp-fill" id="s5heroHp" style="width:100%;"></div></div>
+              <span class="fighter-hp-val" id="s5heroVal">150</span>
+            </div>
+          </div>
+          <div class="vs-badge">⚔️</div>
+          <div class="fighter-side">
+            <span class="fighter-emoji" id="s5enemy">👺</span>
+            <div class="fighter-name" id="s5ename">—</div>
+            <div class="fighter-hp-row">
+              <span class="fighter-hp-label">HP</span>
+              <div class="hp-wrap" style="flex:1;"><div class="hp-fill" id="s5enemyHp" style="width:100%;"></div></div>
+              <span class="fighter-hp-val" id="s5enemyVal">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="attack-log" id="s5log"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <button class="action-btn amber-btn" onclick="s5StartBattle()">⚔️ Start Battle Sequence!</button>
+    </div>
+    <button class="action-btn green-btn" id="s5next" style="display:none;" onclick="nextStage(6)">Design different monster types →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- STAGE 6: Monster Types          -->
+<!-- ════════════════════════════════ -->
+<div class="screen" id="s6">
+  <div class="screen-center">
+    <div style="display:flex;justify-content:center;margin-left:44px;">
+      <div class="pm-bubble slide-up">
+        <div class="pm-name">👔 Product Manager — Day 6</div>
+        <div class="pm-text">We want <strong>Fire, Ice, and Stone</strong> monsters.<br>But should they all behave the same way?</div>
+      </div>
+    </div>
+    <div class="big-question">"Give each monster its own special rule!"</div>
+    <div style="font-size:14px;color:var(--muted);">Click to assign a behaviour to each monster type.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;">
+      <div class="rule-monster">
+        <div style="font-size:52px;">🔥</div>
+        <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:16px;margin:8px 0 2px;">Fire Monster</div>
+        <div class="rule-btns" id="rules-fire">
+          <button class="rule-btn" onclick="setRule('fire','Burns enemy each turn')">🔥 Burns enemy each turn</button>
+          <button class="rule-btn" onclick="setRule('fire','Double attack power')">⚡ Double attack power</button>
+          <button class="rule-btn" onclick="setRule('fire','Heals itself')">💊 Heals itself</button>
+          <button class="rule-btn" onclick="setRule('fire','Weak against ice')">🧊 Weak against ice</button>
+        </div>
+        <div id="fire-rule" style="margin-top:8px;font-size:12px;color:var(--orange);min-height:18px;font-weight:700;"></div>
+      </div>
+      <div class="rule-monster">
+        <div style="font-size:52px;">🧊</div>
+        <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:16px;margin:8px 0 2px;">Ice Monster</div>
+        <div class="rule-btns" id="rules-ice">
+          <button class="rule-btn" onclick="setRule('ice','Freezes enemy for 1 turn')">❄️ Freezes enemy 1 turn</button>
+          <button class="rule-btn" onclick="setRule('ice','Slows enemy speed')">🐢 Slows enemy speed</button>
+          <button class="rule-btn" onclick="setRule('ice','Immune to ice attacks')">🛡️ Immune to ice</button>
+          <button class="rule-btn" onclick="setRule('ice','Weak against fire')">🔥 Weak against fire</button>
+        </div>
+        <div id="ice-rule" style="margin-top:8px;font-size:12px;color:var(--cyan);min-height:18px;font-weight:700;"></div>
+      </div>
+      <div class="rule-monster">
+        <div style="font-size:52px;">🪨</div>
+        <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:16px;margin:8px 0 2px;">Stone Monster</div>
+        <div class="rule-btns" id="rules-stone">
+          <button class="rule-btn" onclick="setRule('stone','Blocks 50% of damage')">🛡️ Blocks 50% damage</button>
+          <button class="rule-btn" onclick="setRule('stone','Smash — ignores defence')">💥 Smash — ignores defence</button>
+          <button class="rule-btn" onclick="setRule('stone','Very high health')">❤️ Very high health</button>
+          <button class="rule-btn" onclick="setRule('stone','Slow but powerful')">🐘 Slow but powerful</button>
+        </div>
+        <div id="stone-rule" style="margin-top:8px;font-size:12px;color:#A8A29E;min-height:18px;font-weight:700;"></div>
+      </div>
+    </div>
+    <div id="s6insight" style="display:none;max-width:520px;background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:18px 22px;font-size:14px;color:var(--dim);line-height:1.6;" class="slide-up"></div>
+    <button class="action-btn green-btn" id="s6next" style="display:none;" onclick="nextStage(7)">Open the Item Shop →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- STAGE 7: Item Shop              -->
+<!-- ════════════════════════════════ -->
+<div class="screen" id="s7">
+  <div class="screen-center">
+    <div style="display:flex;justify-content:center;margin-left:44px;">
+      <div class="pm-bubble slide-up">
+        <div class="pm-name">👔 Product Manager — Day 7</div>
+        <div class="pm-text">The hero just earned <strong>50 coins</strong> from defeating monsters!<br>Design the item shop — what can players spend their coins on?</div>
+      </div>
+    </div>
+    <div class="big-question">"50 coins. What would YOU buy?"</div>
+    <div class="inventory-bar" id="s7inv" style="margin-bottom:4px;">
+      <span class="inv-label">Inventory:</span>
+      <div class="inv-items" id="s7items"><span style="font-size:13px;color:var(--muted);">Empty</span></div>
+      <div style="margin-left:auto;" class="coins-badge">🪙 <span id="s7coins">50</span></div>
+    </div>
+    <div class="shop-grid">
+      <div class="shop-item" id="shop-sword" onclick="buyItem('sword','⚔️ Sword',20,'⚔️','ATK +15')">
+        <span class="shop-emoji">⚔️</span>
+        <div class="shop-name">Sword</div>
+        <div class="shop-cost">🪙 20</div>
+        <div class="shop-desc">ATK +15 per attack</div>
+      </div>
+      <div class="shop-item" id="shop-shield" onclick="buyItem('shield','🛡️ Shield',15,'🛡️','DEF +20')">
+        <span class="shop-emoji">🛡️</span>
+        <div class="shop-name">Shield</div>
+        <div class="shop-cost">🪙 15</div>
+        <div class="shop-desc">DEF +20 per block</div>
+      </div>
+      <div class="shop-item" id="shop-potion" onclick="buyItem('potion','💊 Potion',10,'💊','HP +30')">
+        <span class="shop-emoji">💊</span>
+        <div class="shop-name">Potion</div>
+        <div class="shop-cost">🪙 10</div>
+        <div class="shop-desc">Restores 30 HP</div>
+      </div>
+      <div class="shop-item" id="shop-magic" onclick="buyItem('magic','🪄 Magic',25,'🪄','SPELL x2')">
+        <span class="shop-emoji">🪄</span>
+        <div class="shop-name">Magic Staff</div>
+        <div class="shop-cost">🪙 25</div>
+        <div class="shop-desc">Double spell damage</div>
+      </div>
+    </div>
+    <div id="s7msg" style="display:none;max-width:480px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 18px;font-size:14px;color:var(--dim);line-height:1.6;" class="slide-up"></div>
+    <button class="action-btn green-btn" id="s7next" style="display:none;" onclick="nextStage(8)">Face the Boss Monster →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- STAGE 8: Boss Battle            -->
+<!-- ════════════════════════════════ -->
+<div class="screen" id="s8">
+  <div class="screen-center">
+    <div style="display:flex;justify-content:center;margin-left:44px;">
+      <div class="pm-bubble slide-up">
+        <div class="pm-name">👔 Product Manager — Day 8</div>
+        <div class="pm-text">It's time for the <strong>Boss Monster</strong>!<br>The Boss has 500 HP. One attack deals 25 damage. Can a single attack win?</div>
+      </div>
+    </div>
+    <div class="big-question">"How many attacks does it take to defeat the Boss?"</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:4px;">
+      <button class="sel-card" style="min-width:auto" onclick="s8Guess(1)"><span class="card-icon">1️⃣</span><div class="card-label">Just 1 attack</div></button>
+      <button class="sel-card" style="min-width:auto" onclick="s8Guess(10)"><span class="card-icon">🔟</span><div class="card-label">About 10</div></button>
+      <button class="sel-card" style="min-width:auto" onclick="s8Guess(20)"><span class="card-icon">2️⃣0️⃣</span><div class="card-label">About 20</div></button>
+      <button class="sel-card" style="min-width:auto" onclick="s8Guess(50)"><span class="card-icon">💯</span><div class="card-label">50+</div></button>
+    </div>
+    <div class="battle-arena" style="max-width:640px;">
+      <div class="arena-bg"></div>
+      <div class="fighters">
+        <div class="fighter-side">
+          <span class="fighter-emoji" id="s8hero">🦸</span>
+          <div class="fighter-name">Hero</div>
+        </div>
+        <div class="vs-badge" style="font-size:36px;">👑</div>
+        <div class="fighter-side">
+          <span class="fighter-emoji" id="s8boss" style="font-size:80px;">🐲</span>
+          <div class="fighter-name" style="color:var(--purple2);">BOSS DRAGON</div>
+          <div class="fighter-hp-row">
+            <span class="fighter-hp-label">HP</span>
+            <div class="hp-wrap" style="flex:1;"><div class="hp-fill" id="s8bossHp" style="width:100%;"></div></div>
+            <span class="fighter-hp-val" id="s8bossVal">500</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="s8attacks">Attacks landed: 0</div>
+        </div>
+      </div>
+      <div class="attack-log" id="s8log"><span style="color:var(--muted)">The Boss awaits your prediction...</span></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <button class="action-btn amber-btn" id="s8attackBtn" onclick="s8Attack()" disabled>⚔️ Attack Boss!</button>
+      <button class="action-btn" style="background:linear-gradient(135deg,#6366F1,#4338CA);" id="s8autoBtn" onclick="s8Auto()" disabled>⚡ Auto-Battle to the End</button>
+    </div>
+    <button class="action-btn green-btn" id="s8next" style="display:none;" onclick="nextStage(9)">Manage 100 Monsters →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- STAGE 9: Monster Roster         -->
+<!-- ════════════════════════════════ -->
+<div class="screen" id="s9">
+  <div class="screen-center">
+    <div style="display:flex;justify-content:center;margin-left:44px;">
+      <div class="pm-bubble slide-up">
+        <div class="pm-name">👔 Product Manager — Day 9</div>
+        <div class="pm-text">The game now has <strong>100 different monsters</strong>!<br>How should the game keep track of all of them?</div>
+      </div>
+    </div>
+    <div class="big-question">"Sort and organise the monster roster!"</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
+      <button class="sel-card" style="min-width:auto" onclick="s9Sort('type')"><span class="card-icon">🗂️</span><div class="card-label">Sort by Type</div></button>
+      <button class="sel-card" style="min-width:auto" onclick="s9Sort('power')"><span class="card-icon">💪</span><div class="card-label">Sort by Power</div></button>
+      <button class="sel-card" style="min-width:auto" onclick="s9Sort('alpha')"><span class="card-icon">🔤</span><div class="card-label">A to Z</div></button>
+      <button class="sel-card" style="min-width:auto" onclick="s9Sort('random')"><span class="card-icon">🔀</span><div class="card-label">Shuffle</div></button>
+    </div>
+    <div class="roster-grid" id="s9roster" style="max-height:380px;overflow-y:auto;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:800px;"></div>
+    <div id="s9insight" style="display:none;max-width:520px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 18px;font-size:14px;color:var(--dim);line-height:1.6;" class="slide-up"></div>
+    <button class="action-btn green-btn" id="s9next" style="display:none;" onclick="nextStage(10)">See the Battle Statistics →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- STAGE 10: Statistics            -->
+<!-- ════════════════════════════════ -->
+<div class="screen" id="s10">
+  <div class="screen-center">
+    <div style="display:flex;justify-content:center;margin-left:44px;">
+      <div class="pm-bubble slide-up">
+        <div class="pm-name">👔 Product Manager — Day 10</div>
+        <div class="pm-text">The game is done! Now our team needs to <strong>improve it</strong>.<br>Which statistics would help us make the game better?</div>
+      </div>
+    </div>
+    <div class="big-question">"Which data matters most?"</div>
+    <div style="font-size:14px;color:var(--muted);">Select the stats you think are most useful for improving the game.</div>
+    <div class="stats-grid">
+      <div class="stat-tile" onclick="toggleStat(this,'defeated')">
+        <span class="stat-tile-icon">💀</span>
+        <div class="stat-tile-num">47</div>
+        <div class="stat-tile-label">Monsters Defeated</div>
+      </div>
+      <div class="stat-tile" onclick="toggleStat(this,'coins')">
+        <span class="stat-tile-icon">🪙</span>
+        <div class="stat-tile-num">320</div>
+        <div class="stat-tile-label">Coins Earned</div>
+      </div>
+      <div class="stat-tile" onclick="toggleStat(this,'damage')">
+        <span class="stat-tile-icon">🩸</span>
+        <div class="stat-tile-num">1,240</div>
+        <div class="stat-tile-label">Damage Received</div>
+      </div>
+      <div class="stat-tile" onclick="toggleStat(this,'potions')">
+        <span class="stat-tile-icon">💊</span>
+        <div class="stat-tile-num">8</div>
+        <div class="stat-tile-label">Potions Used</div>
+      </div>
+      <div class="stat-tile" onclick="toggleStat(this,'time')">
+        <span class="stat-tile-icon">⏱️</span>
+        <div class="stat-tile-num">42m</div>
+        <div class="stat-tile-label">Time Played</div>
+      </div>
+      <div class="stat-tile" onclick="toggleStat(this,'deaths')">
+        <span class="stat-tile-icon">💔</span>
+        <div class="stat-tile-num">3</div>
+        <div class="stat-tile-label">Times Defeated</div>
+      </div>
+    </div>
+    <div id="s10feedback" style="display:none;max-width:520px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 18px;font-size:14px;color:var(--dim);line-height:1.6;" class="slide-up"></div>
+    <button class="action-btn green-btn" id="s10next" style="display:none;" onclick="showCompletion()">🎉 See Your Game Design Report!</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- COMPLETION                      -->
+<!-- ════════════════════════════════ -->
+<div class="screen" id="sComplete">
+  <div class="screen-center">
+    <div class="completion-card">
+      <span class="confetti-emoji">🎮</span>
+      <div class="completion-title">You Designed a Real Game!</div>
+      <div class="completion-sub">
+        Over 10 days as a Game Designer, you made every major decision that goes into a battle game. You defined what monsters are, how battles work, what happens when things end, how the shop operates, and how to track the game's progress.<br><br>
+        <strong style="color:var(--purple2);">Your teacher has something to tell you...</strong>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(168,85,247,.1));border:1px solid rgba(168,85,247,.3);border-radius:16px;padding:20px;margin-bottom:24px;text-align:left;">
+        <div style="font-size:13px;font-weight:700;color:var(--purple2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">🎓 Teacher Moment</div>
+        <div style="font-size:15px;color:var(--text);line-height:1.8;">
+          Everything you just designed has a name in Java.<br>
+          <span class="tag">Monster properties</span> = <strong>Variables</strong><br>
+          <span class="tag">Monster itself</span> = <strong>Object / Class</strong><br>
+          <span class="tag">Health decreasing</span> = <strong>Assignment</strong><br>
+          <span class="tag">HP = 0 → what happens</span> = <strong>if-statement</strong><br>
+          <span class="tag">Fight 3 monsters in order</span> = <strong>Loop</strong><br>
+          <span class="tag">Different monster types</span> = <strong>Inheritance / Polymorphism</strong><br>
+          <span class="tag">Shop inventory</span> = <strong>ArrayList</strong><br>
+          <span class="tag">Repeat attacks on Boss</span> = <strong>While loop</strong><br>
+          <span class="tag">100 monsters</span> = <strong>Array / Collection</strong><br>
+          <span class="tag">Statistics</span> = <strong>Variables + Methods</strong>
+        </div>
+      </div>
+      <button class="action-btn" onclick="restartGame()">🔄 Play Again</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- TEACHER PANEL                   -->
+<!-- ════════════════════════════════ -->
+<div class="teacher-panel" id="teacherPanel">
+  <div class="tp-header">
+    <div class="tp-title">🎓 Teacher Notes — Stage <span id="tpStageNum">1</span></div>
+    <button class="tp-close" onclick="closeTeacher()">✕ Close</button>
+  </div>
+  <div class="tp-grid" id="tpContent"></div>
+  <div class="tp-code" id="tpCode"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let currentStage = 1;
+let mode = 'student';
+let s1selected = new Set();
+let s4selected = new Set();
+let s7coins = 50;
+let s7bought = new Set();
+let s8hp = 500; s8atk = 0;
+let s3heroHp = 100; s3goblinHp = 80;
+let s5heroHp = 150;
+let s10selected = new Set();
+let monsterRules = {fire:'', ice:'', stone:''};
+let rulesSet = 0;
+let dragSrc = null;
+
+// ══════════════════════════════════════════════
+// TEACHER DATA
+// ══════════════════════════════════════════════
+const teacherData = {
+  1:{
+    concept:'Classes and Objects',
+    why:'Students are defining the fields of a Monster class. Each property they select becomes an instance variable.',
+    discussion:'Ask: "If every monster has these same properties, what do they all have in common?" Lead to the idea of a template.',
+    misconception:'Students may think each monster is totally unique — help them see that they all share the same structure with different values.',
+    code:`class Monster {
+  String name;
+  int health;
+  int attack;
+  int defence;
+  int speed;
+  int magicPower;
+  int rewardCoins;
+  String image;
+}`
+  },
+  2:{
+    concept:'Comparison Operators (>, <, ==)',
+    why:'Comparing two monsters stat by stat is exactly what comparison operators do in Java.',
+    discussion:'Ask: "How does the computer decide which number is bigger?" Introduce > and <.',
+    misconception:'Students may think "stronger" has one answer. Reinforce that it depends on which stat you compare.',
+    code:`if (dragon.health > goblin.health) {
+  System.out.println("Dragon has more HP");
+}
+if (goblin.speed > dragon.speed) {
+  System.out.println("Goblin is faster");
+}`
+  },
+  3:{
+    concept:'Assignment Statements (hp = hp - damage)',
+    why:'Every attack reduces health. This is the fundamental assignment statement: variable = variable - value.',
+    discussion:'Ask: "How does the computer remember the new health value?" Introduce the concept of reassignment.',
+    misconception:'Students assume things update automatically. Help them see that the computer must be explicitly told to change a value.',
+    code:`goblin.health = goblin.health - hero.attack;
+// or shorthand:
+goblin.health -= hero.attack;
+System.out.println("Goblin HP: " + goblin.health);`
+  },
+  4:{
+    concept:'if-else Statement (Conditional Logic)',
+    why:'When HP reaches 0, different things happen depending on conditions — this is exactly if-else.',
+    discussion:'Ask: "Can we write out the rule as an English sentence with IF and THEN?"',
+    misconception:'Students may not realise that conditions must be checked explicitly every time.',
+    code:`if (goblin.health <= 0) {
+  goblin.isAlive = false;
+  player.coins += goblin.rewardCoins;
+  player.score += 10;
+  loadNextMonster();
+}`
+  },
+  5:{
+    concept:'Arrays and Sequential Loops (for loop)',
+    why:'Fighting 3 monsters in order is a perfect for-loop: go through each item in an array in sequence.',
+    discussion:'Ask: "If there were 50 monsters, would you write 50 separate fight instructions?"',
+    misconception:'Students may think the order is automatic. Help them see that sequences must be explicitly programmed.',
+    code:`Monster[] enemies = {goblin, zombie, skeleton};
+for (int i = 0; i < enemies.length; i++) {
+  battle(hero, enemies[i]);
+}`
+  },
+  6:{
+    concept:'Inheritance and Polymorphism',
+    why:'Each monster type sharing the same base but having unique behaviours is the definition of inheritance and method overriding.',
+    discussion:'Ask: "Are all three still monsters? What makes them different?" Lead to superclass + subclass.',
+    misconception:'Students may think completely different code is needed for each type.',
+    code:`class Monster { void attack() {...} }
+class FireMonster extends Monster {
+  void attack() { /* burns enemy */ }
+}
+class IceMonster extends Monster {
+  void attack() { /* freezes enemy */ }
+}`
+  },
+  7:{
+    concept:'ArrayList — Dynamic Collections',
+    why:'An inventory that grows as items are added is an ArrayList. Unlike arrays, it can change size.',
+    discussion:'Ask: "What if the player could carry unlimited items? How would we store an unknown number of things?"',
+    misconception:'Students assume a fixed list. Help them see the need for a collection that can grow.',
+    code:`ArrayList<String> inventory = new ArrayList<>();
+inventory.add("Sword");
+inventory.add("Shield");
+System.out.println(inventory);
+// Output: [Sword, Shield]`
+  },
+  8:{
+    concept:'While Loop (Repeated Action)',
+    why:'Attacking the boss repeatedly until it dies is a classic while loop: keep doing something while a condition is true.',
+    discussion:'Ask: "Can we write the rule as: keep attacking WHILE the boss is still alive?"',
+    misconception:'Students may think 20 separate attack commands are needed.',
+    code:`while (boss.health > 0) {
+  boss.health -= hero.attack;
+  System.out.println("Boss HP: " + boss.health);
+}
+System.out.println("Boss defeated!");`
+  },
+  9:{
+    concept:'Arrays, ArrayList, Sorting',
+    why:'100 monsters need a container. Sorting them demonstrates that collections have built-in operations.',
+    discussion:'Ask: "If the game needs to find the strongest monster quickly, how should the list be arranged?"',
+    misconception:'Students may think each monster is remembered separately.',
+    code:`ArrayList<Monster> roster = new ArrayList<>();
+// Sort by attack power:
+roster.sort((a, b) -> b.attack - a.attack);
+// Access by index:
+Monster first = roster.get(0);`
+  },
+  10:{
+    concept:'Variables to Track State — Game Logic',
+    why:'Each statistic is a variable that changes as the game runs. Selecting useful stats is about understanding what data matters.',
+    discussion:'Ask: "Which variable would help us find out why players keep losing?"',
+    misconception:'Students may track everything. Help them understand purposeful data collection.',
+    code:`int monstersDefeated = 0;
+int coinsEarned = 0;
+int damageReceived = 0;
+int potionsUsed = 0;
+// Updated after each event:
+monstersDefeated++;
+coinsEarned += monster.rewardCoins;`
+  }
+};
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function nextStage(n) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  currentStage = n;
+  document.getElementById('stageNum').textContent = n > 10 ? '✓' : n;
+  document.getElementById('progressBar').style.width = (n/10*100)+'%';
+  if(mode==='teacher') showTeacher(n);
+  window.scrollTo({top:0,behavior:'smooth'});
+  // stage-specific init
+  if(n===2) s2Init();
+  if(n===3) s3Init();
+  if(n===9) s9Init();
+}
+
+function showCompletion() {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sComplete').classList.add('active');
+  document.getElementById('stageNum').textContent = '✓';
+  document.getElementById('progressBar').style.width = '100%';
+}
+
+function restartGame(){
+  location.reload();
+}
+
+// ══════════════════════════════════════════════
+// MODE TOGGLE
+// ══════════════════════════════════════════════
+function setMode(m){
+  mode = m;
+  document.getElementById('studentModeBtn').classList.toggle('active', m==='student');
+  document.getElementById('teacherModeBtn').classList.toggle('active', m==='teacher');
+  if(m==='teacher') showTeacher(currentStage);
+  else closeTeacher();
+}
+function showTeacher(n){
+  const d = teacherData[n]; if(!d) return;
+  document.getElementById('tpStageNum').textContent = n;
+  document.getElementById('tpContent').innerHTML = `
+    <div class="tp-card"><div class="tp-card-label">☕ Java Concept</div><div class="tp-card-text"><strong>${d.concept}</strong></div></div>
+    <div class="tp-card"><div class="tp-card-label">🎯 Why This Activity</div><div class="tp-card-text">${d.why}</div></div>
+    <div class="tp-card"><div class="tp-card-label">💬 Discussion Prompt</div><div class="tp-card-text">${d.discussion}</div></div>
+    <div class="tp-card"><div class="tp-card-label">⚠️ Misconception Watch</div><div class="tp-card-text">${d.misconception}</div></div>`;
+  document.getElementById('tpCode').innerHTML = d.code.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.getElementById('teacherPanel').classList.add('open');
+}
+function closeTeacher(){ document.getElementById('teacherPanel').classList.remove('open'); }
+
+// ══════════════════════════════════════════════
+// STAGE 1
+// ══════════════════════════════════════════════
+function toggleCard(el, stage){
+  el.classList.toggle('selected');
+  if(stage==='s1'){
+    const v = el.dataset.val;
+    if(s1selected.has(v)) s1selected.delete(v); else s1selected.add(v);
+    document.getElementById('s1btn').disabled = s1selected.size < 3;
+  } else if(stage==='s4'){
+    const v = el.dataset.val;
+    if(s4selected.has(v)) s4selected.delete(v); else s4selected.add(v);
+    document.getElementById('s4btn').disabled = s4selected.size === 0;
+  }
+}
+function s1Build(){
+  const card = document.getElementById('s1monsterCard');
+  const has = v => s1selected.has(v);
+  card.innerHTML = `
+    <span class="monster-emoji">👺</span>
+    <div class="monster-name" style="color:#22C55E;">Goblin</div>
+    <div class="monster-stats">
+      ${has('health') ? statRow('❤️','HP',80,80,'#22C55E,#86EFAC') : ''}
+      ${has('attack') ? statRow('⚔️','ATK',25,100,'#EF4444,#FCA5A5') : ''}
+      ${has('defence') ? statRow('🛡️','DEF',40,100,'#3B82F6,#93C5FD') : ''}
+      ${has('speed') ? statRow('💨','SPD',70,100,'#06B6D4,#67E8F9') : ''}
+      ${has('magic') ? statRow('✨','MAG',15,100,'#A855F7,#D8B4FE') : ''}
+      ${has('coins') ? statRow('🪙','RWD',30,100,'#F59E0B,#FCD34D') : ''}
+    </div>
+    ${has('image') ? '<div style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px;">🖼️ Image: goblin.png</div>' : ''}`;
+  document.getElementById('s1preview').style.display = 'block';
+  setTimeout(()=>{ document.getElementById('s1btn').textContent = 'Continue to Day 2 →'; document.getElementById('s1btn').onclick = ()=>nextStage(2); }, 800);
+}
+function statRow(icon, label, val, max, grad){
+  const pct = Math.round(val/max*100);
+  return `<div class="stat-row">
+    <span class="stat-icon">${icon}</span>
+    <span class="stat-label">${label}</span>
+    <div class="stat-bar-wrap"><div class="stat-bar" style="width:${pct}%;background:linear-gradient(90deg,${grad});"></div></div>
+    <span class="stat-val">${val}</span>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+// STAGE 2
+// ══════════════════════════════════════════════
+function s2Init(){
+  document.getElementById('goblinStats').innerHTML =
+    statRow('❤️','HP',80,200,'#22C55E,#86EFAC')+
+    statRow('⚔️','ATK',25,60,'#EF4444,#FCA5A5')+
+    statRow('💨','SPD',70,70,'#06B6D4,#67E8F9');
+  document.getElementById('dragonStats').innerHTML =
+    statRow('❤️','HP',200,200,'#22C55E,#86EFAC')+
+    statRow('⚔️','ATK',60,60,'#EF4444,#FCA5A5')+
+    statRow('💨','SPD',30,70,'#06B6D4,#67E8F9');
+  // highlight winners
+  setTimeout(()=>{
+    styleCompare('cg-hp','cd-hp',80,200);
+    styleCompare('cg-atk','cd-atk',25,60);
+    styleCompare('cg-spd','cd-spd',70,30);
+  },400);
+}
+function styleCompare(a,b,va,vb){
+  const ea=document.getElementById(a), eb=document.getElementById(b);
+  if(!ea||!eb) return;
+  ea.classList.add(va>=vb?'winner':'loser');
+  eb.classList.add(vb>=va?'winner':'loser');
+}
+function s2Pick(stat){
+  const msgs = {
+    health:`The Dragon has much higher HP (200 vs 80). In a long fight, it survives longer. Health is important — but not the only thing!`,
+    attack:`The Dragon deals 60 damage per hit vs Goblin's 25. Higher attack ends battles faster. But the Goblin might dodge more...`,
+    speed:`The Goblin has 70 speed vs Dragon's 30! That means the Goblin could attack twice before the Dragon attacks once. Speed can matter more than strength!`,
+    all:`That's the best answer! A truly "stronger" monster depends on ALL stats together. Different situations call for different strengths.`
+  };
+  document.getElementById('s2feedback').textContent = msgs[stat];
+  document.getElementById('s2feedback').style.display = 'block';
+  const w = document.getElementById('s2winner');
+  w.innerHTML = stat==='speed'
+    ? `<div style="font-size:12px;font-weight:700;color:var(--green);">👺 Goblin wins on speed!</div>`
+    : stat==='all' ? `<div style="font-size:12px;font-weight:700;color:var(--amber);">🤔 It depends!</div>`
+    : `<div style="font-size:12px;font-weight:700;color:var(--red);">🐉 Dragon wins here!</div>`;
+  w.style.display='block';
+  document.getElementById('s2btn').style.display='block';
+}
+
+// ══════════════════════════════════════════════
+// STAGE 3
+// ══════════════════════════════════════════════
+let s3Attacks = 0;
+function s3Init(){ s3Attacks=0; s3heroHp=100; s3goblinHp=80; }
+function s3Attack(){
+  const dmg = 20 + Math.floor(Math.random()*10);
+  s3goblinHp = Math.max(0, s3goblinHp - dmg);
+  s3Attacks++;
+  floatDamage('s3goblin', dmg, 'red');
+  shakeElement('s3goblin');
+  updateHpBar('s3goblinHp', s3goblinHp, 80);
+  document.getElementById('s3goblinVal').textContent = s3goblinHp;
+  addLog('s3log', `⚔️ Hero attacks! Goblin takes ${dmg} damage. Goblin HP: ${s3goblinHp}`, 'damage');
+  if(s3goblinHp<=0){ addLog('s3log','🏆 Goblin defeated!','win'); document.getElementById('s3next').style.display='block'; }
+  if(s3Attacks>=2) showS3Insight();
+}
+function s3GoblinAttack(){
+  const dmg = 15 + Math.floor(Math.random()*8);
+  s3heroHp = Math.max(0, s3heroHp - dmg);
+  floatDamage('s3hero', dmg, 'red');
+  shakeElement('s3hero');
+  updateHpBar('s3heroHp', s3heroHp, 100);
+  document.getElementById('s3heroVal').textContent = s3heroHp;
+  addLog('s3log', `👺 Goblin attacks! Hero takes ${dmg} damage. Hero HP: ${s3heroHp}`, 'damage');
+}
+function s3ToggleRule(el){
+  el.classList.toggle('selected');
+}
+function showS3Insight(){
+  if(document.getElementById('s3insight')) return;
+  const d = document.createElement('div');
+  d.id='s3insight';
+  d.className='slide-up';
+  d.style.cssText='max-width:500px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 18px;font-size:14px;color:var(--dim);line-height:1.6;';
+  d.innerHTML='✅ You discovered it! After every attack, <strong>health must decrease</strong>. The game needs to keep track of the new health value after every single hit. What if it forgot to update it?';
+  document.querySelector('#s3 .screen-center').insertBefore(d, document.getElementById('s3next'));
+}
+
+// ══════════════════════════════════════════════
+// STAGE 4
+// ══════════════════════════════════════════════
+function s4Demo(){
+  document.getElementById('s4arena').style.display='block';
+  const log = document.getElementById('s4log');
+  log.innerHTML='';
+  let hp = 80; let step = 0;
+  const msgs = s4selected;
+  function tick(){
+    if(hp > 0){ hp -= 25; addLog('s4log',`⚔️ Hero attacks! Goblin HP: ${Math.max(0,hp)}`,'damage'); setTimeout(tick,600); }
+    else {
+      if(msgs.has('disappear')) setTimeout(()=>{ document.getElementById('s4goblin').classList.add('defeated'); addLog('s4log','💨 Goblin disappears!','win'); },300);
+      if(msgs.has('coins')) setTimeout(()=>addLog('s4log','🪙 +30 coins earned!','heal'),600);
+      if(msgs.has('win')) setTimeout(()=>addLog('s4log','🏆 Player wins!','win'),900);
+      if(msgs.has('next')) setTimeout(()=>addLog('s4log','➡️ Loading next monster...','heal'),1200);
+      setTimeout(()=>{ document.getElementById('s4next').style.display='block'; },1500);
+    }
+  }
+  tick();
+}
+
+// ══════════════════════════════════════════════
+// STAGE 5
+// ══════════════════════════════════════════════
+const monsters5 = {
+  goblin:{emoji:'👺',name:'Goblin',hp:80,atk:20},
+  zombie:{emoji:'🧟',name:'Zombie',hp:120,atk:25},
+  skeleton:{emoji:'💀',name:'Skeleton',hp:60,atk:35}
+};
+let s5Queue = ['goblin','zombie','skeleton'];
+let s5BattleRunning = false;
+
+function dragStart(e){ dragSrc = e.currentTarget; e.currentTarget.classList.add('dragging'); }
+function dragOver(e){ e.preventDefault(); }
+function dropOrder(e){
+  e.preventDefault();
+  const tgt = e.currentTarget;
+  if(dragSrc===tgt) return;
+  const list = document.getElementById('s5list');
+  const items = [...list.querySelectorAll('.order-item')];
+  const si = items.indexOf(dragSrc), ti = items.indexOf(tgt);
+  if(si<ti) tgt.after(dragSrc); else tgt.before(dragSrc);
+  dragSrc.classList.remove('dragging');
+  // update numbers
+  [...list.querySelectorAll('.order-item')].forEach((item,i)=>{
+    item.querySelector('.order-num').textContent = i+1;
+  });
+  s5Queue = [...list.querySelectorAll('.order-item')].map(i=>i.dataset.monster);
+}
+
+let s5idx = 0; let s5curHp = 0; let s5curMax = 0; let s5heroHpNow = 150;
+function s5StartBattle(){
+  if(s5BattleRunning) return;
+  s5BattleRunning = true;
+  document.getElementById('s5battles').style.display = 'block';
+  s5idx = 0; s5heroHpNow = 150;
+  updateHpBar('s5heroHp', 150, 150);
+  document.getElementById('s5heroVal').textContent = 150;
+  s5NextMonster();
+}
+function s5NextMonster(){
+  if(s5idx >= s5Queue.length){ addLog('s5log','🏆 All monsters defeated! Amazing!','win'); document.getElementById('s5next').style.display='block'; return; }
+  const m = monsters5[s5Queue[s5idx]];
+  s5curHp = m.hp; s5curMax = m.hp;
+  document.getElementById('s5enemy').textContent = m.emoji;
+  document.getElementById('s5ename').textContent = m.name;
+  document.getElementById('s5enemyVal').textContent = m.hp;
+  updateHpBar('s5enemyHp', m.hp, m.hp);
+  addLog('s5log', `➡️ ${m.emoji} ${m.name} appears! HP: ${m.hp}`, 'heal');
+  setTimeout(s5BattleTick, 700);
+}
+function s5BattleTick(){
+  const m = monsters5[s5Queue[s5idx]];
+  // hero attacks
+  const hAtk = 30; s5curHp = Math.max(0, s5curHp-hAtk);
+  floatDamage('s5enemy', hAtk, 'red');
+  updateHpBar('s5enemyHp', s5curHp, s5curMax);
+  document.getElementById('s5enemyVal').textContent = s5curHp;
+  addLog('s5log', `⚔️ Hero deals ${hAtk}. ${m.name} HP: ${s5curHp}`, 'damage');
+  if(s5curHp<=0){
+    addLog('s5log', `💀 ${m.name} defeated!`, 'win');
+    s5idx++;
+    setTimeout(s5NextMonster, 800);
+    return;
+  }
+  // monster attacks
+  const mAtk = m.atk; s5heroHpNow = Math.max(0, s5heroHpNow-mAtk);
+  updateHpBar('s5heroHp', s5heroHpNow, 150);
+  document.getElementById('s5heroVal').textContent = s5heroHpNow;
+  addLog('s5log', `👊 ${m.name} hits Hero for ${mAtk}. Hero HP: ${s5heroHpNow}`, 'damage');
+  if(s5heroHpNow<=0){ addLog('s5log','💔 Hero was defeated...','damage'); return; }
+  setTimeout(s5BattleTick, 800);
+}
+
+// ══════════════════════════════════════════════
+// STAGE 6
+// ══════════════════════════════════════════════
+function setRule(type, rule){
+  monsterRules[type] = rule;
+  document.getElementById(type+'-rule').textContent = '✓ '+rule;
+  document.querySelectorAll('#rules-'+type+' .rule-btn').forEach(b=>{
+    b.classList.toggle('active-rule', b.textContent.trim().includes(rule.split('—')[0].trim().replace(/[✓🔥❄️🐢🛡️🔥💊⚡🐘💥❤️]/,'').trim()));
+  });
+  const done = Object.values(monsterRules).every(v=>v!=='');
+  if(done){
+    document.getElementById('s6insight').innerHTML = `🎮 You gave each monster a unique behaviour. The Fire Monster ${monsterRules.fire}. The Ice Monster ${monsterRules.ice}. The Stone Monster ${monsterRules.stone}.<br><br>In a real game, we'd write special instructions for each monster type — but they all still share the same basic monster design you created on Day 1!`;
+    document.getElementById('s6insight').style.display='block';
+    document.getElementById('s6next').style.display='block';
+  }
+}
+
+// ══════════════════════════════════════════════
+// STAGE 7
+// ══════════════════════════════════════════════
+function buyItem(id, label, cost, icon, stat){
+  if(s7bought.has(id)) return;
+  if(s7coins < cost){ 
+    document.getElementById('s7msg').textContent = `Not enough coins! You have 🪙${s7coins} but ${label} costs 🪙${cost}.`;
+    document.getElementById('s7msg').style.display='block';
+    return;
+  }
+  s7coins -= cost;
+  s7bought.add(id);
+  document.getElementById('s7coins').textContent = s7coins;
+  document.getElementById('shop-'+id).classList.add('bought');
+  // add to inventory
+  const items = document.getElementById('s7items');
+  if(items.querySelector('.placeholder-text')) items.innerHTML='';
+  const item = document.createElement('div'); item.className='inv-item';
+  item.innerHTML = `${icon} <span style="font-size:12px;font-weight:700;">${stat}</span>`;
+  items.appendChild(item);
+  document.getElementById('s7msg').innerHTML = `✅ <strong>${label}</strong> added to inventory! ${stat} when equipped.`;
+  document.getElementById('s7msg').style.display='block';
+  if(s7bought.size>=2) document.getElementById('s7next').style.display='block';
+}
+
+// ══════════════════════════════════════════════
+// STAGE 8
+// ══════════════════════════════════════════════
+let s8attackCount = 0; let s8revealed = false;
+function s8Guess(n){
+  document.getElementById('s8attackBtn').disabled = false;
+  document.getElementById('s8autoBtn').disabled = false;
+  const correct = Math.ceil(500/25); // 20
+  const msg = n === correct ? `Exactly right! 500 ÷ 25 = ${correct} attacks. Let's test it!`
+    : n < correct ? `Too few! With 25 damage each time, try calculating: 500 ÷ 25 = ? Let's find out!`
+    : `That's more than needed! Think: if each attack does 25 damage, and the boss has 500... Let's test it!`;
+  addLog('s8log', msg, 'heal');
+}
+function s8Attack(){
+  if(s8hp<=0) return;
+  s8hp = Math.max(0, s8hp-25);
+  s8attackCount++;
+  document.getElementById('s8bossVal').textContent = s8hp;
+  document.getElementById('s8attacks').textContent = `Attacks landed: ${s8attackCount}`;
+  updateHpBar('s8bossHp', s8hp, 500);
+  floatDamage('s8boss', 25, 'purple');
+  shakeElement('s8boss');
+  addLog('s8log', `⚔️ Attack #${s8attackCount}: Boss HP reduced to ${s8hp}`, 'damage');
+  if(s8hp<=0) s8Victory();
+}
+function s8Auto(){
+  const interval = setInterval(()=>{
+    if(s8hp<=0){ clearInterval(interval); return; }
+    s8Attack();
+  }, 200);
+}
+function s8Victory(){
+  document.getElementById('s8boss').classList.add('defeated');
+  addLog('s8log', `🏆 Boss defeated in exactly ${s8attackCount} attacks! (500 ÷ 25 = 20)`, 'win');
+  document.getElementById('s8next').style.display='block';
+}
+
+// ══════════════════════════════════════════════
+// STAGE 9
+// ══════════════════════════════════════════════
+const monsterTypes = [
+  {emoji:'👺',name:'Goblin',type:'creature',power:25},
+  {emoji:'🐉',name:'Dragon',type:'beast',power:90},
+  {emoji:'🧟',name:'Zombie',type:'undead',power:35},
+  {emoji:'💀',name:'Skeleton',type:'undead',power:45},
+  {emoji:'🔥',name:'Inferno',type:'elemental',power:70},
+  {emoji:'🧊',name:'Glacier',type:'elemental',power:65},
+  {emoji:'🪨',name:'Boulder',type:'elemental',power:55},
+  {emoji:'🦇',name:'Vampire',type:'undead',power:60},
+  {emoji:'🐺',name:'Werewolf',type:'beast',power:50},
+  {emoji:'🐍',name:'Serpent',type:'beast',power:40},
+  {emoji:'👁️',name:'Watcher',type:'magical',power:80},
+  {emoji:'🧙',name:'Dark Mage',type:'magical',power:75},
+  {emoji:'🦅',name:'Harpy',type:'creature',power:30},
+  {emoji:'🐸',name:'Swamp Toad',type:'creature',power:15},
+  {emoji:'🕷️',name:'Spider King',type:'beast',power:45},
+  {emoji:'🌊',name:'Tide Lord',type:'elemental',power:85},
+];
+let s9sorted = false;
+function s9Init(){
+  renderRoster([...monsterTypes]);
+}
+function s9Sort(by){
+  s9sorted = true;
+  let arr = [...monsterTypes];
+  if(by==='type') arr.sort((a,b)=>a.type.localeCompare(b.type));
+  else if(by==='power') arr.sort((a,b)=>b.power-a.power);
+  else if(by==='alpha') arr.sort((a,b)=>a.name.localeCompare(b.name));
+  else arr.sort(()=>Math.random()-.5);
+  renderRoster(arr);
+  document.getElementById('s9insight').innerHTML = `🗂️ You just sorted ${arr.length} monsters! Imagine doing this manually for 100 monsters every time... In a real game, the computer does this instantly whenever needed. The monsters are all stored together in one place — a collection — and sorting is just one of many things you can do with it.`;
+  document.getElementById('s9insight').style.display='block';
+  document.getElementById('s9next').style.display='block';
+}
+function renderRoster(arr){
+  const r = document.getElementById('s9roster');
+  r.innerHTML = arr.map(m=>`
+    <div class="mini-card">
+      <span class="mini-emoji">${m.emoji}</span>
+      <div class="mini-info">
+        <h4>${m.name}</h4>
+        <p>${m.type} · ⚔️${m.power}</p>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// STAGE 10
+// ══════════════════════════════════════════════
+function toggleStat(el, id){
+  el.classList.toggle('selected-stat');
+  if(s10selected.has(id)) s10selected.delete(id); else s10selected.add(id);
+  if(s10selected.size>=2){
+    const fb = document.getElementById('s10feedback');
+    fb.innerHTML = `✅ Great choices! These ${s10selected.size} statistics could help improve the game:<br><br>` +
+      [...s10selected].map(s=>({
+        defeated:'💀 <strong>Monsters Defeated</strong> — tells us if the game is too easy or too hard.',
+        coins:'🪙 <strong>Coins Earned</strong> — helps balance the shop prices.',
+        damage:'🩸 <strong>Damage Received</strong> — shows which monsters are too powerful.',
+        potions:'💊 <strong>Potions Used</strong> — tells us if potions are needed more often.',
+        time:'⏱️ <strong>Time Played</strong> — shows how engaging the game is.',
+        deaths:'💔 <strong>Times Defeated</strong> — shows if the game is too hard.'
+      }[s])).join('<br>');
+    fb.style.display='block';
+    document.getElementById('s10next').style.display='block';
+  }
+}
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+function updateHpBar(id, current, max){
+  const bar = document.getElementById(id); if(!bar) return;
+  const pct = Math.max(0,current/max*100);
+  bar.style.width = pct+'%';
+  bar.className = 'hp-fill' + (pct>50?'':pct>25?' mid':' low');
+}
+function addLog(logId, msg, type){
+  const log = document.getElementById(logId); if(!log) return;
+  const entry = document.createElement('div');
+  entry.className = 'log-entry '+(type||'');
+  entry.textContent = msg;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+function shakeElement(id){
+  const el = document.getElementById(id); if(!el) return;
+  el.classList.remove('shake'); void el.offsetWidth;
+  el.classList.add('shake');
+}
+function floatDamage(targetId, dmg, color){
+  const target = document.getElementById(targetId); if(!target) return;
+  const rect = target.getBoundingClientRect();
+  const d = document.createElement('div');
+  d.className = 'dmg-float';
+  d.textContent = '-'+dmg;
+  d.style.left = (rect.left + rect.width/2 - 20)+'px';
+  d.style.top = (rect.top + window.scrollY - 10)+'px';
+  if(color==='purple') d.style.color = 'var(--purple2)';
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(), 900);
+}
+</script>
+</body>
+</html>

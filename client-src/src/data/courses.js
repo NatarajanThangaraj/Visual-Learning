@@ -254,10 +254,16 @@ export function allLessons() {
     course.modules.forEach(module => {
       module.lessons.forEach(lesson => {
         /* Two prefixes, deliberately: every URL a person sees is built from
-           the course id, while the files keep the folder they have always
-           been served from. */
+           the course id, while the files live under /labs/ in the folder they
+           have always used.
+
+           The /labs/ prefix is not cosmetic. The host serves a directory by
+           handing back its index.html, so a lab sitting at /java/<id>/ would
+           occupy the lesson's own URL and answer it with the bare lab instead
+           of the app. Keeping files and routes in separate namespaces is what
+           lets every route below be a real page. */
         const route = `/${course.id}/${lesson.id}`;
-        const dir = `/${course.folder}/${lesson.id}`;
+        const dir = `/labs/${course.folder}/${lesson.id}`;
         out.push({
           ...lesson,
           key: lessonKey(course.id, module.id, lesson.id),

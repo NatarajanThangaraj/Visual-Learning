@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🕵️ Bank Fraud Detective</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg:        #0A0E1A;
+  --panel:     #111827;
+  --panel2:    #1A2235;
+  --border:    #1E2D45;
+  --border2:   #243352;
+  --text:      #E2E8F0;
+  --muted:     #64748B;
+  --dim:       #94A3B8;
+  --green:     #10B981;
+  --green-dim: #064E3B;
+  --red:       #EF4444;
+  --red-dim:   #450A0A;
+  --amber:     #F59E0B;
+  --amber-dim: #451A03;
+  --blue:      #3B82F6;
+  --blue-dim:  #1E3A5F;
+  --cyan:      #06B6D4;
+  --purple:    #8B5CF6;
+  --mono:      'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SCANLINE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(10,14,26,.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.tb-left { display: flex; align-items: center; gap: 12px; }
+.tb-logo {
+  font-family: var(--mono);
+  font-size: 14px; font-weight: 700;
+  color: var(--green);
+  letter-spacing: .05em;
+}
+.tb-logo span { color: var(--muted); font-weight: 400; }
+.live-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.3);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px; font-weight: 600;
+  color: var(--red);
+  letter-spacing: .06em;
+}
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: pulse 1.2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+.tb-right { display: flex; align-items: center; gap: 16px; }
+.score-pill {
+  font-family: var(--mono);
+  font-size: 13px; font-weight: 600;
+  color: var(--amber);
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.25);
+  border-radius: 8px;
+  padding: 4px 12px;
+}
+.progress-bar-wrap {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--muted);
+}
+.progress-track {
+  width: 120px; height: 4px;
+  background: var(--border);
+  border-radius: 2px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--cyan));
+  border-radius: 2px;
+  transition: width .5s ease;
+}
+
+/* ── MAIN ── */
+.main { position: relative; z-index: 1; }
+
+/* ── INTRO SCREEN ── */
+#introScreen {
+  min-height: calc(100vh - 56px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 20px;
+}
+.intro-card {
+  max-width: 780px; width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.intro-top {
+  background: linear-gradient(135deg, #0D1B2A 0%, #162032 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 36px 40px;
+  display: flex; align-items: flex-start; gap: 24px;
+}
+.intro-icon {
+  font-size: 56px; line-height: 1;
+  filter: drop-shadow(0 0 20px rgba(239,68,68,.4));
+}
+.intro-top-text h1 {
+  font-size: 28px; font-weight: 900;
+  letter-spacing: -.02em;
+  margin-bottom: 8px;
+}
+.intro-top-text h1 span { color: var(--red); }
+.intro-top-text p { font-size: 15px; color: var(--dim); line-height: 1.65; }
+.intro-body { padding: 28px 40px; }
+.txn-display {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+}
+.txn-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: var(--muted); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.txn-label::after {
+  content: ''; flex: 1; height: 1px;
+  background: var(--border);
+}
+.txn-raw {
+  font-family: var(--mono);
+  font-size: 13px; font-weight: 500;
+  color: var(--cyan);
+  line-height: 1.6;
+  word-break: break-all;
+}
+.intro-rules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.rule-item {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.rule-num {
+  font-family: var(--mono);
+  font-size: 10px; font-weight: 700;
+  color: var(--purple);
+  background: rgba(139,92,246,.12);
+  border: 1px solid rgba(139,92,246,.25);
+  border-radius: 5px;
+  padding: 2px 7px;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+.rule-text { font-size: 12.5px; color: var(--dim); line-height: 1.5; }
+.rule-text strong { color: var(--text); }
+.intro-challenge {
+  background: rgba(239,68,68,.07);
+  border: 1px solid rgba(239,68,68,.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+}
+.intro-challenge strong { color: var(--red); }
+.start-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, var(--red), #DC2626);
+  color: white;
+  border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: .02em;
+  transition: all .2s;
+  box-shadow: 0 4px 20px rgba(239,68,68,.3);
+}
+.start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(239,68,68,.4); }
+
+/* ── GAME SCREEN ── */
+#gameScreen { display: none; padding: 24px; }
+.game-layout {
+  max-width: 1100px; margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── LEFT: STEPS ── */
+.steps-panel {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.step-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color .3s;
+}
+.step-card.active { border-color: var(--blue); }
+.step-card.solved { border-color: var(--green); }
+.step-card.fraud-found { border-color: var(--red); }
+.step-card.locked { opacity: .45; }
+
+.step-header {
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+  flex-shrink: 0;
+}
+.step-num.pending { background: var(--border2); color: var(--muted); }
+.step-num.active-num { background: rgba(59,130,246,.2); color: var(--blue); }
+.step-num.done-num { background: rgba(16,185,129,.2); color: var(--green); }
+.step-num.fraud-num { background: rgba(239,68,68,.2); color: var(--red); }
+
+.step-title { font-size: 14px; font-weight: 600; flex: 1; }
+.step-method-tag {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 6px;
+  background: rgba(139,92,246,.15);
+  color: var(--purple);
+  border: 1px solid rgba(139,92,246,.25);
+}
+.step-status-icon { font-size: 16px; }
+
+.step-body {
+  border-top: 1px solid var(--border);
+  padding: 18px;
+  display: none;
+}
+.step-body.open { display: block; }
+
+.step-situation {
+  font-size: 13.5px; color: var(--dim); line-height: 1.7;
+  margin-bottom: 14px;
+}
+.step-situation strong { color: var(--text); }
+.step-situation code {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg); border: 1px solid var(--border2);
+  padding: 2px 7px; border-radius: 5px;
+  color: var(--cyan);
+}
+
+/* choices */
+.choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.choice {
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: var(--panel2);
+  color: var(--dim);
+  font-family: 'Inter', sans-serif;
+  transition: all .18s;
+  text-align: left;
+}
+.choice:hover { border-color: var(--blue); color: var(--text); background: var(--blue-dim); }
+.choice.correct-ans { border-color: var(--green); background: var(--green-dim); color: #86EFAC; }
+.choice.wrong-ans { border-color: var(--red); background: var(--red-dim); color: #FCA5A5; }
+
+/* text input */
+.input-row { display: flex; gap: 8px; margin-top: 12px; }
+.ans-input {
+  flex: 1; padding: 10px 14px;
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 9px; color: var(--text);
+  font-size: 13px; font-family: 'Inter', sans-serif;
+  outline: none; transition: border-color .2s;
+}
+.ans-input:focus { border-color: var(--blue); }
+.ans-input::placeholder { color: var(--muted); }
+.submit-btn {
+  padding: 10px 18px;
+  background: var(--blue); color: white;
+  border: none; border-radius: 9px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: all .2s;
+}
+.submit-btn:hover { background: #2563EB; }
+
+/* feedback */
+.feedback {
+  margin-top: 12px; padding: 12px 14px;
+  border-radius: 10px; font-size: 13px; line-height: 1.6;
+  animation: fadeUp .3s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.feedback.correct { background: var(--green-dim); border: 1px solid rgba(16,185,129,.35); color: #86EFAC; }
+.feedback.wrong { background: var(--red-dim); border: 1px solid rgba(239,68,68,.3); color: #FCA5A5; }
+.feedback.hint { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.25); color: #FDE68A; }
+.feedback.fraud { background: rgba(239,68,68,.1); border: 2px solid rgba(239,68,68,.5); color: var(--red); }
+
+/* transform viz */
+.transform-viz {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.viz-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.viz-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 6px; }
+.viz-before { color: #FCA5A5; text-decoration: line-through; }
+.viz-arrow { color: var(--muted); }
+.viz-method { color: var(--purple); font-weight: 600; }
+.viz-after { color: #86EFAC; }
+.viz-result { 
+  color: var(--amber); font-weight: 600;
+  padding: 3px 8px; border-radius: 5px;
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.2);
+}
+
+/* code snippet */
+.code-snip {
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 14px 16px;
+  font-family: var(--mono); font-size: 12px;
+  line-height: 1.8; margin-top: 12px;
+  overflow-x: auto;
+}
+.ck { color: #93C5FD; }
+.cs { color: #86EFAC; }
+.cm { color: #FCD34D; }
+.cc { color: var(--muted); font-style: italic; }
+.ct { color: #F9A8D4; }
+.co { color: var(--purple); }
+
+/* ── RIGHT: EVIDENCE BOARD ── */
+.evidence-panel {
+  position: sticky; top: 80px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.panel-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.panel-title {
+  padding: 12px 16px;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-title span { color: var(--amber); }
+
+/* transaction dissected */
+.txn-fields { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.txn-field {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px 12px;
+  transition: all .3s;
+}
+.txn-field.highlighted { border-color: var(--blue); background: var(--blue-dim); }
+.txn-field.fraud-flag { border-color: var(--red); background: var(--red-dim); }
+.txn-field.clean-flag { border-color: var(--green); background: var(--green-dim); }
+.field-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 3px; }
+.field-value { font-family: var(--mono); font-size: 12px; color: var(--cyan); word-break: break-all; }
+.field-badge {
+  display: inline-block; margin-top: 4px;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 4px;
+}
+.field-badge.fraud-b { background: rgba(239,68,68,.2); color: var(--red); }
+.field-badge.clean-b { background: rgba(16,185,129,.2); color: var(--green); }
+
+/* fraud signals */
+.signals { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.signal-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--bg); border: 1px solid var(--border);
+  transition: all .4s;
+  opacity: .4;
+}
+.signal-item.found { opacity: 1; border-color: rgba(239,68,68,.4); background: var(--red-dim); animation: fraudAlert .5s ease; }
+@keyframes fraudAlert {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+.signal-icon { font-size: 18px; flex-shrink: 0; }
+.signal-text { font-size: 12px; line-height: 1.5; color: var(--dim); }
+.signal-text.found-text { color: var(--text); }
+.signal-text strong { color: var(--red); }
+
+/* methods used tracker */
+.methods-grid { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.method-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px; border-radius: 7px;
+  background: var(--bg); border: 1px solid var(--border);
+  transition: all .3s;
+}
+.method-item.used { border-color: rgba(139,92,246,.4); background: rgba(139,92,246,.08); }
+.method-name { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--muted); }
+.method-item.used .method-name { color: var(--purple); }
+.method-check { font-size: 12px; color: var(--border2); }
+.method-item.used .method-check { color: var(--green); }
+
+/* ── VERDICT SCREEN ── */
+#verdictScreen {
+  display: none;
+  min-height: calc(100vh - 56px);
+  align-items: center; justify-content: center;
+  padding: 40px 20px;
+}
+.verdict-card {
+  max-width: 700px; width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px; overflow: hidden;
+}
+.verdict-top {
+  padding: 36px 40px; text-align: center;
+  background: linear-gradient(135deg, #150A0A 0%, #1F1010 100%);
+  border-bottom: 1px solid var(--border);
+}
+.verdict-icon { font-size: 60px; margin-bottom: 12px; }
+.verdict-top h1 { font-size: 28px; font-weight: 900; color: var(--red); margin-bottom: 8px; }
+.verdict-top p { color: var(--dim); font-size: 14px; }
+.verdict-body { padding: 28px 40px; }
+.verdict-score {
+  display: flex; align-items: center; justify-content: center; gap: 24px;
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 20px; margin-bottom: 24px;
+}
+.score-block { text-align: center; }
+.score-big { font-size: 40px; font-weight: 900; font-family: var(--mono); }
+.score-big.gold { color: var(--amber); }
+.score-big.green { color: var(--green); }
+.score-big.red { color: var(--red); }
+.score-small { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+.score-divider { width: 1px; height: 50px; background: var(--border2); }
+
+.fraud-summary { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+.fraud-summary-item {
+  background: var(--bg); border: 1px solid var(--border2);
+  border-left: 3px solid var(--red);
+  border-radius: 10px; padding: 12px 16px;
+}
+.fraud-summary-item h4 { font-size: 13px; font-weight: 600; color: var(--red); margin-bottom: 4px; }
+.fraud-summary-item p { font-size: 12px; color: var(--dim); line-height: 1.5; }
+
+.java-final {
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 16px;
+  margin-bottom: 24px;
+}
+.java-final-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--purple); margin-bottom: 12px; }
+
+.replay-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--red), #DC2626);
+  color: white; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: all .2s;
+  box-shadow: 0 4px 20px rgba(239,68,68,.3);
+}
+.replay-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(239,68,68,.4); }
+
+/* ── UTILS ── */
+.hidden { display: none !important; }
+.slide-in { animation: slideIn .35s ease; }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .game-layout { grid-template-columns: 1fr; }
+  .evidence-panel { position: static; }
+  .intro-rules { grid-template-columns: 1fr; }
+  .intro-top { flex-direction: column; padding: 24px; }
+  .intro-body, .verdict-body { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo">BANCORP <span>// Fraud Detection Unit</span></div>
+    <div class="live-badge"><div class="live-dot"></div> LIVE ANALYSIS</div>
+  </div>
+  <div class="tb-right">
+    <div class="score-pill">⚡ <span id="scoreVal">0</span> pts</div>
+    <div class="progress-bar-wrap">
+      <span id="progressTxt">0/10</span>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════ INTRO ══════════════ -->
+<div id="introScreen">
+  <div class="intro-card slide-in">
+    <div class="intro-top">
+      <div class="intro-icon">🕵️</div>
+      <div class="intro-top-text">
+        <h1>Bank Fraud <span>Detective</span></h1>
+        <p>A suspicious transaction just hit our system. You are the fraud analyst. Using Java String methods, dissect the transaction message, expose every red flag, and decide: <strong>Approve or Reject?</strong></p>
+      </div>
+    </div>
+    <div class="intro-body">
+      <div class="txn-display">
+        <div class="txn-label">📡 Incoming Raw Transaction Message</div>
+        <div class="txn-raw">"&nbsp;&nbsp;&nbsp;TXN-REF-2024&nbsp;&nbsp;| John Doe | JOHNDOE@BANK.COM | amount:9999 | note:URGENT TRANSFER to acc&nbsp;&nbsp;&nbsp;"</div>
+      </div>
+
+      <div class="intro-rules">
+        <div class="rule-item"><span class="rule-num">R1</span><div class="rule-text">Raw message must be <strong>trimmed</strong> — extra spaces indicate tampered input</div></div>
+        <div class="rule-item"><span class="rule-num">R2</span><div class="rule-text">Must have <strong>exactly 5 fields</strong> when split by <code>|</code> — else forged</div></div>
+        <div class="rule-item"><span class="rule-num">R3</span><div class="rule-text">Reference ID must <strong>start with "TXN"</strong> — other prefixes are fake</div></div>
+        <div class="rule-item"><span class="rule-num">R4</span><div class="rule-text">Reference ID must be <strong>exactly 15 chars</strong> — short/long IDs are fake</div></div>
+        <div class="rule-item"><span class="rule-num">R5</span><div class="rule-text">Email must <strong>contain "@bank.com"</strong> — outside emails are unauthorized</div></div>
+        <div class="rule-item"><span class="rule-num">R6</span><div class="rule-text">Note field containing <strong>"URGENT"</strong> is an automatic fraud flag</div></div>
+        <div class="rule-item"><span class="rule-num">R7</span><div class="rule-text">Amount must be <strong>masked as "****"</strong> in logs — never store raw amounts</div></div>
+        <div class="rule-item"><span class="rule-num">R8</span><div class="rule-text">Audit log stores note in <strong>lowercase</strong> only</div></div>
+        <div class="rule-item"><span class="rule-num">R9</span><div class="rule-text">Alert system reads <strong>UPPERCASE</strong> flags only</div></div>
+        <div class="rule-item"><span class="rule-num">R10</span><div class="rule-text">Sender email must be checked against <strong>blocked list</strong> using exact match</div></div>
+      </div>
+
+      <div class="intro-challenge">
+        🎯 <strong>Your mission:</strong> This transaction has <strong>3 hidden fraud signals</strong>. Work through each step — apply the correct Java String method — and uncover them all before reaching the verdict.
+      </div>
+
+      <button class="start-btn" onclick="startGame()">🔍 Begin Investigation →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ GAME ══════════════ -->
+<div id="gameScreen">
+  <div class="game-layout">
+
+    <!-- LEFT: Steps -->
+    <div class="steps-panel" id="stepsPanel"></div>
+
+    <!-- RIGHT: Evidence -->
+    <div class="evidence-panel">
+
+      <!-- Transaction Fields -->
+      <div class="panel-card">
+        <div class="panel-title">📋 Transaction Fields <span id="fieldCount"></span></div>
+        <div class="txn-fields" id="txnFields">
+          <div class="txn-field" id="field-raw">
+            <div class="field-label">Raw Message</div>
+            <div class="field-value">"&nbsp;&nbsp;&nbsp;TXN-REF-2024&nbsp;&nbsp;| John Doe | JOHNDOE@BANK.COM | amount:9999 | note:URGENT TRANSFER to acc&nbsp;&nbsp;&nbsp;"</div>
+          </div>
+          <div class="txn-field" id="field-0"><div class="field-label">Field 1 — Ref ID</div><div class="field-value">—</div></div>
+          <div class="txn-field" id="field-1"><div class="field-label">Field 2 — Name</div><div class="field-value">—</div></div>
+          <div class="txn-field" id="field-2"><div class="field-label">Field 3 — Email</div><div class="field-value">—</div></div>
+          <div class="txn-field" id="field-3"><div class="field-label">Field 4 — Amount</div><div class="field-value">—</div></div>
+          <div class="txn-field" id="field-4"><div class="field-label">Field 5 — Note</div><div class="field-value">—</div></div>
+        </div>
+      </div>
+
+      <!-- Fraud Signals -->
+      <div class="panel-card">
+        <div class="panel-title">🚨 Fraud Signals <span id="fraudCount">0 / 3 found</span></div>
+        <div class="signals">
+          <div class="signal-item" id="signal-0">
+            <div class="signal-icon">📏</div>
+            <div class="signal-text" id="signal-text-0">Signal #1 — Under investigation...</div>
+          </div>
+          <div class="signal-item" id="signal-1">
+            <div class="signal-icon">📧</div>
+            <div class="signal-text" id="signal-text-1">Signal #2 — Under investigation...</div>
+          </div>
+          <div class="signal-item" id="signal-2">
+            <div class="signal-icon">⚡</div>
+            <div class="signal-text" id="signal-text-2">Signal #3 — Under investigation...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Methods Used -->
+      <div class="panel-card">
+        <div class="panel-title">☕ Java Methods Used</div>
+        <div class="methods-grid" id="methodsGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ VERDICT ══════════════ -->
+<div id="verdictScreen" style="display:none; min-height:calc(100vh - 56px); align-items:center; justify-content:center; padding:40px 20px;">
+  <div class="verdict-card slide-in">
+    <div class="verdict-top">
+      <div class="verdict-icon">🚨</div>
+      <h1>TRANSACTION REJECTED</h1>
+      <p>3 fraud signals detected. Case filed. Well done, Detective.</p>
+    </div>
+    <div class="verdict-body">
+      <div class="verdict-score">
+        <div class="score-block">
+          <div class="score-big gold" id="finalScore">0</div>
+          <div class="score-small">Total Points</div>
+        </div>
+        <div class="score-divider"></div>
+        <div class="score-block">
+          <div class="score-big green">3</div>
+          <div class="score-small">Signals Found</div>
+        </div>
+        <div class="score-divider"></div>
+        <div class="score-block">
+          <div class="score-big red">10</div>
+          <div class="score-small">Methods Used</div>
+        </div>
+      </div>
+
+      <div class="fraud-summary">
+        <div class="fraud-summary-item">
+          <h4>🚩 Fraud Signal #1 — Invalid Reference ID Length</h4>
+          <p>"TXN-REF-2024" is only 12 characters. A valid reference must be exactly 15. <code>length()</code> caught this immediately.</p>
+        </div>
+        <div class="fraud-summary-item">
+          <h4>🚩 Fraud Signal #2 — Unauthorized Email Domain</h4>
+          <p>"JOHNDOE@BANK.COM" does not contain "@bank.com" in lowercase. After <code>toLowerCase()</code>, it becomes "johndoe@bank.com" — but it also matched our blocked list via <code>equals()</code>.</p>
+        </div>
+        <div class="fraud-summary-item">
+          <h4>🚩 Fraud Signal #3 — URGENT Flag in Note</h4>
+          <p>Note field contained "URGENT" — a known social engineering tactic. <code>contains()</code> flagged it instantly. 90% of fraud transactions use urgency language.</p>
+        </div>
+      </div>
+
+      <div class="java-final">
+        <div class="java-final-title">☕ All 10 Java String Methods — Applied in One Investigation</div>
+        <div class="code-snip">
+<span class="cc">// Step 1: Clean tampered input</span>
+<span class="ct">String</span> msg = raw.<span class="cm">trim</span>();
+<span class="cc">// Step 2: Split into fields</span>
+<span class="ct">String[]</span> fields = msg.<span class="cm">split</span>(<span class="cs">"\|"</span>);
+<span class="cc">// Step 3: Validate prefix</span>
+fields[<span class="co">0</span>].<span class="cm">startsWith</span>(<span class="cs">"TXN"</span>);
+<span class="cc">// Step 4: Check ID length → FRAUD</span>
+fields[<span class="co">0</span>].<span class="cm">length</span>() == <span class="co">15</span>;
+<span class="cc">// Step 5: Normalize email</span>
+fields[<span class="co">2</span>].<span class="cm">toLowerCase</span>();
+<span class="cc">// Step 6: Check domain → FRAUD</span>
+email.<span class="cm">contains</span>(<span class="cs">"@bank.com"</span>);
+<span class="cc">// Step 7: Mask amount in log</span>
+fields[<span class="co">3</span>].<span class="cm">replace</span>(<span class="cs">"9999"</span>, <span class="cs">"****"</span>);
+<span class="cc">// Step 8: Lowercase audit note</span>
+fields[<span class="co">4</span>].<span class="cm">toLowerCase</span>();
+<span class="cc">// Step 9: Uppercase alert → FRAUD</span>
+note.<span class="cm">toUpperCase</span>().<span class="cm">contains</span>(<span class="cs">"URGENT"</span>);
+<span class="cc">// Step 10: Blocked list check</span>
+email.<span class="cm">equals</span>(<span class="cs">"johndoe@bank.com"</span>);
+        </div>
+      </div>
+
+      <button class="replay-btn" onclick="replayGame()">🔄 Investigate Another Transaction</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+const RAW = '   TXN-REF-2024  | John Doe | JOHNDOE@BANK.COM | amount:9999 | note:URGENT TRANSFER to acc   ';
+const BLOCKED = ['johndoe@bank.com'];
+
+let score = 0;
+let stepsCompleted = 0;
+let fraudFound = 0;
+let wrongMap = {};
+
+const METHODS = [
+  'trim()', 'split()', 'startsWith()', 'length()',
+  'toLowerCase()', 'contains()', 'replace()',
+  'toLowerCase()', 'toUpperCase()', 'equals()'
+];
+
+// Unique methods for tracker display
+const UNIQUE_METHODS = [
+  'trim()', 'split()', 'startsWith()', 'length()',
+  'toLowerCase()', 'contains()', 'replace()',
+  'toUpperCase()', 'equals()'
+];
+
+const usedMethods = new Set();
+
+// ════════════════════════════════════════════
+// STEP DEFINITIONS
+// ════════════════════════════════════════════
+const STEPS = [
+  {
+    title: 'Clean the Raw Message',
+    method: 'trim()',
+    situation: `The raw transaction arrived as: <code>"&nbsp;&nbsp;&nbsp;TXN-REF-2024&nbsp;&nbsp;|..."</code><br><br>
+    Notice the <strong>extra spaces at the start and end</strong>. Our fraud rules say: tampered messages often carry leading/trailing whitespace. Before we can parse anything, we must clean it.<br><br>
+    What Java String method removes whitespace from both ends?`,
+    type: 'input',
+    answer: 'trim',
+    hint: 'Think about trimming — like trimming the edges off paper. The method name is literally that word.',
+    hint2: 'The method is: <code>trim()</code> — called on the string, no arguments needed.',
+    vizBefore: '"   TXN-REF-2024  |...|...   "',
+    vizMethod: '.trim()',
+    vizAfter: '"TXN-REF-2024  |...|..."',
+    vizType: 'transform',
+    fieldUpdate: null,
+    fraudSignal: null,
+    correctMsg: '✓ Cleaned! Tampered whitespace removed. The message is now safe to parse.',
+    points: 10,
+  },
+  {
+    title: 'Split Into Fields',
+    method: 'split()',
+    situation: `The cleaned message uses <code>|</code> as a separator between fields:<br><br>
+    <code>TXN-REF-2024 | John Doe | JOHNDOE@BANK.COM | amount:9999 | note:URGENT...</code><br><br>
+    Our rule: a valid transaction has <strong>exactly 5 fields</strong>. What method breaks a string into parts using a separator character?`,
+    type: 'input',
+    answer: 'split',
+    hint: 'Think about dividing something into pieces using a boundary character. The method name describes this perfectly.',
+    hint2: 'The method is: <code>split("|")</code> — pass the separator as argument. Returns a String array.',
+    vizBefore: '"TXN-REF-2024 | John Doe | ..."',
+    vizMethod: '.split("|")',
+    vizAfter: '["TXN-REF-2024", "John Doe", "JOHNDOE@BANK.COM", "amount:9999", "note:URGENT..."]',
+    vizType: 'array',
+    fieldUpdate: 'all',
+    fraudSignal: null,
+    correctMsg: '✓ Parsed into 5 fields. Field count confirmed valid.',
+    points: 10,
+  },
+  {
+    title: 'Validate Reference Prefix',
+    method: 'startsWith()',
+    situation: `Field 1 (Ref ID) is: <code>TXN-REF-2024</code><br><br>
+    Fraud rule R3: the reference must begin with <code>"TXN"</code>. A generic "check if it contains TXN" won't work — <code>"BUTTON-TXN-X"</code> would also pass that check. We need to verify only the beginning.<br><br>
+    What method checks if a string begins with a specific prefix?`,
+    type: 'choices',
+    choices: ['contains("TXN")', 'startsWith("TXN")', 'equals("TXN")', 'indexOf("TXN") == 0'],
+    correct: 1,
+    wrongMsg: 'Close — but <code>contains()</code> would match "TXN" anywhere in the string, even in the middle. We need to verify it\'s specifically at the <strong>beginning</strong>. Try again.',
+    wrongMsg2: '<code>indexOf("TXN") == 0</code> works technically, but Java gives us a cleaner, more readable method purpose-built for this. Which one?',
+    vizBefore: '"TXN-REF-2024"',
+    vizMethod: '.startsWith("TXN")',
+    vizAfter: 'true → ✓ Valid prefix',
+    vizType: 'bool',
+    fieldUpdate: 0,
+    fraudSignal: null,
+    correctMsg: '✓ Prefix "TXN" confirmed. Reference header is legitimate.',
+    points: 10,
+  },
+  {
+    title: 'Check Reference ID Length',
+    method: 'length()',
+    situation: `The reference ID is: <code>TXN-REF-2024</code><br><br>
+    Fraud rule R4: a valid reference ID must be <strong>exactly 15 characters</strong>. Let's count: T-X-N---R-E-F---2-0-2-4 = 12 characters. That's shorter than required!<br><br>
+    This is your first fraud signal. What Java method tells you how many characters are in a string?`,
+    type: 'input',
+    answer: 'length',
+    hint: 'Think about measuring how long something is. The method returns an integer — the count of characters.',
+    hint2: 'The method is: <code>length()</code> — no arguments. Returns an int. e.g., "TXN-REF-2024".length() returns 12.',
+    vizBefore: '"TXN-REF-2024"',
+    vizMethod: '.length()',
+    vizAfter: '12 ≠ 15 → 🚨 FRAUD SIGNAL #1',
+    vizType: 'fraud',
+    fieldUpdate: 0,
+    fraudSignal: 0,
+    fraudText: '<strong>Invalid Reference ID Length!</strong> "TXN-REF-2024" is 12 chars, not 15. This ID was forged.',
+    correctMsg: '🚨 FRAUD SIGNAL #1 FOUND! Reference ID is only 12 characters — should be 15. Forged ID detected.',
+    points: 15,
+  },
+  {
+    title: 'Normalize the Email',
+    method: 'toLowerCase()',
+    situation: `Field 3 shows: <code>JOHNDOE@BANK.COM</code><br><br>
+    Our database stores all emails in <strong>lowercase</strong>. "JOHNDOE@BANK.COM" and "johndoe@bank.com" are the same email, but a direct comparison would fail without normalization.<br><br>
+    Before checking the email against our blocked list, we need to standardize it. What method converts a string to all lowercase?`,
+    type: 'choices',
+    choices: ['toUpperCase()', 'toLowerCase()', 'normalize()', 'trim()'],
+    correct: 1,
+    wrongMsg: 'Not quite. <code>toUpperCase()</code> goes the wrong direction — it makes ALL CAPS. We need lowercase for our database comparison.',
+    wrongMsg2: 'The right direction is lowercase. One of these options does exactly that.',
+    vizBefore: '"JOHNDOE@BANK.COM"',
+    vizMethod: '.toLowerCase()',
+    vizAfter: '"johndoe@bank.com"',
+    vizType: 'transform',
+    fieldUpdate: 2,
+    fraudSignal: null,
+    correctMsg: '✓ Email normalized to lowercase. Ready for comparison.',
+    points: 10,
+  },
+  {
+    title: 'Verify Email Domain',
+    method: 'contains()',
+    situation: `Normalized email: <code>johndoe@bank.com</code><br><br>
+    Fraud rule R5: the email must contain <code>"@bank.com"</code>. Authorized personnel only have @bank.com addresses.<br><br>
+    We don't need the exact full email — we just need to confirm the domain exists somewhere in the string. What method checks if a substring exists anywhere within a string?`,
+    type: 'input',
+    answer: 'contains',
+    hint: 'We\'re checking if one string is found anywhere inside another. The method name is the English word for "to have something inside it".',
+    hint2: 'The method is: <code>contains("@bank.com")</code> — returns true if the substring exists anywhere.',
+    vizBefore: '"johndoe@bank.com"',
+    vizMethod: '.contains("@bank.com")',
+    vizAfter: 'true → ✓ Domain valid... but blocked list check next',
+    vizType: 'bool',
+    fieldUpdate: 2,
+    fraudSignal: null,
+    correctMsg: '✓ Domain "@bank.com" found. Email format is valid — but we still check the blocked list.',
+    points: 10,
+  },
+  {
+    title: 'Mask Amount for Audit Log',
+    method: 'replace()',
+    situation: `Field 4: <code>amount:9999</code><br><br>
+    Security policy: we must <strong>never log the actual transaction amount</strong>. Before writing to the audit log, replace the numeric value with <code>"****"</code>.<br><br>
+    We need to find "9999" in the string and substitute it with "****". What Java String method finds a substring and replaces it with another?`,
+    type: 'input',
+    answer: 'replace',
+    hint: 'Think about the word you use when you substitute one thing for another. Find and ___.',
+    hint2: 'The method is: <code>replace("9999", "****")</code> — first argument is what to find, second is what to put instead.',
+    vizBefore: '"amount:9999"',
+    vizMethod: '.replace("9999", "****")',
+    vizAfter: '"amount:****"',
+    vizType: 'transform',
+    fieldUpdate: 3,
+    fraudSignal: null,
+    correctMsg: '✓ Amount masked as "****". Audit log is now safe to write.',
+    points: 10,
+  },
+  {
+    title: 'Store Note in Audit Log',
+    method: 'toLowerCase()',
+    situation: `Field 5: <code>note:URGENT TRANSFER to acc</code><br><br>
+    Fraud rule R8: the audit log stores all notes in <strong>lowercase only</strong> — this is for consistent search indexing. The note will be stored as-is in uppercase right now.<br><br>
+    Convert the note to lowercase before writing it to the audit database.`,
+    type: 'choices',
+    choices: ['toUpperCase()', 'trim()', 'toLowerCase()', 'replace()'],
+    correct: 2,
+    wrongMsg: 'We already used <code>trim()</code> to clean whitespace. For changing the case of characters to lowercase, there\'s a specific method.',
+    wrongMsg2: 'We need all characters to become lowercase letters. One of these options does exactly that.',
+    vizBefore: '"note:URGENT TRANSFER to acc"',
+    vizMethod: '.toLowerCase()',
+    vizAfter: '"note:urgent transfer to acc"',
+    vizType: 'transform',
+    fieldUpdate: 4,
+    fraudSignal: null,
+    correctMsg: '✓ Note stored in lowercase. Audit log entry written.',
+    points: 10,
+  },
+  {
+    title: 'Check for URGENT Flag',
+    method: 'toUpperCase() + contains()',
+    situation: `The note field (lowercased for logs) was: <code>"note:urgent transfer to acc"</code><br><br>
+    Fraud rule R9: the alert system only reads <strong>UPPERCASE</strong> keywords. To check for the "URGENT" flag, we must first convert the note to uppercase, then check if it contains "URGENT".<br><br>
+    This is fraud signal #2. What method converts a string to ALL CAPS?`,
+    type: 'input',
+    answer: 'touppercase',
+    altAnswers: ['upper', 'uppercase'],
+    hint: 'The opposite of toLowerCase. Everything becomes CAPITAL letters.',
+    hint2: 'The method is: <code>toUpperCase()</code> — converts all characters to uppercase, then we chain <code>.contains("URGENT")</code>.',
+    vizBefore: '"note:urgent transfer to acc"',
+    vizMethod: '.toUpperCase().contains("URGENT")',
+    vizAfter: 'true → 🚨 FRAUD SIGNAL #2',
+    vizType: 'fraud',
+    fieldUpdate: 4,
+    fraudSignal: 1,
+    fraudText: '<strong>URGENT flag detected!</strong> Social engineering tactic. 90% of fraud uses urgency language to bypass checks.',
+    correctMsg: '🚨 FRAUD SIGNAL #2 FOUND! Note contains "URGENT" — classic social engineering. Transaction flagged.',
+    points: 15,
+  },
+  {
+    title: 'Check Blocked Email List',
+    method: 'equals()',
+    situation: `Final check. The normalized email is: <code>johndoe@bank.com</code><br><br>
+    Our blocked list contains this exact email from a previous fraud case. We need to compare it <strong>exactly</strong> — character for character.<br><br>
+    ⚠️ A junior analyst used <code>==</code> to compare. The test sometimes failed even when emails matched. Why is <code>==</code> wrong for Strings in Java, and what method should be used instead?`,
+    type: 'choices',
+    choices: [
+      '== compares object memory addresses, not content. Use equals()',
+      '== is slower. Use equals() for performance',
+      'equals() is newer syntax. == still works fine',
+      '== only works for numbers. Use compareTo() for strings'
+    ],
+    correct: 0,
+    wrongMsg: 'Not quite. The core issue is what <code>==</code> actually checks in Java. Think about what two String variables actually hold — references to memory locations, not the characters themselves.',
+    wrongMsg2: 'In Java, <code>==</code> compares object references (memory addresses), not the string content. Two different String objects can spell the same word but fail a <code>==</code> check.',
+    vizBefore: '"johndoe@bank.com"',
+    vizMethod: '.equals("johndoe@bank.com")',
+    vizAfter: 'true → 🚨 FRAUD SIGNAL #3',
+    vizType: 'fraud',
+    fieldUpdate: 2,
+    fraudSignal: 2,
+    fraudText: '<strong>Email matches blocked list!</strong> johndoe@bank.com was flagged in a previous fraud case. Access denied.',
+    correctMsg: '🚨 FRAUD SIGNAL #3 FOUND! Email matches blocked list. <code>equals()</code> confirmed the exact match. Transaction REJECTED.',
+    points: 15,
+  }
+];
+
+// ════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════
+function startGame() {
+  document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'block';
+  renderMethodsGrid();
+  renderSteps();
+  openStep(0);
+}
+
+function renderMethodsGrid() {
+  const grid = document.getElementById('methodsGrid');
+  grid.innerHTML = UNIQUE_METHODS.map(m => `
+    <div class="method-item" id="mtrack-${m.replace(/[^a-z]/gi,'_')}">
+      <span class="method-name">.${m}</span>
+      <span class="method-check">○</span>
+    </div>`).join('');
+}
+
+function markMethodUsed(method) {
+  usedMethods.add(method);
+  const key = method.replace(/[^a-z]/gi,'_');
+  const el = document.getElementById('mtrack-' + key);
+  if (el) { el.classList.add('used'); el.querySelector('.method-check').textContent = '✓'; }
+}
+
+function renderSteps() {
+  const panel = document.getElementById('stepsPanel');
+  panel.innerHTML = STEPS.map((s, i) => {
+    const state = i === 0 ? 'active' : 'locked';
+    const numCls = i === 0 ? 'active-num' : 'pending';
+    return `<div class="step-card ${state}" id="step-${i}">
+      <div class="step-header" onclick="toggleStep(${i})">
+        <div class="step-num ${numCls}" id="stepnum-${i}">${i+1}</div>
+        <div class="step-title">${s.title}</div>
+        <span class="step-method-tag">${s.method}</span>
+        <span class="step-status-icon" id="stepicon-${i}">🔒</span>
+      </div>
+      <div class="step-body" id="stepbody-${i}">
+        <div class="step-situation">${s.situation}</div>
+        <div id="stepinput-${i}"></div>
+        <div id="stepfeedback-${i}"></div>
+        <div id="stepviz-${i}"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // first step unlocked icon
+  document.getElementById('stepicon-0').textContent = '🔍';
+}
+
+function toggleStep(i) {
+  const card = document.getElementById('step-' + i);
+  if (card.classList.contains('locked')) return;
+  const body = document.getElementById('stepbody-' + i);
+  body.classList.toggle('open');
+}
+
+function openStep(i) {
+  const card = document.getElementById('step-' + i);
+  if (!card) return;
+  card.classList.remove('locked');
+  card.classList.add('active');
+  document.getElementById('stepbody-' + i).classList.add('open');
+  document.getElementById('stepnum-' + i).className = 'step-num active-num';
+  document.getElementById('stepicon-' + i).textContent = '🔍';
+  renderStepInput(i);
+
+  // highlight corresponding field
+  const s = STEPS[i];
+  if (s.fieldUpdate !== null && s.fieldUpdate !== undefined && s.fieldUpdate !== 'all') {
+    const fEl = document.getElementById('field-' + s.fieldUpdate);
+    if (fEl) { fEl.classList.add('highlighted'); }
+  }
+
+  // scroll to it
+  setTimeout(() => {
+    document.getElementById('step-' + i).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
+function renderStepInput(i) {
+  const s = STEPS[i];
+  const inputDiv = document.getElementById('stepinput-' + i);
+  if (s.type === 'input') {
+    inputDiv.innerHTML = `
+      <div class="input-row">
+        <input class="ans-input" id="ans-${i}" placeholder="Type the Java method name..." 
+          onkeydown="if(event.key==='Enter')checkInput(${i})">
+        <button class="submit-btn" onclick="checkInput(${i})">Check →</button>
+      </div>
+      <div style="margin-top:8px">
+        <button class="choice" onclick="giveHint(${i})" style="font-size:12px;padding:7px 12px">💡 Hint</button>
+      </div>`;
+  } else if (s.type === 'choices') {
+    inputDiv.innerHTML = `<div class="choices">` +
+      s.choices.map((c, ci) => `<button class="choice" id="choice-${i}-${ci}" onclick="checkChoice(${i}, ${ci})">${c}</button>`).join('') +
+      `</div>`;
+  }
+}
+
+// ════════════════════════════════════════════
+// INPUT HANDLERS
+// ════════════════════════════════════════════
+function checkInput(i) {
+  const s = STEPS[i];
+  const input = document.getElementById('ans-' + i);
+  const val = input.value.trim().toLowerCase().replace(/[^a-z]/g, '');
+  const expected = s.answer.toLowerCase().replace(/[^a-z]/g, '');
+  const alts = (s.altAnswers || []).map(a => a.toLowerCase().replace(/[^a-z]/g,''));
+
+  if (val.includes(expected) || alts.some(a => val.includes(a))) {
+    correctStep(i);
+  } else {
+    wrongStep(i, input);
+  }
+}
+
+function checkChoice(i, ci) {
+  const s = STEPS[i];
+  if (ci === s.correct) {
+    document.getElementById('choice-' + i + '-' + ci).classList.add('correct-ans');
+    correctStep(i);
+  } else {
+    document.getElementById('choice-' + i + '-' + ci).classList.add('wrong-ans');
+    wrongStep(i, null);
+  }
+}
+
+function giveHint(i) {
+  const s = STEPS[i];
+  const fb = document.getElementById('stepfeedback-' + i);
+  const key = 'hint-' + i;
+  if (!wrongMap[key]) {
+    wrongMap[key] = 1;
+    fb.innerHTML = `<div class="feedback hint">💡 <strong>Hint:</strong> ${s.hint}</div>`;
+  } else {
+    fb.innerHTML = `<div class="feedback hint">💡 <strong>Bigger hint:</strong> ${s.hint2}</div>`;
+  }
+  score = Math.max(0, score - 2);
+  updateScoreUI();
+}
+
+function wrongStep(i, input) {
+  const s = STEPS[i];
+  const fb = document.getElementById('stepfeedback-' + i);
+  if (!wrongMap[i]) wrongMap[i] = 0;
+  wrongMap[i]++;
+  score = Math.max(0, score - 3);
+
+  const msg = wrongMap[i] === 1 ? s.wrongMsg : (s.wrongMsg2 || s.wrongMsg);
+  fb.innerHTML = `<div class="feedback wrong">🤔 ${msg}</div>`;
+  if (input) { input.value = ''; input.focus(); }
+  updateScoreUI();
+}
+
+function correctStep(i) {
+  const s = STEPS[i];
+  stepsCompleted++;
+
+  // Points
+  const penalty = (wrongMap[i] || 0) * 3;
+  const earned = Math.max(s.points - penalty, Math.floor(s.points * 0.3));
+  score += earned;
+
+  // Mark method
+  const primary = s.method.split('+')[0].trim();
+  markMethodUsed(primary.replace(/[^a-z()]/gi,'').toLowerCase().includes('lower') ? 'toLowerCase()' :
+    primary.toLowerCase().includes('upper') ? 'toUpperCase()' : primary);
+
+  // Update step UI
+  const card = document.getElementById('step-' + i);
+  const isFraud = s.fraudSignal !== null && s.fraudSignal !== undefined;
+  card.classList.remove('active');
+  card.classList.add(isFraud ? 'fraud-found' : 'solved');
+  document.getElementById('stepnum-' + i).className = `step-num ${isFraud ? 'fraud-num' : 'done-num'}`;
+  document.getElementById('stepicon-' + i).textContent = isFraud ? '🚨' : '✅';
+
+  // Disable input
+  const inputDiv = document.getElementById('stepinput-' + i);
+  inputDiv.innerHTML = '';
+
+  // Feedback
+  const fb = document.getElementById('stepfeedback-' + i);
+  fb.innerHTML = `<div class="feedback ${isFraud ? 'fraud' : 'correct'} slide-in">
+    ${isFraud ? '🚨' : '✅'} <strong>${isFraud ? 'FRAUD DETECTED' : 'Correct!'}</strong> — ${s.correctMsg}
+    <br><br><em>+${earned} pts</em>
+  </div>`;
+
+  // Visualization
+  renderViz(i);
+
+  // Field updates
+  updateFields(i);
+
+  // Fraud signal
+  if (isFraud) {
+    fraudFound++;
+    revealFraudSignal(s.fraudSignal, s.fraudText);
+    document.getElementById('fraudCount').textContent = `${fraudFound} / 3 found`;
+  }
+
+  // Unlock next
+  if (i + 1 < STEPS.length) {
+    setTimeout(() => openStep(i + 1), 800);
+  } else {
+    setTimeout(() => showVerdict(), 1200);
+  }
+
+  updateScoreUI();
+  updateProgress();
+}
+
+// ════════════════════════════════════════════
+// VISUALIZATIONS
+// ════════════════════════════════════════════
+function renderViz(i) {
+  const s = STEPS[i];
+  const vizDiv = document.getElementById('stepviz-' + i);
+  const isFraud = s.vizType === 'fraud';
+
+  vizDiv.innerHTML = `<div class="transform-viz slide-in">
+    <div class="viz-label">🔬 Java Operation</div>
+    <div class="viz-row">
+      <span class="viz-before">${s.vizBefore}</span>
+      <span class="viz-arrow">→</span>
+      <span class="viz-method">${s.vizMethod}</span>
+      <span class="viz-arrow">→</span>
+      <span class="viz-result ${isFraud ? 'fraud-result' : ''}" style="${isFraud ? 'color:var(--red);background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)' : ''}">${s.vizAfter}</span>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════
+// FIELD UPDATES
+// ════════════════════════════════════════════
+const FIELD_DATA = [
+  { label: 'Field 1 — Ref ID', value: 'TXN-REF-2024', clean: true },
+  { label: 'Field 2 — Name', value: 'John Doe', clean: true },
+  { label: 'Field 3 — Email', value: 'JOHNDOE@BANK.COM', clean: false },
+  { label: 'Field 4 — Amount', value: 'amount:9999', clean: true },
+  { label: 'Field 5 — Note', value: 'note:URGENT TRANSFER to acc', clean: false }
+];
+
+let fieldsPopulated = false;
+
+function updateFields(i) {
+  const s = STEPS[i];
+
+  if (s.fieldUpdate === 'all' && !fieldsPopulated) {
+    fieldsPopulated = true;
+    FIELD_DATA.forEach((f, fi) => {
+      const el = document.getElementById('field-' + fi);
+      if (el) {
+        el.classList.remove('highlighted');
+        el.innerHTML = `<div class="field-label">${f.label}</div><div class="field-value">${f.value}</div>`;
+      }
+    });
+    // raw field
+    const raw = document.getElementById('field-raw');
+    if (raw) { raw.classList.add('clean-flag'); raw.querySelector('.field-value').textContent = '✓ Trimmed and parsed'; }
+    return;
+  }
+
+  if (s.fieldUpdate !== null && s.fieldUpdate !== undefined && s.fieldUpdate !== 'all') {
+    const fi = s.fieldUpdate;
+    const el = document.getElementById('field-' + fi);
+    if (!el) return;
+    el.classList.remove('highlighted');
+
+    const isFraud = s.fraudSignal !== null && s.fraudSignal !== undefined;
+    el.classList.add(isFraud ? 'fraud-flag' : 'clean-flag');
+
+    // Update displayed value
+    let newVal = FIELD_DATA[fi].value;
+    if (i === 4) newVal = 'johndoe@bank.com'; // lowercase email
+    if (i === 6) newVal = 'amount:****'; // masked
+    if (i === 7) newVal = 'note:urgent transfer to acc'; // lowercase note
+    if (i === 8) newVal = 'note:URGENT TRANSFER TO ACC ← 🚨'; // uppercase check
+    if (i === 9) newVal = 'johndoe@bank.com ← 🚨 BLOCKED';
+
+    const badge = isFraud ? `<span class="field-badge fraud-b">⚠ FRAUD</span>` : `<span class="field-badge clean-b">✓ OK</span>`;
+    el.innerHTML = `<div class="field-label">${FIELD_DATA[fi].label}</div><div class="field-value">${newVal}</div>${badge}`;
+  }
+}
+
+// ════════════════════════════════════════════
+// FRAUD SIGNALS
+// ════════════════════════════════════════════
+const SIGNAL_ICONS = ['📏', '📧', '⚡'];
+function revealFraudSignal(idx, text) {
+  const el = document.getElementById('signal-' + idx);
+  const textEl = document.getElementById('signal-text-' + idx);
+  el.classList.add('found');
+  textEl.innerHTML = text;
+  textEl.classList.add('found-text');
+}
+
+// ════════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════════
+function updateScoreUI() {
+  document.getElementById('scoreVal').textContent = score;
+}
+
+function updateProgress() {
+  const pct = Math.round((stepsCompleted / STEPS.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressTxt').textContent = `${stepsCompleted}/${STEPS.length}`;
+}
+
+function showVerdict() {
+  document.getElementById('gameScreen').style.display = 'none';
+  const vs = document.getElementById('verdictScreen');
+  vs.style.display = 'flex';
+  document.getElementById('finalScore').textContent = score;
+}
+
+function replayGame() {
+  score = 0; stepsCompleted = 0; fraudFound = 0;
+  wrongMap = {}; fieldsPopulated = false; usedMethods.clear();
+  document.getElementById('verdictScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'block';
+  renderMethodsGrid();
+  renderSteps();
+  openStep(0);
+  updateScoreUI(); updateProgress();
+  document.getElementById('fraudCount').textContent = '0 / 3 found';
+  FIELD_DATA.forEach((f, fi) => {
+    const el = document.getElementById('field-' + fi);
+    if (el) { el.className = 'txn-field'; el.innerHTML = `<div class="field-label">${f.label}</div><div class="field-value">—</div>`; }
+  });
+  const raw = document.getElementById('field-raw');
+  if (raw) { raw.className = 'txn-field'; raw.querySelector('.field-value').textContent = '"   TXN-REF-2024  | John Doe | JOHNDOE@BANK.COM | amount:9999 | note:URGENT TRANSFER to acc   "'; }
+  ['signal-0','signal-1','signal-2'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.classList.remove('found');
+  });
+  ['signal-text-0','signal-text-1','signal-text-2'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el) { el.innerHTML = `Signal #${i+1} — Under investigation...`; el.classList.remove('found-text'); }
+  });
+}
+</script>
+</body>
+</html>

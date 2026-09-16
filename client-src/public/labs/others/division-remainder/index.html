@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Remainder — A Thinking Journey</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --cream:#FAF8F3;--sand:#F0EBE0;--warm:#E8E0D0;
+    --ink:#2C2416;--ink2:#5C5040;--ink3:#8C8070;
+    --teal:#2A7A6F;--teal-l:#E0F2EF;--teal-ll:#F0FAF8;
+    --amber:#C17B2A;--amber-l:#FFF3E0;--amber-ll:#FFFAF3;
+    --rose:#C0545A;--rose-l:#FDEEED;--rose-ll:#FFF5F5;
+    --purple:#6B52A8;--purple-l:#EEEAF9;--purple-ll:#F8F6FF;
+    --blue:#3060A8;--blue-l:#E5EDFB;--blue-ll:#F3F7FF;
+    --green:#2E7D52;--green-l:#E4F4EC;--green-ll:#F2FAF5;
+    --r:14px;--r2:20px;--r3:28px;
+    --shadow:0 2px 12px rgba(44,36,22,.07);
+    --shadow2:0 4px 24px rgba(44,36,22,.10);
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'DM Sans',sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* ── HEADER ── */
+  header{
+    text-align:center;
+    padding:3rem 2rem 2rem;
+    position:relative;
+  }
+  header::before{
+    content:'';
+    position:absolute;inset:0;
+    background:radial-gradient(ellipse 60% 80% at 50% 0%,var(--sand) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .header-eyebrow{
+    font-family:'Fraunces',serif;
+    font-size:12px;letter-spacing:.18em;
+    color:var(--ink3);text-transform:uppercase;
+    margin-bottom:.75rem;
+  }
+  .header-title{
+    font-family:'Fraunces',serif;
+    font-size:clamp(2rem,5vw,3.2rem);
+    font-weight:300;line-height:1.15;
+    color:var(--ink);margin-bottom:.6rem;
+  }
+  .header-title em{font-style:italic;color:var(--teal)}
+  .header-sub{
+    font-size:14px;color:var(--ink3);
+    max-width:480px;margin:0 auto 1.5rem;
+    line-height:1.7;
+  }
+  .progress-bar-wrap{
+    max-width:320px;margin:0 auto;
+    background:var(--warm);border-radius:99px;
+    height:4px;overflow:hidden;
+  }
+  .progress-bar-fill{
+    height:100%;background:var(--teal);
+    border-radius:99px;
+    transition:width .6s cubic-bezier(.4,0,.2,1);
+    width:0%;
+  }
+  .progress-label{
+    font-size:11px;color:var(--ink3);
+    margin-top:.4rem;
+  }
+
+  /* ── STEP NAV ── */
+  .step-nav{
+    display:flex;justify-content:center;gap:8px;
+    padding:1.5rem 2rem;flex-wrap:wrap;
+  }
+  .snav-btn{
+    width:36px;height:36px;border-radius:50%;
+    border:1.5px solid var(--warm);
+    background:var(--cream);
+    font-family:'Fraunces',serif;
+    font-size:13px;font-weight:500;
+    color:var(--ink3);cursor:pointer;
+    transition:all .2s;display:flex;align-items:center;justify-content:center;
+  }
+  .snav-btn:hover{border-color:var(--teal);color:var(--teal)}
+  .snav-btn.active{background:var(--teal);border-color:var(--teal);color:#fff}
+  .snav-btn.done{background:var(--teal-l);border-color:var(--teal);color:var(--teal)}
+
+  /* ── MAIN LAYOUT ── */
+  main{max-width:860px;margin:0 auto;padding:0 1.5rem 4rem}
+
+  /* ── STEP PANEL ── */
+  .step-panel{display:none;animation:fadeUp .4s ease both}
+  .step-panel.active{display:block}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+  .step-top{
+    display:grid;grid-template-columns:1fr 1fr;
+    gap:16px;margin-bottom:16px;
+  }
+  @media(max-width:600px){.step-top{grid-template-columns:1fr}}
+
+  .card{
+    background:#fff;border-radius:var(--r2);
+    border:1px solid var(--sand);
+    padding:1.25rem 1.5rem;
+    box-shadow:var(--shadow);
+  }
+  .card-eyebrow{
+    font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+    font-weight:500;margin-bottom:.5rem;
+  }
+  .card-title{
+    font-family:'Fraunces',serif;
+    font-size:1.15rem;font-weight:500;
+    line-height:1.35;margin-bottom:.5rem;
+  }
+  .card-body{
+    font-size:13px;color:var(--ink2);
+    line-height:1.7;
+  }
+
+  /* story card */
+  .story-card{
+    background:var(--amber-ll);
+    border-color:#E8D5B0;
+  }
+  .story-card .card-eyebrow{color:var(--amber)}
+  .story-card .card-title{color:#7A4A10}
+
+  /* concept card */
+  .concept-card{background:var(--teal-ll);border-color:#BDE0DA}
+  .concept-card .card-eyebrow{color:var(--teal)}
+  .concept-card .card-title{color:#1A5248}
+
+  /* ── VISUAL AREA ── */
+  .visual-area{
+    background:#fff;border-radius:var(--r2);
+    border:1px solid var(--sand);
+    padding:1.5rem;margin-bottom:16px;
+    box-shadow:var(--shadow);
+    min-height:160px;
+  }
+  .visual-title{
+    font-family:'Fraunces',serif;
+    font-size:.85rem;font-weight:500;
+    color:var(--ink3);margin-bottom:1rem;
+    display:flex;align-items:center;gap:6px;
+  }
+  .visual-title::before{
+    content:'';width:16px;height:2px;
+    background:var(--teal);border-radius:1px;
+  }
+
+  /* Dot grid */
+  .dot-grid{display:flex;flex-wrap:wrap;gap:7px;padding:.5rem 0}
+  .dot{
+    width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:500;
+    transition:all .3s;cursor:default;
+    font-family:'DM Sans',sans-serif;
+  }
+  .dot.neutral{background:var(--sand);color:var(--ink3);border:1.5px solid var(--warm)}
+  .dot.grouped{background:var(--teal-l);color:var(--teal);border:1.5px solid #A0D8D2}
+  .dot.remainder{background:var(--rose-l);color:var(--rose);border:1.5px solid #F0B8BC;animation:pulse .8s ease infinite alternate}
+  .dot.highlight{background:var(--amber-l);color:var(--amber);border:1.5px solid #E8C88A}
+  @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.12)}}
+
+  .group-divider{
+    width:2px;height:28px;background:var(--warm);
+    border-radius:1px;margin:0 2px;align-self:center;
+  }
+
+  /* Formula strip */
+  .formula-strip{
+    display:flex;align-items:center;gap:8px;
+    flex-wrap:wrap;margin:1rem 0;
+    padding:12px 16px;
+    background:var(--purple-ll);border-radius:var(--r);
+    border:1px solid #D8D0F4;
+  }
+  .fterm{
+    font-family:'Fraunces',serif;
+    font-size:1.1rem;font-weight:500;
+  }
+  .fterm.n{color:var(--ink)}
+  .fterm.d{color:var(--teal)}
+  .fterm.q{color:var(--purple)}
+  .fterm.r{color:var(--rose)}
+  .fterm.op{color:var(--ink3);font-size:.9rem}
+  .fterm.eq{color:var(--ink);font-size:.9rem;font-weight:400}
+  .fterm-label{font-size:10px;color:var(--ink3);display:block;margin-top:2px;letter-spacing:.04em}
+
+  /* Slider controls */
+  .ctrl-row{display:flex;gap:16px;flex-wrap:wrap;margin:.75rem 0;align-items:center}
+  .ctrl-group{display:flex;flex-direction:column;gap:4px}
+  .ctrl-label{font-size:11px;color:var(--ink3);letter-spacing:.04em}
+  input[type=range]{
+    -webkit-appearance:none;height:3px;
+    background:var(--warm);border-radius:2px;
+    outline:none;cursor:pointer;width:140px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;border-radius:50%;
+    background:var(--teal);border:2px solid #fff;
+    box-shadow:0 1px 4px rgba(0,0,0,.15);
+    cursor:pointer;
+  }
+  .ctrl-val{
+    font-family:'Fraunces',serif;
+    font-size:1.2rem;font-weight:500;
+    color:var(--teal);min-width:28px;
+  }
+
+  /* Result display */
+  .result-display{
+    display:flex;gap:10px;flex-wrap:wrap;margin:.75rem 0;
+  }
+  .result-pill{
+    padding:6px 14px;border-radius:99px;
+    font-size:12px;font-weight:500;
+    display:flex;align-items:center;gap:6px;
+  }
+  .rp-q{background:var(--purple-l);color:var(--purple)}
+  .rp-r{background:var(--rose-l);color:var(--rose)}
+  .rp-check{background:var(--green-l);color:var(--green)}
+
+  /* Real world uses */
+  .uses-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:10px;margin-top:1rem;
+  }
+  .use-card{
+    border-radius:var(--r);padding:12px 14px;
+    border:1px solid;cursor:pointer;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .use-card:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}
+  .use-icon{font-size:20px;margin-bottom:6px}
+  .use-title{font-size:12px;font-weight:500;margin-bottom:3px}
+  .use-desc{font-size:11px;line-height:1.55;opacity:.8}
+
+  /* Pseudocode */
+  .pseudo-area{
+    background:var(--ink);border-radius:var(--r2);
+    padding:1.5rem;margin-bottom:16px;
+    font-family:'DM Mono','Courier New',monospace;
+    font-size:13px;line-height:1.9;
+    position:relative;overflow:hidden;
+  }
+  .pseudo-area::before{
+    content:'PSEUDOCODE';
+    position:absolute;top:12px;right:16px;
+    font-size:9px;letter-spacing:.15em;
+    color:rgba(255,255,255,.2);
+  }
+  .pseudo-line{
+    display:flex;gap:12px;align-items:flex-start;
+    padding:1px 0;
+  }
+  .pseudo-line-num{
+    color:rgba(255,255,255,.2);
+    font-size:11px;min-width:18px;
+    padding-top:1px;user-select:none;
+  }
+  .pseudo-code{color:#E8E0D0}
+  .pk{color:#A8D8D0} /* keyword */
+  .pc{color:rgba(255,255,255,.35);font-style:italic} /* comment */
+  .pn{color:#F9C874} /* number */
+  .pv{color:#C4A8E8} /* variable */
+  .ps{color:#A8D4A8} /* string/output */
+
+  /* Think question */
+  .think-box{
+    background:var(--blue-ll);border-radius:var(--r2);
+    border:1px solid #C0D8F8;
+    padding:1.25rem 1.5rem;margin-bottom:16px;
+  }
+  .think-eyebrow{
+    font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--blue);font-weight:500;margin-bottom:.5rem;
+  }
+  .think-q{
+    font-family:'Fraunces',serif;
+    font-size:1rem;color:#1A3870;
+    line-height:1.5;margin-bottom:.75rem;
+  }
+  .think-options{display:flex;flex-direction:column;gap:6px}
+  .think-opt{
+    padding:8px 14px;border-radius:var(--r);
+    border:1.5px solid #C0D8F8;
+    background:#fff;font-size:13px;
+    color:var(--ink2);cursor:pointer;
+    transition:all .15s;text-align:left;
+    font-family:'DM Sans',sans-serif;
+  }
+  .think-opt:hover{border-color:var(--blue);color:var(--blue)}
+  .think-opt.correct{background:var(--green-l);border-color:#7FCC9F;color:var(--green)}
+  .think-opt.wrong{background:var(--rose-l);border-color:#F0B8BC;color:var(--rose)}
+  .think-feedback{
+    margin-top:.75rem;padding:10px 14px;
+    border-radius:var(--r);font-size:13px;
+    line-height:1.6;display:none;
+  }
+  .think-feedback.show{display:block}
+  .think-feedback.good{background:var(--green-l);color:#1A5232}
+  .think-feedback.bad{background:var(--rose-l);color:#7A2428}
+
+  /* Nav buttons */
+  .nav-row{
+    display:flex;justify-content:space-between;
+    align-items:center;margin-top:1.5rem;
+    padding-top:1.5rem;
+    border-top:1px solid var(--sand);
+  }
+  .nav-btn{
+    padding:10px 24px;border-radius:99px;
+    font-size:13px;font-weight:500;cursor:pointer;
+    border:1.5px solid;transition:all .18s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .nav-btn-prev{
+    border-color:var(--warm);color:var(--ink3);background:transparent;
+  }
+  .nav-btn-prev:hover{border-color:var(--ink3);color:var(--ink)}
+  .nav-btn-next{
+    border-color:var(--teal);color:var(--teal);background:transparent;
+  }
+  .nav-btn-next:hover{background:var(--teal);color:#fff}
+  .nav-step-label{font-size:12px;color:var(--ink3)}
+
+  /* celebration */
+  .celebration{
+    text-align:center;padding:2rem;
+    background:var(--teal-ll);border-radius:var(--r2);
+    border:1px solid #A0D8D2;margin-bottom:16px;
+  }
+  .celeb-title{
+    font-family:'Fraunces',serif;
+    font-size:1.6rem;color:var(--teal);
+    margin-bottom:.5rem;
+  }
+  .celeb-body{font-size:13px;color:var(--ink2);line-height:1.7;max-width:500px;margin:0 auto}
+
+  /* tooltip */
+  [data-tip]{position:relative;cursor:help}
+  [data-tip]:hover::after{
+    content:attr(data-tip);
+    position:absolute;bottom:110%;left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);color:#fff;
+    font-size:11px;padding:5px 10px;
+    border-radius:6px;white-space:nowrap;
+    pointer-events:none;z-index:10;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="header-eyebrow">A thinking journey · 5 steps</p>
+  <h1 class="header-title">Division with<br><em>Remainder</em></h1>
+  <p class="header-sub">Every great algorithm begins with a simple question: what is left over? Work through five steps and discover where this idea lives in the real world.</p>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="prog"></div>
+  </div>
+  <p class="progress-label" id="prog-label">Step 1 of 5</p>
+</header>
+
+<nav class="step-nav">
+  <button class="snav-btn active" onclick="goTo(0)" id="sn0">1</button>
+  <button class="snav-btn" onclick="goTo(1)" id="sn1">2</button>
+  <button class="snav-btn" onclick="goTo(2)" id="sn2">3</button>
+  <button class="snav-btn" onclick="goTo(3)" id="sn3">4</button>
+  <button class="snav-btn" onclick="goTo(4)" id="sn4">5</button>
+</nav>
+
+<main>
+
+<!-- ═══ STEP 1 ═══ -->
+<div class="step-panel active" id="step0">
+  <div class="step-top">
+    <div class="card story-card">
+      <p class="card-eyebrow">🍊 The story</p>
+      <p class="card-title">Sharing oranges at school</p>
+      <p class="card-body">You have <strong>13 oranges</strong>. You want to share them equally among <strong>4 friends</strong>. How many does each friend get — and how many are left over that cannot be shared?</p>
+    </div>
+    <div class="card concept-card">
+      <p class="card-eyebrow">💡 The concept</p>
+      <p class="card-title">What is a remainder?</p>
+      <p class="card-body">When you divide and the number does not split perfectly, the leftover part is called the <strong>remainder</strong>. In maths we write: <em>13 ÷ 4 = 3 remainder 1</em>. The remainder is never bigger than the divisor.</p>
+    </div>
+  </div>
+
+  <div class="visual-area">
+    <p class="visual-title">Interactive — drag the slider and watch the oranges group</p>
+    <div class="ctrl-row">
+      <div class="ctrl-group">
+        <span class="ctrl-label">TOTAL ORANGES (N)</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="3" max="20" value="13" id="s1n" oninput="updateStep1()">
+          <span class="ctrl-val" id="s1n-v">13</span>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">FRIENDS (D)</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="2" max="7" value="4" id="s1d" oninput="updateStep1()">
+          <span class="ctrl-val" id="s1d-v">4</span>
+        </div>
+      </div>
+    </div>
+    <div id="s1-dots" class="dot-grid"></div>
+    <div class="result-display" id="s1-result"></div>
+    <div class="formula-strip">
+      <span><span class="fterm n" id="f1n">13</span><span class="fterm-label">total</span></span>
+      <span class="fterm op">÷</span>
+      <span><span class="fterm d" id="f1d">4</span><span class="fterm-label">groups</span></span>
+      <span class="fterm eq">=</span>
+      <span><span class="fterm q" id="f1q">3</span><span class="fterm-label">each</span></span>
+      <span class="fterm op">remainder</span>
+      <span><span class="fterm r" id="f1r">1</span><span class="fterm-label">left over</span></span>
+    </div>
+  </div>
+
+  <div class="think-box">
+    <p class="think-eyebrow">🧠 Think about it</p>
+    <p class="think-q">If you have 15 oranges and 5 friends, what is the remainder?</p>
+    <div class="think-options">
+      <button class="think-opt" onclick="answer(this,'wrong','Not quite. 15 ÷ 5 = 3 exactly. Try setting the sliders to 15 and 5 to see.')">3</button>
+      <button class="think-opt" onclick="answer(this,'correct','Yes! 15 ÷ 5 = 3 with remainder 0. When remainder is 0, the sharing was perfect. We call this exact division.')">0</button>
+      <button class="think-opt" onclick="answer(this,'wrong','The remainder cannot be larger than the divisor (5). So 5 cannot be left over.')">5</button>
+    </div>
+    <div class="think-feedback" id="tf0"></div>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div class="uses-grid">
+      <div class="use-card" style="background:var(--amber-ll);border-color:#E8D5B0" onclick="alert('When a shop gets 50 eggs packed in boxes of 6, the packer does 50 ÷ 6 = 8 boxes with 2 eggs remaining. The remainder tells the packer to make a partial box.')">
+        <div class="use-icon">🛒</div>
+        <div class="use-title" style="color:#7A4A10">Packaging goods</div>
+        <div class="use-desc" style="color:#A06010">50 eggs into boxes of 6 — how many full boxes and how many left over?</div>
+      </div>
+      <div class="use-card" style="background:var(--teal-ll);border-color:#BDE0DA" onclick="alert('A bus holds 44 passengers. 150 students need transport. 150 ÷ 44 = 3 buses with 18 students remaining — so 4 buses are needed.')">
+        <div class="use-icon">🚌</div>
+        <div class="use-title" style="color:#1A5248">School buses</div>
+        <div class="use-desc" style="color:#2A7A6F">150 students, 44 seats per bus. How many buses? Any left over?</div>
+      </div>
+      <div class="use-card" style="background:var(--blue-ll);border-color:#C0D8F8" onclick="alert('In computing, a 10-second timer uses 10 mod 60. Page numbering: total items mod items-per-page gives the number of items on the last page.')">
+        <div class="use-icon">💻</div>
+        <div class="use-title" style="color:#1A3870">Computer pages</div>
+        <div class="use-desc" style="color:#3060A8">Showing 10 items per page from 37 results — how many on the last page?</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--ink3);margin-top:8px;text-align:center">Tap any card to learn more</p>
+  </div>
+
+  <div class="nav-row">
+    <div></div>
+    <span class="nav-step-label">Step 1 of 5</span>
+    <button class="nav-btn nav-btn-next" onclick="goTo(1)">Next step →</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 2 ═══ -->
+<div class="step-panel" id="step1">
+  <div class="step-top">
+    <div class="card story-card">
+      <p class="card-eyebrow">🕐 The story</p>
+      <p class="card-title">Reading a clock</p>
+      <p class="card-body">It is 26 hours since midnight. What time does the clock show? Hours on a clock cycle every 12. So we need to know: what is 26 when wrapped around a cycle of 12? The answer is <strong>2 o'clock</strong> — because 26 mod 12 = 2.</p>
+    </div>
+    <div class="card concept-card">
+      <p class="card-eyebrow">💡 The concept</p>
+      <p class="card-title">Modulo — the cycling operation</p>
+      <p class="card-body">The modulo operation ( <strong>mod</strong> or <strong>%</strong> ) gives only the remainder. It wraps numbers around a cycle. Every clock, calendar, and rotating system uses this idea without calling it modulo.</p>
+    </div>
+  </div>
+
+  <div class="visual-area">
+    <p class="visual-title">Clock visualiser — what hour does the number land on?</p>
+    <div class="ctrl-row">
+      <div class="ctrl-group">
+        <span class="ctrl-label">TOTAL HOURS ELAPSED</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="1" max="48" value="26" id="s2h" oninput="updateStep2()" step="1">
+          <span class="ctrl-val" id="s2h-v">26</span>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">CYCLE LENGTH</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="4" max="24" value="12" id="s2c" oninput="updateStep2()" step="1">
+          <span class="ctrl-val" id="s2c-v">12</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:2rem;flex-wrap:wrap;margin:1rem 0">
+      <canvas id="clockCanvas" width="160" height="160" style="border-radius:50%;border:2px solid var(--sand)"></canvas>
+      <div>
+        <div class="formula-strip" style="margin-bottom:10px">
+          <span><span class="fterm n" id="f2h">26</span><span class="fterm-label">hours</span></span>
+          <span class="fterm op">mod</span>
+          <span><span class="fterm d" id="f2c">12</span><span class="fterm-label">cycle</span></span>
+          <span class="fterm eq">=</span>
+          <span><span class="fterm r" id="f2r">2</span><span class="fterm-label">position</span></span>
+        </div>
+        <div class="result-display">
+          <span class="result-pill rp-q" id="s2-laps"></span>
+          <span class="result-pill rp-r" id="s2-pos"></span>
+        </div>
+        <p style="font-size:12px;color:var(--ink3);margin-top:8px;line-height:1.6" id="s2-insight"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="think-box">
+    <p class="think-eyebrow">🧠 Think about it</p>
+    <p class="think-q">It is day 100 of the year. What day of the week is it, if day 1 was a Monday? (Hint: weeks have 7 days)</p>
+    <div class="think-options">
+      <button class="think-opt" onclick="answer(this,'correct','Correct! 100 mod 7 = 2 (because 7 × 14 = 98, remainder 2). Day 2 in a week starting Monday is Tuesday. This is exactly how computers calculate weekdays from timestamps.')">Tuesday</button>
+      <button class="think-opt" onclick="answer(this,'wrong','Close! Try 100 mod 7. 7 × 14 = 98. 100 − 98 = 2. Day 2 from Monday is Tuesday, not Wednesday.')">Wednesday</button>
+      <button class="think-opt" onclick="answer(this,'wrong','Try the modulo: 100 ÷ 7 = 14 with remainder 2. We need the remainder, not the quotient.')">14</button>
+    </div>
+    <div class="think-feedback" id="tf1"></div>
+  </div>
+
+  <div class="uses-grid">
+    <div class="use-card" style="background:var(--purple-ll);border-color:#D0C8F4">
+      <div class="use-icon">📅</div>
+      <div class="use-title" style="color:#3C2880">Calendar apps</div>
+      <div class="use-desc" style="color:#6B52A8">date mod 7 gives the weekday. Every calendar app does this billions of times.</div>
+    </div>
+    <div class="use-card" style="background:var(--rose-ll);border-color:#F0C8CA">
+      <div class="use-icon">🔁</div>
+      <div class="use-title" style="color:#7A2428">Music loops</div>
+      <div class="use-desc" style="color:#C0545A">Beat position in a song: (beat number) mod (beats per bar) = position in bar.</div>
+    </div>
+    <div class="use-card" style="background:var(--green-ll);border-color:#A0DDB8">
+      <div class="use-icon">🎮</div>
+      <div class="use-title" style="color:#1A5232">Game levels</div>
+      <div class="use-desc" style="color:#2E7D52">Level cycling: (score mod 10) resets progress bar. Infinite scrolling images use modulo.</div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="nav-btn nav-btn-prev" onclick="goTo(0)">← Back</button>
+    <span class="nav-step-label">Step 2 of 5</span>
+    <button class="nav-btn nav-btn-next" onclick="goTo(2)">Next step →</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 3 ═══ -->
+<div class="step-panel" id="step2">
+  <div class="step-top">
+    <div class="card story-card">
+      <p class="card-eyebrow">🔢 The story</p>
+      <p class="card-title">Odd and even — the simplest test</p>
+      <p class="card-body">You arrange chairs in pairs for a classroom. If every chair pairs up with no leftover, the number is <strong>even</strong>. If one chair is always alone at the end, the number is <strong>odd</strong>. This is just asking: what is N mod 2?</p>
+    </div>
+    <div class="card concept-card">
+      <p class="card-eyebrow">💡 The concept</p>
+      <p class="card-title">Remainder as a classifier</p>
+      <p class="card-body">The remainder does not just measure leftover — it <strong>classifies</strong>. N mod 2 = 0 means even. N mod 2 = 1 means odd. Any number mod any value creates a classification system. This is the engine behind sorting, filtering, and routing in code.</p>
+    </div>
+  </div>
+
+  <div class="visual-area">
+    <p class="visual-title">Try any number — watch it get classified</p>
+    <div class="ctrl-row">
+      <div class="ctrl-group">
+        <span class="ctrl-label">NUMBER (N)</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="1" max="30" value="9" id="s3n" oninput="updateStep3()" step="1">
+          <span class="ctrl-val" id="s3n-v">9</span>
+        </div>
+      </div>
+    </div>
+    <div id="s3-dots" class="dot-grid" style="margin:10px 0"></div>
+    <div id="s3-verdict" style="padding:10px 16px;border-radius:var(--r);font-size:14px;font-weight:500;margin:8px 0;display:inline-block"></div>
+    <div class="formula-strip">
+      <span><span class="fterm n" id="f3n">9</span><span class="fterm-label">number</span></span>
+      <span class="fterm op">mod</span>
+      <span><span class="fterm d">2</span><span class="fterm-label">pairs</span></span>
+      <span class="fterm eq">=</span>
+      <span><span class="fterm r" id="f3r">1</span><span class="fterm-label">remainder</span></span>
+      <span class="fterm op" id="f3conc" style="color:var(--rose);font-size:.85rem">→ odd</span>
+    </div>
+    <div style="margin-top:12px">
+      <p style="font-size:12px;color:var(--ink3);margin-bottom:6px">Try divisor 3 — it creates three categories:</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="result-pill rp-q">mod 3 = 0 → divisible</span>
+        <span class="result-pill rp-r">mod 3 = 1 → one over</span>
+        <span class="result-pill rp-check">mod 3 = 2 → two over</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="think-box">
+    <p class="think-eyebrow">🧠 Think about it</p>
+    <p class="think-q">In a program, you have 1000 user accounts. You want to split them into 4 server groups evenly. User 347 goes to which group?</p>
+    <div class="think-options">
+      <button class="think-opt" onclick="answer(this,'correct','Correct! 347 mod 4 = 3 (because 4 × 86 = 344, remainder 3). So user 347 goes to group 3. This technique is called modulo-based sharding — it is how large apps like WhatsApp distribute millions of users across servers.')">Group 3</button>
+      <button class="think-opt" onclick="answer(this,'wrong','347 mod 4: divide 347 by 4 = 86 remainder 3. So group 3, not group 2.')">Group 2</button>
+      <button class="think-opt" onclick="answer(this,'wrong','347 mod 4 gives 3, not 1. Try: 4 × 86 = 344, 347 − 344 = 3.')">Group 1</button>
+    </div>
+    <div class="think-feedback" id="tf2"></div>
+  </div>
+
+  <div class="uses-grid">
+    <div class="use-card" style="background:var(--teal-ll);border-color:#BDE0DA">
+      <div class="use-icon">🏦</div>
+      <div class="use-title" style="color:#1A5248">Credit card check</div>
+      <div class="use-desc" style="color:#2A7A6F">Luhn algorithm uses mod 10 on card digits to detect typing errors instantly.</div>
+    </div>
+    <div class="use-card" style="background:var(--amber-ll);border-color:#E8D5B0">
+      <div class="use-icon">🌐</div>
+      <div class="use-title" style="color:#7A4A10">Server routing</div>
+      <div class="use-desc" style="color:#C17B2A">user_id mod num_servers routes each request to the right machine.</div>
+    </div>
+    <div class="use-card" style="background:var(--blue-ll);border-color:#C0D8F8">
+      <div class="use-icon">🎨</div>
+      <div class="use-title" style="color:#1A3870">Alternating rows</div>
+      <div class="use-desc" style="color:#3060A8">row mod 2 = 0 → white background, = 1 → gray. Every table you have ever seen.</div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="nav-btn nav-btn-prev" onclick="goTo(1)">← Back</button>
+    <span class="nav-step-label">Step 3 of 5</span>
+    <button class="nav-btn nav-btn-next" onclick="goTo(3)">Next step →</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 4 ═══ -->
+<div class="step-panel" id="step3">
+  <div class="step-top">
+    <div class="card story-card">
+      <p class="card-eyebrow">🔒 The story</p>
+      <p class="card-title">The lock that uses remainder</p>
+      <p class="card-body">You and a friend agree: to send a secret message, multiply the code number by 7, then divide by 26 and keep only the remainder. The remainder maps to a letter. A becomes B, B becomes I... This is the <strong>Caesar cipher</strong> — one of history's first encryption systems.</p>
+    </div>
+    <div class="card concept-card">
+      <p class="card-eyebrow">💡 The concept</p>
+      <p class="card-title">Modulo in patterns and security</p>
+      <p class="card-body">When you apply mod to a sequence, the remainders form a repeating, predictable pattern. But when that modulus is a <strong>prime number</strong>, the pattern becomes hard to reverse — which is the foundation of cryptography and internet security.</p>
+    </div>
+  </div>
+
+  <div class="visual-area">
+    <p class="visual-title">Caesar cipher — encode a letter using shift mod 26</p>
+    <div class="ctrl-row">
+      <div class="ctrl-group">
+        <span class="ctrl-label">LETTER (A=0 … Z=25)</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="0" max="25" value="0" id="s4l" oninput="updateStep4()" step="1">
+          <span class="ctrl-val" id="s4l-v">A</span>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">SHIFT KEY</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="1" max="25" value="3" id="s4s" oninput="updateStep4()" step="1">
+          <span class="ctrl-val" id="s4s-v">3</span>
+        </div>
+      </div>
+    </div>
+    <div id="s4-alpha" style="display:flex;flex-wrap:wrap;gap:4px;margin:10px 0"></div>
+    <div class="formula-strip">
+      <span><span class="fterm n" id="f4l">0</span><span class="fterm-label">letter pos</span></span>
+      <span class="fterm op">+</span>
+      <span><span class="fterm d" id="f4s">3</span><span class="fterm-label">shift</span></span>
+      <span class="fterm op">mod</span>
+      <span><span class="fterm q">26</span><span class="fterm-label">alphabet</span></span>
+      <span class="fterm eq">=</span>
+      <span><span class="fterm r" id="f4r">3</span><span class="fterm-label">encoded pos</span></span>
+      <span class="fterm op">→</span>
+      <span><span class="fterm r" id="f4rl">D</span><span class="fterm-label">encoded letter</span></span>
+    </div>
+    <p id="s4-note" style="font-size:12px;color:var(--ink3);margin-top:8px;line-height:1.6"></p>
+  </div>
+
+  <div class="think-box">
+    <p class="think-eyebrow">🧠 Think about it</p>
+    <p class="think-q">If you encode the letter Z (position 25) with a shift of 3, the result wraps around. What letter do you get?</p>
+    <div class="think-options">
+      <button class="think-opt" onclick="answer(this,'correct','Yes! (25 + 3) mod 26 = 28 mod 26 = 2 → C. The modulo wraps the alphabet so it cycles. Without mod, position 28 would go past Z and break. Modulo keeps it inside the 0–25 range.')">C</button>
+      <button class="think-opt" onclick="answer(this,'wrong','Not quite. (25 + 3) = 28, but there are only 26 letters (0–25). 28 mod 26 = 2, which is the letter C.')">Z</button>
+      <button class="think-opt" onclick="answer(this,'wrong','Almost — that would be X shifted forward, not Z. Z is at position 25. (25 + 3) mod 26 = 2 = C.')">B</button>
+    </div>
+    <div class="think-feedback" id="tf3"></div>
+  </div>
+
+  <div class="uses-grid">
+    <div class="use-card" style="background:var(--purple-ll);border-color:#D0C8F4">
+      <div class="use-icon">🔐</div>
+      <div class="use-title" style="color:#3C2880">RSA encryption</div>
+      <div class="use-desc" style="color:#6B52A8">Your HTTPS padlock. Enormous modulo operations with prime numbers protect every login.</div>
+    </div>
+    <div class="use-card" style="background:var(--green-ll);border-color:#A0DDB8">
+      <div class="use-icon">📦</div>
+      <div class="use-title" style="color:#1A5232">Hash functions</div>
+      <div class="use-desc" style="color:#2E7D52">hash(data) mod table_size places items in the right bucket. Used in every database.</div>
+    </div>
+    <div class="use-card" style="background:var(--rose-ll);border-color:#F0C8CA">
+      <div class="use-icon">✅</div>
+      <div class="use-title" style="color:#7A2428">Checksums</div>
+      <div class="use-desc" style="color:#C0545A">File downloads use mod to verify nothing was corrupted during transfer.</div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="nav-btn nav-btn-prev" onclick="goTo(2)">← Back</button>
+    <span class="nav-step-label">Step 4 of 5</span>
+    <button class="nav-btn nav-btn-next" onclick="goTo(4)">Next step →</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 5 ═══ -->
+<div class="step-panel" id="step4">
+  <div class="step-top">
+    <div class="card story-card">
+      <p class="card-eyebrow">✍️ The story</p>
+      <p class="card-title">Writing the logic yourself</p>
+      <p class="card-body">You have now seen remainder in sharing, cycling, classifying, and encoding. Before any real code, a good thinker writes the <strong>logic in plain language</strong> first — this is called pseudocode. It bridges your thinking and the machine's language.</p>
+    </div>
+    <div class="card concept-card">
+      <p class="card-eyebrow">💡 The concept</p>
+      <p class="card-title">Pseudocode — thinking out loud</p>
+      <p class="card-body">Pseudocode is not a real programming language. It has no syntax to memorize. It is your logic written clearly enough that anyone — or any AI — could turn it into real code. The skill of writing good pseudocode is the same skill as writing a good AI prompt.</p>
+    </div>
+  </div>
+
+  <div class="pseudo-area">
+    <div class="pseudo-line"><span class="pseudo-line-num">1</span><span class="pseudo-code"><span class="pc">// Step 1 — basic division with remainder</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">2</span><span class="pseudo-code"><span class="pk">FUNCTION</span> divide(N, D):</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">3</span><span class="pseudo-code">&nbsp;&nbsp;quotient  ← N <span class="pk">div</span> D &nbsp;&nbsp;&nbsp;&nbsp;<span class="pc">// how many full groups</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">4</span><span class="pseudo-code">&nbsp;&nbsp;remainder ← N <span class="pk">mod</span> D &nbsp;&nbsp;&nbsp;&nbsp;<span class="pc">// what is left over</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">5</span><span class="pseudo-code">&nbsp;&nbsp;<span class="pk">RETURN</span> quotient, remainder</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">6</span><span class="pseudo-code">&nbsp;</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">7</span><span class="pseudo-code"><span class="pc">// Step 2 — cycling (like a clock)</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">8</span><span class="pseudo-code"><span class="pk">FUNCTION</span> cyclePosition(value, cycleLength):</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">9</span><span class="pseudo-code">&nbsp;&nbsp;<span class="pk">RETURN</span> value <span class="pk">mod</span> cycleLength</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">10</span><span class="pseudo-code">&nbsp;</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">11</span><span class="pseudo-code"><span class="pc">// Step 3 — classifying odd / even</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">12</span><span class="pseudo-code"><span class="pk">FUNCTION</span> isEven(N):</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">13</span><span class="pseudo-code">&nbsp;&nbsp;<span class="pk">IF</span> N <span class="pk">mod</span> <span class="pn">2</span> = <span class="pn">0</span>:</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">14</span><span class="pseudo-code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="pk">RETURN</span> <span class="ps">"even"</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">15</span><span class="pseudo-code">&nbsp;&nbsp;<span class="pk">ELSE</span>:</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">16</span><span class="pseudo-code">&nbsp;&nbsp;&nbsp;&nbsp;<span class="pk">RETURN</span> <span class="ps">"odd"</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">17</span><span class="pseudo-code">&nbsp;</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">18</span><span class="pseudo-code"><span class="pc">// Step 4 — Caesar cipher encode</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">19</span><span class="pseudo-code"><span class="pk">FUNCTION</span> caesarEncode(letterPos, shift):</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">20</span><span class="pseudo-code">&nbsp;&nbsp;encoded ← (letterPos + shift) <span class="pk">mod</span> <span class="pn">26</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">21</span><span class="pseudo-code">&nbsp;&nbsp;<span class="pk">RETURN</span> encoded &nbsp;&nbsp;&nbsp;&nbsp;<span class="pc">// convert position back to letter</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">22</span><span class="pseudo-code">&nbsp;</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">23</span><span class="pseudo-code"><span class="pc">// Step 5 — combining all ideas: page calculator</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">24</span><span class="pseudo-code"><span class="pk">FUNCTION</span> paginateItems(totalItems, perPage):</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">25</span><span class="pseudo-code">&nbsp;&nbsp;fullPages  ← totalItems <span class="pk">div</span> perPage</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">26</span><span class="pseudo-code">&nbsp;&nbsp;leftOnLast ← totalItems <span class="pk">mod</span> perPage</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">27</span><span class="pseudo-code">&nbsp;&nbsp;<span class="pk">IF</span> leftOnLast = <span class="pn">0</span>:</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">28</span><span class="pseudo-code">&nbsp;&nbsp;&nbsp;&nbsp;totalPages ← fullPages</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">29</span><span class="pseudo-code">&nbsp;&nbsp;<span class="pk">ELSE</span>:</span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">30</span><span class="pseudo-code">&nbsp;&nbsp;&nbsp;&nbsp;totalPages ← fullPages + <span class="pn">1</span></span></div>
+    <div class="pseudo-line"><span class="pseudo-line-num">31</span><span class="pseudo-code">&nbsp;&nbsp;<span class="pk">RETURN</span> totalPages, leftOnLast</span></div>
+  </div>
+
+  <div class="visual-area">
+    <p class="visual-title">Live test — run the pagination pseudocode</p>
+    <div class="ctrl-row">
+      <div class="ctrl-group">
+        <span class="ctrl-label">TOTAL ITEMS</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="5" max="100" value="37" id="s5t" oninput="updateStep5()" step="1">
+          <span class="ctrl-val" id="s5t-v">37</span>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">ITEMS PER PAGE</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="2" max="20" value="10" id="s5p" oninput="updateStep5()" step="1">
+          <span class="ctrl-val" id="s5p-v">10</span>
+        </div>
+      </div>
+    </div>
+    <div id="s5-pages" style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0"></div>
+    <div class="result-display" id="s5-result"></div>
+    <div class="formula-strip">
+      <span><span class="fterm n" id="f5t">37</span><span class="fterm-label">items</span></span>
+      <span class="fterm op">div</span>
+      <span><span class="fterm d" id="f5p">10</span><span class="fterm-label">per page</span></span>
+      <span class="fterm eq">=</span>
+      <span><span class="fterm q" id="f5q">3</span><span class="fterm-label">full pages</span></span>
+      <span class="fterm op">+</span>
+      <span><span class="fterm r" id="f5r">7</span><span class="fterm-label">on last page</span></span>
+    </div>
+  </div>
+
+  <div class="think-box">
+    <p class="think-eyebrow">🧠 Final challenge</p>
+    <p class="think-q">A music app has 500 songs. The shuffle uses: (current_position × 7) mod 500 to pick the next song. Why is 7 a good choice for the multiplier?</p>
+    <div class="think-options">
+      <button class="think-opt" onclick="answer(this,'correct','Exactly right! 7 is prime and does not share factors with 500. This means the sequence visits all 500 positions before repeating — a perfect shuffle. If you used 10 instead, it shares a factor with 500 (both divisible by 10) and you would only ever hear 50 songs before it cycles. Prime numbers create maximum spread.')">Because 7 is prime and shares no factors with 500</button>
+      <button class="think-opt" onclick="answer(this,'wrong','7 is a lucky number in culture, but that is not why it works here. The mathematical reason is that 7 is prime — it shares no common factors with 500, which creates the longest possible sequence before repeating.')">Because 7 is a lucky number</button>
+      <button class="think-opt" onclick="answer(this,'wrong','7 is actually not the largest option. The reason it works is that 7 is prime and coprime with 500 — no shared factors. This gives the maximum possible spread across all 500 songs.')">Because 7 is the largest single digit</button>
+    </div>
+    <div class="think-feedback" id="tf4"></div>
+  </div>
+
+  <div class="celebration" id="completion-box" style="display:none">
+    <p class="celeb-title">Journey complete</p>
+    <p class="celeb-body">You traced one idea — the remainder — from sharing oranges to clock cycles, odd and even classification, Caesar ciphers, and finally shuffle algorithms. Every step was the same maths. Every step was a different world.</p>
+    <p style="font-size:12px;color:var(--teal);margin-top:.75rem;font-family:'Fraunces',serif;font-style:italic">The remainder is not a leftover. It is a pattern-maker.</p>
+  </div>
+
+  <div class="nav-row">
+    <button class="nav-btn nav-btn-prev" onclick="goTo(3)">← Back</button>
+    <span class="nav-step-label">Step 5 of 5</span>
+    <button class="nav-btn nav-btn-next" onclick="finish()" style="border-color:var(--teal);background:var(--teal);color:#fff">Complete the journey ✓</button>
+  </div>
+</div>
+
+</main>
+
+<script>
+var currentStep=0;
+var answered=[false,false,false,false,false];
+
+function goTo(n){
+  document.querySelectorAll('.step-panel').forEach(function(p,i){
+    p.classList.toggle('active',i===n);
+  });
+  document.querySelectorAll('.snav-btn').forEach(function(b,i){
+    b.classList.remove('active','done');
+    if(i===n) b.classList.add('active');
+    else if(i<n) b.classList.add('done');
+  });
+  currentStep=n;
+  var pct=((n)/(5))*100;
+  document.getElementById('prog').style.width=pct+'%';
+  document.getElementById('prog-label').textContent='Step '+(n+1)+' of 5';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n===0) updateStep1();
+  if(n===1) {updateStep2();drawClock();}
+  if(n===2) updateStep3();
+  if(n===3) updateStep4();
+  if(n===4) updateStep5();
+}
+
+function answer(btn, type, msg){
+  var parent=btn.closest('.think-options');
+  var feedbackId='tf'+currentStep;
+  var fb=document.getElementById(feedbackId);
+  parent.querySelectorAll('.think-opt').forEach(function(b){b.onclick=null;});
+  btn.classList.add(type==='correct'?'correct':'wrong');
+  fb.className='think-feedback show '+(type==='correct'?'good':'bad');
+  fb.textContent=msg;
+  answered[currentStep]=true;
+  if(currentStep===4&&type==='correct'){
+    setTimeout(function(){
+      document.getElementById('completion-box').style.display='block';
+    },800);
+  }
+}
+
+function finish(){
+  document.getElementById('completion-box').style.display='block';
+  document.getElementById('prog').style.width='100%';
+  document.getElementById('prog-label').textContent='Complete!';
+  document.querySelectorAll('.snav-btn').forEach(function(b){b.classList.add('done');b.classList.remove('active')});
+  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+
+// ── Step 1 ──
+function updateStep1(){
+  var n=+document.getElementById('s1n').value;
+  var d=+document.getElementById('s1d').value;
+  document.getElementById('s1n-v').textContent=n;
+  document.getElementById('s1d-v').textContent=d;
+  var q=Math.floor(n/d), r=n%d;
+  document.getElementById('f1n').textContent=n;
+  document.getElementById('f1d').textContent=d;
+  document.getElementById('f1q').textContent=q;
+  document.getElementById('f1r').textContent=r;
+  var dots=document.getElementById('s1-dots');
+  dots.innerHTML='';
+  for(var i=1;i<=n;i++){
+    var dotEl=document.createElement('div');
+    dotEl.className='dot '+(i>q*d?'remainder':'grouped');
+    dotEl.setAttribute('data-tip',i<=q*d?'Group '+(Math.ceil(i/q)):'Remainder');
+    dotEl.textContent=i;
+    dots.appendChild(dotEl);
+    if(i%q===0&&i<q*d&&q>0){
+      var div=document.createElement('div');
+      div.className='group-divider';
+      dots.appendChild(div);
+    }
+  }
+  var res=document.getElementById('s1-result');
+  res.innerHTML='<span class="result-pill rp-q">'+q+' each</span><span class="result-pill rp-r">'+r+' left over</span>'+(r===0?'<span class="result-pill rp-check">Perfect share!</span>':'');
+}
+
+// ── Step 2 (clock) ──
+function updateStep2(){
+  var h=+document.getElementById('s2h').value;
+  var c=+document.getElementById('s2c').value;
+  document.getElementById('s2h-v').textContent=h;
+  document.getElementById('s2c-v').textContent=c;
+  var laps=Math.floor(h/c), pos=h%c;
+  document.getElementById('f2h').textContent=h;
+  document.getElementById('f2c').textContent=c;
+  document.getElementById('f2r').textContent=pos;
+  document.getElementById('s2-laps').textContent=laps+' full cycle'+(laps!==1?'s':'');
+  document.getElementById('s2-pos').textContent='position '+pos;
+  document.getElementById('s2-insight').textContent='After '+h+' hours, the clock has cycled '+laps+' time'+(laps!==1?'s':'')+' and now shows position '+pos+' (out of '+c+').';
+  drawClock();
+}
+
+function drawClock(){
+  var canvas=document.getElementById('clockCanvas');
+  if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  var cx=80,cy=80,r=72;
+  var h=+(document.getElementById('s2h')||{value:26}).value;
+  var c=+(document.getElementById('s2c')||{value:12}).value;
+  var pos=h%c;
+  ctx.clearRect(0,0,160,160);
+  ctx.fillStyle='#FAF8F3';ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#E8E0D0';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  for(var i=0;i<c;i++){
+    var angle=(i/c)*Math.PI*2-Math.PI/2;
+    var tx=cx+Math.cos(angle)*(r-12);
+    var ty=cy+Math.sin(angle)*(r-12);
+    ctx.fillStyle=i===pos?'#2A7A6F':'#8C8070';
+    ctx.font=(i===pos?'bold ':'')+'11px DM Sans,sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(i===0?c:i,tx,ty);
+  }
+  var handAngle=(pos/c)*Math.PI*2-Math.PI/2;
+  ctx.strokeStyle='#2A7A6F';ctx.lineWidth=2.5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(cx,cy);
+  ctx.lineTo(cx+Math.cos(handAngle)*50,cy+Math.sin(handAngle)*50);
+  ctx.stroke();
+  ctx.fillStyle='#2A7A6F';ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();
+}
+
+// ── Step 3 ──
+function updateStep3(){
+  var n=+document.getElementById('s3n').value;
+  document.getElementById('s3n-v').textContent=n;
+  var r=n%2;
+  document.getElementById('f3n').textContent=n;
+  document.getElementById('f3r').textContent=r;
+  var conc=document.getElementById('f3conc');
+  conc.textContent='→ '+(r===0?'even':'odd');
+  conc.style.color=r===0?'var(--teal)':'var(--rose)';
+  var dots=document.getElementById('s3-dots');
+  dots.innerHTML='';
+  for(var i=1;i<=n;i++){
+    var d=document.createElement('div');
+    d.className='dot '+(i%2===1?'grouped':'highlight');
+    d.textContent=i;
+    dots.appendChild(d);
+  }
+  var v=document.getElementById('s3-verdict');
+  v.textContent=n+' is '+(r===0?'even':'odd');
+  v.style.background=r===0?'var(--teal-l)':'var(--rose-l)';
+  v.style.color=r===0?'var(--teal)':'var(--rose)';
+}
+
+// ── Step 4 ──
+function updateStep4(){
+  var l=+document.getElementById('s4l').value;
+  var s=+document.getElementById('s4s').value;
+  var letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  document.getElementById('s4l-v').textContent=letters[l];
+  document.getElementById('s4s-v').textContent=s;
+  var enc=(l+s)%26;
+  document.getElementById('f4l').textContent=l;
+  document.getElementById('f4s').textContent=s;
+  document.getElementById('f4r').textContent=enc;
+  document.getElementById('f4rl').textContent=letters[enc];
+  document.getElementById('s4-note').textContent=letters[l]+' (position '+l+') + shift '+s+' = '+(l+s)+', mod 26 = '+enc+' → encodes to '+letters[enc];
+  var alpha=document.getElementById('s4-alpha');
+  alpha.innerHTML='';
+  for(var i=0;i<26;i++){
+    var d=document.createElement('div');
+    d.className='dot '+(i===l?'highlight':i===enc?'remainder':'neutral');
+    d.style.width='24px';d.style.height='24px';d.style.fontSize='10px';
+    d.textContent=letters[i];
+    alpha.appendChild(d);
+  }
+}
+
+// ── Step 5 ──
+function updateStep5(){
+  var t=+document.getElementById('s5t').value;
+  var p=+document.getElementById('s5p').value;
+  document.getElementById('s5t-v').textContent=t;
+  document.getElementById('s5p-v').textContent=p;
+  var q=Math.floor(t/p),r=t%p;
+  var total=r>0?q+1:q;
+  document.getElementById('f5t').textContent=t;
+  document.getElementById('f5p').textContent=p;
+  document.getElementById('f5q').textContent=q;
+  document.getElementById('f5r').textContent=r;
+  var pages=document.getElementById('s5-pages');
+  pages.innerHTML='';
+  for(var i=1;i<=total;i++){
+    var d=document.createElement('div');
+    var isLast=i===total&&r>0;
+    d.className='result-pill '+(isLast?'rp-r':'rp-q');
+    d.textContent='Page '+i+': '+(isLast?r:p)+' items';
+    pages.appendChild(d);
+  }
+  document.getElementById('s5-result').innerHTML=
+    '<span class="result-pill rp-q">'+total+' total pages</span>'+
+    (r>0?'<span class="result-pill rp-r">Last page has '+r+'</span>':'<span class="result-pill rp-check">All pages full</span>');
+}
+
+// init
+updateStep1();
+</script>
+</body>
+</html>
