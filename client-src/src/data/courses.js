@@ -98,10 +98,10 @@ export const courses = [
       {
         id: 'collections',
         title: 'Collections',
-        summary: 'Work handled in order, and finding any one thing instantly.',
+        summary: 'Filing work under the person who holds it, so every question has an instant answer.',
         lessons: [
-          { id: 'assetflow', title: 'AssetFlow', minutes: 25,
-            blurb: 'Run an IT asset desk — clear the request line in order, then find any asset by its tag.', thumb: false },
+          { id: 'sprintboard', title: 'SprintBoard', minutes: 25,
+            blurb: 'Plan an AI study app sprint by sprint — hand every stage to a teammate, then run the day and watch where everyone stands.', thumb: false },
         ],
       },
       {
