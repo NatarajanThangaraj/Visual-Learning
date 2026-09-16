@@ -102,8 +102,6 @@ export const courses = [
         lessons: [
           { id: 'sprintboard', title: 'SprintBoard', minutes: 25,
             blurb: 'Plan an AI study app sprint by sprint — hand every stage to a teammate, then run the day and watch where everyone stands.' },
-          { id: 'sprintboard-blueprint', title: 'SprintBoard Blueprint', minutes: 15,
-            blurb: 'The five classes behind the board — what each one holds, what it does, and how one action travels from Main all the way to the file and back.' },
         ],
       },
       {
