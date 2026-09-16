@@ -101,7 +101,7 @@ export const courses = [
         summary: 'Filing work under the person who holds it, so every question has an instant answer.',
         lessons: [
           { id: 'sprintboard', title: 'SprintBoard', minutes: 25,
-            blurb: 'Plan an AI study app sprint by sprint — hand every stage to a teammate, then run the day and watch where everyone stands.', thumb: false },
+            blurb: 'Plan an AI study app sprint by sprint — hand every stage to a teammate, then run the day and watch where everyone stands.' },
         ],
       },
       {
