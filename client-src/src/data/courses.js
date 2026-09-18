@@ -102,6 +102,8 @@ export const courses = [
         lessons: [
           { id: 'sprintboard', title: 'SprintBoard', minutes: 25,
             blurb: 'Plan an AI study app sprint by sprint — hand every stage to a teammate, then run the day and watch where everyone stands.' },
+          { id: 'quotesogram', title: 'QuotesOGram', minutes: 45,
+            blurb: 'A social network for short quotes, running whole: sign in, post, follow, knock on a private account and wait to be let in, read a feed built only from the people you follow, and chat. Then open Demo and watch the classes behind it — Main, Authentication, QuotesOgram, FileHandling — hand one operation down the line, arrow by arrow.', thumb: false },
         ],
       },
       {

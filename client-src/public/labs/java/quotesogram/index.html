@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuotesOGram</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128172;</text></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app" class="booting">
+    <div class="boot">
+      <span class="cursor"></span> starting QuotesOGram&hellip;
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- ------------------------------------------------------------ AUTH -->
+  <template id="tpl-auth">
+    <div class="auth">
+      <section class="auth__pitch">
+        <h1 class="logo">Quotes<span>O</span>Gram</h1>
+        <p class="auth__tagline">A console for the quotes worth keeping.</p>
+        <pre class="auth__demo">rajan_t   : "Anchor Than &#9875;&#65039;&#127807;"
+meera.k   : "Begin badly, but begin."
+arun_dev  : "Ship it, then sleep on it."</pre>
+        <p class="auth__hint">Demo login &middot; <code>rajan_t</code> / <code>quotes123</code><br>
+          Private account demo &middot; <code>kavi.writes</code> / <code>quotes123</code><br>
+          Curious how it works inside? Sign in and open <code>Demo</code> in the sidebar.</p>
+      </section>
+
+      <section class="auth__panel card">
+        <div class="tabs">
+          <button class="tab is-active" data-mode="signin">Sign In</button>
+          <button class="tab" data-mode="signup">Sign Up</button>
+        </div>
+
+        <form class="form" data-form="signin">
+          <label>Username<input name="username" autocomplete="username" placeholder="rajan_t" required></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" placeholder="••••••••" required></label>
+          <button class="btn btn--primary" type="submit">Sign In</button>
+        </form>
+
+        <form class="form" data-form="signup" hidden>
+          <label>Username<input name="username" autocomplete="off" placeholder="a-z, 0-9, . or _" required></label>
+          <label>Display name<input name="name" autocomplete="off" placeholder="Your name"></label>
+          <label>Password<input name="password" type="password" autocomplete="new-password" placeholder="min 4 characters" required></label>
+          <label>Bio<input name="bio" autocomplete="off" placeholder="Live &amp; let live"></label>
+          <label class="switch">
+            <input name="isPrivate" type="checkbox">
+            <span><strong>Private account</strong><small>Only accepted followers see your posts, followers and following.</small></span>
+          </label>
+          <button class="btn btn--primary" type="submit">Create account</button>
+        </form>
+
+        <p class="form__error" data-error hidden></p>
+      </section>
+    </div>
+  </template>
+
+  <!-- ------------------------------------------------------------ SHELL -->
+  <template id="tpl-shell">
+    <div class="shell">
+      <header class="topbar">
+        <a class="logo logo--sm" href="#/feed">Quotes<span>O</span>Gram</a>
+        <form class="search" data-search>
+          <input name="q" placeholder="search profiles" autocomplete="off" aria-label="Search profiles">
+        </form>
+        <button class="btn btn--ghost" data-action="signout" title="Sign out">exit</button>
+      </header>
+
+      <nav class="nav">
+        <a href="#/feed" data-nav="feed"><i>&#9776;</i><span>Feed</span></a>
+        <a href="#/recent" data-nav="recent"><i>&#9200;</i><span>Recent</span></a>
+        <a href="#/explore" data-nav="explore"><i>&#9906;</i><span>Explore</span></a>
+        <a href="#/requests" data-nav="requests"><i>&#9993;</i><span>Requests</span><b class="badge" data-badge="requests" hidden></b></a>
+        <a href="#/chat" data-nav="chat"><i>&#128172;</i><span>Chat</span><b class="badge" data-badge="unread" hidden></b></a>
+        <a href="#/demo" data-nav="demo"><i>&#9881;</i><span>Demo</span></a>
+        <a href="#/me" data-nav="me"><i>&#9679;</i><span>Profile</span></a>
+      </nav>
+
+      <main class="main" data-view></main>
+    </div>
+  </template>
+</body>
+<script src="backend.js"></script>
+<script src="demo.js"></script>
+<script src="app.js"></script>
+</html>
