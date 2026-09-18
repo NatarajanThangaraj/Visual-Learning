@@ -6,10 +6,10 @@ description: >-
   in client/ is hosted by Catalyst Slate. Every page is a self-contained static HTML project
   placed under client-src/public/ and registered as one lesson entry in
   client-src/src/data/courses.js (course → module → lesson). Covers where the file goes,
-  which module to put it in, rebuilding client/ with `npm run deploy:build`, committing, and
-  the required manual Slate "Sync now". Triggers on "add a new project", "add an
-  assignment", "add a page", "put this HTML page in the course", "new project on Visual
-  Learning".
+  which module to put it in, capturing the lesson's thumb.png, rebuilding client/ with
+  `npm run deploy:build`, committing, and the required manual Slate "Sync now". Triggers on
+  "add a new project", "add an assignment", "add a page", "put this HTML page in the
+  course", "new project on Visual Learning".
 ---
 
 # Add a project to Visual Learning
@@ -40,8 +40,8 @@ Pick the course's folder (`java` / `python` / `others`, lowercase — it is the 
 field on the course in `courses.js`) and a slug.
 
 1. Put the page at `client-src/public/labs/<folder>/<slug>/index.html`. Anything under `public/`
-   is copied into the build with the `public/` prefix stripped. Add a `thumb.png` beside it
-   (a screenshot of the page) — without one the card falls back to per-course art.
+   is copied into the build with the `public/` prefix stripped. A `thumb.png` goes beside it
+   — that is Step 2, and it is not optional.
 
 2. Add ONE entry to the right module's `lessons` array in `courses.js` — identity only:
    ```js
@@ -50,8 +50,10 @@ field on the course in `courses.js`) and a slug.
    ```
    **The `id` must equal the folder name under `public/`** — the file path, the thumbnail
    and both URLs are all built from it. No `src`, no `thumbnail`: writing a path by hand is
-   what the derivation exists to prevent. If there is no `thumb.png` yet, add `thumb: false`
-   and the card uses the course's fallback art.
+   what the derivation exists to prevent. No `thumb` key either — Step 2 gives the lesson a
+   real one. (`thumb: false` exists only for a page that genuinely cannot be captured; it
+   forces the generic course art, so if you set it, say so rather than leaving it to be
+   found later.)
 
 ### Placing it
 
@@ -60,7 +62,27 @@ page before it must be completed first. Put it in the module whose topic it teac
 module is just another `{ id, title, summary, lessons: [] }` object in the course's
 `modules` array. `summary` is one line, shown only behind the module's notes button.
 
-## Step 2 — Rebuild, commit, deploy
+## Step 2 — Capture the thumbnail
+
+**Every lesson gets a real screenshot of its own page.** Skipping it leaves the card showing
+the generic per-course art, and a path of identical cards is the one thing that makes the
+course look unfinished. Do this in the same change as Step 1 — never "later".
+
+```bash
+node .claude/skills/capture-lesson-thumbnail/shoot.mjs <folder>/<slug>
+```
+
+That writes a 1280x800 `thumb.png` into the lab's folder. Most pages open on something
+lifeless — an empty playground, a sign-in form, a "press Run to begin" splash — so the page
+usually needs staging first (sign in, run a step, pause an animation) via a `--setup`
+snippet, and the frame is worth drafting to the scratchpad and looking at before it becomes
+the real file.
+
+**Read the `capture-lesson-thumbnail` skill for that** — choosing the moment, the setup
+snippet contract, where the recipe is kept so the shot can be retaken, and the verification
+that the card actually resolves the image.
+
+## Step 3 — Rebuild, commit, deploy
 
 From the repo root, on an up-to-date `main`:
 
@@ -78,7 +100,7 @@ repopulates it from the fresh build (including your `public/` file).
 Then in the **Catalyst console → `visuallearning.onslate.in` Web Client Hosting (Slate) →
 click "Sync now"**. This is **required** — Slate does not auto-deploy on push.
 
-## Step 3 — Verify
+## Step 4 — Verify
 
 - **Locally:** `cd client && python3 -m http.server 4599`, open `http://localhost:4599/`.
   Turn on **Explore mode** in the sidebar to reach the new page without completing the
@@ -110,3 +132,7 @@ click "Sync now"**. This is **required** — Slate does not auto-deploy on push.
    Problem Solving course name; leave it as is so existing URLs keep working.
 8. **Don't add explanation/theory pages.** The course deliberately shows only the
    interactive projects — that was an explicit product decision.
+9. **A missing thumbnail fails silently and a leftover `thumb: false` overrides a real
+   one.** Both just show the generic course art, with no error anywhere — so the card looks
+   deliberate and nobody notices for weeks. Capture the thumbnail in the same change
+   (Step 2), and if you ever set `thumb: false`, delete it the moment the PNG exists.
