@@ -20,12 +20,40 @@ import LessonThumb from '../course/LessonThumb';
 
 const dirOf = src => src.slice(0, src.lastIndexOf('/') + 1);
 
+/* The <base> above has one nasty side effect, and only in Firefox.
+
+   The frame's document URL is `about:srcdoc`, but an href is resolved against
+   the *base* URL — so `<a href="#/demo">` resolves to
+   https://host/labs/java/quotesogram/#/demo. Chrome still treats that click as
+   a same-document fragment change. Firefox treats it as a real navigation to
+   another URL, the host answers with `X-Frame-Options: DENY`, and the lab is
+   replaced by "Firefox Can't Open This Page" — the very header the srcdoc
+   trick exists to dodge.
+
+   Assigning `location.hash` is resolved against the document URL instead, so it
+   stays inside the frame in both browsers. This turns every in-page fragment
+   click into that assignment. A lab that routes its own anchors still wins:
+   it calls preventDefault, and we leave a defaultPrevented event alone. */
+const FRAGMENT_LINK_FIX = `<script>(function () {
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button !== 0) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target && e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a || a.target || a.hasAttribute('download')) return;
+    var href = a.getAttribute('href');
+    if (!href) return;
+    e.preventDefault();
+    if (href === '#') { window.scrollTo(0, 0); return; }
+    location.hash = href;
+  });
+}());<\/script>`;
+
 /** Put a <base> right after <head> so relative URLs keep working under srcdoc. */
 function withBase(html, src) {
-  const base = `<base href="${dirOf(src)}">`;
+  const head = `<base href="${dirOf(src)}">${FRAGMENT_LINK_FIX}`;
   return /<head[^>]*>/i.test(html)
-    ? html.replace(/<head[^>]*>/i, m => m + base)
-    : base + html;
+    ? html.replace(/<head[^>]*>/i, m => m + head)
+    : head + html;
 }
 
 /* Native fullscreen where the browser allows it; otherwise the frame is pinned
