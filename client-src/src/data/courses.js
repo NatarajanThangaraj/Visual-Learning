@@ -109,6 +109,8 @@ export const courses = [
         title: 'Collections',
         summary: 'Filing work under the person who holds it, so every question has an instant answer.',
         lessons: [
+          { id: 'collections-lab', title: 'Collections Lab', minutes: 35,
+            blurb: 'Ten problems, and the same question each time: which collection does this actually need? Keep notes in an ArrayList, run a hospital queue, collect unique names, look one up in a HashMap, rank a leaderboard with a TreeSet — then swap the type and watch the queue serve the patient who just walked in. Nothing to memorize; you change it, run it and see.' },
           { id: 'sprintboard', title: 'SprintBoard', minutes: 25,
             blurb: 'Plan an AI study app sprint by sprint — hand every stage to a teammate, then run the day and watch where everyone stands.' },
           { id: 'quotesogram', title: 'QuotesOGram', minutes: 45,

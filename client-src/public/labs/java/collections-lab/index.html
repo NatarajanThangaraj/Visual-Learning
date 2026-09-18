@@ -1,0 +1,2531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Collections Lab</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#181c27;--card:#1e2333;--border:#2a3047;--border-l:#3a4060;
+  --accent:#5b8def;--accent-dim:#2d4a8a;--accent-bright:#7ba8f5;
+  --success:#4ec9a0;--success-dim:#1a4a3a;
+  --warning:#f0c274;--warning-dim:#4a3a10;
+  --danger:#ef6b6b;--danger-dim:#4a1a1a;
+  --purple:#a78bfa;--purple-dim:#2d1f5e;
+  --teal:#38bdf8;--teal-dim:#0c3a4a;
+  --orange:#fb923c;--orange-dim:#4a2010;
+  --tp:#e8eaf2;--ts:#8892aa;--tm:#4a5270;
+}
+body{background:var(--bg);color:var(--tp);font-family:'Inter','Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px}
+
+/* NAV */
+#nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;position:sticky;top:0;z-index:100;overflow-x:auto}
+#nav-brand{padding:12px 14px;cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0}
+#nav-tabs{display:flex;flex:1}
+.nav-tab{padding:12px 14px;cursor:pointer;font-size:12px;color:var(--ts);border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;user-select:none}
+.nav-tab:hover{color:var(--tp)}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* MAIN */
+#content{padding:20px;max-width:1100px;margin:0 auto}
+.back-bar{margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.page{display:none}.page.active{display:block}
+
+/* GRIDS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid-2-fixed{display:grid;grid-template-columns:180px 1fr;gap:16px}
+.col{display:flex;flex-direction:column;gap:12px}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;transition:all .18s}
+.card.highlight{background:#2d4a8a55;border-color:var(--accent)}
+.card.warn-border{border-color:var(--warning)}
+.card.danger-border{border-color:var(--danger)}
+.card.success-border{border-color:var(--success)}
+
+/* BUTTONS */
+button{font-family:inherit;cursor:pointer;border-radius:6px;font-weight:500;transition:all .15s;border:none;font-size:13px;padding:7px 14px}
+button.sm{font-size:12px;padding:4px 10px}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover{opacity:.9}
+button.success{background:var(--success);color:#0a1a14}
+button.danger{background:var(--danger);color:#fff}
+button.ghost{background:var(--card);color:var(--tp);border:1px solid var(--border)}
+button.ghost:hover{background:var(--surface)}
+button.muted{background:transparent;color:var(--ts);border:1px solid var(--border)}
+button.muted:hover{background:var(--surface)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* INPUTS */
+input,select,textarea{background:var(--surface);border:1px solid var(--border);color:var(--tp);border-radius:6px;padding:6px 10px;font-size:12px;font-family:inherit;outline:none;width:100%}
+input:focus,select:focus{border-color:var(--accent)}
+
+/* BADGES */
+.badge{border-radius:4px;font-size:11px;padding:2px 8px;font-weight:600;display:inline-block}
+.badge.success{background:var(--success-dim);color:var(--success)}
+.badge.warning{background:var(--warning-dim);color:var(--warning)}
+.badge.danger{background:var(--danger-dim);color:var(--danger)}
+.badge.default{background:var(--accent-dim);color:var(--accent-bright)}
+.badge.purple{background:var(--purple-dim);color:var(--purple)}
+
+/* LABELS */
+.label{font-size:12px;color:var(--tm);margin-bottom:6px}
+.label.accent{color:var(--accent);font-weight:600}
+.label.sm{font-size:11px}
+
+/* CODE PANE */
+.code-wrap{background:#0a0d14;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.code-header{padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border);font-size:11px;color:var(--ts);display:flex;align-items:center;gap:8px}
+.code-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.code-body{padding:12px 14px;font-family:'Fira Code','Consolas',monospace;font-size:12px;color:#a8d5f7;line-height:1.7;white-space:pre-wrap;min-height:100px;overflow-x:auto}
+
+/* COLLECTION ITEMS */
+.coll-item{padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px;transition:all .2s}
+.coll-item.highlight{border-color:var(--accent);background:#5b8def22}
+.coll-idx{font-size:10px;color:var(--tm);min-width:24px;text-align:right}
+.pill{padding:5px 12px;border-radius:20px;font-size:13px;display:inline-block}
+.map-row{display:grid;grid-template-columns:1fr 24px 1fr;align-items:center;gap:6px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;transition:all .25s}
+.map-row.highlight{border-color:var(--warning);background:#f0c27422}
+.map-arr{text-align:center;color:var(--tm);font-size:11px}
+
+/* QUEUE VIZ */
+.queue-wrap{display:flex;align-items:center;gap:4px;overflow-x:auto;padding-bottom:4px}
+.queue-item{padding:8px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:6px;font-size:13px;white-space:nowrap;transition:all .3s}
+.queue-item.front{background:#fb923c33;border-color:var(--orange);font-weight:600}
+.queue-arrow{color:var(--tm);font-size:12px;margin:0 2px}
+.queue-label{font-size:10px;color:var(--orange);white-space:nowrap}
+
+/* STACK VIZ */
+.stack-item{padding:8px 14px;background:var(--surface);border:1.5px solid var(--border);font-size:13px;display:flex;justify-content:space-between;align-items:center;transition:all .3s}
+.stack-item.top{background:#ef6b6b33;border-color:var(--danger)}
+.stack-top-badge{font-size:10px;color:var(--danger);font-weight:600}
+.stack-base{background:var(--border);height:4px;border-radius:0 0 4px 4px}
+
+/* EXECUTION FLOW */
+.exec-step{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:7px;border:1px solid var(--border);transition:all .3s;margin-bottom:2px}
+.exec-step.active{border-color:var(--accent);background:#5b8def22}
+.exec-step.done{border-color:#5b8def44;background:#5b8def11}
+.exec-dot{width:20px;height:20px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tm);flex-shrink:0;transition:all .3s}
+.exec-dot.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.exec-dot.done{background:#5b8def66;border-color:var(--accent);color:#fff}
+.exec-label{font-size:12px;color:var(--tm)}
+.exec-label.active{color:var(--accent);font-weight:600}
+.exec-label.done{color:var(--ts)}
+.exec-detail{font-size:11px;color:var(--ts);margin-top:2px}
+.exec-connector{width:1px;height:6px;background:var(--border);margin-left:20px}
+.exec-connector.done{background:#5b8def66}
+
+/* HOME CARDS */
+.home-case-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .18s}
+.home-case-card:hover{transform:translateY(-1px)}
+
+/* CHALLENGE */
+.challenge-opt{background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:12px 16px;cursor:pointer;display:flex;align-items:flex-start;gap:12px;transition:all .2s;margin-bottom:8px}
+.challenge-opt:hover{border-color:var(--border-l)}
+.challenge-opt.correct{border-color:var(--success);background:var(--success-dim)}
+.challenge-opt.wrong{border-color:var(--danger);background:var(--danger-dim)}
+.challenge-opt.show-correct{border-color:var(--success);background:var(--success-dim)}
+.challenge-opt-icon{font-size:18px;min-width:24px}
+.challenge-dots{display:flex;gap:4px;align-items:center}
+.ch-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.ch-dot.done{background:var(--success)}
+.ch-dot.active{background:var(--accent)}
+
+/* COMPARISON */
+.comp-type-btn{padding:4px 10px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--ts);transition:all .15s}
+.comp-type-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* EXPLORER */
+.explorer-nav-item{padding:8px 12px;border-radius:7px;cursor:pointer;border:1px solid var(--border);display:flex;align-items:center;gap:8px;transition:all .15s;margin-bottom:6px}
+.explorer-nav-item.active{border-color:var(--accent)}
+.explorer-nav-item:hover{border-color:var(--border-l)}
+
+/* UTIL */
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.flex-center{display:flex;align-items:center;gap:6px}
+.gap-6{gap:6px}.gap-8{gap:8px}.gap-10{gap:10px}
+.mt-4{margin-top:4px}.mt-6{margin-top:6px}.mt-8{margin-top:8px}.mt-10{margin-top:10px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
+.mb-4{margin-bottom:4px}.mb-6{margin-bottom:6px}.mb-8{margin-bottom:8px}.mb-10{margin-bottom:10px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}
+.ts{color:var(--ts)}.tm{color:var(--tm)}.tp{color:var(--tp)}
+.f12{font-size:12px}.f11{font-size:11px}.f13{font-size:13px}.f14{font-size:14px}
+.fw6{font-weight:600}
+.empty-state{color:var(--tm);font-size:12px;text-align:center;padding:20px 0;border:1px dashed var(--border);border-radius:8px}
+.divider{border:none;border-top:1px solid var(--border);margin:10px 0}
+.log-wrap{max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+.log-entry{font-size:11px;color:var(--ts);padding:3px 8px;background:var(--surface);border-radius:4px}
+.log-entry.fifo{color:var(--success)}
+.log-entry.lifo{color:var(--danger)}
+.log-entry.warn{color:var(--warning)}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;font-size:11px}
+.feat-ok{color:var(--success);text-align:center}
+.feat-no{color:var(--danger);text-align:center}
+.feat-na{color:var(--ts);text-align:center}
+.feat-head{color:var(--tm);padding:3px 0}
+.feat-label{color:var(--ts);padding:3px 0}
+.warn-box{font-size:11px;color:var(--warning);background:var(--warning-dim);border:1px solid #f0c27444;border-radius:6px;padding:5px 10px;margin-bottom:8px}
+.search-log{margin-top:8px;display:flex;flex-direction:column;gap:3px;max-height:80px;overflow-y:auto}
+.score-bar-wrap{display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border)}
+.score-bar-bg{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:3px;background:var(--accent)}
+.note-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;animation:slideIn .25s ease}
+.note-card.new-note{border-color:var(--accent);box-shadow:0 0 12px #5b8def33}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.del-btn{background:none;border:none;color:var(--tm);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px}
+.del-btn:hover{color:var(--danger)}
+
+/* FOOTER */
+#footer{text-align:center;padding:24px 20px 32px;border-top:1px solid var(--border);margin:20px}
+
+/* INPUT ROW */
+.input-row{display:flex;gap:6px}
+.input-row input{flex:1}
+
+/* COMPARISON COLS */
+.comp-col{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.comp-item{padding:5px 8px;border-radius:5px;font-size:12px;margin-bottom:4px}
+
+/* SCROLL HIDE */
+#nav::-webkit-scrollbar{display:none}
+.queue-wrap::-webkit-scrollbar{height:4px}
+.queue-wrap::-webkit-scrollbar-track{background:transparent}
+.queue-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* LOOKUP BOXES */
+.lookup-box{padding:10px 12px;border:1px solid var(--border);border-radius:7px;transition:all .3s}
+.lookup-box.active-green{border-color:var(--success);background:var(--success-dim)}
+.lookup-box.active-warn{border-color:var(--warning);background:var(--warning-dim)}
+
+/* HIERARCHY DIAGRAM */
+.hier-scroll{overflow-x:auto;padding:14px 4px 6px;background:var(--card);border:1px solid var(--border);border-radius:10px}
+.hier-svg{display:block;margin:0 auto;max-width:100%;height:auto;min-width:760px}
+.hier-node{cursor:pointer}
+.hier-node rect{transition:all .15s}
+.hier-node:hover rect{filter:brightness(1.12);stroke:var(--tp);stroke-width:2}
+.hier-node:focus{outline:none}
+.hier-node:focus rect{stroke:var(--accent-bright);stroke-width:2.5}
+.hier-legend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-size:11px;color:var(--ts)}
+.legend-swatch{width:16px;height:11px;border-radius:2px;display:inline-block;margin-right:6px;vertical-align:-1px}
+.legend-line{display:inline-block;width:26px;border-top:2px solid var(--border-l);margin-right:6px;vertical-align:3px}
+.legend-line.dashed{border-top-style:dashed}
+
+/* TOPIC PAGE */
+.topic-chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .15s;margin-right:4px}
+.topic-chip:hover{background:var(--card);transform:translateY(-1px)}
+.inline-code{font-family:'Fira Code','Consolas',monospace;font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 6px}
+.method-row{display:flex;flex-direction:column;gap:3px;padding:6px 0;border-bottom:1px solid var(--border)}
+.method-row:last-child{border-bottom:none}
+.method-row .inline-code{align-self:flex-start}
+.explorer-group{font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 6px;padding-left:2px}
+.explorer-group:first-child{margin-top:0}
+
+@media(max-width:700px){
+  .grid-2,.grid-3,.grid-2-fixed{grid-template-columns:1fr}
+  #nav-tabs{gap:0}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div id="nav">
+  <div id="nav-brand" onclick="goTo('home')">⬡ Collections Lab</div>
+  <div id="nav-tabs">
+    <div class="nav-tab" data-page="hierarchy" onclick="goTo('hierarchy')">Hierarchy</div>
+    <div class="nav-tab" data-page="notes" onclick="goTo('notes')">ArrayList</div>
+    <div class="nav-tab" data-page="queue" onclick="goTo('queue')">Queue</div>
+    <div class="nav-tab" data-page="set" onclick="goTo('set')">Set</div>
+    <div class="nav-tab" data-page="map" onclick="goTo('map')">HashMap</div>
+    <div class="nav-tab" data-page="stack" onclick="goTo('stack')">Stack</div>
+    <div class="nav-tab" data-page="leaderboard" onclick="goTo('leaderboard')">TreeSet</div>
+    <div class="nav-tab" data-page="compare" onclick="goTo('compare')">Compare</div>
+    <div class="nav-tab" data-page="challenge" onclick="goTo('challenge')">Challenge</div>
+    <div class="nav-tab" data-page="explorer" onclick="goTo('explorer')">All Types</div>
+  </div>
+</div>
+
+<div id="content">
+
+<!-- ── HOME ───────────────────────────────────────────────────────────────── -->
+<div id="page-home" class="page active">
+  <div style="text-align:center;padding:32px 0 24px">
+    <div style="font-size:11px;color:var(--accent);letter-spacing:.1em;margin-bottom:10px">JAVA COLLECTIONS LAB</div>
+    <div style="font-size:28px;font-weight:700;line-height:1.2;margin-bottom:8px">
+      Don't memorize collections.<br>
+      <span style="color:var(--accent)">Experiment with them.</span>
+    </div>
+    <div style="font-size:14px;color:var(--ts);max-width:480px;margin:0 auto;line-height:1.6">
+      Choose a problem, pick a collection, run code, see what happens. Change things. Run again. Understand through experience.
+    </div>
+  </div>
+  <div style="margin-bottom:16px" id="home-map"></div>
+  <div class="grid-3" style="margin-bottom:16px" id="home-cases"></div>
+  <div class="grid-2" id="home-extra"></div>
+</div>
+
+<!-- ── NOTES / ARRAYLIST ──────────────────────────────────────────────────── -->
+<div id="page-notes" class="page">
+  <div class="back-bar"><button class="muted sm" onclick="goTo('home')">← Home</button><span class="ts f14">Notes app — ArrayList</span><button class="muted sm" onclick="goToTopic('ArrayList','notes')" style="margin-left:auto">ⓘ ArrayList reference</button></div>
+  <div class="grid-2">
+    <div class="col">
+      <div class="card">
+        <div class="label">Collection type</div>
+        <select id="notes-coll-type" onchange="notesRender()">
+          <option>ArrayList&lt;Note&gt;</option>
+          <option>ArrayList&lt;String&gt;</option>
+          <option>ArrayList&lt;Integer&gt;</option>
+          <option>LinkedList&lt;Note&gt;</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="label">Add note</div>
+        <input id="notes-title" placeholder="Title" style="margin-bottom:6px" value="Linux Commands">
+        <input id="notes-content" placeholder="Content" style="margin-bottom:8px" value="Shell scripting basics">
+        <button class="primary" id="notes-run-btn" onclick="notesRunAdd()">▶ Run notes.add(note)</button>
+      </div>
+      <div class="card">
+        <div class="label">Search notes</div>
+        <div class="input-row">
+          <input id="notes-search" placeholder="Search title...">
+          <button class="ghost sm" onclick="notesSearch()" style="white-space:nowrap">notes.get()</button>
+        </div>
+      </div>
+      <div id="notes-list-wrap">
+        <div class="flex-between mb-8">
+          <span class="label accent" id="notes-coll-label">ArrayList&lt;Note&gt;</span>
+          <span class="tm f11" id="notes-size">size: 3</span>
+        </div>
+        <div id="notes-list"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="label">Execution flow</div>
+        <div id="notes-exec-flow"><div class="ts f12" style="text-align:center;padding:16px 0">Click "Run notes.add(note)" to see execution</div></div>
+      </div>
+      <div class="card">
+        <div class="label">Your code</div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-dot" style="background:var(--danger)"></span><span class="code-dot" style="background:var(--warning)"></span><span class="code-dot" style="background:var(--success)"></span><span style="margin-left:4px">Java</span></div>
+          <div class="code-body" id="notes-code"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label mb-10">What did you observe?</div>
+        <div class="flex-between mb-6"><span class="f12 ts">Insertion order</span><span class="badge success">preserved</span></div>
+        <div class="flex-between mb-6"><span class="f12 ts">Duplicates</span><span class="badge warning">allowed</span></div>
+        <div class="flex-between mb-6"><span class="f12 ts">Index access</span><span class="badge success">yes — notes.get(i)</span></div>
+        <div class="flex-between"><span class="f12 ts">Auto resize</span><span class="badge success">yes — grows as needed</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── QUEUE ──────────────────────────────────────────────────────────────── -->
+<div id="page-queue" class="page">
+  <div class="back-bar"><button class="muted sm" onclick="goTo('home')">← Home</button><span class="ts f14">Hospital queue — Queue vs Stack</span><button class="muted sm" onclick="goToTopic('Queue','queue')" style="margin-left:auto">ⓘ Queue reference</button></div>
+  <div class="grid-2">
+    <div class="col">
+      <div class="card">
+        <div class="label">Collection type — change and observe!</div>
+        <div class="btn-row">
+          <button class="primary sm" id="q-btn-Queue" onclick="queueSetMode('Queue')">Queue</button>
+          <button class="ghost sm" id="q-btn-Stack" onclick="queueSetMode('Stack')">Stack</button>
+          <button class="ghost sm" id="q-btn-ArrayList" onclick="queueSetMode('ArrayList')">ArrayList</button>
+        </div>
+      </div>
+      <div id="queue-warn-box" style="display:none" class="card warn-border">
+        <div style="font-size:13px;color:var(--warning);font-weight:600">⚠ Wrong collection for this problem</div>
+        <div class="f12 ts mt-4">Stack is LIFO — the last patient added gets served first, not the first who arrived. Does this match the hospital requirement?</div>
+      </div>
+      <div class="card">
+        <div class="label">Add patient</div>
+        <div class="input-row">
+          <input id="queue-new-patient" placeholder="Patient name" value="Ravi">
+          <button class="primary sm" onclick="queueAdd()">Add</button>
+        </div>
+      </div>
+      <button class="success" id="queue-serve-btn" onclick="queueServe()">▶ queue.poll() — serve next</button>
+      <div class="card" id="queue-viz-wrap"></div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="label">Operation log</div>
+        <div class="log-wrap" id="queue-log"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;color:var(--tp);font-weight:600;margin-bottom:10px">Requirement vs behavior</div>
+        <div class="f12 ts mb-10" style="line-height:1.6">"Patients must be treated in the order they arrive."</div>
+        <div id="queue-req-rows"></div>
+      </div>
+      <div class="card">
+        <div class="code-wrap"><div class="code-header"><span class="code-dot" style="background:var(--danger)"></span><span class="code-dot" style="background:var(--warning)"></span><span class="code-dot" style="background:var(--success)"></span><span style="margin-left:4px">Java</span></div><div class="code-body" id="queue-code"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SET ────────────────────────────────────────────────────────────────── -->
+<div id="page-set" class="page">
+  <div class="back-bar"><button class="muted sm" onclick="goTo('home')">← Home</button><span class="ts f14">Unique participants — HashSet / TreeSet</span><button class="muted sm" onclick="goToTopic('HashSet','set')" style="margin-left:auto">ⓘ HashSet reference</button></div>
+  <div class="grid-2">
+    <div class="col">
+      <div class="card">
+        <div class="label">Collection type</div>
+        <div class="btn-row">
+          <button class="ghost sm" id="set-btn-ArrayList" onclick="setSetType('ArrayList')">ArrayList</button>
+          <button class="primary sm" id="set-btn-HashSet" onclick="setSetType('HashSet')">HashSet</button>
+          <button class="ghost sm" id="set-btn-TreeSet" onclick="setSetType('TreeSet')">TreeSet</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="f12 tm mb-6">Input stream (click to add one by one)</div>
+        <div id="set-input-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+        <button class="primary" id="set-add-next-btn" onclick="setAddNext()">→ Add next: "Arun"</button>
+      </div>
+      <div class="card">
+        <div class="label">Add custom name</div>
+        <div class="input-row">
+          <input id="set-custom-input" placeholder='participants.add("...")'>
+          <button class="success sm" onclick="setAddCustom()">Add</button>
+        </div>
+      </div>
+      <button class="muted sm" onclick="setReset()">Reset</button>
+    </div>
+    <div class="col">
+      <div class="card" id="set-viz-wrap"></div>
+      <div class="card">
+        <div class="label mb-10">Behavior comparison</div>
+        <div class="feat-grid">
+          <div></div>
+          <div class="feat-head" id="set-fh-ArrayList" style="text-align:center">ArrayList</div>
+          <div class="feat-head" id="set-fh-HashSet" style="text-align:center">HashSet</div>
+          <div class="feat-head" id="set-fh-TreeSet" style="text-align:center">TreeSet</div>
+          <div class="feat-label">Duplicates</div>
+          <div class="feat-warn" style="text-align:center;color:var(--warning)">✓</div>
+          <div class="feat-no">✗</div>
+          <div class="feat-no">✗</div>
+          <div class="feat-label">Ordered</div>
+          <div class="feat-ok" style="text-align:center">insertion</div>
+          <div class="feat-no">✗</div>
+          <div class="feat-ok" style="text-align:center">sorted</div>
+          <div class="feat-label">Indexed</div>
+          <div class="feat-ok" style="text-align:center">✓</div>
+          <div class="feat-no">✗</div>
+          <div class="feat-no">✗</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="code-wrap"><div class="code-header"><span class="code-dot" style="background:var(--danger)"></span><span class="code-dot" style="background:var(--warning)"></span><span class="code-dot" style="background:var(--success)"></span><span style="margin-left:4px">Java</span></div><div class="code-body" id="set-code"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAP ────────────────────────────────────────────────────────────────── -->
+<div id="page-map" class="page">
+  <div class="back-bar"><button class="muted sm" onclick="goTo('home')">← Home</button><span class="ts f14">Student marks — HashMap</span><button class="muted sm" onclick="goToTopic('HashMap','map')" style="margin-left:auto">ⓘ HashMap reference</button></div>
+  <div class="grid-2">
+    <div class="col">
+      <div class="card">
+        <div class="label">Collection type — observe lookup behavior</div>
+        <div class="btn-row">
+          <button class="primary sm" id="map-btn-HashMap" onclick="mapSetType('HashMap')">HashMap</button>
+          <button class="ghost sm" id="map-btn-ArrayList" onclick="mapSetType('ArrayList')">ArrayList</button>
+        </div>
+        <div id="map-type-warn" class="f11 mt-8" style="color:var(--warning);display:none">⚠ ArrayList requires sequential search — watch the highlighted items scan through the list</div>
+      </div>
+      <div class="card">
+        <div class="label">Find student mark</div>
+        <div class="input-row">
+          <input id="map-search-key" placeholder="Student name...">
+          <button class="primary sm" onclick="mapSearch()">marks.get()</button>
+        </div>
+        <div class="search-log" id="map-search-log"></div>
+      </div>
+      <div class="card">
+        <div class="label">Update mark (marks.put)</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input id="map-update-key" placeholder="Name" style="flex:1">
+          <input id="map-update-val" placeholder="New mark" style="width:90px">
+          <button class="success sm" onclick="mapUpdate()">Put</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">Add new entry</div>
+        <div style="display:flex;gap:6px">
+          <input id="map-new-key" placeholder="Name" style="flex:1">
+          <input id="map-new-val" placeholder="Mark" style="width:90px">
+          <button class="primary sm" onclick="mapAdd()">Add</button>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" id="map-viz-wrap"></div>
+      <div class="card">
+        <div class="label mb-10">Lookup behavior</div>
+        <div class="lookup-box mb-8" id="map-lookup-hashmap">
+          <div class="f12 fw6" style="color:var(--ts)">HashMap.get("Bala")</div>
+          <div class="f11 ts mt-4">Direct key lookup — O(1) constant time</div>
+        </div>
+        <div class="lookup-box" id="map-lookup-arraylist">
+          <div class="f12 fw6" style="color:var(--ts)">ArrayList — linear search</div>
+          <div class="f11 ts mt-4">Must check each item — O(n) linear time</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="code-wrap"><div class="code-header"><span class="code-dot" style="background:var(--danger)"></span><span class="code-dot" style="background:var(--warning)"></span><span class="code-dot" style="background:var(--success)"></span><span style="margin-left:4px">Java</span></div><div class="code-body" id="map-code"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STACK / BROWSER HISTORY ────────────────────────────────────────────── -->
+<div id="page-stack" class="page">
+  <div class="back-bar"><button class="muted sm" onclick="goTo('home')">← Home</button><span class="ts f14">Browser history — Stack</span><button class="muted sm" onclick="goToTopic('Stack','stack')" style="margin-left:auto">ⓘ Stack reference</button></div>
+  <div class="grid-2">
+    <div class="col">
+      <div class="card">
+        <div class="label">Collection type</div>
+        <div class="btn-row">
+          <button class="primary sm" id="stack-btn-Stack" onclick="stackSetMode('Stack')">Stack</button>
+          <button class="ghost sm" id="stack-btn-Queue" onclick="stackSetMode('Queue')">Queue</button>
+        </div>
+        <div id="stack-warn" class="f11 mt-8" style="color:var(--danger);display:none">⚠ Queue removes the FIRST page you visited (not the last). Back button wouldn't work correctly!</div>
+      </div>
+      <div class="card">
+        <div class="label">Visit a page</div>
+        <div class="input-row">
+          <input id="stack-url" placeholder="Page name..." value="StackOverflow">
+          <button class="primary sm" onclick="stackVisit()">Visit</button>
+        </div>
+      </div>
+      <button class="danger" id="stack-back-btn" onclick="stackBack()">← Back (stack.pop())</button>
+      <div class="card">
+        <div class="label">Operation log</div>
+        <div class="log-wrap" id="stack-log"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" id="stack-viz-wrap"></div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px">Why Stack for browser history?</div>
+        <div class="mb-8">
+          <div class="tm f12 mb-4">Back goes to last page</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div style="padding:4px 8px;background:var(--success-dim);border-radius:5px;font-size:11px;color:var(--success)">Stack: ✓ LIFO — most recent</div>
+            <div style="padding:4px 8px;background:var(--danger-dim);border-radius:5px;font-size:11px;color:var(--danger)">Queue: ✗ removes oldest</div>
+          </div>
+        </div>
+        <div>
+          <div class="tm f12 mb-4">Correct for requirement</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div style="padding:4px 8px;background:var(--success-dim);border-radius:5px;font-size:11px;color:var(--success)">Stack: ✓ yes</div>
+            <div style="padding:4px 8px;background:var(--danger-dim);border-radius:5px;font-size:11px;color:var(--danger)">Queue: ✗ no</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="code-wrap"><div class="code-header"><span class="code-dot" style="background:var(--danger)"></span><span class="code-dot" style="background:var(--warning)"></span><span class="code-dot" style="background:var(--success)"></span><span style="margin-left:4px">Java</span></div><div class="code-body" id="stack-code"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LEADERBOARD / TREESET ──────────────────────────────────────────────── -->
+<div id="page-leaderboard" class="page">
+  <div class="back-bar"><button class="muted sm" onclick="goTo('home')">← Home</button><span class="ts f14">Leaderboard — TreeSet</span><button class="muted sm" onclick="goToTopic('TreeSet','leaderboard')" style="margin-left:auto">ⓘ TreeSet reference</button></div>
+  <div class="grid-2">
+    <div class="col">
+      <div class="card">
+        <div class="label">Collection type</div>
+        <div class="btn-row">
+          <button class="ghost sm" id="lb-btn-ArrayList" onclick="lbSetType('ArrayList')">ArrayList</button>
+          <button class="ghost sm" id="lb-btn-HashSet" onclick="lbSetType('HashSet')">HashSet</button>
+          <button class="primary sm" id="lb-btn-TreeSet" onclick="lbSetType('TreeSet')">TreeSet</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">Add score</div>
+        <div class="input-row mb-8">
+          <input id="lb-input" placeholder="Score (e.g. 95)" type="number">
+          <button class="primary sm" onclick="lbAdd()">Add</button>
+        </div>
+        <div class="btn-row">
+          <button class="muted sm" onclick="lbAddVal(95)">+95</button>
+          <button class="muted sm" onclick="lbAddVal(70)">+70</button>
+          <button class="muted sm" onclick="lbAddVal(85)">+85</button>
+          <button class="muted sm" onclick="lbAddVal(95)">+95</button>
+          <button class="muted sm" onclick="lbAddVal(60)">+60</button>
+          <button class="muted sm" onclick="lbAddVal(70)">+70</button>
+        </div>
+      </div>
+      <button class="muted sm" onclick="lbReset()">Reset</button>
+      <div id="lb-dupe-warn" style="display:none" class="card warn-border">
+        <div class="f12" style="color:var(--warning)" id="lb-dupe-msg"></div>
+      </div>
+      <div class="card">
+        <div class="label mb-10">Feature matrix</div>
+        <div class="feat-grid">
+          <div></div>
+          <div class="feat-head" id="lb-fh-ArrayList" style="text-align:center">ArrayList</div>
+          <div class="feat-head" id="lb-fh-HashSet" style="text-align:center">HashSet</div>
+          <div class="feat-head" id="lb-fh-TreeSet" style="text-align:center">TreeSet</div>
+          <div class="feat-label">Unique</div>
+          <div style="text-align:center;color:var(--danger)">✗</div>
+          <div class="feat-ok">✓</div>
+          <div class="feat-ok">✓</div>
+          <div class="feat-label">Sorted</div>
+          <div style="text-align:center;color:var(--danger)">✗</div>
+          <div style="text-align:center;color:var(--danger)">✗</div>
+          <div class="feat-ok">✓</div>
+          <div class="feat-label">Ordered</div>
+          <div class="feat-ok">insertion</div>
+          <div style="text-align:center;color:var(--danger)">✗</div>
+          <div class="feat-ok">sorted</div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" id="lb-viz-wrap"><div class="empty-state">Add some scores</div></div>
+      <div class="card">
+        <div class="code-wrap"><div class="code-header"><span class="code-dot" style="background:var(--danger)"></span><span class="code-dot" style="background:var(--warning)"></span><span class="code-dot" style="background:var(--success)"></span><span style="margin-left:4px">Java</span></div><div class="code-body" id="lb-code"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── COMPARE ────────────────────────────────────────────────────────────── -->
+<div id="page-compare" class="page">
+  <div class="back-bar"><button class="muted sm" onclick="goTo('home')">← Home</button><span class="ts f14">Same problem, different collection</span></div>
+  <div class="mb-16">
+    <div class="f12 tm mb-8">Same input data: "Arun", "Bala", "Arun", "Divya", "Bala", "Emma"</div>
+    <div class="btn-row" id="compare-type-btns"></div>
+  </div>
+  <div id="compare-cols" style="display:grid;gap:12px"></div>
+</div>
+
+<!-- ── CHALLENGE ──────────────────────────────────────────────────────────── -->
+<div id="page-challenge" class="page">
+  <div class="back-bar"><button class="muted sm" onclick="goTo('home')">← Home</button><span class="ts f14">Choose the right collection</span></div>
+  <div style="max-width:600px;margin:0 auto" id="challenge-wrap"></div>
+</div>
+
+<!-- ── EXPLORER ───────────────────────────────────────────────────────────── -->
+<div id="page-explorer" class="page">
+  <div class="back-bar"><button class="muted sm" onclick="goTo('home')">← Home</button><span class="ts f14">Collection explorer</span></div>
+  <div class="grid-2-fixed">
+    <div id="explorer-nav"></div>
+    <div id="explorer-detail"></div>
+  </div>
+</div>
+
+<!-- ── HIERARCHY ──────────────────────────────────────────────────────────── -->
+<div id="page-hierarchy" class="page">
+  <div class="back-bar"><button class="muted sm" onclick="goTo('home')">← Home</button><span class="ts f14">The Collection framework hierarchy</span></div>
+
+  <div class="card mb-12">
+    <div class="f13" style="line-height:1.7">
+      Every collection in Java is a point on this map. <span class="tp fw6">Interfaces</span> describe the <em>behaviour</em> you need —
+      ordered? unique? sorted? first-in-first-out? <span class="tp fw6">Classes</span> are the concrete implementations that deliver it.
+      Choose the interface for your variable type, and the class for the performance you need.
+    </div>
+    <div class="f12 tm mt-8">Click any box to open its topic page.</div>
+  </div>
+
+  <div class="flex-between mb-8" style="flex-wrap:wrap;gap:10px">
+    <span class="label accent" style="margin:0">Collection branch — java.util</span>
+    <div class="hier-legend">
+      <span><span class="legend-swatch" style="background:#5ddb9a"></span>Interface</span>
+      <span><span class="legend-swatch" style="background:#9aa3b8"></span>Class</span>
+      <span><span class="legend-line"></span>Extends</span>
+      <span><span class="legend-line dashed"></span>Implements</span>
+    </div>
+  </div>
+  <div class="hier-scroll mb-16" id="hier-canvas"></div>
+
+  <div class="flex-between mb-8" style="flex-wrap:wrap;gap:10px">
+    <span class="label accent" style="margin:0">Map branch — a separate root</span>
+    <span class="f11 tm">Map is <em>not</em> a Collection: it stores pairs, not elements</span>
+  </div>
+  <div class="hier-scroll mb-16" id="hier-map-canvas"></div>
+
+  <div class="grid-3">
+    <div class="card"><div class="f13 fw6 mb-6" style="color:var(--accent)">Read it downward</div><div class="f12 ts" style="line-height:1.6">An arrow points from a child to its parent. Everything below <code class="inline-code">Collection</code> can be passed to a method that accepts a <code class="inline-code">Collection</code>.</div></div>
+    <div class="card"><div class="f13 fw6 mb-6" style="color:var(--success)">Declare the interface</div><div class="f12 ts" style="line-height:1.6"><code class="inline-code">List&lt;String&gt; x = new ArrayList&lt;&gt;();</code> — swapping the implementation later then costs you one word.</div></div>
+    <div class="card"><div class="f13 fw6 mb-6" style="color:var(--warning)">Legacy nodes</div><div class="f12 ts" style="line-height:1.6"><code class="inline-code">Vector</code>, <code class="inline-code">Stack</code> and <code class="inline-code">Hashtable</code> are Java 1.0 survivors. Prefer ArrayList, ArrayDeque and HashMap.</div></div>
+  </div>
+</div>
+
+<!-- ── TOPIC DETAIL ───────────────────────────────────────────────────────── -->
+<div id="page-topic" class="page">
+  <div class="back-bar">
+    <button class="muted sm" onclick="goTo('hierarchy')"><span id="topic-back-label">← Hierarchy</span></button>
+    <span class="ts f14" id="topic-crumb"></span>
+  </div>
+  <div id="topic-body"></div>
+</div>
+
+</div><!-- /content -->
+
+<div id="footer">
+  <div class="ts" style="line-height:1.8">Understand the problem first. Then choose the collection whose behavior fits the problem.</div>
+  <div class="tm f12 mt-4">Problem → Thinking → Collection → Code → Execution → Result</div>
+</div>
+
+<script>
+// ── ROUTER ────────────────────────────────────────────────────────────────────
+function goTo(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) page.classList.add('active');
+  const tab = document.querySelector('.nav-tab[data-page="' + id + '"]');
+  if (tab) tab.classList.add('active');
+  document.getElementById('footer').style.display = id === 'home' ? 'block' : 'none';
+  if (id === 'home') renderHome();
+  if (id === 'hierarchy') hierarchyInit();
+  if (id === 'topic') topicInit();
+  if (id === 'notes') notesInit();
+  if (id === 'queue') queueInit();
+  if (id === 'set') setInit();
+  if (id === 'map') mapInit();
+  if (id === 'stack') stackInit();
+  if (id === 'leaderboard') lbInit();
+  if (id === 'compare') compareInit();
+  if (id === 'challenge') challengeInit();
+  if (id === 'explorer') explorerInit();
+}
+
+// ── HOME ──────────────────────────────────────────────────────────────────────
+function renderHome() {
+  const cases = [
+    { id:'notes', title:'Notes app', sub:'ArrayList', icon:'≡', color:'var(--accent)', desc:'Add, delete, search notes. See ArrayList grow.' },
+    { id:'queue', title:'Hospital queue', sub:'Queue vs Stack', icon:'→', color:'var(--orange)', desc:'FIFO vs LIFO. See what happens with the wrong choice.' },
+    { id:'set', title:'Unique participants', sub:'HashSet / TreeSet', icon:'◈', color:'var(--success)', desc:'Watch duplicates get rejected in real time.' },
+    { id:'map', title:'Student marks', sub:'HashMap', icon:'↔', color:'var(--warning)', desc:'Key→value lookup vs linear search.' },
+    { id:'stack', title:'Browser history', sub:'Stack', icon:'↑', color:'var(--danger)', desc:'LIFO behavior for back navigation.' },
+    { id:'leaderboard', title:'Leaderboard', sub:'TreeSet', icon:'⊤', color:'var(--teal)', desc:'Sorted unique scores. Compare with ArrayList.' },
+  ];
+  document.getElementById('home-map').innerHTML = `
+    <div class="home-case-card" onclick="goTo('hierarchy')" style="border-color:#4ec9a066"
+      onmouseenter="this.style.borderColor='var(--success)'"
+      onmouseleave="this.style.borderColor='#4ec9a066'">
+      <div class="flex-between" style="flex-wrap:wrap;gap:12px">
+        <div style="flex:1;min-width:240px">
+          <div style="font-size:11px;color:var(--success);letter-spacing:.08em;margin-bottom:6px">START HERE</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:4px">The Collection hierarchy map</div>
+          <div class="f12 ts" style="line-height:1.6">Every interface and every class, and how they connect. Click any box to open its topic — when to use it, core methods, complexity and runnable code.</div>
+        </div>
+        <div style="font-size:34px;color:var(--success);opacity:.8">⬡</div>
+      </div>
+    </div>`;
+  document.getElementById('home-cases').innerHTML = cases.map(c => `
+    <div class="home-case-card" onclick="goTo('${c.id}')"
+      onmouseenter="this.style.borderColor='${c.color}';this.style.background='color-mix(in srgb,${c.color} 8%,var(--card))'"
+      onmouseleave="this.style.borderColor='';this.style.background=''">
+      <div style="font-size:22px;margin-bottom:8px;color:${c.color}">${c.icon}</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:2px">${c.title}</div>
+      <div style="font-size:11px;color:${c.color};margin-bottom:6px">${c.sub}</div>
+      <div class="f12 ts" style="line-height:1.5">${c.desc}</div>
+    </div>`).join('');
+  document.getElementById('home-extra').innerHTML = `
+    <div class="home-case-card" onclick="goTo('compare')"
+      onmouseenter="this.style.borderColor='var(--purple)'"
+      onmouseleave="this.style.borderColor=''">
+      <div style="font-size:22px;margin-bottom:8px">⊞</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:2px">Same problem, different collection</div>
+      <div class="f12 ts">Run identical input through any collection. Compare results side by side.</div>
+    </div>
+    <div class="home-case-card" onclick="goTo('challenge')"
+      onmouseenter="this.style.borderColor='var(--warning)'"
+      onmouseleave="this.style.borderColor=''">
+      <div style="font-size:22px;margin-bottom:8px">🎯</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:2px">Choose the right collection</div>
+      <div class="f12 ts">Given a requirement — which collection? Make your choice, see the consequence.</div>
+    </div>
+    <div class="home-case-card" onclick="goTo('explorer')"
+      onmouseenter="this.style.borderColor='var(--teal)'"
+      onmouseleave="this.style.borderColor=''">
+      <div style="font-size:22px;margin-bottom:8px">📚</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:2px">All types, side nav</div>
+      <div class="f12 ts">Browse all 24 interfaces and classes grouped by branch — List, Queue, Set, Map.</div>
+    </div>
+    <div class="home-case-card" onclick="goTo('hierarchy')"
+      onmouseenter="this.style.borderColor='var(--success)'"
+      onmouseleave="this.style.borderColor=''">
+      <div style="font-size:22px;margin-bottom:8px">⬡</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:2px">Interface vs implementation</div>
+      <div class="f12 ts">Why you write List&lt;String&gt; on the left and ArrayList&lt;&gt; on the right.</div>
+    </div>`;
+}
+
+// ── NOTES ─────────────────────────────────────────────────────────────────────
+let notesData = [
+  { id:1, title:'Java Classes', content:'Blueprint for objects' },
+  { id:2, title:'Python Lists', content:'Ordered mutable sequence' },
+  { id:3, title:'MySQL Basics', content:'Structured query language' },
+];
+let notesNewId = null;
+let notesRunning = false;
+let notesExecTimer = null;
+
+function notesInit() {
+  notesRender();
+  notesUpdateCode();
+}
+
+function notesRender() {
+  const list = document.getElementById('notes-list');
+  const type = document.getElementById('notes-coll-type').value;
+  document.getElementById('notes-coll-label').textContent = type;
+  document.getElementById('notes-size').textContent = 'size: ' + notesData.length;
+  list.innerHTML = notesData.length === 0
+    ? '<div class="empty-state">ArrayList is empty</div>'
+    : notesData.map(n => `
+      <div class="note-card${n.id === notesNewId ? ' new-note' : ''}" id="note-${n.id}" style="margin-bottom:6px">
+        <div>
+          <div class="f13 fw6">${escHtml(n.title)}</div>
+          <div class="f12 ts">${escHtml(n.content)}</div>
+        </div>
+        <button class="del-btn" onclick="notesDelete(${n.id})">×</button>
+      </div>`).join('');
+  notesUpdateCode();
+}
+
+function notesUpdateCode() {
+  const type = document.getElementById('notes-coll-type').value;
+  const title = document.getElementById('notes-title').value || 'Title';
+  const content = document.getElementById('notes-content').value || 'Content';
+  document.getElementById('notes-code').textContent =
+    `${type} notes = new ArrayList<>();\n\n// Add a note\nNote note = new Note("${title}", "${content}");\nnotes.add(note);\n\n// Remove by index\nnotes.remove(0);\n\n// Get by index\nnotes.get(0);\n\n// Size\nnotes.size(); // ${notesData.length}`;
+}
+
+function notesRunAdd() {
+  const title = document.getElementById('notes-title').value.trim();
+  const content = document.getElementById('notes-content').value.trim();
+  if (!title || notesRunning) return;
+  notesRunning = true;
+  document.getElementById('notes-run-btn').disabled = true;
+
+  const colColors = ['var(--accent)','var(--purple)','var(--teal)','var(--success)','var(--warning)'];
+  const steps = [
+    { label:'Main calls NotesManager.addNote()', detail:`addNote("${title}", "${content}")` },
+    { label:'NotesManager creates Note object', detail:`new Note("${title}", "${content}")` },
+    { label:'Note fields receive values', detail:`title="${title}", content="${content}"` },
+    { label:`Note added to ArrayList`, detail:`notes.add(note) → size ${notesData.length} → ${notesData.length+1}` },
+    { label:'UI updates with new note', detail:'ArrayList rendered in Notes panel' },
+  ];
+
+  let step = -1;
+  function runStep() {
+    step++;
+    if (step >= steps.length) {
+      setTimeout(() => {
+        document.getElementById('notes-exec-flow').innerHTML = '<div class="ts f12" style="text-align:center;padding:16px 0">Click "Run notes.add(note)" to see execution</div>';
+        notesNewId = null;
+        notesRender();
+        notesRunning = false;
+        document.getElementById('notes-run-btn').disabled = false;
+      }, 800);
+      return;
+    }
+    if (step === 3) {
+      notesNewId = Date.now();
+      notesData.push({ id: notesNewId, title, content });
+    }
+    renderExecFlow(steps, step, colColors);
+    notesRender();
+    notesExecTimer = setTimeout(runStep, 750);
+  }
+  runStep();
+}
+
+function renderExecFlow(steps, currentStep, colColors) {
+  const wrap = document.getElementById('notes-exec-flow');
+  wrap.innerHTML = steps.map((s, i) => {
+    const active = i === currentStep, done = i < currentStep;
+    const c = colColors[i % colColors.length];
+    const dot = done ? '✓' : (i+1);
+    return `
+      <div class="exec-step${active?' active':done?' done':''}" style="${active?`border-color:${c};background:${c}22`:''}${done?`border-color:${c}44;background:${c}11`:''}">
+        <div class="exec-dot${active?' active':done?' done':''}" style="${active?`background:${c};border-color:${c}`:''}${done?`background:${c}66;border-color:${c}`:''}">
+          <span style="font-size:9px">${dot}</span>
+        </div>
+        <div>
+          <div class="exec-label${active?' active':done?' done':''}" style="${active?`color:${c};font-weight:600`:''}">${s.label}</div>
+          ${active && s.detail ? `<div class="exec-detail">${s.detail}</div>` : ''}
+        </div>
+      </div>
+      ${i < steps.length-1 ? `<div class="exec-connector${done?' done':''}"></div>` : ''}`;
+  }).join('');
+}
+
+function notesSearch() {
+  const term = document.getElementById('notes-search').value.toLowerCase();
+  const idx = notesData.findIndex(n => n.title.toLowerCase().includes(term));
+  document.querySelectorAll('.note-card').forEach((el, i) => {
+    el.style.borderColor = i === idx ? 'var(--accent)' : '';
+    el.style.background = i === idx ? '#5b8def22' : '';
+  });
+  setTimeout(() => document.querySelectorAll('.note-card').forEach(el => { el.style.borderColor=''; el.style.background=''; }), 2000);
+}
+
+function notesDelete(id) {
+  notesData = notesData.filter(n => n.id !== id);
+  notesRender();
+}
+
+// ── QUEUE ─────────────────────────────────────────────────────────────────────
+let queueData = ['Arun','Bala','Divya','Kumar'];
+let queueMode = 'Queue';
+let queueLog = [];
+
+function queueInit() {
+  queueData = ['Arun','Bala','Divya','Kumar'];
+  queueLog = [];
+  queueMode = 'Queue';
+  queueRender();
+}
+
+function queueSetMode(mode) {
+  queueMode = mode;
+  ['Queue','Stack','ArrayList'].forEach(m => {
+    const b = document.getElementById('q-btn-'+m);
+    b.className = m === mode ? 'primary sm' : 'ghost sm';
+  });
+  document.getElementById('queue-warn-box').style.display = mode === 'Stack' ? 'block' : 'none';
+  const serveBtn = document.getElementById('queue-serve-btn');
+  if (mode === 'Queue') { serveBtn.textContent = '▶ queue.poll() — serve next'; serveBtn.className='success'; }
+  else if (mode === 'Stack') { serveBtn.textContent = '▶ stack.pop() — serve'; serveBtn.className='danger'; }
+  else { serveBtn.textContent = '▶ remove(0)'; serveBtn.className='ghost'; }
+  queueRender();
+}
+
+function queueAdd() {
+  const name = document.getElementById('queue-new-patient').value.trim();
+  if (!name) return;
+  queueData.push(name);
+  const label = queueMode === 'Queue' ? 'added to rear' : queueMode === 'Stack' ? 'pushed to top' : 'added to end';
+  queueLog.unshift(`${queueMode === 'Stack' ? 'stack.push' : queueMode === 'Queue' ? 'queue.add' : 'list.add'}("${name}") — ${label}`);
+  document.getElementById('queue-new-patient').value = '';
+  queueRender();
+}
+
+function queueServe() {
+  if (queueData.length === 0) return;
+  if (queueMode === 'Queue' || queueMode === 'ArrayList') {
+    const patient = queueData.shift();
+    queueLog.unshift(`queue.poll() → "${patient}" leaves (FIFO)`);
+  } else {
+    const patient = queueData.pop();
+    queueLog.unshift(`stack.pop() → "${patient}" leaves (LIFO)`);
+  }
+  queueRender();
+}
+
+function queueRender() {
+  const serveBtn = document.getElementById('queue-serve-btn');
+  serveBtn.disabled = queueData.length === 0;
+
+  const viz = document.getElementById('queue-viz-wrap');
+  if (queueMode === 'Queue') {
+    viz.innerHTML = renderQueueViz(queueData);
+  } else if (queueMode === 'Stack') {
+    viz.innerHTML = renderStackViz(queueData);
+  } else {
+    viz.innerHTML = renderArrayListViz(queueData, 'ArrayList', 'var(--accent)');
+  }
+
+  const logWrap = document.getElementById('queue-log');
+  logWrap.innerHTML = queueLog.length === 0
+    ? '<div class="ts f12">No operations yet</div>'
+    : queueLog.slice(0,10).map(l => `<div class="log-entry${l.includes('FIFO')?` fifo`:l.includes('LIFO')?' lifo':''}">${l}</div>`).join('');
+
+  const reqRows = document.getElementById('queue-req-rows');
+  const items = [
+    ['Queue (FIFO)', queueMode==='Queue' ? '✓ matches requirement' : null, 'success'],
+    ['Stack (LIFO)', queueMode==='Stack' ? '⚠ last patient served first!' : null, 'danger'],
+    ['ArrayList', queueMode==='ArrayList' ? 'works but inefficient' : null, 'warning'],
+  ];
+  reqRows.innerHTML = items.map(([name, status, type]) => `
+    <div class="flex-between mb-6" style="padding:6px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border)">
+      <span class="f12 ts">${name}</span>
+      ${status ? `<span class="badge ${type}">${status}</span>` : ''}
+    </div>`).join('');
+
+  const codeEl = document.getElementById('queue-code');
+  if (queueMode === 'Queue') {
+    codeEl.textContent = `Queue<String> queue = new LinkedList<>();\n\nqueue.add("Arun");  // rear\nqueue.add("Bala");\n\nqueue.poll(); // → "Arun" (FIFO)\nqueue.peek(); // look at front`;
+  } else if (queueMode === 'Stack') {
+    codeEl.textContent = `Stack<String> stack = new Stack<>();\n\nstack.push("Arun");\nstack.push("Bala");\n\nstack.pop(); // → "Bala" (LIFO) ⚠`;
+  } else {
+    codeEl.textContent = `ArrayList<String> list = new ArrayList<>();\n\nlist.add("Arun");\nlist.add("Bala");\n\nlist.remove(0); // manual FIFO`;
+  }
+}
+
+function renderQueueViz(items) {
+  if (items.length === 0) return '<div class="empty-state">empty queue</div>';
+  const html = `<div class="f11 tm mb-8 flex-between"><span style="color:var(--orange);font-weight:600">Queue (FIFO)</span><span>size: ${items.length}</span></div>
+    <div class="queue-wrap">
+      <div class="queue-label">FRONT →</div>
+      ${items.map((item,i) => `
+        <div class="queue-item${i===0?' front':''}">${escHtml(item)}</div>
+        ${i<items.length-1?'<span class="queue-arrow">→</span>':''}
+      `).join('')}
+      <div class="queue-label" style="color:var(--tm);margin-left:4px">← REAR</div>
+    </div>`;
+  return html;
+}
+
+function renderStackViz(items) {
+  if (items.length === 0) return '<div class="empty-state">empty stack</div>';
+  const reversed = [...items].reverse();
+  return `<div class="f11 tm mb-8 flex-between"><span style="color:var(--danger);font-weight:600">Stack (LIFO)</span><span>size: ${items.length}</span></div>
+    ${reversed.map((item,i) => `
+      <div class="stack-item${i===0?' top':''}" style="${i===0?'border-radius:6px 6px 0 0':i===reversed.length-1?'border-radius:0 0 6px 6px;border-top:none':'border-top:none'}">
+        <span>${escHtml(item)}</span>
+        ${i===0?'<span class="stack-top-badge">← TOP</span>':''}
+      </div>`).join('')}
+    <div class="stack-base"></div>`;
+}
+
+function renderArrayListViz(items, label, color) {
+  return `<div class="f11 tm mb-8 flex-between"><span style="color:${color};font-weight:600">${label}</span><span>size: ${items.length}</span></div>
+    ${items.length===0?'<div class="empty-state">empty</div>':items.map((item,i)=>`
+      <div class="coll-item" style="margin-bottom:4px">
+        <span class="coll-idx">[${i}]</span>
+        <span class="f13">${escHtml(String(item))}</span>
+      </div>`).join('')}`;
+}
+
+// ── SET ───────────────────────────────────────────────────────────────────────
+const setInputList = ['Arun','Bala','Arun','Divya','Bala'];
+let setType = 'HashSet';
+let setResult = [];
+let setAddedCount = 0;
+
+function setInit() {
+  setType = 'HashSet';
+  setResult = [];
+  setAddedCount = 0;
+  setRenderChips();
+  setRender();
+  setUpdateFeatureHeaders();
+}
+
+function setSetType(type) {
+  setType = type;
+  setResult = [];
+  setAddedCount = 0;
+  ['ArrayList','HashSet','TreeSet'].forEach(t => {
+    document.getElementById('set-btn-'+t).className = t===type ? 'primary sm' : 'ghost sm';
+  });
+  setRenderChips();
+  setRender();
+  setUpdateFeatureHeaders();
+}
+
+function setUpdateFeatureHeaders() {
+  ['ArrayList','HashSet','TreeSet'].forEach(t => {
+    const el = document.getElementById('set-fh-'+t);
+    el.style.color = t===setType ? 'var(--accent)' : 'var(--tm)';
+    el.style.fontWeight = t===setType ? '600' : '400';
+  });
+}
+
+function setRenderChips() {
+  const wrap = document.getElementById('set-input-chips');
+  wrap.innerHTML = setInputList.map((name,i) => `
+    <div style="padding:4px 10px;border-radius:20px;font-size:12px;background:${i<setAddedCount?'var(--accent-dim)':'var(--surface)'};border:1px solid ${i<setAddedCount?'var(--accent)':'var(--border)'};color:${i<setAddedCount?'var(--accent-bright)':'var(--ts)'}">${name}</div>`).join('');
+  const btn = document.getElementById('set-add-next-btn');
+  if (setAddedCount < setInputList.length) {
+    btn.textContent = `→ Add next: "${setInputList[setAddedCount]}"`;
+    btn.disabled = false;
+  } else {
+    btn.textContent = '→ All added';
+    btn.disabled = true;
+  }
+}
+
+function setAddNext() {
+  if (setAddedCount >= setInputList.length) return;
+  const name = setInputList[setAddedCount];
+  setAddedCount++;
+  setDoAdd(name);
+  setRenderChips();
+}
+
+function setAddCustom() {
+  const val = document.getElementById('set-custom-input').value.trim();
+  if (!val) return;
+  setDoAdd(val);
+  document.getElementById('set-custom-input').value = '';
+}
+
+function setDoAdd(name, showRejected) {
+  if (setType === 'HashSet' || setType === 'TreeSet') {
+    if (setResult.includes(name)) {
+      showWarnBox(`⚠ "${name}" rejected — already exists`);
+    } else {
+      setResult = setType === 'TreeSet' ? [...setResult, name].sort() : [...setResult, name];
+    }
+  } else {
+    setResult.push(name);
+  }
+  setRender();
+}
+
+function showWarnBox(msg) {
+  const viz = document.getElementById('set-viz-wrap');
+  const existing = viz.querySelector('.warn-box');
+  if (existing) existing.remove();
+  const box = document.createElement('div');
+  box.className = 'warn-box';
+  box.textContent = msg;
+  viz.insertBefore(box, viz.firstChild);
+  setTimeout(() => box.remove(), 2500);
+}
+
+function setReset() {
+  setResult = [];
+  setAddedCount = 0;
+  setRenderChips();
+  setRender();
+}
+
+function setRender() {
+  const wrap = document.getElementById('set-viz-wrap');
+  let html = '';
+  const label = setType;
+  const color = setType==='HashSet'?'var(--success)':setType==='TreeSet'?'var(--teal)':'var(--accent)';
+
+  html += `<div class="flex-between mb-8"><span class="f11 fw6" style="color:${color}">${label}</span><span class="tm f11">size: ${setResult.length}</span></div>`;
+
+  if (setResult.length === 0) {
+    html += '<div class="empty-state">empty</div>';
+  } else if (setType === 'ArrayList') {
+    html += setResult.map((item,i) => `<div class="coll-item mb-4"><span class="coll-idx">[${i}]</span><span class="f13">${escHtml(item)}</span></div>`).join('');
+  } else {
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+      setResult.map(item => `<div class="pill" style="background:${color}18;border:1px solid ${color}55;font-size:13px">${escHtml(item)}</div>`).join('') +
+      '</div>';
+  }
+
+  wrap.innerHTML = html;
+
+  const codeEl = document.getElementById('set-code');
+  if (setType === 'ArrayList') {
+    codeEl.textContent = `ArrayList<String> participants = new ArrayList<>();\n\nparticipants.add("Arun"); // Arun\nparticipants.add("Bala"); // Bala\nparticipants.add("Arun"); // Arun again ⚠\n\n// size: ${setResult.length} (duplicates allowed!)`;
+  } else if (setType === 'HashSet') {
+    codeEl.textContent = `HashSet<String> participants = new HashSet<>();\n\nparticipants.add("Arun"); // added\nparticipants.add("Bala"); // added\nparticipants.add("Arun"); // false — exists!\n\n// size: ${setResult.length} ✓`;
+  } else {
+    codeEl.textContent = `TreeSet<String> participants = new TreeSet<>();\n\nparticipants.add("Arun"); // added + sorted\nparticipants.add("Bala"); // added\nparticipants.add("Arun"); // false — exists!\n\n// size: ${setResult.length}, sorted ✓`;
+  }
+}
+
+// ── MAP ───────────────────────────────────────────────────────────────────────
+let mapEntries = [['Arun',85],['Bala',72],['Divya',91]];
+let mapType = 'HashMap';
+let mapSearchLog = [];
+let mapHighlighted = null;
+
+function mapInit() {
+  mapEntries = [['Arun',85],['Bala',72],['Divya',91]];
+  mapType = 'HashMap';
+  mapSearchLog = [];
+  mapHighlighted = null;
+  mapRender();
+}
+
+function mapSetType(type) {
+  mapType = type;
+  ['HashMap','ArrayList'].forEach(t => {
+    document.getElementById('map-btn-'+t).className = t===type?'primary sm':'ghost sm';
+  });
+  document.getElementById('map-type-warn').style.display = type==='ArrayList'?'block':'none';
+  document.getElementById('map-lookup-hashmap').className = 'lookup-box mb-8' + (type==='HashMap'?' active-green':'');
+  document.getElementById('map-lookup-arraylist').className = 'lookup-box' + (type==='ArrayList'?' active-warn':'');
+  mapRender();
+}
+
+function mapSearch() {
+  const key = document.getElementById('map-search-key').value.trim();
+  if (!key) return;
+  const found = mapEntries.find(([k]) => String(k) === key);
+
+  if (mapType === 'HashMap') {
+    mapHighlighted = key;
+    mapSearchLog.unshift(found ? `marks.get("${key}") → ${found[1]}` : `marks.get("${key}") → null`);
+    mapRender();
+    setTimeout(() => { mapHighlighted = null; mapRender(); }, 2000);
+  } else {
+    // linear scan
+    let i = 0;
+    const scan = () => {
+      mapHighlighted = String(mapEntries[i]?.[0]);
+      mapRender();
+      if (i < mapEntries.length - 1 && !found) { i++; setTimeout(scan, 400); }
+      else {
+        mapSearchLog.unshift(found ? `Linear search: checked ${i+1} item(s) → found ${found[1]}` : 'Linear search: not found');
+        mapRender();
+        setTimeout(() => { mapHighlighted = null; mapRender(); }, 1500);
+      }
+    };
+    scan();
+  }
+}
+
+function mapUpdate() {
+  const key = document.getElementById('map-update-key').value.trim();
+  const val = document.getElementById('map-update-val').value.trim();
+  if (!key || !val) return;
+  const v = isNaN(val) ? val : Number(val);
+  const idx = mapEntries.findIndex(([k]) => String(k) === key);
+  if (idx >= 0) mapEntries[idx][1] = v;
+  else mapEntries.push([key, v]);
+  mapRender();
+}
+
+function mapAdd() {
+  const key = document.getElementById('map-new-key').value.trim();
+  const val = document.getElementById('map-new-val').value.trim();
+  if (!key || !val) return;
+  const v = isNaN(val) ? val : Number(val);
+  const idx = mapEntries.findIndex(([k]) => String(k) === key);
+  if (idx >= 0) mapEntries[idx][1] = v;
+  else mapEntries.push([key, v]);
+  document.getElementById('map-new-key').value = '';
+  document.getElementById('map-new-val').value = '';
+  mapRender();
+}
+
+function mapRender() {
+  const viz = document.getElementById('map-viz-wrap');
+  viz.innerHTML = `<div class="flex-between mb-8"><span class="f11 fw6" style="color:var(--warning)">HashMap</span><span class="tm f11">size: ${mapEntries.length}</span></div>` +
+    (mapEntries.length===0 ? '<div class="empty-state">empty</div>' : mapEntries.map(([k,v]) => {
+      const hl = mapHighlighted === String(k);
+      return `<div class="map-row${hl?' highlight':''}" style="margin-bottom:4px">
+        <span class="f13${hl?' fw6':''}" style="${hl?'color:var(--warning)':''}">${escHtml(String(k))}</span>
+        <span class="map-arr">→</span>
+        <span class="f13">${escHtml(String(v))}</span>
+      </div>`;
+    }).join(''));
+
+  const logEl = document.getElementById('map-search-log');
+  logEl.innerHTML = mapSearchLog.slice(0,4).map(l => `<div class="log-entry">${l}</div>`).join('');
+
+  const codeEl = document.getElementById('map-code');
+  if (mapType === 'HashMap') {
+    codeEl.textContent = `HashMap<String, Integer> marks = new HashMap<>();\n\nmarks.put("Arun", 85);\nmarks.put("Bala", 72);\n\n// Direct lookup — O(1)\nint mark = marks.get("Bala"); // 72\n\n// Update\nmarks.put("Bala", 88); // replaces 72`;
+  } else {
+    codeEl.textContent = `ArrayList<Student> students = new ArrayList<>();\n\n// Must search linearly\nfor (Student s : students) {\n  if (s.name.equals("Bala")) {\n    return s.mark; // O(n) ⚠\n  }\n}`;
+  }
+}
+
+// ── STACK / BROWSER HISTORY ───────────────────────────────────────────────────
+let stackData = ['Google','YouTube','GitHub'];
+let stackMode = 'Stack';
+let stackLog = [];
+
+function stackInit() {
+  stackData = ['Google','YouTube','GitHub'];
+  stackMode = 'Stack';
+  stackLog = [];
+  stackRender();
+}
+
+function stackSetMode(mode) {
+  stackMode = mode;
+  ['Stack','Queue'].forEach(m => {
+    document.getElementById('stack-btn-'+m).className = m===mode?'primary sm':'ghost sm';
+  });
+  document.getElementById('stack-warn').style.display = mode==='Queue'?'block':'none';
+  const btn = document.getElementById('stack-back-btn');
+  btn.textContent = mode==='Stack' ? '← Back (stack.pop())' : '← Back (queue.poll())';
+  stackRender();
+}
+
+function stackVisit() {
+  const url = document.getElementById('stack-url').value.trim();
+  if (!url) return;
+  stackData.push(url);
+  stackLog.unshift(`Visited: ${url}`);
+  document.getElementById('stack-url').value = '';
+  stackRender();
+}
+
+function stackBack() {
+  if (stackData.length === 0) return;
+  if (stackMode === 'Stack') {
+    const page = stackData.pop();
+    stackLog.unshift(`← Back: ${page} removed (LIFO)`);
+  } else {
+    const page = stackData.shift();
+    stackLog.unshift(`queue.poll(): ${page} removed (FIFO) ⚠`);
+  }
+  stackRender();
+}
+
+function stackRender() {
+  document.getElementById('stack-back-btn').disabled = stackData.length === 0;
+  const viz = document.getElementById('stack-viz-wrap');
+  viz.innerHTML = stackMode === 'Stack' ? renderStackViz(stackData) : renderQueueViz(stackData);
+
+  const logEl = document.getElementById('stack-log');
+  logEl.innerHTML = stackLog.slice(0,8).map(l => `<div class="log-entry${l.includes('⚠')?` warn`:l.includes('Back')&&!l.includes('⚠')?' fifo':''}">${l}</div>`).join('');
+
+  const codeEl = document.getElementById('stack-code');
+  if (stackMode === 'Stack') {
+    codeEl.textContent = `Stack<String> history = new Stack<>();\n\nhistory.push("Google");\nhistory.push("YouTube");\nhistory.push("GitHub");\n\n// Press Back:\nhistory.pop(); // → "GitHub" ✓\nhistory.pop(); // → "YouTube" ✓`;
+  } else {
+    codeEl.textContent = `Queue<String> history = new LinkedList<>();\n\nhistory.add("Google");\nhistory.add("YouTube");\nhistory.add("GitHub");\n\n// Press Back:\nhistory.poll(); // → "Google" ⚠\n// Wrong! Should be "GitHub"`;
+  }
+}
+
+// ── LEADERBOARD ───────────────────────────────────────────────────────────────
+let lbScores = [];
+let lbType = 'TreeSet';
+
+function lbInit() {
+  lbScores = [];
+  lbType = 'TreeSet';
+  lbUpdateBtns();
+  lbRender();
+}
+
+function lbSetType(type) {
+  lbType = type;
+  lbUpdateBtns();
+  lbRender();
+}
+
+function lbUpdateBtns() {
+  ['ArrayList','HashSet','TreeSet'].forEach(t => {
+    document.getElementById('lb-btn-'+t).className = t===lbType?'primary sm':'ghost sm';
+    document.getElementById('lb-fh-'+t).style.color = t===lbType?'var(--accent)':'var(--tm)';
+    document.getElementById('lb-fh-'+t).style.fontWeight = t===lbType?'600':'400';
+  });
+}
+
+function lbAddVal(v) { lbScores.push(v); lbRender(); }
+function lbAdd() {
+  const v = Number(document.getElementById('lb-input').value);
+  if (isNaN(v) || !document.getElementById('lb-input').value.trim()) return;
+  lbScores.push(v);
+  document.getElementById('lb-input').value = '';
+  lbRender();
+}
+function lbReset() { lbScores = []; lbRender(); }
+
+function lbGetDisplay() {
+  if (lbType === 'ArrayList') return [...lbScores];
+  if (lbType === 'HashSet') return [...new Set(lbScores)];
+  return [...new Set(lbScores)].sort((a,b)=>a-b);
+}
+
+function lbRender() {
+  const display = lbGetDisplay();
+  const color = lbType==='TreeSet'?'var(--teal)':lbType==='HashSet'?'var(--success)':'var(--accent)';
+  const dupeCount = lbScores.length - display.length;
+
+  const warn = document.getElementById('lb-dupe-warn');
+  if (dupeCount > 0) {
+    warn.style.display = 'block';
+    document.getElementById('lb-dupe-msg').textContent = `⚠ ${dupeCount} duplicate(s) removed by ${lbType}`;
+  } else {
+    warn.style.display = 'none';
+  }
+
+  const viz = document.getElementById('lb-viz-wrap');
+  if (display.length === 0) {
+    viz.innerHTML = '<div class="empty-state">Add some scores</div>';
+  } else {
+    const maxScore = Math.max(...display);
+    const items = lbType === 'TreeSet' ? [...display].reverse() : display;
+    viz.innerHTML = `<div class="flex-between mb-8"><span class="f11 fw6" style="color:${color}">${lbType}</span><span class="tm f11">size: ${display.length}${lbScores.length!==display.length?` (input had ${lbScores.length})`:''}</span></div>` +
+      items.map((score, i) => {
+        const rank = lbType==='TreeSet'?i+1:null;
+        const pct = maxScore > 0 ? (score/maxScore*100) : 0;
+        const fillColor = i===0&&lbType==='TreeSet'?'var(--warning)':'var(--accent)';
+        return `<div class="score-bar-wrap mb-4">
+          ${rank?`<span class="tm f11" style="min-width:20px">#${rank}</span>`:''}
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+          <span class="f13" style="min-width:28px;text-align:right">${score}</span>
+        </div>`;
+      }).join('');
+  }
+
+  const codeEl = document.getElementById('lb-code');
+  if (lbType === 'TreeSet') {
+    codeEl.textContent = `TreeSet<Integer> leaderboard = new TreeSet<>();\n\nleaderboard.add(95);\nleaderboard.add(70);\nleaderboard.add(95); // ignored\nleaderboard.add(60);\n\n// Output: [60, 70, 95] ✓ sorted & unique`;
+  } else if (lbType === 'HashSet') {
+    codeEl.textContent = `HashSet<Integer> scores = new HashSet<>();\n\nscores.add(95);\nscores.add(70);\nscores.add(95); // ignored\n\n// Unique ✓, but order not guaranteed ⚠`;
+  } else {
+    codeEl.textContent = `ArrayList<Integer> scores = new ArrayList<>();\n\nscores.add(95);\nscores.add(70);\nscores.add(95); // duplicate ⚠\n\n// Need to sort manually: Collections.sort()`;
+  }
+}
+
+// ── COMPARE ───────────────────────────────────────────────────────────────────
+const compareInput = ['Arun','Bala','Arun','Divya','Bala','Emma'];
+const compareMeta = {
+  ArrayList: { color:'var(--accent)', dups:true, ordered:'insertion', sorted:false, indexed:true },
+  LinkedList: { color:'var(--purple)', dups:true, ordered:'insertion', sorted:false, indexed:false },
+  HashSet: { color:'var(--success)', dups:false, ordered:false, sorted:false, indexed:false },
+  TreeSet: { color:'var(--teal)', dups:false, ordered:'sorted', sorted:true, indexed:false },
+  Stack: { color:'var(--danger)', dups:true, ordered:'LIFO', sorted:false, indexed:false },
+  Queue: { color:'var(--orange)', dups:true, ordered:'FIFO', sorted:false, indexed:false },
+  HashMap: { color:'var(--warning)', dups:false, ordered:false, sorted:false, indexed:false },
+  Vector: { color:'var(--teal)', dups:true, ordered:'insertion', sorted:false, indexed:true },
+  LinkedHashSet: { color:'var(--accent-bright)', dups:false, ordered:'insertion', sorted:false, indexed:false },
+  ArrayDeque: { color:'var(--orange)', dups:true, ordered:'both ends', sorted:false, indexed:false },
+  PriorityQueue: { color:'var(--orange)', dups:true, ordered:'priority', sorted:false, indexed:false },
+  TreeMap: { color:'var(--teal)', dups:false, ordered:'sorted', sorted:true, indexed:false },
+};
+let compareSelected = ['ArrayList','HashSet','TreeSet'];
+
+function compareGetResult(type) {
+  switch(type) {
+    case 'ArrayList': case 'LinkedList': case 'Queue': case 'Vector': case 'ArrayDeque':
+      return [...compareInput];
+    case 'Stack': return [...compareInput].reverse();
+    case 'PriorityQueue': return [...compareInput].sort();
+    case 'HashSet': return [...new Set(compareInput)].sort((a,b)=>a.length-b.length||(a<b?1:-1));
+    case 'LinkedHashSet': return [...new Set(compareInput)];
+    case 'TreeSet': return [...new Set(compareInput)].sort();
+    case 'HashMap': return [...new Set(compareInput)].map(k=>k+'→?');
+    case 'TreeMap': return [...new Set(compareInput)].sort().map(k=>k+'→?');
+    default: return [...compareInput];
+  }
+}
+
+function compareInit() {
+  const btnWrap = document.getElementById('compare-type-btns');
+  btnWrap.innerHTML = Object.keys(compareMeta).map(t => `
+    <button class="comp-type-btn${compareSelected.includes(t)?' on':''}" id="comp-btn-${t}" onclick="compareToggle('${t}')">${t}</button>`).join('');
+  compareRender();
+}
+
+function compareToggle(type) {
+  if (compareSelected.includes(type)) {
+    if (compareSelected.length > 1) compareSelected = compareSelected.filter(t=>t!==type);
+  } else {
+    compareSelected.push(type);
+  }
+  document.querySelectorAll('.comp-type-btn').forEach(b => {
+    const t = b.id.replace('comp-btn-','');
+    b.className = 'comp-type-btn' + (compareSelected.includes(t)?' on':'');
+  });
+  compareRender();
+}
+
+function compareRender() {
+  const cols = document.getElementById('compare-cols');
+  const n = Math.min(compareSelected.length, 4);
+  cols.style.gridTemplateColumns = `repeat(${n},1fr)`;
+  cols.innerHTML = compareSelected.map(type => {
+    const meta = compareMeta[type];
+    const result = compareGetResult(type);
+    const props = [
+      ['Duplicates', meta.dups?'allowed':'removed', meta.dups?'warning':'success'],
+      ['Order', meta.ordered?String(meta.ordered):'none', meta.ordered?'success':'default'],
+      ['Sorted', meta.sorted?'yes':'no', meta.sorted?'success':'default'],
+      ['Index access', meta.indexed?'yes':'no', meta.indexed?'success':'default'],
+    ];
+    return `<div class="comp-col">
+      <div class="f13 fw6 mb-10" style="color:${meta.color}">${type}</div>
+      <div style="margin-bottom:12px">
+        ${result.map(item=>`<div class="comp-item" style="background:${meta.color}18;border:1px solid ${meta.color}33">${escHtml(item)}</div>`).join('')}
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:10px">
+        ${props.map(([k,v,t])=>`<div class="flex-between mb-6"><span class="f11 ts">${k}</span><span class="badge ${t}">${v}</span></div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── CHALLENGE ─────────────────────────────────────────────────────────────────
+const challenges = [
+  {
+    title:'Browser back button',
+    desc:'The most recently visited page should be removed first when pressing Back.',
+    correct:'Stack',
+    options:['ArrayList','HashSet','HashMap','Stack','Queue'],
+    exp:{
+      Stack:'✓ Perfect! Stack is LIFO — last visited = first removed. Exactly what Back needs.',
+      Queue:'⚠ Queue is FIFO — it would remove your first-ever visited page, not the last one.',
+      ArrayList:'⚠ ArrayList has no built-in LIFO behavior. You\'d need to manually manage the index.',
+      HashSet:'⚠ HashSet is unordered — no concept of "last" or "first".',
+      HashMap:'⚠ HashMap is for key→value lookup, not ordered removal.',
+    }
+  },
+  {
+    title:'Unique employee IDs',
+    desc:'Store employee IDs where duplicates are automatically rejected.',
+    correct:'HashSet',
+    options:['ArrayList','HashSet','TreeSet','HashMap','Queue'],
+    exp:{
+      HashSet:'✓ HashSet automatically rejects duplicates. add() returns false if already present.',
+      TreeSet:'✓ Also works! TreeSet is unique AND sorted. Choose based on whether sorting matters.',
+      ArrayList:'⚠ ArrayList allows duplicates — you\'d need to manually check before adding.',
+      HashMap:'⚠ HashMap stores key→value pairs. IDs as keys could work but isn\'t the right fit.',
+      Queue:'⚠ Queue allows duplicates and is ordered for processing, not storage.',
+    }
+  },
+  {
+    title:'Student name → mark lookup',
+    desc:'Find any student\'s mark instantly using their name.',
+    correct:'HashMap',
+    options:['ArrayList','HashSet','HashMap','TreeSet','Stack'],
+    exp:{
+      HashMap:'✓ HashMap gives O(1) key→value lookup. marks.get("Arun") returns the mark directly.',
+      ArrayList:'⚠ ArrayList would require a linear search through all students — slow for large data.',
+      HashSet:'⚠ HashSet stores single values, not key-value pairs.',
+      TreeSet:'⚠ TreeSet stores unique sorted values, not key-value pairs.',
+      Stack:'⚠ Stack is for LIFO removal, not lookup by key.',
+    }
+  },
+  {
+    title:'Hospital patient queue',
+    desc:'Patients must be treated in the exact order they arrived.',
+    correct:'Queue',
+    options:['ArrayList','HashSet','Queue','Stack','HashMap'],
+    exp:{
+      Queue:'✓ Queue is FIFO — first patient in is first patient treated. Perfect match.',
+      Stack:'⚠ Stack is LIFO — the last patient to arrive would be treated first!',
+      ArrayList:'⚠ ArrayList can work (remove from index 0) but Queue makes the intent explicit.',
+      HashSet:'⚠ HashSet is unordered — no guaranteed order of processing.',
+      HashMap:'⚠ HashMap is for key-value lookup, not ordered processing.',
+    }
+  },
+  {
+    title:'Emergency room triage',
+    desc:'The most critical patient must be treated first, no matter when they arrived.',
+    correct:'PriorityQueue',
+    options:['Queue','PriorityQueue','TreeSet','ArrayDeque','Stack'],
+    exp:{
+      PriorityQueue:'✓ PriorityQueue orders by priority, not arrival. poll() always returns the most urgent case.',
+      Queue:'⚠ A plain Queue is strictly FIFO — a critical patient arriving last would wait last.',
+      TreeSet:'⚠ TreeSet sorts, but it rejects duplicates — two patients with the same severity would collide.',
+      ArrayDeque:'⚠ ArrayDeque gives you both ends, but no notion of priority in the middle.',
+      Stack:'⚠ Stack is LIFO — the most recent arrival wins regardless of severity.',
+    }
+  },
+  {
+    title:'Remove duplicates, keep the order',
+    desc:'De-duplicate a list of visitor names but still print them in the order they first appeared.',
+    correct:'LinkedHashSet',
+    options:['HashSet','LinkedHashSet','TreeSet','ArrayList','ArrayDeque'],
+    exp:{
+      LinkedHashSet:'✓ LinkedHashSet rejects duplicates AND iterates in insertion order. Exactly this problem.',
+      HashSet:'⚠ HashSet removes duplicates but scrambles the order — you lose "who came first".',
+      TreeSet:'⚠ TreeSet de-duplicates but re-sorts alphabetically, which is not the original order.',
+      ArrayList:'⚠ ArrayList keeps the order but happily stores duplicates.',
+      ArrayDeque:'⚠ ArrayDeque keeps order but allows duplicates — it is a queue, not a set.',
+    }
+  },
+  {
+    title:'Undo history in new code',
+    desc:'You need LIFO undo. Which type should you actually instantiate today?',
+    correct:'ArrayDeque',
+    options:['Stack','ArrayDeque','Vector','LinkedList','PriorityQueue'],
+    exp:{
+      ArrayDeque:'✓ ArrayDeque is the modern stack: push/pop, no synchronization overhead, no legacy baggage.',
+      Stack:'⚠ It works, but Stack extends Vector — synchronized and legacy. Java itself recommends Deque.',
+      Vector:'⚠ Vector is the synchronized legacy list that made Stack slow in the first place.',
+      LinkedList:'⚠ It implements Deque so it works, but ArrayDeque is faster and uses less memory.',
+      PriorityQueue:'⚠ PriorityQueue reorders by priority — undo must follow time, not value.',
+    }
+  },
+];
+const collMeta = {
+  ArrayList:{color:'var(--accent)',icon:'≡',desc:'Ordered, indexed, allows duplicates'},
+  LinkedList:{color:'var(--purple)',icon:'⟷',desc:'Doubly-linked nodes, fast insert/delete'},
+  HashSet:{color:'var(--success)',icon:'◈',desc:'Unique elements, no order'},
+  TreeSet:{color:'var(--teal)',icon:'⊤',desc:'Unique elements, sorted'},
+  HashMap:{color:'var(--warning)',icon:'↔',desc:'Key-value pairs, O(1) lookup'},
+  Queue:{color:'var(--orange)',icon:'→',desc:'FIFO — first in, first out'},
+  Stack:{color:'var(--danger)',icon:'↑',desc:'LIFO — last in, first out'},
+  PriorityQueue:{color:'var(--orange)',icon:'⚡',desc:'Smallest / most urgent first'},
+  ArrayDeque:{color:'var(--orange)',icon:'⇆',desc:'Fast stack and queue, both ends'},
+  LinkedHashSet:{color:'var(--accent-bright)',icon:'◇',desc:'Unique, insertion-ordered'},
+  Vector:{color:'var(--teal)',icon:'▤',desc:'Synchronized legacy list'},
+};
+let chIdx = 0, chChosen = null, chRevealed = false, chScore = 0, chDone = false;
+
+function challengeInit() {
+  chIdx = 0; chChosen = null; chRevealed = false; chScore = 0; chDone = false;
+  challengeRender();
+}
+
+function challengeRender() {
+  const wrap = document.getElementById('challenge-wrap');
+  if (chDone) {
+    const emoji = chScore === challenges.length ? '🎯' : chScore >= challenges.length/2 ? '👍' : '💡';
+    wrap.innerHTML = `
+      <div style="text-align:center;padding:40px 20px">
+        <div style="font-size:48px;margin-bottom:12px">${emoji}</div>
+        <div style="font-size:24px;font-weight:600;margin-bottom:8px">${chScore} / ${challenges.length}</div>
+        <div class="f14 ts mb-24" style="line-height:1.6">
+          ${chScore===challenges.length
+            ? 'You matched every requirement to the right collection. The key insight is clear.'
+            : 'Good effort! Go back to the cases and experiment more — let the behavior guide you.'}
+        </div>
+        <div class="card mb-16" style="max-width:400px;margin:0 auto 20px;text-align:left">
+          <div class="f13 ts" style="line-height:1.8">Requirement → Behavior → Collection<br>
+          <span class="tm">There is no "best collection" for every situation. The right collection depends on the problem you are solving.</span></div>
+        </div>
+        <button class="primary" onclick="challengeRestart()">Try again</button>
+      </div>`;
+    return;
+  }
+
+  const ch = challenges[chIdx];
+  const isCorrect = chChosen === ch.correct;
+
+  wrap.innerHTML = `
+    <div class="flex-between mb-16">
+      <div class="tm f12">Challenge ${chIdx+1} of ${challenges.length}</div>
+      <div class="challenge-dots">
+        ${challenges.map((_,i)=>`<div class="ch-dot${i<chIdx?' done':i===chIdx?' active':''}"></div>`).join('')}
+      </div>
+      <div class="ts f12">Score: ${chScore}</div>
+    </div>
+    <div class="card mb-16">
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px">${ch.title}</div>
+      <div class="f14 ts" style="line-height:1.6">${ch.desc}</div>
+    </div>
+    <div class="tm f12 mb-10">Choose a collection:</div>
+    <div id="ch-options">
+      ${ch.options.map(opt => {
+        const m = collMeta[opt];
+        let cls = 'challenge-opt';
+        if (chRevealed) {
+          if (opt === chChosen && isCorrect) cls += ' correct';
+          else if (opt === chChosen && !isCorrect) cls += ' wrong';
+          else if (opt === ch.correct) cls += ' show-correct';
+        }
+        return `<div class="${cls}" onclick="chChoose('${opt}')">
+          <div class="challenge-opt-icon" style="color:${m.color}">${m.icon}</div>
+          <div style="flex:1">
+            <div class="f14 fw6 mb-2">${opt}</div>
+            <div class="f12 ts">${m.desc}</div>
+            ${chRevealed&&(opt===chChosen||opt===ch.correct)?`<div class="f12 mt-6" style="color:${opt===ch.correct?'var(--success)':'var(--danger)'};line-height:1.5">${ch.exp[opt]}</div>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${chRevealed?`<div style="margin-top:16px;text-align:right"><button class="primary" onclick="chNext()">${chIdx<challenges.length-1?'Next challenge →':'See results'}</button></div>`:''}`;
+}
+
+function chChoose(opt) {
+  if (chRevealed) return;
+  chChosen = opt;
+  chRevealed = true;
+  if (opt === challenges[chIdx].correct) chScore++;
+  challengeRender();
+}
+
+function chNext() {
+  if (chIdx < challenges.length - 1) { chIdx++; chChosen = null; chRevealed = false; }
+  else chDone = true;
+  challengeRender();
+}
+
+function challengeRestart() {
+  chIdx=0; chChosen=null; chRevealed=false; chScore=0; chDone=false;
+  challengeRender();
+}
+
+// ── TOPICS: the full type hierarchy (single source of truth) ──────────────────
+// kind: interface | class   | extends/implements/impls drive the clickable links
+const topics = {
+
+  // ── ROOT INTERFACES ─────────────────────────────────────────────────────────
+  Iterable: {
+    kind:'interface', color:'var(--success)', icon:'∞', pkg:'java.lang',
+    tagline:'The root of everything you can loop over',
+    extends:[], implementsL:[], impls:['Collection'],
+    when:'You never implement this directly — it is why every collection works with the for-each loop.',
+    facts:[
+      'Root of the entire Collection hierarchy',
+      'Single abstract method: iterator()',
+      'Enables the enhanced for-each loop',
+      'Also gives forEach(Consumer) since Java 8',
+      'Map is NOT Iterable (it has no iterator())',
+      'Arrays are not Iterable either',
+    ],
+    methods:[
+      ['iterator()','Returns an Iterator over the elements'],
+      ['forEach(action)','Runs an action for every element (Java 8+)'],
+      ['spliterator()','Splittable iterator used by parallel streams'],
+    ],
+    props:{ Order:'n/a', Duplicates:'n/a', Nulls:'n/a', Thread:'n/a' },
+    code:`// Anything Iterable works in a for-each loop\nIterable<String> names = new ArrayList<>(List.of("Arun","Bala"));\n\nfor (String n : names) {      // compiler calls iterator()\n    System.out.println(n);\n}\n\nnames.forEach(System.out::println);  // Java 8+`,
+    lab:null,
+  },
+
+  Collection: {
+    kind:'interface', color:'var(--success)', icon:'⬡', pkg:'java.util',
+    tagline:'The common contract shared by List, Set and Queue',
+    extends:['Iterable'], implementsL:[], impls:['List','Queue','Set'],
+    when:'Use Collection<T> as a parameter type when your method does not care which kind of collection it receives.',
+    facts:[
+      'Defines add / remove / size / contains / clear',
+      'Every List, Set and Queue is a Collection',
+      'Map is deliberately NOT a Collection',
+      'Bulk operations: addAll, removeAll, retainAll',
+      'stream() entry point for the Streams API',
+      'Good as a method parameter type — accept the widest thing that works',
+    ],
+    methods:[
+      ['add(e)','Adds an element, returns false if refused (e.g. Set duplicate)'],
+      ['remove(o)','Removes one matching element'],
+      ['contains(o)','Membership test — cost depends on the implementation'],
+      ['size() / isEmpty()','Element count'],
+      ['addAll(c) / removeAll(c) / retainAll(c)','Bulk union / difference / intersection'],
+      ['stream()','Opens a Stream pipeline over the elements'],
+    ],
+    props:{ Order:'depends', Duplicates:'depends', Nulls:'depends', Thread:'not safe' },
+    code:`// Program to the interface, not the implementation\nvoid report(Collection<String> items) {\n    System.out.println(items.size() + " items");\n}\n\nreport(new ArrayList<>());   // works\nreport(new HashSet<>());     // works\nreport(new LinkedList<>());  // works`,
+    lab:null,
+  },
+
+  // ── LIST BRANCH ─────────────────────────────────────────────────────────────
+  List: {
+    kind:'interface', color:'var(--success)', icon:'≣', pkg:'java.util',
+    tagline:'An ordered collection with index access — duplicates allowed',
+    extends:['Collection'], implementsL:[], impls:['ArrayList','LinkedList','Vector'],
+    when:'When position matters: "the 3rd item", "keep them in the order the user typed them".',
+    facts:[
+      'Positional access: get(i), set(i,e), add(i,e)',
+      'Insertion order is always preserved',
+      'Duplicates are allowed',
+      'indexOf() / lastIndexOf() search by value',
+      'ListIterator can walk backwards',
+      'List.of(...) creates an immutable list (Java 9+)',
+    ],
+    methods:[
+      ['get(i) / set(i,e)','Read / overwrite by index'],
+      ['add(i,e)','Insert at a position, shifting the rest right'],
+      ['indexOf(o)','First index of a value, or -1'],
+      ['subList(a,b)','A live view of part of the list'],
+      ['sort(comparator)','Sorts the list in place'],
+    ],
+    props:{ Order:'insertion', Duplicates:'allowed', Nulls:'allowed', Thread:'not safe' },
+    code:`List<String> notes = new ArrayList<>();\nnotes.add("Java");\nnotes.add("Python");\nnotes.add("Java");     // duplicate is fine\n\nnotes.get(0);          // "Java"\nnotes.add(1, "MySQL"); // insert in the middle\nnotes.indexOf("Java"); // 0`,
+    lab:'notes',
+  },
+
+  ArrayList: {
+    kind:'class', color:'var(--accent)', icon:'≡', pkg:'java.util',
+    tagline:'Resizable array — the default List you should reach for',
+    extends:[], implementsL:['List'], impls:[],
+    when:'Your default choice for a list: lots of reading by index, appending at the end.',
+    facts:[
+      'Backed by a resizable Object[] array',
+      'get(i) is O(1) — the fastest random access',
+      'add() at the end is amortised O(1)',
+      'add/remove in the middle is O(n) — everything shifts',
+      'Grows ~50% when full (copying the array)',
+      'Not synchronized — fast, but single-threaded',
+    ],
+    methods:[
+      ['add(e)','Append to the end — amortised O(1)'],
+      ['get(i)','Random access — O(1)'],
+      ['remove(i)','Remove by index — O(n) because of the shift'],
+      ['ensureCapacity(n)','Pre-size to avoid repeated re-grows'],
+      ['trimToSize()','Shrink the backing array to the current size'],
+    ],
+    props:{ Order:'insertion', Duplicates:'allowed', Nulls:'allowed', Thread:'not safe' },
+    perf:[['get(i)','O(1)'],['add (end)','O(1)*'],['add(i,e)','O(n)'],['remove(i)','O(n)'],['contains','O(n)']],
+    code:`ArrayList<String> list = new ArrayList<>();\nlist.add("Alice");\nlist.add("Bob");\nlist.add("Alice");   // duplicate OK\n\nlist.get(0);         // "Alice"  — O(1)\nlist.remove(1);      // removes "Bob"\nlist.size();         // 2`,
+    lab:'notes',
+  },
+
+  LinkedList: {
+    kind:'class', color:'var(--purple)', icon:'⟷', pkg:'java.util',
+    tagline:'Doubly-linked nodes — a List and a Deque at the same time',
+    extends:[], implementsL:['List','Deque'], impls:[],
+    when:'When you constantly add/remove at the front or back, and rarely jump to a random index.',
+    facts:[
+      'Each element is a node with prev/next pointers',
+      'O(1) insert and remove at both ends',
+      'O(n) get(i) — it has to walk the chain',
+      'Implements Deque, so it is also a Queue',
+      'Higher memory per element (two pointers)',
+      'In practice ArrayList wins most benchmarks — measure first',
+    ],
+    methods:[
+      ['addFirst(e) / addLast(e)','O(1) insertion at either end'],
+      ['removeFirst() / removeLast()','O(1) removal at either end'],
+      ['peek() / poll()','Queue-style head access'],
+      ['get(i)','Walks the chain — O(n)'],
+    ],
+    props:{ Order:'insertion', Duplicates:'allowed', Nulls:'allowed', Thread:'not safe' },
+    perf:[['get(i)','O(n)'],['addFirst','O(1)'],['addLast','O(1)'],['removeFirst','O(1)'],['contains','O(n)']],
+    code:`LinkedList<String> list = new LinkedList<>();\nlist.add("Alice");\nlist.addFirst("Zara");  // O(1) at the front\nlist.addLast("Bob");    // O(1) at the rear\n\nlist.removeFirst();     // "Zara"\nlist.peek();            // "Alice"\n\n// It is also a Queue:\nQueue<String> q = new LinkedList<>();`,
+    lab:'queue',
+  },
+
+  Vector: {
+    kind:'class', color:'var(--teal)', icon:'▤', pkg:'java.util',
+    tagline:'A synchronized ArrayList from Java 1.0 — legacy',
+    extends:[], implementsL:['List'], impls:['Stack'],
+    when:'Almost never in new code. Use ArrayList, or CopyOnWriteArrayList / Collections.synchronizedList when you truly need thread safety.',
+    facts:[
+      'Same resizable-array idea as ArrayList',
+      'Every method is synchronized — slower',
+      'Doubles its capacity when full (ArrayList grows 50%)',
+      'Legacy class, kept only for backwards compatibility',
+      'Per-method locking still does not make compound actions safe',
+      'Stack extends Vector — which is why Stack is legacy too',
+    ],
+    methods:[
+      ['addElement(e)','Legacy alias for add(e)'],
+      ['elementAt(i)','Legacy alias for get(i)'],
+      ['firstElement() / lastElement()','Ends of the vector'],
+      ['capacity()','Current backing-array capacity'],
+    ],
+    props:{ Order:'insertion', Duplicates:'allowed', Nulls:'allowed', Thread:'synchronized' },
+    perf:[['get(i)','O(1)'],['add (end)','O(1)*'],['add(i,e)','O(n)'],['remove(i)','O(n)']],
+    code:`Vector<String> v = new Vector<>();\nv.add("Alice");\nv.addElement("Bob");   // legacy API\nv.elementAt(0);        // "Alice"\n\n// Modern equivalents:\nList<String> fast = new ArrayList<>();\nList<String> safe = Collections.synchronizedList(new ArrayList<>());`,
+    lab:null,
+  },
+
+  Stack: {
+    kind:'class', color:'var(--danger)', icon:'↑', pkg:'java.util',
+    tagline:'LIFO — last in, first out',
+    extends:['Vector'], implementsL:[], impls:[],
+    when:'Undo history, browser back, bracket matching, any "reverse what just happened" problem.',
+    facts:[
+      'Last In, First Out ordering',
+      'push() adds on top, pop() removes from the top',
+      'Extends Vector, so it is synchronized and legacy',
+      'Modern advice: use ArrayDeque as a stack instead',
+      'peek() looks at the top without removing',
+      'Throws EmptyStackException when popping an empty stack',
+    ],
+    methods:[
+      ['push(e)','Put an element on top'],
+      ['pop()','Remove and return the top'],
+      ['peek()','Look at the top without removing'],
+      ['empty()','Is the stack empty?'],
+      ['search(o)','1-based distance from the top'],
+    ],
+    props:{ Order:'LIFO', Duplicates:'allowed', Nulls:'allowed', Thread:'synchronized' },
+    perf:[['push','O(1)'],['pop','O(1)'],['peek','O(1)'],['search','O(n)']],
+    code:`Stack<String> stack = new Stack<>();\nstack.push("Google");\nstack.push("YouTube");\nstack.push("GitHub");\n\nstack.pop();    // "GitHub"  (LIFO)\nstack.peek();   // "YouTube"\nstack.empty();  // false\n\n// Preferred today:\nDeque<String> s = new ArrayDeque<>();`,
+    lab:'stack',
+  },
+
+  // ── QUEUE BRANCH ────────────────────────────────────────────────────────────
+  Queue: {
+    kind:'interface', color:'var(--success)', icon:'→', pkg:'java.util',
+    tagline:'Elements waiting to be processed — normally FIFO',
+    extends:['Collection'], implementsL:[], impls:['Deque','PriorityQueue'],
+    when:'Anything that waits its turn: print jobs, patients, tasks, BFS traversal.',
+    facts:[
+      'First In, First Out by default',
+      'offer/poll/peek return a value instead of throwing',
+      'add/remove/element throw when the queue is empty or full',
+      'PriorityQueue changes the order to "smallest first"',
+      'Queue itself is an interface — you instantiate LinkedList / ArrayDeque',
+      'Never index into a Queue — that is not what it is for',
+    ],
+    methods:[
+      ['offer(e) / add(e)','Insert at the tail (offer returns false, add throws)'],
+      ['poll() / remove()','Remove the head (poll returns null, remove throws)'],
+      ['peek() / element()','Look at the head without removing'],
+    ],
+    props:{ Order:'FIFO', Duplicates:'allowed', Nulls:'usually rejected', Thread:'not safe' },
+    perf:[['offer','O(1)'],['poll','O(1)'],['peek','O(1)'],['contains','O(n)']],
+    code:`Queue<String> queue = new LinkedList<>();\nqueue.offer("Arun");\nqueue.offer("Bala");\nqueue.offer("Divya");\n\nqueue.poll();   // "Arun"  — first in, first out\nqueue.peek();   // "Bala"\nqueue.size();   // 2`,
+    lab:'queue',
+  },
+
+  Deque: {
+    kind:'interface', color:'var(--success)', icon:'⇄', pkg:'java.util',
+    tagline:'Double-ended queue — add and remove from both ends',
+    extends:['Queue'], implementsL:[], impls:['ArrayDeque','LinkedList'],
+    when:'When you need a queue AND a stack, or a sliding window over a sequence.',
+    facts:[
+      'Pronounced "deck" — double ended queue',
+      'xxxFirst / xxxLast methods at both ends',
+      'Can act as a Queue (FIFO) or a Stack (LIFO)',
+      'The recommended replacement for the legacy Stack class',
+      'Implemented by ArrayDeque and LinkedList',
+      'ArrayDeque rejects null so that poll() == null means "empty"',
+    ],
+    methods:[
+      ['addFirst(e) / addLast(e)','Insert at either end'],
+      ['pollFirst() / pollLast()','Remove from either end'],
+      ['peekFirst() / peekLast()','Inspect either end'],
+      ['push(e) / pop()','Stack view — operates on the head'],
+    ],
+    props:{ Order:'both ends', Duplicates:'allowed', Nulls:'rejected (ArrayDeque)', Thread:'not safe' },
+    code:`Deque<String> deque = new ArrayDeque<>();\n\ndeque.addFirst("B");   // front\ndeque.addLast("C");    // rear\ndeque.addFirst("A");    // [A, B, C]\n\ndeque.pollFirst();     // "A"\ndeque.pollLast();      // "C"\n\n// Use it as a stack:\ndeque.push("X");\ndeque.pop();           // "X"`,
+    lab:'stack',
+  },
+
+  PriorityQueue: {
+    kind:'class', color:'var(--orange)', icon:'⚡', pkg:'java.util',
+    tagline:'A queue ordered by priority, not by arrival',
+    extends:[], implementsL:['Queue'], impls:[],
+    when:'Emergency rooms, task schedulers, Dijkstra — when "most important first" beats "first come first served".',
+    facts:[
+      'Backed by a binary min-heap',
+      'poll() always returns the smallest element',
+      'Pass a Comparator to reverse or customise the order',
+      'toString() / iteration order is NOT sorted — only poll() is',
+      'O(log n) offer and poll, O(1) peek',
+      'Does not allow null elements',
+    ],
+    methods:[
+      ['offer(e)','Insert and sift up — O(log n)'],
+      ['poll()','Remove the smallest — O(log n)'],
+      ['peek()','Smallest element — O(1)'],
+      ['new PriorityQueue<>(cmp)','Custom ordering'],
+    ],
+    props:{ Order:'priority', Duplicates:'allowed', Nulls:'rejected', Thread:'not safe' },
+    perf:[['offer','O(log n)'],['poll','O(log n)'],['peek','O(1)'],['contains','O(n)']],
+    code:`PriorityQueue<Integer> pq = new PriorityQueue<>();\npq.offer(50);\npq.offer(10);\npq.offer(30);\n\npq.poll();   // 10  — smallest first, not first added\npq.poll();   // 30\n\n// Highest first instead:\nPriorityQueue<Integer> max =\n    new PriorityQueue<>(Comparator.reverseOrder());`,
+    lab:'queue',
+  },
+
+  ArrayDeque: {
+    kind:'class', color:'var(--orange)', icon:'⇹', pkg:'java.util',
+    tagline:'Resizable circular array — the fast stack and queue',
+    extends:[], implementsL:['Deque'], impls:[],
+    when:'Your default for both stacks and queues. Faster than Stack and faster than LinkedList.',
+    facts:[
+      'Backed by a circular resizable array',
+      'O(1) add/remove at both ends, no node allocation',
+      'Faster than Stack (no locking) and LinkedList (no pointer chasing)',
+      'Does not allow null elements — by design',
+      'No index access: you cannot get(i)',
+      'The modern answer to "which stack should I use?"',
+    ],
+    methods:[
+      ['push(e) / pop()','Stack behaviour (LIFO) on the head'],
+      ['offer(e) / poll()','Queue behaviour (FIFO)'],
+      ['addFirst / addLast','Explicit both-ends insertion'],
+      ['peekFirst / peekLast','Inspect either end'],
+    ],
+    props:{ Order:'both ends', Duplicates:'allowed', Nulls:'rejected', Thread:'not safe' },
+    perf:[['addFirst','O(1)'],['addLast','O(1)'],['poll','O(1)'],['contains','O(n)']],
+    code:`// As a stack (replaces the legacy Stack class)\nDeque<String> history = new ArrayDeque<>();\nhistory.push("Google");\nhistory.push("GitHub");\nhistory.pop();       // "GitHub"\n\n// As a queue\nDeque<String> line = new ArrayDeque<>();\nline.offer("Arun");\nline.offer("Bala");\nline.poll();         // "Arun"`,
+    lab:'stack',
+  },
+
+  // ── SET BRANCH ──────────────────────────────────────────────────────────────
+  Set: {
+    kind:'interface', color:'var(--success)', icon:'◈', pkg:'java.util',
+    tagline:'No duplicates — mathematical set semantics',
+    extends:['Collection'], implementsL:[], impls:['SortedSet','HashSet','LinkedHashSet'],
+    when:'"Each thing once": unique IDs, visited pages, tags, de-duplicating a list.',
+    facts:[
+      'add() returns false when the element is already present',
+      'Uniqueness is decided by equals() and hashCode()',
+      'No index access — there is no get(i)',
+      'retainAll/removeAll give you intersection and difference',
+      'Order depends on the implementation, not on Set itself',
+      'Broken hashCode() = broken Set — override both methods together',
+    ],
+    methods:[
+      ['add(e)','Returns false if the element already exists'],
+      ['contains(o)','Membership test — O(1) for HashSet'],
+      ['retainAll(c)','Intersection'],
+      ['removeAll(c)','Difference'],
+    ],
+    props:{ Order:'depends', Duplicates:'rejected', Nulls:'depends', Thread:'not safe' },
+    code:`Set<String> unique = new HashSet<>();\nunique.add("Arun");   // true\nunique.add("Bala");   // true\nunique.add("Arun");   // false — ignored\n\nunique.size();        // 2\n\n// Instant de-duplication of a list:\nList<String> clean = new ArrayList<>(new HashSet<>(names));`,
+    lab:'set',
+  },
+
+  SortedSet: {
+    kind:'interface', color:'var(--success)', icon:'⇅', pkg:'java.util',
+    tagline:'A Set that always stays in sorted order',
+    extends:['Set'], implementsL:[], impls:['NavigableSet'],
+    when:'When the elements must come out sorted every time you iterate, without you calling sort().',
+    facts:[
+      'Iteration always follows the sort order',
+      'Elements must be Comparable, or you supply a Comparator',
+      'first() / last() give the extremes',
+      'Range views: headSet, tailSet, subSet',
+      'Implemented through NavigableSet by TreeSet',
+      'Ordering uses compareTo(), NOT equals() — be consistent',
+    ],
+    methods:[
+      ['first() / last()','Smallest / largest element'],
+      ['headSet(e)','Everything strictly below e'],
+      ['tailSet(e)','Everything from e upward'],
+      ['subSet(a,b)','A range view'],
+      ['comparator()','The ordering in use, or null for natural order'],
+    ],
+    props:{ Order:'sorted', Duplicates:'rejected', Nulls:'rejected', Thread:'not safe' },
+    code:`SortedSet<Integer> scores = new TreeSet<>();\nscores.add(70);\nscores.add(95);\nscores.add(82);\n\nscores.first();        // 70\nscores.last();         // 95\nscores.headSet(90);    // [70, 82]\n// iteration order: 70, 82, 95`,
+    lab:'leaderboard',
+  },
+
+  NavigableSet: {
+    kind:'interface', color:'var(--success)', icon:'⌖', pkg:'java.util',
+    tagline:'A SortedSet that can find nearest neighbours',
+    extends:['SortedSet'], implementsL:[], impls:['TreeSet'],
+    when:'"The closest score below 80", "the next available slot after 3pm" — nearest-match queries.',
+    facts:[
+      'Adds floor / ceiling / lower / higher lookups',
+      'pollFirst() / pollLast() remove the extremes',
+      'descendingSet() gives a reversed live view',
+      'All navigation is O(log n) on a red-black tree',
+      'TreeSet is the standard implementation',
+      'Closed/open range control on subSet(a,inc,b,inc)',
+    ],
+    methods:[
+      ['floor(e)','Greatest element ≤ e'],
+      ['ceiling(e)','Smallest element ≥ e'],
+      ['lower(e) / higher(e)','Strictly below / above e'],
+      ['pollFirst() / pollLast()','Remove and return the extremes'],
+      ['descendingSet()','Reverse-ordered view'],
+    ],
+    props:{ Order:'sorted', Duplicates:'rejected', Nulls:'rejected', Thread:'not safe' },
+    code:`NavigableSet<Integer> s = new TreeSet<>(List.of(70, 82, 95));\n\ns.floor(90);      // 82  — greatest value ≤ 90\ns.ceiling(90);    // 95  — smallest value ≥ 90\ns.higher(95);     // null\ns.pollFirst();    // 70  (and removes it)\ns.descendingSet() // [95, 82]`,
+    lab:'leaderboard',
+  },
+
+  HashSet: {
+    kind:'class', color:'var(--success)', icon:'◈', pkg:'java.util',
+    tagline:'Hash table set — O(1) uniqueness, no order at all',
+    extends:[], implementsL:['Set'], impls:['LinkedHashSet'],
+    when:'The fastest way to answer "have I seen this before?".',
+    facts:[
+      'Backed by a HashMap internally',
+      'O(1) add, remove and contains',
+      'No order guarantee — and the order can change as it grows',
+      'Allows exactly one null element',
+      'Relies entirely on hashCode() and equals()',
+      'Best for uniqueness checks, tags, visited sets',
+    ],
+    methods:[
+      ['add(e)','O(1) insert, false if already present'],
+      ['contains(o)','O(1) membership test'],
+      ['remove(o)','O(1) removal'],
+    ],
+    props:{ Order:'none', Duplicates:'rejected', Nulls:'one allowed', Thread:'not safe' },
+    perf:[['add','O(1)'],['contains','O(1)'],['remove','O(1)'],['iterate','O(n + capacity)']],
+    code:`HashSet<String> set = new HashSet<>();\nset.add("Alice");    // true\nset.add("Bob");      // true\nset.add("Alice");    // false — ignored!\n\nset.contains("Bob"); // true — O(1)\nset.size();          // 2\n// print order is unpredictable`,
+    lab:'set',
+  },
+
+  LinkedHashSet: {
+    kind:'class', color:'var(--accent)', icon:'◇', pkg:'java.util',
+    tagline:'HashSet speed, but it remembers insertion order',
+    extends:['HashSet'], implementsL:['Set'], impls:[],
+    when:'De-duplicating while keeping the original order — the best of both worlds.',
+    facts:[
+      'Extends HashSet and adds a doubly-linked list of entries',
+      'Iteration follows insertion order',
+      'Still O(1) add / contains / remove',
+      'Slightly more memory than HashSet',
+      'Re-adding an existing element does NOT move it to the end',
+      'The usual answer to "HashSet scrambled my order"',
+    ],
+    methods:[
+      ['add(e)','O(1), keeps first-insertion position'],
+      ['contains(o)','O(1) membership test'],
+      ['iterator()','Walks in insertion order'],
+    ],
+    props:{ Order:'insertion', Duplicates:'rejected', Nulls:'one allowed', Thread:'not safe' },
+    perf:[['add','O(1)'],['contains','O(1)'],['remove','O(1)'],['iterate','O(n)']],
+    code:`Set<String> seen = new LinkedHashSet<>();\nseen.add("Arun");\nseen.add("Bala");\nseen.add("Arun");    // ignored\nseen.add("Divya");\n\n// Iterates as: Arun, Bala, Divya\n// A plain HashSet could print them in any order.`,
+    lab:'set',
+  },
+
+  TreeSet: {
+    kind:'class', color:'var(--teal)', icon:'⊤', pkg:'java.util',
+    tagline:'Red-black tree — unique elements, always sorted',
+    extends:[], implementsL:['NavigableSet'], impls:[],
+    when:'Leaderboards, rankings, any "unique AND in order" requirement.',
+    facts:[
+      'Self-balancing red-black tree',
+      'No duplicates, always sorted',
+      'O(log n) add / remove / contains',
+      'Implements NavigableSet — floor, ceiling, first, last',
+      'Elements must be Comparable or you pass a Comparator',
+      'Rejects null — comparison would throw',
+    ],
+    methods:[
+      ['add(e)','O(log n) insert in sorted position'],
+      ['first() / last()','Extremes in O(log n)'],
+      ['floor(e) / ceiling(e)','Nearest neighbour lookups'],
+      ['descendingSet()','Reverse view — useful for top-N'],
+    ],
+    props:{ Order:'sorted', Duplicates:'rejected', Nulls:'rejected', Thread:'not safe' },
+    perf:[['add','O(log n)'],['contains','O(log n)'],['remove','O(log n)'],['first/last','O(log n)']],
+    code:`TreeSet<Integer> scores = new TreeSet<>();\nscores.add(70);\nscores.add(95);\nscores.add(70);   // ignored — duplicate\nscores.add(82);\n\n// Automatically sorted: [70, 82, 95]\nscores.last();            // 95 — top score\nscores.descendingSet();   // [95, 82, 70]`,
+    lab:'leaderboard',
+  },
+
+  // ── MAP BRANCH (separate root — Map is not a Collection) ─────────────────────
+  Map: {
+    kind:'interface', color:'var(--warning)', icon:'↔', pkg:'java.util',
+    tagline:'Key → value pairs. Not a Collection.',
+    extends:[], implementsL:[], impls:['SortedMap','HashMap','LinkedHashMap','Hashtable'],
+    when:'Whenever you look something up BY something else: name → mark, id → user, code → label.',
+    facts:[
+      'Map does NOT extend Collection or Iterable',
+      'Keys are unique, values may repeat',
+      'Iterate via keySet(), values() or entrySet()',
+      'getOrDefault / putIfAbsent / merge / computeIfAbsent are worth learning',
+      'Key type must have sane equals() and hashCode()',
+      'Implementations: HashMap, LinkedHashMap, TreeMap, Hashtable',
+    ],
+    methods:[
+      ['put(k,v)','Insert or overwrite, returns the old value'],
+      ['get(k) / getOrDefault(k,d)','Lookup by key'],
+      ['containsKey(k) / containsValue(v)','Membership tests'],
+      ['entrySet()','Iterable view of key-value pairs'],
+      ['merge(k,v,fn) / computeIfAbsent(k,fn)','Update-in-place helpers'],
+    ],
+    props:{ Order:'depends', Duplicates:'unique keys', Nulls:'depends', Thread:'not safe' },
+    code:`Map<String,Integer> marks = new HashMap<>();\nmarks.put("Arun", 85);\nmarks.put("Bala", 72);\n\nmarks.get("Arun");              // 85\nmarks.getOrDefault("Zoe", 0);   // 0\n\nfor (Map.Entry<String,Integer> e : marks.entrySet())\n    System.out.println(e.getKey() + " = " + e.getValue());`,
+    lab:'map',
+  },
+
+  HashMap: {
+    kind:'class', color:'var(--warning)', icon:'↔', pkg:'java.util',
+    tagline:'Hash table map — O(1) lookup, no order',
+    extends:[], implementsL:['Map'], impls:['LinkedHashMap'],
+    when:'The default Map. Instant lookup by key instead of scanning a list.',
+    facts:[
+      'Array of buckets; the key hash picks the bucket',
+      'O(1) average get / put / containsKey',
+      'Collisions chain in a list, converting to a tree past 8 entries',
+      'One null key and any number of null values allowed',
+      'No order guarantee at all',
+      'Default capacity 16, resizes at 75% load factor',
+    ],
+    methods:[
+      ['put(k,v)','Insert or overwrite — O(1)'],
+      ['get(k)','Lookup — O(1)'],
+      ['containsKey(k)','Key membership — O(1)'],
+      ['computeIfAbsent(k,fn)','Lazily build a value for a key'],
+    ],
+    props:{ Order:'none', Duplicates:'unique keys', Nulls:'1 key, many values', Thread:'not safe' },
+    perf:[['get','O(1)'],['put','O(1)'],['containsKey','O(1)'],['containsValue','O(n)']],
+    code:`HashMap<String,Integer> map = new HashMap<>();\nmap.put("Alice", 85);\nmap.put("Bob", 72);\n\nmap.get("Alice");        // 85 — O(1), no scanning\nmap.containsKey("Bob");  // true\nmap.put("Alice", 90);    // overwrites, size stays 2\nmap.size();              // 2`,
+    lab:'map',
+  },
+
+  LinkedHashMap: {
+    kind:'class', color:'var(--accent)', icon:'⇥', pkg:'java.util',
+    tagline:'HashMap that keeps insertion (or access) order',
+    extends:['HashMap'], implementsL:['Map'], impls:[],
+    when:'Ordered output from a map — and with accessOrder=true, a ready-made LRU cache.',
+    facts:[
+      'Extends HashMap, adds a linked list across entries',
+      'Iterates in insertion order by default',
+      'accessOrder=true makes it iterate least-recently-used first',
+      'Override removeEldestEntry() to build an LRU cache',
+      'Still O(1) get / put',
+      'Slightly more memory than HashMap',
+    ],
+    methods:[
+      ['put(k,v) / get(k)','O(1), same as HashMap'],
+      ['entrySet()','Iterates in order'],
+      ['removeEldestEntry(e)','Override to cap the map size (LRU)'],
+    ],
+    props:{ Order:'insertion / access', Duplicates:'unique keys', Nulls:'allowed', Thread:'not safe' },
+    code:`// Predictable iteration order\nMap<String,Integer> m = new LinkedHashMap<>();\nm.put("Arun", 85);\nm.put("Bala", 72);   // always prints Arun, then Bala\n\n// A 100-entry LRU cache in four lines:\nnew LinkedHashMap<String,String>(16, 0.75f, true) {\n    protected boolean removeEldestEntry(Map.Entry e) {\n        return size() > 100;\n    }\n};`,
+    lab:'map',
+  },
+
+  SortedMap: {
+    kind:'interface', color:'var(--warning)', icon:'⇅', pkg:'java.util',
+    tagline:'A Map whose keys stay sorted',
+    extends:['Map'], implementsL:[], impls:['NavigableMap'],
+    when:'When you need the keys in order, or need "everything between these two keys".',
+    facts:[
+      'Keys iterate in sorted order',
+      'firstKey() / lastKey() give the extremes',
+      'headMap / tailMap / subMap give range views',
+      'Keys must be Comparable or you pass a Comparator',
+      'Extended by NavigableMap, implemented by TreeMap',
+    ],
+    methods:[
+      ['firstKey() / lastKey()','Smallest / largest key'],
+      ['headMap(k) / tailMap(k)','Range views by key'],
+      ['subMap(a,b)','Keys in [a, b)'],
+    ],
+    props:{ Order:'sorted by key', Duplicates:'unique keys', Nulls:'key rejected', Thread:'not safe' },
+    code:`SortedMap<String,Integer> m = new TreeMap<>();\nm.put("Bala", 72);\nm.put("Arun", 85);\n\nm.firstKey();       // "Arun" — sorted, not inserted first\nm.headMap("B");     // {Arun=85}`,
+    lab:'map',
+  },
+
+  NavigableMap: {
+    kind:'interface', color:'var(--warning)', icon:'⌖', pkg:'java.util',
+    tagline:'A SortedMap with nearest-key lookups',
+    extends:['SortedMap'], implementsL:[], impls:['TreeMap'],
+    when:'Range and nearest-key queries: rate tables, time series, "the tier just below this score".',
+    facts:[
+      'floorKey / ceilingKey / lowerEntry / higherEntry',
+      'firstEntry() / lastEntry() / pollFirstEntry()',
+      'descendingMap() for a reversed view',
+      'All operations are O(log n)',
+      'TreeMap is the standard implementation',
+    ],
+    methods:[
+      ['floorKey(k) / ceilingKey(k)','Nearest key below / above'],
+      ['firstEntry() / lastEntry()','Extreme entries'],
+      ['pollFirstEntry()','Remove and return the smallest entry'],
+      ['descendingMap()','Reversed live view'],
+    ],
+    props:{ Order:'sorted by key', Duplicates:'unique keys', Nulls:'key rejected', Thread:'not safe' },
+    code:`NavigableMap<Integer,String> grade = new TreeMap<>();\ngrade.put(90, "A");\ngrade.put(75, "B");\ngrade.put(60, "C");\n\ngrade.floorEntry(82).getValue();  // "B" — the band 82 falls into\ngrade.firstEntry();               // 60=C`,
+    lab:'map',
+  },
+
+  TreeMap: {
+    kind:'class', color:'var(--teal)', icon:'⊥', pkg:'java.util',
+    tagline:'Red-black tree map — keys always sorted',
+    extends:[], implementsL:['NavigableMap'], impls:[],
+    when:'Sorted reports, range queries, grade/rate bands.',
+    facts:[
+      'Self-balancing red-black tree, ordered by key',
+      'O(log n) get / put / remove',
+      'Implements NavigableMap — floor, ceiling, sub-maps',
+      'Null keys are rejected (comparison would fail)',
+      'TreeSet is literally a TreeMap with dummy values',
+    ],
+    methods:[
+      ['put(k,v)','O(log n) insert in key order'],
+      ['firstKey() / lastKey()','Extremes'],
+      ['floorEntry(k) / ceilingEntry(k)','Nearest-key lookup'],
+      ['subMap(a,b)','Range view'],
+    ],
+    props:{ Order:'sorted by key', Duplicates:'unique keys', Nulls:'key rejected', Thread:'not safe' },
+    perf:[['get','O(log n)'],['put','O(log n)'],['firstKey','O(log n)'],['subMap','O(log n)']],
+    code:`TreeMap<String,Integer> marks = new TreeMap<>();\nmarks.put("Divya", 91);\nmarks.put("Arun", 85);\nmarks.put("Bala", 72);\n\n// Iterates: Arun, Bala, Divya\nmarks.firstKey();     // "Arun"\nmarks.descendingMap(); // Divya, Bala, Arun`,
+    lab:'map',
+  },
+
+  Hashtable: {
+    kind:'class', color:'var(--tm)', icon:'▦', pkg:'java.util',
+    tagline:'The synchronized Map from Java 1.0 — legacy',
+    extends:[], implementsL:['Map'], impls:[],
+    when:'Never in new code. Use HashMap, or ConcurrentHashMap when threads are involved.',
+    facts:[
+      'Every method is synchronized — a single global lock',
+      'Rejects null keys AND null values',
+      'Legacy class from Java 1.0',
+      'ConcurrentHashMap is faster and safer for concurrency',
+      'Kept only for backwards compatibility',
+    ],
+    methods:[
+      ['put(k,v) / get(k)','Synchronized insert and lookup'],
+      ['elements()','Legacy Enumeration over the values'],
+    ],
+    props:{ Order:'none', Duplicates:'unique keys', Nulls:'rejected', Thread:'synchronized' },
+    code:`Hashtable<String,Integer> t = new Hashtable<>();\nt.put("Arun", 85);\n// t.put(null, 1);   → NullPointerException\n\n// Modern replacements:\nMap<String,Integer> fast = new HashMap<>();\nMap<String,Integer> safe = new ConcurrentHashMap<>();`,
+    lab:'map',
+  },
+};
+
+// ── HIERARCHY DIAGRAM ─────────────────────────────────────────────────────────
+// Boxes are positioned by centre-x / top-y on a fixed canvas, then rendered as SVG.
+const HB_W = 132, HB_H = 38;
+
+const collectionDiagram = {
+  w:1160, h:560,
+  nodes:[
+    { id:'Iterable',      cx:560, y:20  },
+    { id:'Collection',    cx:560, y:100 },
+    { id:'List',          cx:215, y:186 },
+    { id:'Queue',         cx:560, y:186 },
+    { id:'Set',           cx:900, y:186 },
+    { id:'Deque',         cx:560, y:268 },
+    { id:'PriorityQueue', cx:718, y:268 },
+    { id:'SortedSet',     cx:860, y:268 },
+    { id:'HashSet',       cx:1030, y:268 },
+    { id:'ArrayList',     cx:80,  y:372 },
+    { id:'Vector',        cx:222, y:372 },
+    { id:'LinkedList',    cx:364, y:372 },
+    { id:'NavigableSet',  cx:860, y:372 },
+    { id:'LinkedHashSet', cx:1030, y:372 },
+    { id:'Stack',         cx:222, y:470 },
+    { id:'ArrayDeque',    cx:560, y:470 },
+    { id:'TreeSet',       cx:860, y:470 },
+  ],
+  edges:[
+    { from:'Collection',    to:'Iterable',     type:'extends' },
+    { from:'List',          to:'Collection',   type:'extends',    midY:165 },
+    { from:'Queue',         to:'Collection',   type:'extends',    midY:165 },
+    { from:'Set',           to:'Collection',   type:'extends',    midY:165 },
+    { from:'Deque',         to:'Queue',        type:'extends' },
+    { from:'PriorityQueue', to:'Queue',        type:'implements', midY:248, toX:604 },
+    { from:'SortedSet',     to:'Set',          type:'extends' },
+    { from:'HashSet',       to:'Set',          type:'implements', midY:248, toX:940 },
+    { from:'NavigableSet',  to:'SortedSet',    type:'extends' },
+    { from:'LinkedHashSet', to:'HashSet',      type:'extends' },
+    { from:'ArrayList',     to:'List',         type:'implements', midY:340 },
+    { from:'Vector',        to:'List',         type:'implements', midY:340 },
+    { from:'LinkedList',    to:'List',         type:'implements', midY:340 },
+    { from:'LinkedList',    to:'Deque',        type:'implements', midY:352, toX:522 },
+    { from:'Stack',         to:'Vector',       type:'extends' },
+    { from:'ArrayDeque',    to:'Deque',        type:'implements', midY:440 },
+    { from:'TreeSet',       to:'NavigableSet', type:'implements' },
+  ],
+};
+
+const mapDiagram = {
+  w:760, h:290,
+  nodes:[
+    { id:'Map',           cx:380, y:20  },
+    { id:'SortedMap',     cx:380, y:106 },
+    { id:'HashMap',       cx:120, y:106 },
+    { id:'Hashtable',     cx:640, y:106 },
+    { id:'NavigableMap',  cx:380, y:192 },
+    { id:'LinkedHashMap', cx:120, y:192 },
+    { id:'TreeMap',       cx:380, y:250 },
+  ],
+  edges:[
+    { from:'SortedMap',     to:'Map',          type:'extends' },
+    { from:'HashMap',       to:'Map',          type:'implements', midY:86, toX:340 },
+    { from:'Hashtable',     to:'Map',          type:'implements', midY:86, toX:420 },
+    { from:'NavigableMap',  to:'SortedMap',    type:'extends' },
+    { from:'LinkedHashMap', to:'HashMap',      type:'extends' },
+    { from:'TreeMap',       to:'NavigableMap', type:'implements' },
+  ],
+};
+
+function hierEdgePath(d, e) {
+  const from = d.nodes.find(n => n.id === e.from);
+  const to   = d.nodes.find(n => n.id === e.to);
+  const y1 = from.y;                 // child top
+  const y2 = to.y + HB_H;            // parent bottom
+  const mid = e.midY != null ? e.midY : (y1 + y2) / 2;
+  // toX lets an edge land off-centre so it does not sit on top of a sibling edge
+  const tx = e.toX != null ? e.toX : to.cx;
+  if (from.cx === tx) return `M${from.cx},${y1} L${from.cx},${y2}`;
+  return `M${from.cx},${y1} L${from.cx},${mid} L${tx},${mid} L${tx},${y2}`;
+}
+
+function renderDiagram(d, idPrefix) {
+  const edges = d.edges.map(e => {
+    const dash = e.type === 'implements' ? ' stroke-dasharray="6 4"' : '';
+    return `<path d="${hierEdgePath(d, e)}" fill="none" stroke="var(--border-l)" stroke-width="1.6"${dash} marker-end="url(#${idPrefix}-arrow)"/>`;
+  }).join('');
+
+  const nodes = d.nodes.map(n => {
+    const t = topics[n.id];
+    const iface = t.kind === 'interface';
+    const fill = iface ? '#5ddb9a' : '#9aa3b8';
+    return `<g class="hier-node" tabindex="0" role="link" aria-label="${n.id} — open topic"
+        onclick="goToTopic('${n.id}')"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goToTopic('${n.id}')}">
+      <rect x="${n.cx - HB_W/2}" y="${n.y}" width="${HB_W}" height="${HB_H}" rx="5"
+        fill="${fill}" stroke="${iface ? '#3fae78' : '#767f95'}" stroke-width="1"/>
+      <text x="${n.cx}" y="${n.y + HB_H/2 + 5}" text-anchor="middle"
+        font-size="14" font-weight="600" fill="#12151d"
+        font-style="${iface ? 'italic' : 'normal'}">${n.id}</text>
+    </g>`;
+  }).join('');
+
+  return `<svg viewBox="0 0 ${d.w} ${d.h}" width="${d.w}" height="${d.h}" class="hier-svg" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="${idPrefix}-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+        markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--border-l)"/>
+      </marker>
+    </defs>
+    ${edges}${nodes}
+  </svg>`;
+}
+
+function hierarchyInit() {
+  document.getElementById('hier-canvas').innerHTML = renderDiagram(collectionDiagram, 'coll');
+  document.getElementById('hier-map-canvas').innerHTML = renderDiagram(mapDiagram, 'map');
+}
+
+// ── TOPIC PAGE ────────────────────────────────────────────────────────────────
+let topicActive = 'ArrayList';
+let topicFrom = 'hierarchy';
+
+function goToTopic(type, from) {
+  topicActive = type;
+  topicFrom = from || 'hierarchy';
+  goTo('topic');
+}
+
+function topicInit() {
+  renderTopicDetail(topicActive, document.getElementById('topic-body'), true);
+  const back = document.getElementById('topic-back-label');
+  const backLabels = { hierarchy:'Hierarchy', explorer:'All types', home:'Home' };
+  back.textContent = '← ' + (backLabels[topicFrom] || (labName(topicFrom) + ' lab'));
+  back.parentElement.setAttribute('onclick', `goTo('${topicFrom}')`);
+  document.getElementById('topic-crumb').textContent =
+    (topics[topicActive].kind === 'interface' ? 'Interface' : 'Class') + ' · ' + topics[topicActive].pkg;
+  window.scrollTo(0, 0);
+}
+
+function topicChip(name, from) {
+  const t = topics[name];
+  if (!t) return '';
+  return `<span class="topic-chip" style="border-color:${t.color}55;color:${t.color}"
+    onclick="goToTopic('${name}','${from}')">${t.icon} ${name}</span>`;
+}
+
+// Renders the full topic view into `el`. Shared by the Topic page and the Explorer.
+function renderTopicDetail(type, el, full) {
+  const t = topics[type];
+  const from = full ? topicFrom : 'explorer';
+  const kindBadge = t.kind === 'interface'
+    ? `<span class="badge success">interface</span>`
+    : `<span class="badge default">class</span>`;
+
+  const relations = [];
+  if (t.extends.length)     relations.push(['extends',     t.extends]);
+  if (t.implementsL.length) relations.push(['implements',  t.implementsL]);
+  if (t.impls.length)       relations.push(['known subtypes', t.impls]);
+
+  const perfBlock = t.perf ? `
+    <div class="card">
+      <div class="label mb-8">Time complexity</div>
+      ${t.perf.map(([op,c]) => `<div class="flex-between mb-6">
+        <span class="f12 ts"><code class="inline-code">${escHtml(op)}</code></span>
+        <span class="badge ${c==='O(1)'?'success':(c.startsWith('O(log')?'default':'warning')}">${c}</span>
+      </div>`).join('')}
+    </div>` : '';
+
+  el.innerHTML = `
+    <div class="card mb-12" style="border-color:${t.color}55;background:linear-gradient(180deg,${t.color}14,transparent)">
+      <div class="flex-between mb-6" style="flex-wrap:wrap;gap:8px">
+        <div class="flex-center gap-8">
+          <span style="font-size:20px;color:${t.color}">${t.icon}</span>
+          <span style="font-size:18px;font-weight:700;color:${t.color}">${type}</span>
+          ${kindBadge}
+        </div>
+        <span class="tm f11">${t.pkg}.${type}</span>
+      </div>
+      <div class="f13 ts">${escHtml(t.tagline)}</div>
+      ${relations.length ? `<div class="mt-10" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        ${relations.map(([label, list]) => `<span class="f11 tm">${label}:</span>${list.map(n => topicChip(n, from)).join('')}`).join('<span class="tm" style="opacity:.4">|</span>')}
+      </div>` : ''}
+    </div>
+
+    <div class="card mb-12" style="border-color:${t.color}33">
+      <div class="label accent mb-6" style="color:${t.color}">When to use it</div>
+      <div class="f13 ts" style="line-height:1.6">${escHtml(t.when)}</div>
+    </div>
+
+    <div class="grid-2 mb-12">
+      <div class="card">
+        <div class="label mb-8">Key facts</div>
+        ${t.facts.map(f => `<div class="f12 ts mb-6" style="display:flex;gap:6px;align-items:flex-start"><span style="color:${t.color};flex-shrink:0">·</span><span>${escHtml(f)}</span></div>`).join('')}
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-dot" style="background:var(--danger)"></span><span class="code-dot" style="background:var(--warning)"></span><span class="code-dot" style="background:var(--success)"></span><span style="margin-left:4px">Java</span></div>
+        <div class="code-body">${escHtml(t.code)}</div>
+      </div>
+    </div>
+
+    <div class="grid-2 mb-12">
+      <div class="card">
+        <div class="label mb-8">Core methods</div>
+        ${t.methods.map(([m,d]) => `<div class="method-row">
+          <code class="inline-code" style="color:${t.color}">${escHtml(m)}</code>
+          <span class="f11 ts">${escHtml(d)}</span>
+        </div>`).join('')}
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="label mb-8">Behaviour</div>
+          ${Object.entries(t.props).map(([k,v]) => `<div class="flex-between mb-6">
+            <span class="f12 ts">${k}</span><span class="badge ${propTone(k,v)}">${escHtml(v)}</span>
+          </div>`).join('')}
+        </div>
+        ${perfBlock}
+      </div>
+    </div>
+
+    ${t.lab ? `<div class="card flex-between" style="flex-wrap:wrap;gap:10px;border-color:${t.color}44">
+      <div>
+        <div class="f13 fw6">Try it in the lab</div>
+        <div class="f11 ts mt-4">Run this collection against a real problem and watch what happens.</div>
+      </div>
+      <button class="primary sm" onclick="goTo('${t.lab}')">▶ Open the ${labName(t.lab)} lab</button>
+    </div>` : `<div class="card"><div class="f12 tm">This is a pure interface — pick one of its implementations above to run real code.</div></div>`}
+  `;
+}
+
+// A badge tone that reads the property in context: for a Set, "rejected" duplicates
+// is the feature, not a failure — so tone depends on the row, not just the word.
+function propTone(k, v) {
+  const s = String(v);
+  if (s === 'n/a' || s === 'depends') return 'default';
+  switch (k) {
+    case 'Duplicates': return /rejected|unique/.test(s) ? 'success' : 'warning';
+    case 'Order':      return s === 'none' ? 'warning' : 'success';
+    case 'Nulls':      return /rejected/.test(s) ? 'warning' : 'default';
+    case 'Thread':     return /not safe/.test(s) ? 'warning' : 'purple';
+    default:           return 'default';
+  }
+}
+
+function labName(id) {
+  return { notes:'Notes', queue:'Queue', set:'Unique participants', map:'Student marks',
+           stack:'Browser history', leaderboard:'Leaderboard' }[id] || id;
+}
+
+// ── EXPLORER (all types, grouped) ─────────────────────────────────────────────
+const explorerGroups = [
+  ['Core interfaces', ['Iterable','Collection']],
+  ['List',            ['List','ArrayList','LinkedList','Vector','Stack']],
+  ['Queue / Deque',   ['Queue','Deque','PriorityQueue','ArrayDeque']],
+  ['Set',             ['Set','SortedSet','NavigableSet','HashSet','LinkedHashSet','TreeSet']],
+  ['Map',             ['Map','SortedMap','NavigableMap','HashMap','LinkedHashMap','TreeMap','Hashtable']],
+];
+let explorerActive = 'ArrayList';
+
+function explorerInit() {
+  explorerRenderNav();
+  explorerRenderDetail();
+}
+
+function explorerSetActive(type) {
+  explorerActive = type;
+  explorerRenderNav();
+  explorerRenderDetail();
+}
+
+function explorerRenderNav() {
+  document.getElementById('explorer-nav').innerHTML = explorerGroups.map(([group, list]) => `
+    <div class="explorer-group">${group}</div>
+    ${list.map(type => {
+      const t = topics[type];
+      const on = type === explorerActive;
+      return `<div class="explorer-nav-item${on?' active':''}" onclick="explorerSetActive('${type}')"
+        style="${on?`border-color:${t.color};background:${t.color}18`:''}">
+        <span style="color:${t.color};font-size:14px">${t.icon}</span>
+        <span class="f13${on?'':' ts'}"${t.kind==='interface'?' style="font-style:italic"':''}>${type}</span>
+      </div>`;
+    }).join('')}`).join('');
+}
+
+function explorerRenderDetail() {
+  renderTopicDetail(explorerActive, document.getElementById('explorer-detail'), false);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+document.getElementById('footer').style.display = 'block';
+renderHome();
+</script>
+</body>
+</html>
