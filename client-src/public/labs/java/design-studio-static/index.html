@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Java Static — Visual Lab</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0d14;--surface:#111520;--card:#171e2e;--card2:#1c2440;
+  --border:#252d45;--border2:#2e3a58;
+  --accent:#4f8ef7;--pro:#c084fc;
+  --success:#34d399;--warn:#fbbf24;--danger:#f87171;
+  --text:#dde4f5;--muted:#6b7a99;--faint:#1a2035;
+  --packet:#fbbf24;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
+button{cursor:pointer;font-family:inherit}
+code,pre{font-family:'Fira Code','Consolas',monospace}
+
+/* ── KEYFRAMES ── */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes popIn{0%{transform:scale(.82);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--accent)55}50%{box-shadow:0 0 0 8px transparent}}
+@keyframes lockShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@keyframes lockBounce{0%{transform:scale(.75);opacity:0}50%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+@keyframes lineGrow{from{stroke-dashoffset:200}to{stroke-dashoffset:0}}
+@keyframes dotTravel{0%{opacity:1;offset-distance:0%}100%{opacity:1;offset-distance:100%}}
+@keyframes nodePop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes flowPanelIn{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%,100%{opacity:.7}50%{opacity:1}}
+
+/* ── TOP NAV ── */
+#topnav{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:0;flex-shrink:0;z-index:50}
+#logo{font-size:15px;font-weight:800;color:#fff;margin-right:16px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+#logo-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--pro));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.nav-btn{padding:7px 12px;border:none;background:transparent;color:var(--muted);font-size:12px;font-weight:600;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.3px;white-space:nowrap}
+.nav-btn:hover{color:var(--text)}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+#nav-spacer{flex:1}
+
+/* Plan toggle in topnav */
+#topnav-plan{display:flex;align-items:center;gap:8px;margin-right:10px;flex-shrink:0}
+#topnav-plan-label{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.3px}
+.plan-toggle{display:flex;background:var(--faint);border-radius:7px;border:1px solid var(--border);overflow:hidden}
+.plan-opt{padding:5px 14px;border:none;background:transparent;font-size:11px;font-weight:700;color:var(--muted);transition:all .2s;letter-spacing:.5px}
+.plan-opt.active.free{background:var(--card);color:var(--text)}
+.plan-opt.active.pro{background:linear-gradient(135deg,#4f1d96,#7c3aed);color:#e9d5ff}
+#plan-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;transition:all .4s;letter-spacing:.5px;flex-shrink:0}
+#plan-pill.free{background:#1a2035;color:var(--muted);border:1px solid var(--border2)}
+#plan-pill.pro{background:linear-gradient(135deg,#4f1d96,#7c3aed);color:#e9d5ff;border:1px solid #7c3aed}
+
+/* ── VIEWS ── */
+.view{display:none;flex:1;overflow:hidden}
+.view.active{display:flex}
+
+/* ═══════════════════════════════════════ PLAY VIEW */
+#view-play{flex-direction:row}
+#play-sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+#play-sidebar-tabs{display:flex;border-bottom:1px solid var(--border)}
+.pst{flex:1;padding:10px 4px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);border:none;background:transparent;transition:all .15s}
+.pst.active{color:var(--accent);background:var(--faint)}
+.pst:hover{color:var(--text)}
+#play-sidebar-items{flex:1;overflow-y:auto;padding:10px}
+.drag-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:grab;transition:all .2s;display:flex;align-items:center;gap:10px;position:relative}
+.drag-item:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.drag-item:active{cursor:grabbing;transform:scale(.97)}
+.drag-item.premium{border-color:var(--pro)44}
+.drag-item.premium:hover{border-color:var(--pro)}
+.item-icon{font-size:22px;width:32px;text-align:center;flex-shrink:0}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
+.item-tag{font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 6px;border-radius:4px}
+.tag-free{background:#34d39922;color:#34d399}
+.tag-pro{background:#c084fc22;color:#c084fc}
+
+/* ── CANVAS AREA ── */
+#play-center{flex:1;display:flex;flex-direction:column;position:relative;overflow:hidden}
+#canvas-drop{flex:1;position:relative;margin:18px;border:2px dashed var(--border2);border-radius:16px;background:var(--faint);transition:all .3s;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#canvas-drop.dragover{border-color:var(--accent);background:#4f8ef710}
+#canvas-empty{text-align:center;color:var(--muted);pointer-events:none;padding:20px}
+#canvas-empty .big{font-size:44px;margin-bottom:12px}
+#canvas-items{position:absolute;inset:0;display:flex;flex-wrap:wrap;gap:12px;padding:16px;align-content:flex-start}
+.canvas-placed{background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;animation:popIn .35s ease-out;cursor:pointer;transition:all .2s}
+.canvas-placed:hover{border-color:var(--accent)}
+.canvas-placed .placed-icon{font-size:24px}
+.canvas-placed .placed-name{font-size:12px;font-weight:600}
+
+/* ── FLOW OVERLAY PANEL (slides up from bottom of canvas) ── */
+#flow-overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(10,13,20,.96);border-top:1px solid var(--border2);border-radius:0 0 14px 14px;z-index:20;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(8px)}
+#flow-overlay.open{transform:translateY(0)}
+#flow-overlay-inner{padding:16px 20px 18px;display:flex;gap:16px;align-items:flex-start}
+#flow-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);font-size:18px;line-height:1;padding:2px 6px}
+#flow-close:hover{color:var(--text)}
+
+/* Flow chain inside overlay */
+#flow-chain-horiz{display:flex;align-items:center;gap:0;flex:1;flex-wrap:nowrap;min-width:0}
+.fch-node{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.fch-box{padding:8px 12px;border-radius:8px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--card);color:var(--muted);transition:all .3s;text-align:center;white-space:nowrap;min-width:90px}
+.fch-box.active{border-color:var(--accent);background:#4f8ef718;color:var(--accent);box-shadow:0 0 0 1px var(--accent)22}
+.fch-box.appconfig-hl{border-color:var(--pro);background:#c084fc18;color:var(--pro)}
+.fch-box.done-ok{border-color:var(--success);background:#34d39918;color:var(--success)}
+.fch-box.done-lock{border-color:var(--danger);background:#f8717118;color:var(--danger);animation:lockShake .4s ease-out}
+.fch-label{font-size:9px;color:var(--muted);text-align:center;max-width:90px}
+.fch-connector{display:flex;align-items:center;gap:0;position:relative;width:40px;flex-shrink:0}
+.fch-line{flex:1;height:2px;background:var(--border2);transition:background .3s}
+.fch-line.active{background:var(--accent)}
+.fch-dot{width:8px;height:8px;border-radius:50%;background:var(--packet);box-shadow:0 0 6px var(--packet);position:absolute;left:0;top:50%;transform:translateY(-50%);opacity:0}
+/* Result box */
+#flow-result-box{flex-shrink:0;padding:12px 14px;border-radius:10px;text-align:center;min-width:130px;display:none}
+#flow-result-box.ok{background:#34d39918;border:1px solid var(--success);color:var(--success);animation:popIn .4s ease-out}
+#flow-result-box.locked{background:#f8717118;border:1px solid var(--danger);color:var(--danger);animation:lockBounce .45s ease-out}
+#frb-icon{font-size:26px;display:block;margin-bottom:6px}
+#frb-msg{font-size:12px;font-weight:700;display:block;margin-bottom:3px}
+#frb-sub{font-size:10px;opacity:.8;display:block;line-height:1.4}
+
+/* ── OBJECTS VIEW — full visual ── */
+#view-objects{flex-direction:column;align-items:stretch;overflow:hidden}
+#obj-view-inner{flex:1;display:flex;flex-direction:column;overflow:auto;padding:24px 32px}
+#obj-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:24px}
+
+/* Static box at top */
+#static-hub{display:flex;flex-direction:column;align-items:center;margin-bottom:0}
+#static-box{background:linear-gradient(135deg,#1a1040,#1e1650);border:2px solid var(--pro);border-radius:14px;padding:16px 28px;text-align:center;position:relative;cursor:pointer;transition:all .3s}
+#static-box:hover{box-shadow:0 0 32px #c084fc33}
+#static-box-tag{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--pro);color:#fff;font-size:9px;font-weight:800;letter-spacing:1px;padding:2px 10px;border-radius:20px;white-space:nowrap}
+#static-box-class{font-size:11px;color:var(--pro);font-weight:700;margin-bottom:8px;opacity:.8}
+#static-field{display:inline-flex;align-items:center;gap:6px;background:#c084fc18;border:1px solid var(--pro)55;border-radius:8px;padding:6px 14px;font-family:monospace;font-size:13px}
+#static-kw{color:#f78166;font-weight:700;font-size:11px}
+#static-val{font-weight:800;color:var(--text);transition:all .4s}
+#static-val.pro-val{color:var(--pro)}
+#static-desc{margin-top:8px;font-size:10px;color:var(--muted)}
+
+/* SVG connector area */
+#obj-svg-wrap{width:100%;position:relative;flex-shrink:0}
+#obj-svg{width:100%;overflow:visible;display:block}
+
+/* Template object cards row */
+#template-cards-row{display:flex;gap:14px;justify-content:center;flex-wrap:nowrap;margin-top:0}
+.tmpl-obj-card{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;min-width:140px;flex:1;max-width:180px;transition:all .4s;position:relative}
+.tmpl-obj-card.reading{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)22,0 0 20px var(--accent)22;animation:pulse 1s ease-in-out}
+.tmpl-obj-card.pro-access{border-color:var(--success);box-shadow:0 0 0 2px var(--success)18}
+.tmpl-obj-card.free-access{border-color:var(--danger);box-shadow:0 0 0 2px var(--danger)18}
+.tmpl-obj-title{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.tmpl-obj-field{font-size:11px;font-family:monospace;padding:3px 6px;border-radius:4px;margin-bottom:4px}
+.tmpl-obj-field.own{background:#34d39912;color:#34d399;border:1px solid #34d39928}
+.tmpl-obj-field.shared-ref{background:#c084fc12;color:var(--pro);border:1px solid var(--pro)28}
+.tmpl-access-result{margin-top:8px;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;text-align:center;transition:all .4s}
+.tmpl-access-result.granted{background:#34d39920;color:var(--success)}
+.tmpl-access-result.denied{background:#f8717120;color:var(--danger)}
+.tmpl-access-result.pending{background:var(--faint);color:var(--muted)}
+
+/* traveling dot on SVG path */
+.travel-dot{r:5;fill:var(--packet);filter:url(#glow-filter);opacity:0}
+
+/* obj controls */
+#obj-controls{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.obj-ctrl-btn{padding:7px 18px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;transition:all .2s}
+.obj-ctrl-btn:hover{border-color:var(--accent);color:var(--accent)}
+.obj-ctrl-btn.active{border-color:var(--accent);background:#4f8ef718;color:var(--accent)}
+
+/* legend */
+#obj-legend{display:flex;gap:16px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══════════════════════════════════════ CLASS FLOW VIEW */
+#view-classflow{flex-direction:column;padding:24px;overflow:auto;align-items:center;justify-content:flex-start;gap:0}
+#classflow-inner{width:100%;max-width:580px;display:flex;flex-direction:column;align-items:center;gap:0}
+.cf-header{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:20px;text-align:center}
+.cf-class{background:var(--card);border:2px solid var(--border);border-radius:12px;width:220px;overflow:hidden;transition:all .4s}
+.cf-class.hl{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 24px #4f8ef733;animation:pulse 1.2s ease-in-out}
+.cf-class.hl-red{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger),0 0 24px #f8717133}
+.cf-class.hl-green{border-color:var(--success);box-shadow:0 0 0 1px var(--success),0 0 24px #34d39933}
+.cf-class-header{padding:10px 14px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.cf-class-body{padding:10px 14px}
+.cf-method{font-size:11px;color:var(--success);font-family:monospace;padding:2px 0}
+.cf-field{font-size:11px;font-family:monospace;padding:2px 0;transition:all .3s}
+.cf-field.hl-field{color:var(--accent);background:#4f8ef715;border-radius:3px;padding:2px 4px}
+.cf-connector{width:2px;height:36px;background:linear-gradient(to bottom,var(--border2),var(--accent));position:relative;overflow:visible}
+.cf-packet{width:10px;height:10px;background:var(--packet);border-radius:50%;position:absolute;left:50%;transform:translateX(-50%);top:-5px;box-shadow:0 0 8px var(--packet);opacity:0;transition:none}
+.cf-conn-label{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--muted);white-space:nowrap}
+.cf-result{margin-top:16px;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;animation:popIn .4s ease-out}
+.cf-result.open{background:#34d39922;border:1px solid var(--success);color:var(--success)}
+.cf-result.locked{background:#f8717122;border:1px solid var(--danger);color:var(--danger)}
+.cf-trigger{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;justify-content:center}
+
+/* ═══════════════════════════════════════ CODE VIEW */
+#view-code{flex-direction:column;overflow:auto;padding:24px}
+#code-inner{max-width:660px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:20px}
+.code-block{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.code-block-header{padding:10px 16px;background:var(--faint);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:8px}
+.code-block-header .dot{width:10px;height:10px;border-radius:50%}
+.code-pre{padding:16px;font-size:12.5px;line-height:1.8;color:var(--text);overflow-x:auto}
+.kw{color:#c084fc}.type{color:#7dd3fc}.str{color:#86efac}.num{color:#fbbf24}
+.hl-static{background:#4f8ef730;border-radius:3px;padding:0 3px}
+.code-editable-area{border-top:1px solid var(--border);padding:14px 16px}
+.code-editable-area textarea{width:100%;background:var(--faint);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Fira Code','Consolas',monospace;font-size:12px;line-height:1.7;padding:10px 12px;resize:none;height:78px;outline:none;transition:border-color .2s}
+.code-editable-area textarea:focus{border-color:var(--accent)}
+.run-btn{padding:7px 20px;background:var(--success);border:none;border-radius:7px;color:#fff;font-size:12px;font-weight:700;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.run-btn:hover{background:#2fb984}
+.run-btn:active{transform:scale(.96)}
+.reset-btn{padding:7px 14px;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:12px;transition:all .15s}
+.reset-btn:hover{border-color:var(--muted);color:var(--text)}
+.code-actions{display:flex;align-items:center;gap:10px;margin-top:10px}
+.run-status{font-size:11px;color:var(--success);opacity:0;transition:opacity .3s}
+.run-status.show{opacity:1}
+
+/* ═══════════════════════════════════════ EXPERIMENT VIEW */
+#view-experiment{flex-direction:column;overflow:auto;padding:24px}
+#exp-inner{max-width:740px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:22px}
+.exp-section{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.exp-section-header{padding:12px 16px;background:var(--faint);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:space-between}
+.exp-section-body{padding:16px}
+.exp-toggle-row{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.exp-toggle{display:flex;background:var(--faint);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.exp-opt{padding:6px 16px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--muted);transition:all .2s}
+.exp-opt.active{background:var(--card2);color:var(--text)}
+.exp-label{font-size:11px;color:var(--muted);font-weight:600}
+.exp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.exp-module{background:var(--faint);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;font-size:11px;font-weight:700;transition:all .4s}
+.exp-module-name{color:var(--muted);margin-bottom:4px;font-size:10px}
+.exp-module-val{font-size:13px;transition:all .4s}
+.exp-module-val.open{color:var(--success)}
+.exp-module-val.locked{color:var(--danger)}
+
+/* ═══════════════════════════════════════ CHALLENGE VIEW */
+#view-challenge{flex-direction:column;overflow:auto;padding:24px}
+#challenge-inner{max-width:620px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:0}
+.ch-progress{display:flex;gap:6px;margin-bottom:22px}
+.ch-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--faint);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);transition:all .3s}
+.ch-dot.done{background:#34d39922;border-color:var(--success);color:var(--success)}
+.ch-dot.current{background:#4f8ef722;border-color:var(--accent);color:var(--accent)}
+.ch-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;animation:slideDown .3s ease-out}
+.ch-scene{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
+.ch-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.ch-visual{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.ch-obj{background:var(--faint);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;font-family:monospace;min-width:120px;transition:all .3s}
+.ch-question{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;padding:10px 14px;background:var(--faint);border-radius:8px;border-left:3px solid var(--accent)}
+.ch-opts{display:flex;gap:10px;flex-wrap:wrap}
+.ch-opt{flex:1;min-width:120px;padding:10px 14px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:700;transition:all .2s;text-align:center}
+.ch-opt:hover{border-color:var(--accent);color:var(--text)}
+.ch-opt.chosen-right{border-color:var(--success);background:#34d39920;color:var(--success);animation:popIn .3s ease-out}
+.ch-opt.chosen-wrong{border-color:var(--danger);background:#f8717120;color:var(--danger);animation:lockShake .4s ease-out}
+.ch-opt.reveal-right{border-color:var(--success);background:#34d39910;color:var(--success)}
+.ch-feedback{margin-top:14px;padding:12px 14px;border-radius:8px;font-size:12px;line-height:1.6;display:none;animation:slideDown .3s ease-out}
+.ch-feedback.show{display:block}
+.ch-feedback.right{background:#34d39920;border:1px solid var(--success);color:var(--success)}
+.ch-feedback.wrong{background:#fbbf2420;border:1px solid var(--warn);color:var(--warn)}
+.ch-nav{display:flex;justify-content:flex-end;margin-top:16px;gap:10px}
+.ch-score{font-size:13px;color:var(--muted);align-self:center;margin-right:auto}
+.btn-next{padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;display:none}
+.btn-next.show{display:inline-flex;align-items:center;gap:6px}
+
+/* ═══════════════════════════════════════ SUMMARY VIEW */
+#view-summary{flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:32px}
+#summary-inner{max-width:560px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px}
+.sum-title{font-size:24px;font-weight:800;color:var(--text)}
+.sum-sub{font-size:13px;color:var(--muted);line-height:1.6;max-width:400px}
+.sum-diagram{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;width:100%;text-align:left}
+.sum-diagram-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;text-align:center}
+.sum-compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sum-col{background:var(--faint);border-radius:10px;padding:14px}
+.sum-col-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.sum-col.instance .sum-col-title{color:#34d399}
+.sum-col.static .sum-col-title{color:var(--accent)}
+.sum-obj{font-size:10px;font-family:monospace;padding:4px 8px;background:var(--card);border-radius:4px;margin-bottom:4px;display:flex;justify-content:space-between}
+.sum-shared-box{display:inline-block;background:var(--card2);border:2px solid var(--accent);border-radius:8px;padding:8px 16px;font-family:monospace;font-size:12px;color:var(--accent);margin-bottom:8px}
+.sum-arrows{display:flex;justify-content:center;gap:16px;font-size:10px;color:var(--muted)}
+.sum-rule{background:var(--faint);border-radius:10px;padding:16px;border-left:3px solid var(--accent);text-align:left}
+.sum-rule-q{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px}
+.sum-rule-items{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
+.sum-rule-item{flex:1;background:var(--card);border-radius:8px;padding:10px 12px;font-size:11px;min-width:130px}
+.sum-rule-item .label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.play-again{padding:12px 30px;background:linear-gradient(135deg,var(--accent),var(--pro));border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;transition:all .2s;box-shadow:0 4px 20px rgba(79,142,247,.3)}
+.play-again:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(79,142,247,.4)}
+
+/* ── QUESTION MODAL ── */
+#question-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
+#question-modal.show{display:flex}
+#qm-box{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:28px;max-width:460px;width:90%;animation:popIn .35s ease-out}
+#qm-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:10px}
+#qm-body{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px}
+#qm-opts{display:flex;flex-direction:column;gap:8px}
+.qm-opt{padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;text-align:left;transition:all .2s}
+.qm-opt:hover{border-color:var(--accent);color:var(--text);background:var(--faint)}
+.qm-opt.chosen{border-color:var(--accent);background:#4f8ef720;color:var(--accent)}
+#qm-reveal{margin-top:14px;padding:12px 14px;border-radius:8px;font-size:12px;line-height:1.6;display:none;animation:slideDown .3s ease-out}
+#qm-close{margin-top:12px;padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:10px 20px;font-size:12px;font-weight:600;opacity:0;transition:all .3s;z-index:999;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:var(--success);color:var(--success)}
+#toast.err{border-color:var(--danger);color:var(--danger)}
+#toast.info{border-color:var(--accent);color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════ TOP NAV -->
+<div id="topnav">
+  <div id="logo"><div id="logo-icon">◈</div>Design Studio</div>
+  <button class="nav-btn active" onclick="nav('play')">▶ Play</button>
+  <button class="nav-btn" onclick="nav('classflow')">⟶ Class Flow</button>
+  <button class="nav-btn" onclick="nav('objects')">◎ Objects</button>
+  <button class="nav-btn" onclick="nav('code')">{ } Code</button>
+  <button class="nav-btn" onclick="nav('experiment')">⚗ Experiment</button>
+  <button class="nav-btn" onclick="nav('challenge')">✦ Challenge</button>
+  <button class="nav-btn" onclick="nav('summary')">◈ Summary</button>
+  <div id="nav-spacer"></div>
+  <!-- Plan toggle — top right -->
+  <div id="topnav-plan">
+    <span id="topnav-plan-label">PLAN</span>
+    <div class="plan-toggle">
+      <button class="plan-opt active free" id="btn-free" onclick="setPlan('FREE')">FREE</button>
+      <button class="plan-opt pro" id="btn-pro" onclick="setPlan('PRO')">PRO</button>
+    </div>
+  </div>
+  <div id="plan-pill" class="free">FREE</div>
+</div>
+
+<!-- ══════════════════════════════════════ VIEWS -->
+
+<!-- ── PLAY VIEW ── -->
+<div class="view active" id="view-play">
+  <div id="play-sidebar">
+    <div id="play-sidebar-tabs">
+      <button class="pst active" onclick="switchSidebarTab('templates',this)">Templates</button>
+      <button class="pst" onclick="switchSidebarTab('elements',this)">Elements</button>
+      <button class="pst" onclick="switchSidebarTab('videos',this)">Videos</button>
+      <button class="pst" onclick="switchSidebarTab('audio',this)">Audio</button>
+    </div>
+    <div id="play-sidebar-items"></div>
+  </div>
+
+  <!-- CENTER: canvas + flow overlay -->
+  <div id="play-center">
+    <div id="canvas-drop">
+      <div id="canvas-empty">
+        <div class="big">🎨</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px">Design Canvas</div>
+        <div style="font-size:11px;line-height:1.6">Click or drag items from the left panel.<br>Try a premium item to see the data flow!</div>
+      </div>
+      <div id="canvas-items" style="display:none"></div>
+
+      <!-- Live Data Flow overlay — slides up from bottom -->
+      <div id="flow-overlay">
+        <button id="flow-close" onclick="closeFlowOverlay()">✕</button>
+        <div id="flow-overlay-inner">
+          <div id="flow-chain-horiz"></div>
+          <div id="flow-result-box">
+            <span id="frb-icon"></span>
+            <span id="frb-msg"></span>
+            <span id="frb-sub"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:10px 18px;border-top:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <span style="font-size:10px;color:var(--muted)">Canvas:</span>
+      <button style="padding:5px 14px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px" onclick="clearCanvas()">Clear</button>
+      <span style="font-size:10px;color:var(--muted);margin-left:auto">Click an item to drag it • Premium items check AppConfig.userPlan</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── CLASS FLOW VIEW ── -->
+<div class="view" id="view-classflow">
+  <div id="classflow-inner">
+    <div class="cf-header">Watch data travel between Java classes</div>
+    <div class="cf-trigger">
+      <button class="run-btn" onclick="animateCF('premium')">▶ Premium Item · FREE plan</button>
+      <button class="run-btn" style="background:var(--pro)" onclick="animateCF('premiumPro')">▶ Premium Item · PRO plan</button>
+      <button class="run-btn" style="background:var(--muted)" onclick="animateCF('free')">▶ Free Item</button>
+    </div>
+    <div class="cf-class" id="cf-templates">
+      <div class="cf-class-header"><span style="font-size:16px">🖼</span><span style="color:var(--accent)">Templates</span></div>
+      <div class="cf-class-body"><div class="cf-method">+ useTemplate(item)</div><div class="cf-method" style="color:var(--muted)">- checkAccess()</div></div>
+    </div>
+    <div class="cf-connector" id="conn-1"><div class="cf-packet" id="pkt-1"></div><span class="cf-conn-label">calls isPremiumUser()</span></div>
+    <div class="cf-class" id="cf-checker">
+      <div class="cf-class-header"><span style="font-size:16px">🔍</span><span style="color:var(--warn)">PremiumChecker</span></div>
+      <div class="cf-class-body"><div class="cf-method">+ isPremiumUser()</div></div>
+    </div>
+    <div class="cf-connector" id="conn-2"><div class="cf-packet" id="pkt-2"></div><span class="cf-conn-label">reads userPlan</span></div>
+    <div class="cf-class" id="cf-appconfig">
+      <div class="cf-class-header"><span style="font-size:16px">⚙</span><span style="color:var(--pro)">AppConfig</span></div>
+      <div class="cf-class-body"><div class="cf-field" id="cf-field-plan">static String userPlan = "<span id="cf-plan-val">FREE</span>"</div></div>
+    </div>
+    <div id="cf-result"></div>
+  </div>
+</div>
+
+<!-- ── OBJECTS VIEW ── -->
+<div class="view" id="view-objects">
+  <div id="obj-view-inner">
+    <div id="obj-title">One <code style="color:var(--pro)">static</code> variable — shared by every Template object</div>
+
+    <!-- Static hub -->
+    <div id="static-hub">
+      <div id="static-box" onclick="pulseStaticBox()">
+        <div id="static-box-tag">AppConfig — shared class</div>
+        <div id="static-box-class">AppConfig.java</div>
+        <div id="static-field">
+          <span id="static-kw">static</span>
+          <span style="color:var(--muted);font-size:12px">String userPlan =</span>
+          <span id="static-val">"FREE"</span>
+        </div>
+        <div id="static-desc">Click to pulse — all objects read this one value</div>
+      </div>
+    </div>
+
+    <!-- SVG connecting lines -->
+    <div id="obj-svg-wrap">
+      <svg id="obj-svg" height="70">
+        <defs>
+          <filter id="glow-filter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Lines drawn by JS -->
+      </svg>
+    </div>
+
+    <!-- Template object cards -->
+    <div id="template-cards-row">
+      <div class="tmpl-obj-card" id="tobj-0">
+        <div class="tmpl-obj-title">Template Object #1</div>
+        <div class="tmpl-obj-field own">name = "Birthday"</div>
+        <div class="tmpl-obj-field own">isPremium = false</div>
+        <div class="tmpl-obj-field shared-ref">userPlan ↑ AppConfig</div>
+        <div class="tmpl-access-result pending" id="tar-0">— checking —</div>
+      </div>
+      <div class="tmpl-obj-card" id="tobj-1">
+        <div class="tmpl-obj-title">Template Object #2</div>
+        <div class="tmpl-obj-field own">name = "Wedding"</div>
+        <div class="tmpl-obj-field own">isPremium = true</div>
+        <div class="tmpl-obj-field shared-ref">userPlan ↑ AppConfig</div>
+        <div class="tmpl-access-result pending" id="tar-1">— checking —</div>
+      </div>
+      <div class="tmpl-obj-card" id="tobj-2">
+        <div class="tmpl-obj-title">Template Object #3</div>
+        <div class="tmpl-obj-field own">name = "Business"</div>
+        <div class="tmpl-obj-field own">isPremium = true</div>
+        <div class="tmpl-obj-field shared-ref">userPlan ↑ AppConfig</div>
+        <div class="tmpl-access-result pending" id="tar-2">— checking —</div>
+      </div>
+      <div class="tmpl-obj-card" id="tobj-3">
+        <div class="tmpl-obj-title">Template Object #4</div>
+        <div class="tmpl-obj-field own">name = "Travel"</div>
+        <div class="tmpl-obj-field own">isPremium = true</div>
+        <div class="tmpl-obj-field shared-ref">userPlan ↑ AppConfig</div>
+        <div class="tmpl-access-result pending" id="tar-3">— checking —</div>
+      </div>
+      <div class="tmpl-obj-card" id="tobj-4">
+        <div class="tmpl-obj-title">Template Object #5</div>
+        <div class="tmpl-obj-field own">name = "Summer"</div>
+        <div class="tmpl-obj-field own">isPremium = false</div>
+        <div class="tmpl-obj-field shared-ref">userPlan ↑ AppConfig</div>
+        <div class="tmpl-access-result pending" id="tar-4">— checking —</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div id="obj-controls">
+      <button class="obj-ctrl-btn active" id="objb-free" onclick="setObjPlan('FREE')">userPlan = "FREE"</button>
+      <button class="obj-ctrl-btn" id="objb-pro" onclick="setObjPlan('PRO')">userPlan = "PRO"</button>
+      <button class="obj-ctrl-btn" id="objb-anim" onclick="animateObjAccess()">▶ Animate access check</button>
+    </div>
+
+    <div id="obj-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--pro)"></div>static field — one shared value</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div>instance field — each object's own</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--packet)"></div>read request travelling to AppConfig</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CODE VIEW ── -->
+<div class="view" id="view-code">
+  <div id="code-inner">
+    <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Java Classes — edit AppConfig and click Run</div>
+    <div class="code-block">
+      <div class="code-block-header">
+        <div class="dot" style="background:#f87171"></div><div class="dot" style="background:#fbbf24"></div><div class="dot" style="background:#34d399"></div>
+        AppConfig.java <span style="margin-left:auto;font-size:10px;background:#c084fc22;color:#c084fc;padding:2px 8px;border-radius:4px">★ shared state</span>
+      </div>
+      <div class="code-pre"><span class="kw">class</span> <span class="type">AppConfig</span> {
+  <span class="hl-static"><span class="kw">static</span></span> <span class="type">String</span> userPlan = <span class="str">"<span id="code-plan-display">FREE</span>"</span>;
+  <span class="hl-static"><span class="kw">static</span></span> <span class="type">String</span> appTheme = <span class="str">"LIGHT"</span>;
+  <span class="hl-static"><span class="kw">static</span></span> <span class="type">int</span> maxUploadMB = <span class="num">100</span>;
+}</div>
+      <div class="code-editable-area">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Change userPlan value:</div>
+        <textarea id="code-editor" spellcheck="false">static String userPlan = "FREE";</textarea>
+        <div class="code-actions">
+          <button class="run-btn" onclick="runCode()">▶ Run</button>
+          <button class="reset-btn" onclick="resetCode()">⟳ Reset</button>
+          <span class="run-status" id="run-status">✓ Applied!</span>
+        </div>
+      </div>
+    </div>
+    <div class="code-block">
+      <div class="code-block-header"><div class="dot" style="background:#f87171"></div><div class="dot" style="background:#fbbf24"></div><div class="dot" style="background:#34d399"></div>Templates.java</div>
+      <div class="code-pre"><span class="kw">class</span> <span class="type">Templates</span> {
+  <span class="kw">void</span> useTemplate() {
+    <span class="kw">if</span> (<span class="type">AppConfig</span>.userPlan.equals(<span class="str">"PRO"</span>)) {
+      System.out.println(<span class="str">"Template added"</span>);
+    } <span class="kw">else</span> {
+      System.out.println(<span class="str">"Upgrade required"</span>);
+    }
+  }
+}</div>
+    </div>
+    <div class="code-block">
+      <div class="code-block-header"><div class="dot" style="background:#f87171"></div><div class="dot" style="background:#fbbf24"></div><div class="dot" style="background:#34d399"></div>Videos.java</div>
+      <div class="code-pre"><span class="kw">class</span> <span class="type">Videos</span> {
+  <span class="kw">void</span> useVideo() {
+    <span class="kw">if</span> (<span class="type">AppConfig</span>.userPlan.equals(<span class="str">"PRO"</span>)) {
+      System.out.println(<span class="str">"Video added"</span>);
+    } <span class="kw">else</span> {
+      System.out.println(<span class="str">"Upgrade required"</span>);
+    }
+  }
+}</div>
+    </div>
+    <div style="padding:14px 16px;background:var(--card2);border:1px solid var(--accent)33;border-radius:10px;font-size:12px;line-height:1.7;color:var(--muted)">
+      <strong style="color:var(--accent)">Notice:</strong> Both Templates and Videos access <code style="color:var(--pro)">AppConfig.userPlan</code> — the same static field. No object of AppConfig is created. The value belongs to the <em>class itself</em>.
+    </div>
+  </div>
+</div>
+
+<!-- ── EXPERIMENT VIEW ── -->
+<div class="view" id="view-experiment">
+  <div id="exp-inner">
+    <div class="exp-section">
+      <div class="exp-section-header">Experiment 1: Application Plan<span style="font-size:10px;color:var(--muted)">AppConfig.userPlan</span></div>
+      <div class="exp-section-body">
+        <div class="exp-toggle-row"><span class="exp-label">userPlan =</span>
+          <div class="exp-toggle"><button class="exp-opt active" id="ex1-free" onclick="setExp1('FREE')">FREE</button><button class="exp-opt" id="ex1-pro" onclick="setExp1('PRO')">PRO</button></div>
+        </div>
+        <div class="exp-grid">
+          <div class="exp-module"><div class="exp-module-name">Templates</div><div class="exp-module-val locked" id="ex1-templates">✕ Locked</div></div>
+          <div class="exp-module"><div class="exp-module-name">Elements</div><div class="exp-module-val locked" id="ex1-elements">✕ Locked</div></div>
+          <div class="exp-module"><div class="exp-module-name">Videos</div><div class="exp-module-val locked" id="ex1-videos">✕ Locked</div></div>
+          <div class="exp-module"><div class="exp-module-name">Audio</div><div class="exp-module-val locked" id="ex1-audio">✕ Locked</div></div>
+          <div class="exp-module"><div class="exp-module-name">Uploads</div><div class="exp-module-val locked" id="ex1-uploads">✕ Locked</div></div>
+          <div class="exp-module"><div class="exp-module-name">Export</div><div class="exp-module-val locked" id="ex1-export">✕ Locked</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="exp-section">
+      <div class="exp-section-header">Experiment 2: Application Theme<span style="font-size:10px;color:var(--muted)">AppConfig.appTheme</span></div>
+      <div class="exp-section-body">
+        <div class="exp-toggle-row"><span class="exp-label">appTheme =</span>
+          <div class="exp-toggle"><button class="exp-opt active" id="ex2-light" onclick="setExp2('LIGHT')">LIGHT</button><button class="exp-opt" id="ex2-dark" onclick="setExp2('DARK')">DARK</button></div>
+        </div>
+        <div class="exp-grid">
+          <div class="exp-module"><div class="exp-module-name">Editor</div><div class="exp-module-val open" id="ex2-editor">LIGHT</div></div>
+          <div class="exp-module"><div class="exp-module-name">Toolbar</div><div class="exp-module-val open" id="ex2-toolbar">LIGHT</div></div>
+          <div class="exp-module"><div class="exp-module-name">Sidebar</div><div class="exp-module-val open" id="ex2-sidebar">LIGHT</div></div>
+          <div class="exp-module"><div class="exp-module-name">Preview</div><div class="exp-module-val open" id="ex2-preview">LIGHT</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="exp-section">
+      <div class="exp-section-header">Experiment 3: Upload Limit<span style="font-size:10px;color:var(--muted)">AppConfig.maxUploadMB</span></div>
+      <div class="exp-section-body">
+        <div class="exp-toggle-row"><span class="exp-label">maxUploadMB =</span>
+          <div class="exp-toggle"><button class="exp-opt active" id="ex3-100" onclick="setExp3(100)">100 MB</button><button class="exp-opt" id="ex3-500" onclick="setExp3(500)">500 MB</button><button class="exp-opt" id="ex3-1024" onclick="setExp3(1024)">1 GB</button></div>
+        </div>
+        <div class="exp-grid">
+          <div class="exp-module"><div class="exp-module-name">Image Upload</div><div class="exp-module-val open" id="ex3-img">Max: 100 MB</div></div>
+          <div class="exp-module"><div class="exp-module-name">Video Upload</div><div class="exp-module-val open" id="ex3-vid">Max: 100 MB</div></div>
+          <div class="exp-module"><div class="exp-module-name">Audio Upload</div><div class="exp-module-val open" id="ex3-aud">Max: 100 MB</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CHALLENGE VIEW ── -->
+<div class="view" id="view-challenge">
+  <div id="challenge-inner">
+    <div id="ch-progress" class="ch-progress"></div>
+    <div id="ch-card"></div>
+  </div>
+</div>
+
+<!-- ── SUMMARY VIEW ── -->
+<div class="view" id="view-summary">
+  <div id="summary-inner">
+    <div class="sum-title">WHO OWNS THIS DATA?</div>
+    <div class="sum-sub">Before using <code style="color:var(--accent)">static</code>, ask yourself one question.</div>
+    <div class="sum-diagram">
+      <div class="sum-diagram-title">Instance vs Static</div>
+      <div class="sum-compare">
+        <div class="sum-col instance">
+          <div class="sum-col-title">Instance variable</div>
+          <div class="sum-obj"><span>Object 1</span><span style="color:#34d399">own value</span></div>
+          <div class="sum-obj"><span>Object 2</span><span style="color:#34d399">own value</span></div>
+          <div class="sum-obj"><span>Object 3</span><span style="color:#34d399">own value</span></div>
+          <div style="margin-top:8px;font-size:10px;color:var(--muted)">Each object has its own copy</div>
+        </div>
+        <div class="sum-col static">
+          <div class="sum-col-title">Static variable</div>
+          <div style="text-align:center;margin-bottom:8px"><div class="sum-shared-box">CLASS: one shared value</div></div>
+          <div class="sum-arrows"><div>Obj 1 ↑</div><div>Obj 2 ↑</div><div>Obj 3 ↑</div></div>
+          <div style="margin-top:8px;font-size:10px;color:var(--muted)">All objects read from the class</div>
+        </div>
+      </div>
+    </div>
+    <div class="sum-rule">
+      <div class="sum-rule-q">🤔 Does this value belong to each object — or to the whole class/application?</div>
+      <div class="sum-rule-items">
+        <div class="sum-rule-item"><div class="label" style="color:#34d399">Each object → instance</div>name, email, price, score</div>
+        <div class="sum-rule-item"><div class="label" style="color:var(--accent)">The class/app → static</div>userPlan, theme, maxUploadMB</div>
+      </div>
+    </div>
+    <button class="play-again" onclick="nav('play');toast('Welcome back!','info')">▶ Play Again</button>
+  </div>
+</div>
+
+<!-- ── QUESTION MODAL ── -->
+<div id="question-modal">
+  <div id="qm-box">
+    <div id="qm-title"></div>
+    <div id="qm-body"></div>
+    <div id="qm-opts"></div>
+    <div id="qm-reveal"></div>
+    <button id="qm-close" onclick="closeModal()" style="display:none">Continue →</button>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+const App = { plan:'FREE', theme:'LIGHT', uploadMB:100 };
+
+const ITEMS = {
+  templates:[
+    {id:'t1',name:'Basic Poster',icon:'🗒',premium:false},
+    {id:'t2',name:'Simple Card',icon:'📇',premium:false},
+    {id:'t3',name:'Premium Poster',icon:'🌟',premium:true},
+    {id:'t4',name:'Pro Brochure',icon:'📋',premium:true},
+    {id:'t5',name:'Luxury Ad',icon:'💎',premium:true}
+  ],
+  elements:[
+    {id:'e1',name:'Circle Shape',icon:'⬤',premium:false},
+    {id:'e2',name:'Arrow',icon:'➜',premium:false},
+    {id:'e3',name:'Pro Animation',icon:'✨',premium:true},
+    {id:'e4',name:'3D Icon Set',icon:'🎯',premium:true}
+  ],
+  videos:[
+    {id:'v1',name:'Sample Video',icon:'🎬',premium:false},
+    {id:'v2',name:'Premium Video',icon:'🎥',premium:true},
+    {id:'v3',name:'Cinematic 4K',icon:'🎞',premium:true}
+  ],
+  audio:[
+    {id:'a1',name:'Basic Audio',icon:'♪',premium:false},
+    {id:'a2',name:'Premium Music',icon:'🎵',premium:true},
+    {id:'a3',name:'Sound Effects',icon:'🔊',premium:false}
+  ]
+};
+
+let currentTab = 'templates';
+let dragItem = null;
+let flowTimer = null;
+let cfAnimating = false;
+let questionShown = false;
+let objAnimRunning = false;
+
+// ═══════════════════════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════════════════════
+function nav(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['play','classflow','objects','code','experiment','challenge','summary'][i] === id);
+  });
+  if (id==='challenge') initChallenge();
+  if (id==='objects') { buildObjSVG(); updateObjCards(); }
+  if (id==='classflow') document.getElementById('cf-plan-val').textContent = App.plan;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SIDEBAR
+// ═══════════════════════════════════════════════════════════════
+function switchSidebarTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.pst').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSidebar();
+}
+
+function renderSidebar() {
+  const el = document.getElementById('play-sidebar-items');
+  el.innerHTML = '';
+  (ITEMS[currentTab]||[]).forEach(item => {
+    const isPro = item.premium;
+    const isLocked = isPro && App.plan !== 'PRO';
+    const div = document.createElement('div');
+    div.className = 'drag-item' + (isPro ? ' premium' : '');
+    div.innerHTML = `<div class="item-icon">${item.icon}</div>
+      <div class="item-info"><div class="item-name">${item.name}</div>
+      <span class="item-tag ${isPro?'tag-pro':'tag-free'}">${isPro?'PRO':'FREE'}</span></div>
+      ${isPro ? `<span style="font-size:${isLocked?'14':'12'}px;opacity:.8">${isLocked?'🔒':'✓'}</span>` : ''}`;
+    div.draggable = true;
+    div.addEventListener('dragstart', e => { dragItem = item; e.dataTransfer.effectAllowed='copy'; });
+    div.addEventListener('click', () => handleItem(item));
+    el.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DRAG & DROP
+// ═══════════════════════════════════════════════════════════════
+const drop = document.getElementById('canvas-drop');
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('dragover'); if (dragItem) handleItem(dragItem); });
+
+function handleItem(item) {
+  const hasAccess = !item.premium || App.plan === 'PRO';
+  showFlowOverlay(item, hasAccess);
+  if (!hasAccess) {
+    if (!questionShown) { questionShown = true; setTimeout(showQuestion, 1800); }
+    return;
+  }
+  setTimeout(() => placeOnCanvas(item), 1600);
+}
+
+function placeOnCanvas(item) {
+  const empty = document.getElementById('canvas-empty');
+  const grid = document.getElementById('canvas-items');
+  empty.style.display = 'none'; grid.style.display = 'flex';
+  const el = document.createElement('div');
+  el.className = 'canvas-placed';
+  el.innerHTML = `<div class="placed-icon">${item.icon}</div><div class="placed-name">${item.name}</div>`;
+  el.addEventListener('click', () => { el.remove(); if (!grid.children.length) { empty.style.display=''; grid.style.display='none'; } });
+  grid.appendChild(el);
+  toast('✓ '+item.name+' added','ok');
+}
+
+function clearCanvas() {
+  document.getElementById('canvas-items').innerHTML = '';
+  document.getElementById('canvas-items').style.display = 'none';
+  document.getElementById('canvas-empty').style.display = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FLOW OVERLAY — horizontal animated chain in canvas bottom
+// ═══════════════════════════════════════════════════════════════
+function showFlowOverlay(item, hasAccess) {
+  const overlay = document.getElementById('flow-overlay');
+  const chain = document.getElementById('flow-chain-horiz');
+  const resultBox = document.getElementById('flow-result-box');
+
+  overlay.classList.add('open');
+  chain.innerHTML = '';
+  resultBox.style.display = 'none';
+  resultBox.className = '';
+
+  const modName = currentTab.charAt(0).toUpperCase() + currentTab.slice(1);
+  const steps = [
+    { label: item.name, sub: 'item' },
+    { label: modName, sub: '.useItem()' },
+    { label: 'PremiumChecker', sub: '.isPremiumUser()' },
+    { label: 'AppConfig', sub: '.userPlan', isConfig: true },
+    { label: `"${App.plan}"`, sub: 'value read' },
+  ];
+
+  const nodeEls = [];
+  const connEls = [];
+
+  steps.forEach((s, i) => {
+    // Node
+    const wrap = document.createElement('div');
+    wrap.className = 'fch-node';
+    const box = document.createElement('div');
+    box.className = 'fch-box' + (s.isConfig ? ' appconfig-hl' : '');
+    box.style.opacity = '0';
+    box.style.transform = 'translateY(6px)';
+    box.textContent = s.label;
+    const lbl = document.createElement('div');
+    lbl.className = 'fch-label';
+    lbl.textContent = s.sub;
+    wrap.appendChild(box); wrap.appendChild(lbl);
+    chain.appendChild(wrap);
+    nodeEls.push(box);
+
+    if (i < steps.length - 1) {
+      const conn = document.createElement('div');
+      conn.className = 'fch-connector';
+      const line = document.createElement('div');
+      line.className = 'fch-line';
+      const dot = document.createElement('div');
+      dot.className = 'fch-dot';
+      conn.appendChild(line); conn.appendChild(dot);
+      chain.appendChild(conn);
+      connEls.push({ line, dot });
+    }
+  });
+
+  const STEP = 300;
+
+  steps.forEach((_, i) => {
+    setTimeout(() => {
+      const b = nodeEls[i];
+      b.style.transition = 'all .25s';
+      b.style.opacity = '1';
+      b.style.transform = 'none';
+      b.classList.add('active');
+      if (i > 0) nodeEls[i-1].classList.remove('active');
+    }, i * STEP * 2);
+
+    if (i < steps.length - 1) {
+      setTimeout(() => {
+        const { line, dot } = connEls[i];
+        line.classList.add('active');
+        dot.style.opacity = '1';
+        dot.style.transition = 'left .28s ease-in';
+        dot.style.left = 'calc(100% - 8px)';
+        setTimeout(() => { dot.style.opacity = '0'; dot.style.transition = 'none'; dot.style.left = '0'; }, 290);
+      }, i * STEP * 2 + STEP);
+    }
+  });
+
+  const totalT = steps.length * STEP * 2 + 300;
+  setTimeout(() => {
+    nodeEls[nodeEls.length - 1].classList.remove('active');
+    nodeEls.forEach((b, i) => {
+      if (i === 3 || i === 4) b.classList.add(hasAccess ? 'done-ok' : 'done-lock');
+      else { b.style.opacity = '0.4'; b.classList.remove('active'); }
+    });
+    resultBox.style.display = 'block';
+    if (hasAccess) {
+      resultBox.className = 'ok';
+      document.getElementById('frb-icon').textContent = '✓';
+      document.getElementById('frb-msg').textContent = 'Access granted';
+      document.getElementById('frb-sub').textContent = item.name + ' added to canvas';
+    } else {
+      resultBox.className = 'locked';
+      document.getElementById('frb-icon').textContent = '🔒';
+      document.getElementById('frb-msg').textContent = 'Not paid — upgrade required';
+      document.getElementById('frb-sub').textContent = 'AppConfig.userPlan = "' + App.plan + '"';
+    }
+  }, totalT);
+}
+
+function closeFlowOverlay() {
+  document.getElementById('flow-overlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PLAN
+// ═══════════════════════════════════════════════════════════════
+function setPlan(plan) {
+  App.plan = plan;
+  document.getElementById('btn-free').classList.toggle('active', plan==='FREE');
+  document.getElementById('btn-pro').classList.toggle('active', plan==='PRO');
+  const pill = document.getElementById('plan-pill');
+  pill.textContent = plan; pill.className = plan==='PRO' ? 'pro' : 'free';
+  document.getElementById('code-plan-display').textContent = plan;
+  document.getElementById('cf-plan-val').textContent = plan;
+  renderSidebar();
+  updateObjCards();
+  updateExp1();
+  // Update static-val in objects view
+  const sv = document.getElementById('static-val');
+  if (sv) { sv.textContent = '"' + plan + '"'; sv.className = plan==='PRO' ? 'pro-val' : ''; }
+  if (plan==='PRO') toast('🚀 All modules unlocked!','ok');
+  else toast('Plan set to FREE','info');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  OBJECTS VIEW
+// ═══════════════════════════════════════════════════════════════
+let objPlan = 'FREE';
+
+function setObjPlan(plan) {
+  objPlan = plan;
+  // Also sync App plan
+  App.plan = plan;
+  setPlan(plan);
+  updateObjCards();
+  ['objb-free','objb-pro'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById(plan === 'PRO' ? 'objb-pro' : 'objb-free').classList.add('active');
+  const sv = document.getElementById('static-val');
+  if (sv) { sv.textContent = '"' + plan + '"'; sv.className = plan==='PRO' ? 'pro-val' : ''; }
+}
+
+function updateObjCards() {
+  const plan = App.plan;
+  const isPro = plan === 'PRO';
+  const premiums = [false, true, true, true, false]; // matches card isPremium
+  for (let i = 0; i < 5; i++) {
+    const card = document.getElementById('tobj-'+i);
+    const result = document.getElementById('tar-'+i);
+    const needsPro = premiums[i];
+    card.classList.remove('pro-access','free-access','reading');
+    if (!needsPro || isPro) {
+      card.classList.add('pro-access');
+      result.className = 'tmpl-access-result granted';
+      result.textContent = '✓ Open';
+    } else {
+      card.classList.add('free-access');
+      result.className = 'tmpl-access-result denied';
+      result.textContent = '🔒 Locked';
+    }
+  }
+}
+
+function buildObjSVG() {
+  const svg = document.getElementById('obj-svg');
+  const staticBox = document.getElementById('static-box');
+  const row = document.getElementById('template-cards-row');
+  const cards = row.querySelectorAll('.tmpl-obj-card');
+  svg.innerHTML = `<defs>
+    <filter id="glow-filter" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>`;
+
+  // We'll use requestAnimationFrame to ensure layout is done
+  requestAnimationFrame(() => {
+    const svgEl = document.getElementById('obj-svg');
+    const wrapRect = document.getElementById('obj-svg-wrap').getBoundingClientRect();
+    const hubRect = document.getElementById('static-hub').getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+
+    // Hub bottom center (relative to svg wrap top)
+    const hubBotX = hubRect.left + hubRect.width/2 - wrapRect.left;
+    const hubBotY = 0; // top of SVG = bottom of hub (they are adjacent)
+    // SVG height = gap between them
+    const svgH = rowRect.top - (hubRect.bottom);
+    svgEl.setAttribute('height', Math.max(svgH, 40));
+
+    cards.forEach(card => {
+      const cRect = card.getBoundingClientRect();
+      const cx = cRect.left + cRect.width/2 - wrapRect.left;
+      const cy = svgH; // bottom of SVG = top of cards
+
+      // Draw bezier from hub bottom to card top
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      const midY = svgH / 2;
+      path.setAttribute('d', `M${hubBotX},${hubBotY} C${hubBotX},${midY} ${cx},${midY} ${cx},${cy}`);
+      path.setAttribute('stroke','#c084fc55');
+      path.setAttribute('stroke-width','1.5');
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke-dasharray','4 3');
+      path.classList.add('obj-path');
+      svgEl.appendChild(path);
+    });
+  });
+}
+
+async function animateObjAccess() {
+  if (objAnimRunning) return;
+  objAnimRunning = true;
+  const isPro = App.plan === 'PRO';
+  const premiums = [false, true, true, true, false];
+
+  // Reset all cards to "reading" state
+  for (let i = 0; i < 5; i++) {
+    const card = document.getElementById('tobj-'+i);
+    const result = document.getElementById('tar-'+i);
+    card.classList.remove('pro-access','free-access','reading');
+    result.className = 'tmpl-access-result pending';
+    result.textContent = '⟳ reading...';
+  }
+
+  // Pulse static box
+  const sbox = document.getElementById('static-box');
+  sbox.style.boxShadow = '0 0 0 4px #c084fc44, 0 0 40px #c084fc44';
+  setTimeout(() => sbox.style.boxShadow = '', 800);
+
+  // Animate each card sequentially
+  for (let i = 0; i < 5; i++) {
+    await delay(i * 300 + 200);
+    const card = document.getElementById('tobj-'+i);
+    const result = document.getElementById('tar-'+i);
+    card.classList.add('reading');
+    await delay(350);
+    card.classList.remove('reading');
+    const needsPro = premiums[i];
+    if (!needsPro || isPro) {
+      card.classList.add('pro-access');
+      result.className = 'tmpl-access-result granted';
+      result.textContent = '✓ Open';
+    } else {
+      card.classList.add('free-access');
+      result.className = 'tmpl-access-result denied';
+      result.textContent = '🔒 Locked';
+    }
+  }
+  objAnimRunning = false;
+}
+
+function pulseStaticBox() {
+  const sbox = document.getElementById('static-box');
+  sbox.style.boxShadow = '0 0 0 6px #c084fc55, 0 0 48px #c084fc55';
+  setTimeout(() => sbox.style.boxShadow = '', 700);
+  animateObjAccess();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CLASS FLOW
+// ═══════════════════════════════════════════════════════════════
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function animateCF(mode) {
+  if (cfAnimating) return;
+  cfAnimating = true;
+  const isPro = mode === 'premiumPro';
+  const isFree = mode === 'free';
+  const hasAccess = isFree || isPro;
+  const result = document.getElementById('cf-result');
+  result.innerHTML = '';
+
+  ['cf-templates','cf-checker','cf-appconfig'].forEach(id => {
+    document.getElementById(id).classList.remove('hl','hl-red','hl-green');
+  });
+  ['pkt-1','pkt-2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.opacity='0'; el.style.top='-5px'; el.style.transition='none';
+  });
+
+  // Step 1
+  document.getElementById('cf-templates').classList.add('hl');
+  await delay(500);
+  // Packet 1
+  const p1 = document.getElementById('pkt-1');
+  p1.style.opacity='1'; p1.style.transition='top .45s ease-in'; p1.style.top='110%';
+  await delay(500);
+  p1.style.opacity='0'; p1.style.transition='none'; p1.style.top='-5px';
+  document.getElementById('cf-templates').classList.remove('hl');
+  // Step 2
+  document.getElementById('cf-checker').classList.add('hl');
+  await delay(500);
+  // Packet 2
+  const p2 = document.getElementById('pkt-2');
+  p2.style.opacity='1'; p2.style.transition='top .45s ease-in'; p2.style.top='110%';
+  await delay(500);
+  p2.style.opacity='0'; p2.style.transition='none'; p2.style.top='-5px';
+  document.getElementById('cf-checker').classList.remove('hl');
+  // Step 3 AppConfig
+  document.getElementById('cf-appconfig').classList.add('hl');
+  document.getElementById('cf-field-plan').classList.add('hl-field');
+  await delay(700);
+  document.getElementById('cf-field-plan').classList.remove('hl-field');
+  document.getElementById('cf-appconfig').classList.remove('hl');
+  // Result
+  const resultCls = hasAccess ? 'hl-green' : 'hl-red';
+  ['cf-templates','cf-checker','cf-appconfig'].forEach(id => document.getElementById(id).classList.add(resultCls));
+  await delay(300);
+  result.className = 'cf-result ' + (hasAccess ? 'open' : 'locked');
+  result.textContent = hasAccess ? '✓ Access granted — item added to canvas' : '🔒 Not paid — upgrade required  (AppConfig.userPlan = "FREE")';
+  cfAnimating = false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CODE
+// ═══════════════════════════════════════════════════════════════
+function runCode() {
+  const code = document.getElementById('code-editor').value;
+  const m = code.match(/userPlan\s*=\s*"([^"]*)"/);
+  if (m) {
+    setPlan(m[1].toUpperCase()==='PRO'?'PRO':'FREE');
+    const s = document.getElementById('run-status');
+    s.textContent='✓ Applied!'; s.classList.add('show');
+    setTimeout(()=>s.classList.remove('show'),2500);
+  } else toast('⚠ Could not parse userPlan','err');
+}
+function resetCode() {
+  document.getElementById('code-editor').value='static String userPlan = "FREE";';
+  setPlan('FREE');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXPERIMENT
+// ═══════════════════════════════════════════════════════════════
+function setExp1(val) {
+  App.plan=val;
+  document.getElementById('ex1-free').classList.toggle('active',val==='FREE');
+  document.getElementById('ex1-pro').classList.toggle('active',val==='PRO');
+  updateExp1();
+}
+function updateExp1() {
+  const isPro=App.plan==='PRO';
+  ['templates','elements','videos','audio','uploads','export'].forEach(m=>{
+    const el=document.getElementById('ex1-'+m);
+    if(!el)return;
+    el.textContent=isPro?'✓ Open':'✕ Locked';
+    el.className='exp-module-val '+(isPro?'open':'locked');
+  });
+}
+function setExp2(val) {
+  document.getElementById('ex2-light').classList.toggle('active',val==='LIGHT');
+  document.getElementById('ex2-dark').classList.toggle('active',val==='DARK');
+  ['editor','toolbar','sidebar','preview'].forEach(m=>document.getElementById('ex2-'+m).textContent=val);
+}
+function setExp3(mb) {
+  ['100','500','1024'].forEach(v=>document.getElementById('ex3-'+v).classList.remove('active'));
+  document.getElementById('ex3-'+mb).classList.add('active');
+  const label=mb>=1024?'1 GB':mb+' MB';
+  ['img','vid','aud'].forEach(m=>document.getElementById('ex3-'+m).textContent='Max: '+label);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  QUESTION MODAL
+// ═══════════════════════════════════════════════════════════════
+function showQuestion() {
+  const modal = document.getElementById('question-modal');
+  document.getElementById('qm-title').textContent = 'How do all modules know the same value?';
+  document.getElementById('qm-body').textContent = 'Templates, Videos, Audio, and Elements all checked the same plan — "FREE". How do they all access the same application-level value?';
+  const opts = [
+    {text:'A. Every object keeps its own copy',right:false,explain:'If every object kept its own copy, changing one would not affect the others. You would have inconsistent plans across modules.'},
+    {text:'B. One common class-level value is shared',right:true,explain:'✓ Correct. When a value belongs to the application/class rather than to each object, Java provides static. AppConfig.userPlan is one shared class-level value.'},
+    {text:'C. Each module manually passes the value',right:false,explain:'This would create tight coupling and require updating every call when the value changes. Not scalable.'}
+  ];
+  const oc = document.getElementById('qm-opts'); oc.innerHTML='';
+  opts.forEach(o=>{
+    const btn=document.createElement('button'); btn.className='qm-opt'; btn.textContent=o.text;
+    btn.onclick=()=>{
+      document.querySelectorAll('.qm-opt').forEach(b=>b.classList.remove('chosen')); btn.classList.add('chosen');
+      const rv=document.getElementById('qm-reveal');
+      rv.textContent=o.explain; rv.style.display='block';
+      rv.style.borderColor=o.right?'var(--success)':'var(--danger)';
+      rv.style.background=o.right?'#34d39920':'#f8717120';
+      rv.style.color=o.right?'var(--success)':'var(--danger)';
+      document.getElementById('qm-close').style.display='block';
+    };
+    oc.appendChild(btn);
+  });
+  document.getElementById('qm-reveal').style.display='none';
+  document.getElementById('qm-close').style.display='none';
+  modal.classList.add('show');
+}
+function closeModal() {
+  document.getElementById('question-modal').classList.remove('show');
+  setTimeout(()=>toast('Try the Code view to see static in Java!','info'),300);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CHALLENGE
+// ═══════════════════════════════════════════════════════════════
+const CHALLENGES=[
+  {title:'Shopping App: Product Prices',desc:'A shopping application has thousands of products. Each product has a name and a price.',
+   visual:[{label:'Product #1',fields:['name = "Laptop"','price = 999']},{label:'Product #2',fields:['name = "Phone"','price = 499']},{label:'Product #3',fields:['name = "Tablet"','price = 299']}],
+   question:'Should price be a static variable?',opts:['Yes — make price static','No — price belongs to each product'],answer:1,
+   feedback:{right:'✓ Correct! Each product has its own price. price is an instance variable.',wrong:'If price were static, ALL products would have the same price. price belongs to each individual Product object.'}},
+  {title:'Game App: Maximum Players',desc:'A card game always allows exactly 4 players. This limit applies to every game session.',
+   visual:[{label:'Game Session #1',fields:['players = 4','status = ACTIVE']},{label:'Game Session #2',fields:['players = 4','status = WAITING']}],
+   question:'Could maximumPlayers = 4 be a static (class-level) constant?',opts:['Yes — same for every game','No — each game has its own limit'],answer:0,
+   feedback:{right:'✓ Correct! maximumPlayers is the same for every session — it belongs to the class level.',wrong:'Actually, every game session has the same maximum of 4 players. It could be a static constant.'}},
+  {title:'Design App: User Plan',desc:'A design application has one plan for the entire account. Templates, Videos, Audio, and Elements all check this same plan.',
+   visual:[{label:'AppConfig',fields:['static userPlan = "FREE"']}],
+   question:'Should userPlan be static, shared across all modules?',opts:['Yes — one plan for the whole app','No — each module has its own plan'],answer:0,
+   feedback:{right:'✓ Exactly. userPlan describes the state of the entire application, not of any individual module.',wrong:'Does it make sense for Templates to say FREE while Videos says PRO? No — there is one account plan.'}},
+  {title:'School App: Student Data',desc:'A school app tracks each student\'s name and test scores.',
+   visual:[{label:'Student #1',fields:['name = "Arun"','mark = 88']},{label:'Student #2',fields:['name = "Priya"','mark = 95']},{label:'Student #3',fields:['name = "Karthik"','mark = 72']}],
+   question:'Should name and mark be static variables?',opts:['Yes — make them static','No — they belong to each student'],answer:1,
+   feedback:{right:'✓ Correct! Each student has their own name and mark. Instance variables.',wrong:'If name were static, all students would share the same name. These are instance variables.'}},
+  {title:'App Theme: DARK / LIGHT',desc:'A design application lets the user choose a theme. The theme affects every panel.',
+   visual:[{label:'AppConfig',fields:['static theme = "DARK"']},{label:'Editor',fields:['reads AppConfig.theme']},{label:'Toolbar',fields:['reads AppConfig.theme']}],
+   question:'Should theme be a static, class-level value?',opts:['Yes — one theme for the whole app','No — each panel has its own theme'],answer:0,
+   feedback:{right:'✓ Correct! The theme is an application-wide setting. One shared value keeps everything consistent.',wrong:'If each panel had its own theme you would get a broken-looking application with mixed themes.'}}
+];
+
+let chIdx=0,chScore=0,chAnswered=false;
+function initChallenge(){chIdx=0;chScore=0;chAnswered=false;renderChallenge();}
+function renderChallenge(){
+  renderProgress();
+  if(chIdx>=CHALLENGES.length){renderChallengeDone();return;}
+  const q=CHALLENGES[chIdx]; chAnswered=false;
+  document.getElementById('ch-card').innerHTML=`<div class="ch-card">
+    <div class="ch-scene">Scenario ${chIdx+1}: ${q.title}</div>
+    <div class="ch-desc">${q.desc}</div>
+    <div class="ch-visual">${q.visual.map(o=>`<div class="ch-obj"><div style="font-size:9px;color:var(--muted);margin-bottom:4px">${o.label}</div>${o.fields.map(f=>`<div style="font-size:10px;font-family:monospace;color:var(--accent)">${f}</div>`).join('')}</div>`).join('')}</div>
+    <div class="ch-question">${q.question}</div>
+    <div class="ch-opts">${q.opts.map((o,i)=>`<button class="ch-opt" id="chopt-${i}" onclick="chAnswer(${i})">${o}</button>`).join('')}</div>
+    <div class="ch-feedback" id="ch-feedback"></div>
+    <div class="ch-nav"><span class="ch-score">Score: ${chScore} / ${CHALLENGES.length}</span><button class="btn-next" id="btn-ch-next" onclick="chNext()">Next →</button></div>
+  </div>`;
+}
+function chAnswer(idx){
+  if(chAnswered)return; chAnswered=true;
+  const q=CHALLENGES[chIdx]; const right=idx===q.answer;
+  if(right)chScore++;
+  document.querySelectorAll('.ch-opt').forEach((b,i)=>{
+    if(i===idx)b.classList.add(right?'chosen-right':'chosen-wrong');
+    if(!right&&i===q.answer)b.classList.add('reveal-right');
+    b.disabled=true;
+  });
+  const fb=document.getElementById('ch-feedback');
+  fb.className='ch-feedback show '+(right?'right':'wrong');
+  fb.textContent=right?q.feedback.right:q.feedback.wrong;
+  document.getElementById('btn-ch-next').classList.add('show');
+  document.querySelector('.ch-score').textContent=`Score: ${chScore} / ${CHALLENGES.length}`;
+  renderProgress();
+}
+function chNext(){chIdx++;renderChallenge();}
+function renderProgress(){
+  document.getElementById('ch-progress').innerHTML=CHALLENGES.map((_,i)=>{
+    let cls='ch-dot';
+    if(i<chIdx)cls+=' done'; else if(i===chIdx)cls+=' current';
+    return`<div class="${cls}">${i<chIdx?'✓':i+1}</div>`;
+  }).join('');
+}
+function renderChallengeDone(){
+  const pct=Math.round(chScore/CHALLENGES.length*100);
+  document.getElementById('ch-card').innerHTML=`<div class="ch-card" style="text-align:center">
+    <div style="font-size:40px;margin-bottom:12px">${pct>=80?'🎉':'💡'}</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:8px">Challenge Complete!</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Score: ${chScore} out of ${CHALLENGES.length}</div>
+    <div style="padding:14px;background:var(--faint);border-radius:10px;font-size:12px;line-height:1.7;color:var(--muted);text-align:left;margin-bottom:16px">
+      <strong style="color:var(--accent)">Key insight:</strong><br>
+      Before using <code>static</code>, ask: does this value belong to each object, or to the class/application as a whole?
+    </div>
+    <button class="run-btn" onclick="initChallenge()">↺ Try Again</button>
+    <button class="run-btn" style="background:var(--pro);margin-left:10px" onclick="nav('summary')">View Summary →</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════════
+let toastT;
+function toast(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show '+type;
+  clearTimeout(toastT); toastT=setTimeout(()=>t.className='',2500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+renderSidebar();
+updateObjCards();
+</script>
+</body>
+</html>
