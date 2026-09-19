@@ -97,7 +97,7 @@ it, and then runs `scripts/prerender-routes.mjs` to write a real `index.html` fo
 route (the host has no fallback for unknown paths, so a route without a file is a 404). It
 repopulates it from the fresh build (including your `public/` file).
 
-Then in the **Catalyst console → `visuallearning.onslate.in` Web Client Hosting (Slate) →
+Then in the **Catalyst console → `zsvl.onslate.in` Web Client Hosting (Slate) →
 click "Sync now"**. This is **required** — Slate does not auto-deploy on push.
 
 ## Step 4 — Verify
@@ -109,7 +109,13 @@ click "Sync now"**. This is **required** — Slate does not auto-deploy on push.
   ⚠️ `http.server` serves directory indexes and has no SPA fallback, so it does *not*
   behave like Slate. To check the real routing, serve `client/` with a server that returns
   `index.html` for any path with no matching file.
-- **Live, after Slate sync:** hard-refresh (Cmd+Shift+R) `https://visuallearning.onslate.in/`.
+- **Live, after Slate sync:** hard-refresh (Cmd+Shift+R) `https://zsvl.onslate.in/`.
+  Slate sends `cache-control: max-age=31536000` on the HTML shell, so a browser that
+  has been here before will happily keep serving last year's page and its bundle.
+  Before concluding a deploy failed, check which bundle is actually live —
+  `curl -s https://zsvl.onslate.in/ | grep -o '/assets/index-[^"]*\.js'` — and compare it
+  with the filename the build just printed. If they match, the deploy is fine and it is
+  the browser that is stale.
 
 ## Rules & gotchas (what has bitten us before)
 
