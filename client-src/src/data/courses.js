@@ -147,6 +147,15 @@ export const courses = [
             blurb: 'Sixty real songs live in one text file — split a line into its five fields, pick any mix of genres and artists, then play the shortlist you built and walk it with next and previous.' },
         ],
       },
+      {
+        id: 'networking-and-threads',
+        title: 'Networking & Threads',
+        summary: 'Two programs talking over a wire, and several things happening at once inside each one.',
+        lessons: [
+          { id: 'mathics-arena', title: 'MathicsArena', minutes: 45,
+            blurb: 'A live math contest played across four machines. Bind port 8080 and watch accept() sit and wait until a player knocks, give every player who joins a thread of their own, then run a round: two players answer on the very same tick. Step it and watch one thread take the lock while the other waits its turn - then switch synchronized off and watch them both win.' },
+        ],
+      },
     ],
   },
 

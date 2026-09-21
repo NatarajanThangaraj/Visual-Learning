@@ -1,0 +1,2284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MathicsArena</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127942;</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1120; --surf1:#111c2e; --surf2:#172035; --surf3:#1e2d48; --surf4:#263654;
+  --border:#2a3f60; --border2:#1e3050;
+  --accent:#3b82f6; --cyan:#06b6d4; --purple:#8b5cf6;
+  --green:#10b981; --amber:#f59e0b; --red:#ef4444;
+  --text:#e2e8f0; --text2:#94a3b8; --text3:#546a8a;
+  --mono:'JetBrains Mono','SF Mono',Menlo,'Courier New',monospace;
+  --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --p1:#3b82f6; --p2:#f59e0b; --p3:#8b5cf6; --p4:#ec4899;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:13px;
+  line-height:1.5;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+select,input{font:inherit;color:inherit}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--surf4);border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+.mono{font-family:var(--mono)}
+
+/* ------------------------------------------------------------- topbar */
+.topbar{height:44px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;
+  background:var(--surf1);border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 6px;border-radius:6px}
+.brand:hover{background:var(--surf3)}
+.brand i{width:22px;height:22px;border-radius:6px;font-style:normal;font-size:12px;
+  background:linear-gradient(135deg,var(--accent),var(--purple));display:grid;place-items:center}
+.brand b{font-weight:600;letter-spacing:-.01em}
+.view-toggle{display:flex;background:var(--surf3);border-radius:7px;padding:2px;margin-left:4px}
+.view-btn{padding:3px 11px;border-radius:5px;font-size:11.5px;color:var(--text2);transition:all .15s}
+.view-btn:hover{color:var(--text)}
+.view-btn.on{background:var(--accent);color:#fff}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:9px}
+.tb-chip{font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--surf2);
+  border:1px solid var(--border);border-radius:5px;padding:2px 8px}
+.tb-chip.lock{color:var(--red);border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.1)}
+.tb-chip.free{color:var(--green);border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08)}
+
+/* ------------------------------------------------------------ app body */
+.app-body{flex:1;display:flex;min-height:0}
+.sidebar{width:200px;flex:none;background:var(--surf1);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:8px 7px;overflow-y:auto}
+.nav-head{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);
+  padding:8px 7px 4px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:6px 8px;
+  border-radius:6px;color:var(--text2);font-size:12.5px;border-left:2px solid transparent;transition:all .12s}
+.nav-item:hover{background:var(--surf2);color:var(--text)}
+.nav-item.on{background:var(--surf3);color:#fff;border-left-color:var(--accent)}
+.nav-item em{font-style:normal;font-size:13px;width:16px;text-align:center}
+.nav-item s{margin-left:auto;text-decoration:none;font-size:9.5px;color:var(--green)}
+.legend{margin-top:auto;border-top:1px solid var(--border);padding:9px 7px 2px;display:grid;gap:5px}
+.legend b{font-size:9.5px;letter-spacing:.1em;color:var(--text3);font-weight:600}
+.legend span{font-size:10.5px;color:var(--text2);display:flex;align-items:center;gap:7px}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.simwrap{flex:1;display:flex;flex-direction:column;min-height:0}
+.split{flex:1;display:flex;min-height:0}
+.canvas-col{flex:1;min-width:0;display:flex;flex-direction:column}
+
+/* ------------------------------------------------------------- canvas */
+.band-net{flex:1;min-height:0;padding:8px;display:flex;gap:0;position:relative;overflow:hidden}
+.band-thr{height:clamp(122px,23vh,182px);flex:none;border-top:1px solid var(--border);padding:8px 11px;overflow:auto}
+.v-net .band-thr{display:none}
+.v-thr .split{display:none}
+.v-thr .band-thr{flex:1;height:auto}
+.band-label{font-size:9.5px;letter-spacing:.14em;color:var(--text3);font-weight:600;margin-bottom:7px;
+  display:flex;align-items:center;gap:8px}
+.band-label s{text-decoration:none;color:var(--text3);font-weight:400;letter-spacing:0;font-size:10.5px}
+
+.srv-col{width:206px;flex:none;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.wire-col{width:58px;flex:none;position:relative}
+.cli-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;overflow:auto}
+
+.card{background:var(--surf2);border:1px solid var(--border);border-radius:9px}
+.srv-card{padding:9px}
+.srv-card.off{opacity:.5}
+.srv-head{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px}
+.srv-head b{font-weight:500}
+.srv-head .port{margin-left:auto;color:var(--cyan)}
+.srv-sub{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px;word-break:break-all}
+.gm-box{margin-top:9px;background:var(--surf1);border:1px solid var(--border);border-radius:7px;padding:8px;
+  transition:border-color .2s}
+.gm-box.locked{border-color:var(--red)}
+.gm-box.unsync{border-color:var(--amber);border-style:dashed}
+.gm-head{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px}
+.gm-head b{font-weight:500;color:var(--amber)}
+.gm-head s{margin-left:auto;text-decoration:none;font-size:13px}
+.gm-fields{font-family:var(--mono);font-size:10.5px;color:var(--text2);margin-top:6px;display:grid;gap:3px}
+.gm-fields i{font-style:normal;color:var(--text3)}
+.gm-fields b{font-weight:500}
+.entryset{margin-top:7px;border:1px dashed var(--red);border-radius:6px;padding:4px 7px;
+  font-family:var(--mono);font-size:10px;color:var(--red)}
+.valchange{animation:vc .9s ease}
+@keyframes vc{0%{background:rgba(245,158,11,.5);color:#fff}100%{background:transparent}}
+
+.scoreboard{padding:8px 9px}
+.scoreboard h4{font-size:10px;letter-spacing:.1em;color:var(--text3);font-weight:600;margin-bottom:6px}
+.sb-row{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;padding:2px 0}
+.sb-row s{margin-left:auto;text-decoration:none;font-weight:500}
+.sb-bad{color:var(--red)}
+
+/* wires */
+.wire{position:absolute;left:0;right:0;height:1px;background:var(--border)}
+.wire.hot{background:var(--amber);box-shadow:0 0 6px rgba(245,158,11,.6)}
+.wire-tag{position:absolute;left:50%;transform:translateX(-50%);font-family:var(--mono);
+  font-size:8.5px;color:var(--text3);background:var(--bg);padding:0 4px;white-space:nowrap}
+.pk{position:absolute;font-family:var(--mono);font-size:8.5px;padding:1px 6px;border-radius:8px;
+  white-space:nowrap;z-index:4;transform:translateY(-50%);pointer-events:none;
+  max-width:70px;overflow:hidden;text-overflow:ellipsis}
+.pk-out{animation:pkOut .42s ease-in-out forwards}
+.pk-in{animation:pkIn .42s ease-in-out forwards}
+@keyframes pkOut{from{left:0;opacity:0}20%{opacity:1}to{left:42px;opacity:0}}
+@keyframes pkIn{from{left:42px;opacity:0}20%{opacity:1}to{left:0;opacity:0}}
+.k-join{background:var(--cyan);color:#03252b}
+.k-problem{background:var(--purple);color:#1b0b3d}
+.k-answer{background:var(--amber);color:#3b2606}
+.k-verdict{background:var(--green);color:#03291d}
+.k-reject{background:var(--red);color:#3d0808}
+.k-board{background:var(--text2);color:#0b1120}
+
+/* client terminals */
+.term{background:var(--surf2);border:1px solid var(--border);border-radius:8px;overflow:hidden;
+  transition:border-color .2s}
+.term.win{border-color:var(--green)}
+.term.blocked{border-color:var(--red)}
+.term.hang{border-color:var(--amber);border-style:dashed}
+.term-bar{display:flex;align-items:center;gap:5px;padding:4px 8px;background:var(--surf3);
+  font-family:var(--mono);font-size:9.5px;color:var(--text2)}
+.term-bar i{width:6px;height:6px;border-radius:50%;font-style:normal}
+.term-bar s{margin-left:6px;text-decoration:none}
+.term-bar u{margin-left:auto;text-decoration:none;font-size:9px;color:var(--text3)}
+.term-body{padding:5px 8px;font-family:var(--mono);font-size:10.5px;color:var(--text2);
+  max-height:68px;overflow:auto}
+.term-body div{white-space:pre-wrap;word-break:break-word}
+.term-body .me{color:var(--text)}
+.term-body .hit{color:var(--green)}
+.term-body .miss{color:var(--red)}
+.caret{display:inline-block;width:6px;height:11px;background:var(--amber);vertical-align:-1px;
+  animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.spin{display:inline-block;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ------------------------------------------------------- thread lanes */
+.lane{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;padding:2px 0}
+.lane-name{width:104px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lane-cells{display:flex;gap:2px;flex:none}
+.lane-cells i{display:block;width:9px;height:12px;border-radius:2px;font-style:normal;opacity:.5}
+.lane-cells i.now{opacity:1;outline:1px solid rgba(255,255,255,.35)}
+.st-chip{flex:none;padding:0 6px;border-radius:4px;font-size:9px;border:1px solid}
+.st-RUNNABLE{color:var(--green);border-color:var(--green)}
+.st-BLOCKED{color:var(--red);border-color:var(--red);background:rgba(239,68,68,.12)}
+.st-WAITING{color:var(--purple);border-color:var(--purple)}
+.st-NEW{color:var(--text3);border-color:var(--text3);border-style:dashed}
+.st-TERMINATED{color:var(--text3);border-color:var(--text3);opacity:.7}
+.lane-doing{color:var(--text3);font-size:9.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lane-doing b{color:var(--text2);font-weight:400}
+.info{display:inline-grid;place-items:center;width:12px;height:12px;border-radius:50%;
+  border:1px solid var(--text3);color:var(--text3);font-size:8px;cursor:help;margin-left:4px}
+.trace{margin-top:9px;border-top:1px dashed var(--border);padding-top:7px;font-family:var(--mono);font-size:10px}
+.trace div{color:var(--text2);padding:1px 0}
+.trace .race{color:var(--red)}
+.banner{margin:8px 0 0;background:rgba(239,68,68,.14);border:1px solid var(--red);border-radius:7px;
+  padding:7px 10px;font-size:11.5px;color:#fecaca}
+.banner b{color:#fff}
+
+/* ---------------------------------------------------------- java pane */
+.java-pane{width:clamp(320px,34%,450px);max-width:450px;min-width:320px;flex:none;background:var(--surf1);
+  border-left:1px solid var(--border);display:flex;flex-direction:column;min-height:0}
+.jtabs{display:flex;flex-wrap:wrap;gap:3px;padding:7px;border-bottom:1px solid var(--border)}
+.jtab{font-family:var(--mono);font-size:9.5px;padding:3px 7px;border-radius:5px;background:var(--surf3);
+  color:var(--text2);transition:all .12s}
+.jtab:hover{color:var(--text)}
+.jtab.on{background:var(--accent);color:#fff}
+.jtab.locked{background:transparent;border:1px dashed var(--border);color:var(--text3);cursor:not-allowed}
+.jhead{display:flex;align-items:center;gap:8px;padding:5px 9px;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:10px;color:var(--green)}
+.jhead u{margin-left:auto;text-decoration:none}
+.jbtn{font-size:9.5px;color:var(--text2);border:1px solid var(--border);border-radius:5px;padding:1px 7px}
+.jbtn:hover{color:var(--text);border-color:var(--text3)}
+.jbtn.on{color:var(--amber);border-color:var(--amber)}
+.jcode{flex:1;overflow:auto;padding:7px 0 14px;font-family:var(--mono);font-size:11px;line-height:1.75}
+.jline{display:flex;padding:0 9px 0 0;border-left:2px solid transparent}
+.jline i{font-style:normal;color:var(--text3);width:30px;flex:none;text-align:right;padding-right:9px;
+  user-select:none}
+.jline em{font-style:normal;flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:break-word;padding-left:2.6em;text-indent:-2.6em}
+.jline.on{border-left-color:var(--green);background:rgba(16,185,129,.1)}
+.jline.blk{border-left-color:var(--red);background:rgba(239,68,68,.08)}
+.jline.fresh i{color:var(--green)}
+.jline.fresh i::after{content:'+';margin-left:2px}
+.badges{flex:none;display:flex;gap:3px;padding-left:6px;align-items:center}
+.badge{width:14px;height:14px;border-radius:3px;display:grid;place-items:center;font-size:8px;
+  font-weight:700;color:#fff;font-family:var(--ui)}
+.badge.wait{opacity:.45;filter:grayscale(1)}
+.kw{color:var(--purple)}.ty{color:var(--cyan)}.st{color:var(--green)}
+.cm{color:var(--text3);font-style:italic}.fn{color:var(--amber)}.nu{color:#f472b6}
+.strike{text-decoration:line-through;color:var(--red)!important}
+
+/* ---------------------------------------------------------- step bar */
+.stepbar{height:44px;flex:none;display:flex;align-items:center;gap:8px;padding:0 12px;
+  background:var(--surf1);border-top:1px solid var(--border);overflow-x:auto}
+.sb-btn{padding:5px 13px;border-radius:6px;background:var(--surf3);color:var(--text);font-size:12px;
+  white-space:nowrap;transition:all .12s}
+.sb-btn:hover{background:var(--surf4)}
+.sb-btn.primary{background:var(--accent);color:#fff}
+.sb-btn.primary:hover{filter:brightness(1.1)}
+.sb-btn:disabled{opacity:.4;cursor:not-allowed}
+.sb-right{margin-left:auto;display:flex;align-items:center;gap:9px;white-space:nowrap}
+.toggle{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+  border:1px solid var(--border);border-radius:6px;padding:3px 9px;color:var(--text2)}
+.toggle.on{color:var(--green);border-color:var(--green)}
+.toggle.off{color:var(--red);border-color:var(--red)}
+.mini-sel{background:var(--surf3);border:1px solid var(--border);border-radius:5px;padding:2px 5px;
+  font-size:11px;font-family:var(--mono)}
+
+/* ------------------------------------------------------------- pages */
+.page{flex:1;overflow:auto;padding:20px 24px;display:none}
+.page.on{display:block}
+.page-wrap{max-width:900px;margin:0 auto}
+.page h1{font-size:21px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
+.page h2{font-size:15px;font-weight:600;margin:22px 0 10px}
+.page p{color:var(--text2);font-size:13px;line-height:1.75;margin-bottom:10px}
+.page p b{color:var(--text);font-weight:500}
+.lede{font-size:14px;color:var(--text2);margin-bottom:18px}
+.grid{display:grid;gap:11px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pcard{background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:13px 15px}
+.pcard h3{font-size:13px;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.pcard p{font-size:12px;margin:0;line-height:1.65}
+.pcard.click{cursor:pointer;transition:all .15s}
+.pcard.click:hover{border-color:var(--accent);transform:translateY(-1px)}
+.tag{font-family:var(--mono);font-size:9.5px;padding:1px 6px;border-radius:4px;background:var(--surf4);
+  color:var(--text2)}
+.ul{color:var(--text2);font-size:12.5px;line-height:1.85;padding-left:18px}
+.ul li{margin-bottom:3px}
+.ul code,.page code{font-family:var(--mono);font-size:11.5px;color:var(--amber);
+  background:var(--surf1);padding:1px 5px;border-radius:4px}
+
+/* -------------------------------------------------------- class flow */
+.flow-wrap{flex:1;display:flex;min-height:0}
+.flow-side{width:186px;flex:none;background:var(--surf1);border-right:1px solid var(--border);
+  padding:9px 7px;overflow-y:auto}
+.flow-group{font-size:9.5px;letter-spacing:.1em;color:var(--text3);padding:9px 7px 3px;font-weight:600}
+.flow-item{display:block;width:100%;text-align:left;padding:5px 8px;border-radius:6px;
+  font-family:var(--mono);font-size:10.5px;color:var(--text2)}
+.flow-item:hover{background:var(--surf2);color:var(--text)}
+.flow-item.on{background:var(--surf3);color:#fff}
+.flow-main{flex:1;min-width:0;overflow:auto;padding:13px 15px}
+.flow-head h2{font-size:16px;font-weight:600;margin:0}
+.flow-head p{font-family:var(--mono);font-size:11px;color:var(--text3);margin:2px 0 0}
+.fctl{display:flex;align-items:center;gap:9px;background:var(--surf2);border:1px solid var(--border);
+  border-radius:8px;padding:7px 10px;margin:11px 0}
+.fctl button{padding:3px 9px;border-radius:5px;background:var(--surf3);font-size:11.5px}
+.fctl button:hover{background:var(--surf4)}
+.fctl button.primary{background:var(--accent);color:#fff}
+.fbar{flex:1;height:4px;border-radius:4px;background:var(--surf4);overflow:hidden}
+.fbar i{display:block;height:100%;width:0;background:var(--amber);transition:width .35s ease}
+.fcap{display:flex;gap:11px;background:var(--surf2);border:1px solid var(--border);border-radius:8px;
+  padding:10px 13px;margin-bottom:11px;min-height:66px}
+.fcap-n{flex:none;width:22px;height:22px;border-radius:50%;background:var(--amber);color:#3b2606;
+  display:grid;place-items:center;font-size:11px;font-weight:700}
+.fcap b{display:block;font-size:12.5px;font-weight:600;margin-bottom:2px}
+.fcap p{margin:0;font-size:12px;color:var(--text2);line-height:1.7;max-width:80ch}
+.fcap-idle{color:var(--text3);font-size:12px;align-self:center}
+.diagram{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:14px;overflow-x:auto}
+.dgm{position:relative;display:grid;min-width:548px;gap:14px 14px}
+.dgm-edges{position:absolute;left:0;top:0;pointer-events:none;z-index:1}
+.edge{fill:none;stroke:var(--text3);stroke-width:1.4;opacity:.7}
+.edge--dashed{stroke-dasharray:5 4}
+.edge--wire{stroke:var(--cyan);stroke-width:1.6;stroke-dasharray:3 3}
+.edge.is-on{stroke:var(--amber);stroke-width:2.4;opacity:1}
+.edge.is-done{stroke:var(--text2);opacity:.75}
+.edge.is-idle{opacity:.25}
+.dnode{position:relative;z-index:2;align-self:center;justify-self:center;width:100%;max-width:194px;
+  background:var(--surf1);border:1px solid var(--border);border-radius:8px;padding:7px 9px;
+  transition:border-color .2s,opacity .2s}
+.dnode b{display:block;font-family:var(--mono);font-size:11.5px;font-weight:500;word-break:break-word}
+.dnode small{display:block;color:var(--text3);font-size:9.5px;margin-top:2px}
+.dnode em{display:block;color:var(--text3);font-size:9.5px;font-style:normal;margin-top:4px;
+  border-top:1px dashed var(--border);padding-top:4px}
+.dnode .meth{display:block;font-family:var(--mono);font-size:9.5px;color:var(--text2);margin-top:5px;
+  padding-top:5px;border-top:1px dashed var(--border)}
+.dnode--class{background:linear-gradient(180deg,var(--surf3),var(--surf2));border-color:#33456a}
+.dnode--thread{border-color:var(--green)}
+.dnode--thread b{color:var(--green)}
+.dnode--data{background:var(--bg);border-style:dashed}
+.dnode--data b{color:var(--text2);font-weight:400}
+.dnode--socket{border-color:var(--cyan);border-style:dashed}
+.dnode--socket b{color:var(--cyan)}
+.dnode--monitor{border-color:var(--amber)}
+.dnode--monitor b{color:var(--amber)}
+.dnode.is-on{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.14)}
+.dnode.is-on b{color:var(--amber)}
+.dnode.is-idle{opacity:.35}
+.elabel{position:absolute;z-index:3;transform:translate(-50%,-50%);pointer-events:none;
+  font-family:var(--mono);font-size:9px;color:var(--text2);background:var(--surf2);
+  border:1px solid var(--border);border-radius:5px;padding:1px 6px;white-space:nowrap}
+.elabel.is-on{background:var(--amber);color:#3b2606;border-color:transparent;font-weight:700}
+.elabel.is-idle{opacity:.3}
+.boundary{position:absolute;top:0;bottom:0;border-left:1px dashed var(--cyan);opacity:.45;z-index:0}
+.boundary-tag{position:absolute;top:-8px;transform:translateX(-50%);font-family:var(--mono);
+  font-size:9px;color:var(--cyan);background:var(--surf2);padding:0 6px;white-space:nowrap;z-index:3}
+.side-tag{position:absolute;top:-10px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  color:var(--text3);z-index:3}
+
+/* --------------------------------------------------------- challenge */
+.q{background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.q-head{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.q-n{width:22px;height:22px;flex:none;border-radius:50%;background:var(--surf4);display:grid;
+  place-items:center;font-size:11px;font-weight:700}
+.q.right .q-n{background:var(--green);color:#03291d}
+.q.wrong .q-n{background:var(--red);color:#fff}
+.q-head b{font-size:13px;font-weight:600}
+.q-code{background:var(--surf1);border:1px solid var(--border);border-radius:7px;padding:9px 11px;
+  font-family:var(--mono);font-size:11.5px;line-height:1.8;white-space:pre-wrap;margin-bottom:10px}
+.slot{display:inline-block;min-width:118px;background:var(--surf3);border:1px dashed var(--amber);
+  border-radius:5px;padding:0 6px;color:var(--amber);cursor:pointer}
+.slot:hover{background:var(--surf4)}
+.opts{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px}
+.opt{font-family:var(--mono);font-size:11px;padding:4px 11px;border-radius:6px;background:var(--surf3);
+  color:var(--text2);border:1px solid transparent}
+.opt:hover{color:var(--text);border-color:var(--text3)}
+.opt.pick{border-color:var(--accent);color:#fff;background:var(--surf4)}
+.fb{border-radius:7px;padding:9px 12px;font-size:12px;line-height:1.7;margin-top:8px}
+.fb.ok{background:rgba(16,185,129,.1);border:1px solid var(--green);color:#a7f3d0}
+.fb.no{background:rgba(239,68,68,.1);border:1px solid var(--red);color:#fecaca}
+.fb b{color:#fff}
+.fb .out{font-family:var(--mono);font-size:10.5px;color:var(--text2);background:var(--surf1);
+  border-radius:5px;padding:6px 9px;margin-top:7px;white-space:pre-wrap}
+.score-chip{font-family:var(--mono);font-size:12px;color:var(--amber);border:1px solid var(--amber);
+  border-radius:6px;padding:2px 10px}
+
+/* ------------------------------------------------------------ toasts */
+.toasts{position:fixed;left:212px;bottom:56px;display:grid;gap:7px;z-index:50}
+.toast{background:var(--surf3);border:1px solid var(--border);border-left:3px solid var(--accent);
+  border-radius:7px;padding:8px 13px;font-size:12px;max-width:310px;animation:tin .25s ease;
+  box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.toast.warn{border-left-color:var(--amber)}
+.toast.bad{border-left-color:var(--red)}
+.toast.good{border-left-color:var(--green)}
+@keyframes tin{from{opacity:0;transform:translateX(-18px)}}
+
+.ctrl-strip{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:7px 11px;
+  border-bottom:1px solid var(--border);background:var(--surf1);font-size:11.5px;color:var(--text2)}
+.ctrl-strip .sb-btn{padding:3px 9px;font-size:11px}
+.ctrl-strip label{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px}
+.ctrl-strip input[type=range]{width:64px;accent-color:var(--accent)}
+.ctrl-strip input[type=checkbox]{accent-color:var(--red)}
+
+/* client row = its own pair of wires, then its terminal */
+.cli-row{display:flex;align-items:stretch;min-height:74px}
+.wire-cell{width:58px;flex:none;position:relative}
+.cli-row .term{flex:1;min-width:0}
+
+@media (max-width:900px){
+  html,body{overflow:auto;height:auto}
+  .app-body{flex-direction:column}
+  .sidebar{width:100%;flex-direction:row;overflow-x:auto;gap:4px;align-items:center;padding:6px}
+  .nav-head,.legend{display:none}
+  .nav-item{width:auto;white-space:nowrap;border-left:0;border:1px solid var(--border)}
+  .split{flex-direction:column}
+  .java-pane{width:100%;max-width:none;border-left:0;border-top:1px solid var(--border);height:300px}
+  .band-net{flex-direction:column}
+  .srv-col,.cli-col{width:100%}
+  .wire-col{width:100%;height:26px}
+  .flow-wrap{flex-direction:column}
+  .flow-side{width:100%;display:flex;overflow-x:auto;gap:5px}
+  .flow-group{display:none}
+  .flow-item{width:auto;white-space:nowrap;border:1px solid var(--border)}
+  .toasts{left:8px;right:8px;bottom:8px}
+  .toast{max-width:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="brand" onclick="go('home')"><i>&#11042;</i><b>MathicsArena</b></button>
+  <div class="view-toggle" id="viewToggle">
+    <button class="view-btn" onclick="setView('net')">Network</button>
+    <button class="view-btn" onclick="setView('thr')">Threads</button>
+    <button class="view-btn on" onclick="setView('split')">Split</button>
+  </div>
+  <div class="tb-right">
+    <span class="tb-chip" id="tbTick">&#9201; tick 0</span>
+    <span class="tb-chip" id="tbLock">&#128275; monitor free</span>
+  </div>
+</div>
+
+<div class="app-body">
+  <div class="sidebar">
+    <div class="nav-head">Stages</div>
+    <button class="nav-item" id="nav-stage1" onclick="go('stage1')"><em>&#128268;</em>1 &middot; The handshake</button>
+    <button class="nav-item" id="nav-stage2" onclick="go('stage2')"><em>&#129525;</em>2 &middot; A thread each</button>
+    <button class="nav-item" id="nav-stage3" onclick="go('stage3')"><em>&#127911;</em>3 &middot; Two threads</button>
+    <button class="nav-item" id="nav-stage4" onclick="go('stage4')"><em>&#127937;</em>4 &middot; The Game Master</button>
+    <div class="nav-head">Explore</div>
+    <button class="nav-item" id="nav-flow" onclick="go('flow')"><em>&#128506;</em>Class flow</button>
+    <button class="nav-item" id="nav-free" onclick="go('free')"><em>&#129514;</em>Free play</button>
+    <button class="nav-item" id="nav-challenge" onclick="go('challenge')"><em>&#127919;</em>Challenge<s id="navScore"></s></button>
+    <button class="nav-item" id="nav-reference" onclick="go('reference')"><em>&#128218;</em>Reference</button>
+    <div class="legend">
+      <b>THREAD STATE</b>
+      <span><i class="dot" style="background:#10b981"></i>RUNNABLE</span>
+      <span><i class="dot" style="background:#ef4444"></i>BLOCKED &mdash; wants a monitor</span>
+      <span><i class="dot" style="background:#8b5cf6"></i>WAITING</span>
+      <span><i class="dot" style="background:#546a8a"></i>TERMINATED</span>
+    </div>
+  </div>
+
+  <div class="main" id="main">
+    <!-- simulator -->
+    <div class="simwrap" id="simView">
+      <div id="ctrlStrip"></div>
+      <div class="split">
+        <div class="canvas-col">
+          <div class="band-net">
+            <div class="srv-col" id="srvCol"></div>
+            <div class="wire-col" id="wireCol"></div>
+            <div class="cli-col" id="cliCol"></div>
+          </div>
+        </div>
+      <div class="java-pane">
+        <div class="jtabs" id="jtabs"></div>
+        <div class="jhead"><span id="jExec">&#9654; idle</span>
+          <u><button class="jbtn" id="jPin" onclick="togglePin()">pin</button>
+             <button class="jbtn" onclick="copyClass()">copy file</button></u></div>
+        <div class="jcode" id="jcode"></div>
+      </div>
+      </div>
+      <div class="band-thr">
+        <div class="band-label">THREAD LANES <s id="laneNote"></s></div>
+        <div id="lanes"></div>
+        <div class="trace" id="trace"></div>
+      </div>
+    </div>
+
+    <!-- class flow -->
+    <div class="flow-wrap" id="flowView" style="display:none">
+      <div class="flow-side" id="flowSide"></div>
+      <div class="flow-main" id="flowMain"></div>
+    </div>
+
+    <!-- text pages -->
+    <div class="page" id="page-home"></div>
+    <div class="page" id="page-challenge"></div>
+    <div class="page" id="page-reference"></div>
+  </div>
+</div>
+
+<div class="stepbar" id="stepbar"></div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+ * MathicsArena
+ * A simulated socket server, a thread per player, and one synchronized
+ * method that decides who answered first.
+ *
+ * Nothing here is narrated that the engine did not actually do: every
+ * thread owns a list of instructions and executes exactly one of them
+ * per tick, so the race on screen is a real race between two program
+ * counters, not an animation of one.
+ * ===================================================================== */
+
+/* ------------------------------------------------------- Java sources */
+/* One line = one addressable object. `since` is the stage the line first
+ * appears in, `until` the last stage it survives. Instruction lists point
+ * at these ids, so the highlight and the execution can never drift. */
+const L = (id, since, h, until) => ({ id: id, since: since, h: h, until: until || 9 });
+
+const CLASSES = {
+  MathicsServer: [
+    L('srv.imp', 1, '<span class="kw">import</span> java.io.*;'),
+    L('srv.imp2', 1, '<span class="kw">import</span> java.net.*;'),
+    L('srv.imp3', 1, '<span class="kw">import</span> java.util.*;'),
+    L('srv.gap1', 1, ''),
+    L('srv.class', 1, '<span class="kw">public class</span> <span class="ty">MathicsServer</span> {'),
+    L('srv.f1', 1, '    <span class="kw">private int</span> port = <span class="nu">8080</span>;'),
+    L('srv.f2', 2, '    <span class="kw">private</span> <span class="ty">List</span>&lt;<span class="ty">ClientHandler</span>&gt; activeClients = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();'),
+    L('srv.f3', 4, '    <span class="kw">private</span> <span class="ty">GameManager</span> gameManager = <span class="kw">new</span> <span class="ty">GameManager</span>(<span class="kw">this</span>);'),
+    L('srv.gap2', 1, ''),
+    L('srv.m1', 1, '    <span class="kw">public void</span> <span class="fn">startServer</span>() <span class="kw">throws</span> IOException {'),
+    L('srv.bind', 1, '        <span class="ty">ServerSocket</span> serverSocket = <span class="kw">new</span> <span class="ty">ServerSocket</span>(port);'),
+    L('srv.log', 1, '        System.out.<span class="fn">println</span>(<span class="st">"MathicsArena listening on "</span> + port);'),
+    L('srv.while', 1, '        <span class="kw">while</span> (<span class="kw">true</span>) {'),
+    L('srv.accept', 1, '            <span class="ty">Socket</span> socket = serverSocket.<span class="fn">accept</span>();  <span class="cm">// waits right here</span>'),
+    L('srv.s1in', 1, '            <span class="ty">BufferedReader</span> in = <span class="kw">new</span> <span class="ty">BufferedReader</span>(', 1),
+    L('srv.s1in2', 1, '                <span class="kw">new</span> <span class="ty">InputStreamReader</span>(socket.<span class="fn">getInputStream</span>()));', 1),
+    L('srv.s1out', 1, '            <span class="ty">PrintWriter</span> out = <span class="kw">new</span> <span class="ty">PrintWriter</span>(socket.<span class="fn">getOutputStream</span>(), <span class="kw">true</span>);', 1),
+    L('srv.s1name', 1, '            <span class="ty">String</span> name = in.<span class="fn">readLine</span>();', 1),
+    L('srv.s1welcome', 1, '            out.<span class="fn">println</span>(<span class="st">"Welcome, "</span> + name + <span class="st">"!"</span>);', 1),
+    L('srv.s1loop', 1, '            <span class="kw">while</span> (in.<span class="fn">readLine</span>() != <span class="kw">null</span>) { }  <span class="cm">// and nobody else gets in</span>', 1),
+    L('srv.mk', 2, '            <span class="ty">ClientHandler</span> handler = <span class="kw">new</span> <span class="ty">ClientHandler</span>(socket, <span class="kw">this</span>);'),
+    L('srv.add', 2, '            activeClients.<span class="fn">add</span>(handler);'),
+    L('srv.start', 2, '            handler.<span class="fn">start</span>();  <span class="cm">// a thread of its own, so accept() is free again</span>'),
+    L('srv.kick', 4, '            <span class="kw">if</span> (activeClients.<span class="fn">size</span>() == players) gameManager.<span class="fn">startGameLoop</span>();'),
+    L('srv.endw', 1, '        }'),
+    L('srv.endm', 1, '    }'),
+    L('srv.gap3', 1, ''),
+    L('srv.bm1', 2, '    <span class="kw">public void</span> <span class="fn">broadcastMessage</span>(<span class="ty">String</span> message) {'),
+    L('srv.bm2', 2, '        <span class="kw">for</span> (<span class="ty">ClientHandler</span> c : activeClients) c.<span class="fn">sendMessage</span>(message);'),
+    L('srv.bm3', 2, '    }'),
+    L('srv.gap4', 2, ''),
+    L('srv.gmget', 4, '    <span class="kw">public</span> <span class="ty">GameManager</span> <span class="fn">getGameManager</span>() { <span class="kw">return</span> gameManager; }'),
+    L('srv.gap5', 4, ''),
+    L('srv.main', 1, '    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) <span class="kw">throws</span> IOException {'),
+    L('srv.main2', 1, '        <span class="kw">new</span> <span class="ty">MathicsServer</span>().<span class="fn">startServer</span>();'),
+    L('srv.main3', 1, '    }'),
+    L('srv.end', 1, '}')
+  ],
+
+  ClientHandler: [
+    L('ch.class', 2, '<span class="kw">public class</span> <span class="ty">ClientHandler</span> <span class="kw">extends</span> <span class="ty">Thread</span> {'),
+    L('ch.f1', 2, '    <span class="kw">private</span> <span class="ty">Socket</span> clientSocket;'),
+    L('ch.f2', 2, '    <span class="kw">private</span> <span class="ty">MathicsServer</span> server;'),
+    L('ch.f3', 2, '    <span class="kw">private</span> <span class="ty">BufferedReader</span> in;'),
+    L('ch.f4', 2, '    <span class="kw">private</span> <span class="ty">PrintWriter</span> out;'),
+    L('ch.f5', 2, '    <span class="kw">private</span> <span class="ty">String</span> playerName;'),
+    L('ch.gap1', 2, ''),
+    L('ch.ctor', 2, '    <span class="fn">ClientHandler</span>(<span class="ty">Socket</span> socket, <span class="ty">MathicsServer</span> server) <span class="kw">throws</span> IOException {'),
+    L('ch.ctor2', 2, '        <span class="kw">this</span>.clientSocket = socket;'),
+    L('ch.ctor3', 2, '        <span class="kw">this</span>.server = server;'),
+    L('ch.ctor4', 2, '        <span class="kw">this</span>.in  = <span class="kw">new</span> <span class="ty">BufferedReader</span>('),
+    L('ch.ctor5', 2, '            <span class="kw">new</span> <span class="ty">InputStreamReader</span>(socket.<span class="fn">getInputStream</span>()));'),
+    L('ch.ctor6', 2, '        <span class="kw">this</span>.out = <span class="kw">new</span> <span class="ty">PrintWriter</span>(socket.<span class="fn">getOutputStream</span>(), <span class="kw">true</span>);'),
+    L('ch.ctor7', 2, '    }'),
+    L('ch.gap2', 2, ''),
+    L('ch.run', 2, '    <span class="kw">public void</span> <span class="fn">run</span>() {  <span class="cm">// one of these runs per connected player</span>'),
+    L('ch.try', 2, '        <span class="kw">try</span> {'),
+    L('ch.name', 2, '            playerName = in.<span class="fn">readLine</span>();'),
+    L('ch.welcome', 2, '            <span class="fn">sendMessage</span>(<span class="st">"Welcome, "</span> + playerName + <span class="st">"!"</span>);'),
+    L('ch.decl', 2, '            <span class="ty">String</span> line;'),
+    L('ch.read', 2, '            <span class="kw">while</span> ((line = in.<span class="fn">readLine</span>()) != <span class="kw">null</span>) {'),
+    L('ch.echo', 2, '                System.out.<span class="fn">println</span>(playerName + <span class="st">" said "</span> + line);', 3),
+    L('ch.parse', 4, '                <span class="kw">int</span> answer = <span class="ty">Integer</span>.<span class="fn">parseInt</span>(line.<span class="fn">trim</span>());'),
+    L('ch.submit', 4, '                <span class="kw">boolean</span> won = server.<span class="fn">getGameManager</span>()'),
+    L('ch.submit2', 4, '                                  .<span class="fn">submitAnswer</span>(playerName, answer);'),
+    L('ch.late', 4, '                <span class="kw">if</span> (!won) <span class="fn">sendMessage</span>(<span class="st">"Too late - the round is already won."</span>);'),
+    L('ch.endw', 2, '            }'),
+    L('ch.catch', 2, '        } <span class="kw">catch</span> (IOException e) {'),
+    L('ch.catch2', 2, '            System.out.<span class="fn">println</span>(playerName + <span class="st">" dropped."</span>);'),
+    L('ch.catch3', 2, '        }'),
+    L('ch.endrun', 2, '    }'),
+    L('ch.gap3', 2, ''),
+    L('ch.send', 2, '    <span class="kw">public void</span> <span class="fn">sendMessage</span>(<span class="ty">String</span> msg) { out.<span class="fn">println</span>(msg); }'),
+    L('ch.get', 2, '    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">getPlayerName</span>() { <span class="kw">return</span> playerName; }'),
+    L('ch.end', 2, '}')
+  ],
+
+  GameManager: [
+    L('gm.class', 4, '<span class="kw">public class</span> <span class="ty">GameManager</span> {'),
+    L('gm.f0', 4, '    <span class="kw">private</span> <span class="ty">MathicsServer</span> server;'),
+    L('gm.f1', 4, '    <span class="kw">private</span> <span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; playerScores = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();'),
+    L('gm.f2', 4, '    <span class="kw">private int</span> currentAnswer;'),
+    L('gm.f3', 4, '    <span class="kw">private boolean</span> isRoundActive = <span class="kw">false</span>;'),
+    L('gm.f4', 4, '    <span class="kw">private int</span> rounds = <span class="nu">3</span>;'),
+    L('gm.f5', 4, '    <span class="kw">private</span> <span class="ty">Random</span> random = <span class="kw">new</span> <span class="ty">Random</span>();'),
+    L('gm.gap1', 4, ''),
+    L('gm.ctor', 4, '    <span class="fn">GameManager</span>(<span class="ty">MathicsServer</span> server) { <span class="kw">this</span>.server = server; }'),
+    L('gm.gap2', 4, ''),
+    L('gm.loop', 4, '    <span class="kw">public void</span> <span class="fn">startGameLoop</span>() {'),
+    L('gm.loop1', 4, '        <span class="kw">new</span> <span class="ty">Thread</span>(() -&gt; {  <span class="cm">// the Game Master runs on its own thread</span>'),
+    L('gm.loop2', 4, '            <span class="kw">for</span> (<span class="kw">int</span> r = <span class="nu">1</span>; r &lt;= rounds; r++) {'),
+    L('gm.gen', 4, '                <span class="ty">String</span> problem = <span class="fn">generateMathProblem</span>();'),
+    L('gm.open', 4, '                isRoundActive = <span class="kw">true</span>;'),
+    L('gm.ask', 4, '                server.<span class="fn">broadcastMessage</span>(<span class="st">"Round "</span> + r + <span class="st">" - Solve: "</span> + problem);'),
+    L('gm.spin', 4, '                <span class="kw">while</span> (isRoundActive) <span class="fn">pause</span>(<span class="nu">50</span>);  <span class="cm">// somebody has to get it</span>'),
+    L('gm.gap', 4, '                <span class="fn">pause</span>(<span class="nu">1500</span>);'),
+    L('gm.endfor', 4, '            }'),
+    L('gm.board', 4, '            <span class="fn">broadcastLeaderboard</span>();'),
+    L('gm.loop3', 4, '        }).<span class="fn">start</span>();'),
+    L('gm.loop4', 4, '    }'),
+    L('gm.gap3', 4, ''),
+    L('gm.gen1', 4, '    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">generateMathProblem</span>() {'),
+    L('gm.gen2', 4, '        <span class="kw">int</span> a = <span class="nu">2</span> + random.<span class="fn">nextInt</span>(<span class="nu">18</span>), b = <span class="nu">2</span> + random.<span class="fn">nextInt</span>(<span class="nu">9</span>);'),
+    L('gm.gen3', 4, '        <span class="kw">int</span> c = <span class="nu">1</span> + random.<span class="fn">nextInt</span>(<span class="nu">9</span>);'),
+    L('gm.gen4', 4, '        currentAnswer = a * b - c;'),
+    L('gm.gen5', 4, '        <span class="kw">return</span> a + <span class="st">" * "</span> + b + <span class="st">" - "</span> + c;'),
+    L('gm.gen6', 4, '    }'),
+    L('gm.gap4', 4, ''),
+    L('gm.sig', 4, '    <span class="kw">public</span> <span class="kw" id="syncKw">synchronized</span> <span class="kw">boolean</span> <span class="fn">submitAnswer</span>('),
+    L('gm.sig2', 4, '            <span class="ty">String</span> player, <span class="kw">int</span> answer) {'),
+    L('gm.check', 4, '        <span class="kw">if</span> (!isRoundActive)          <span class="kw">return false</span>;'),
+    L('gm.wrong', 4, '        <span class="kw">if</span> (answer != currentAnswer) <span class="kw">return false</span>;'),
+    L('gm.flip', 4, '        isRoundActive = <span class="kw">false</span>;  <span class="cm">// the round is now closed</span>'),
+    L('gm.score', 4, '        playerScores.<span class="fn">merge</span>(player, <span class="nu">1</span>, <span class="ty">Integer</span>::sum);'),
+    L('gm.say', 4, '        server.<span class="fn">broadcastMessage</span>(player'),
+    L('gm.say1b', 4, '                                + <span class="st">" answered first! The answer was "</span>'),
+    L('gm.say2', 4, '                                + currentAnswer + <span class="st">"."</span>);'),
+    L('gm.ret', 4, '        <span class="kw">return true</span>;'),
+    L('gm.endsub', 4, '    }'),
+    L('gm.gap5', 4, ''),
+    L('gm.lb1', 4, '    <span class="kw">public void</span> <span class="fn">broadcastLeaderboard</span>() {'),
+    L('gm.lb2', 4, '        server.<span class="fn">broadcastMessage</span>(<span class="st">"--- FINAL LEADERBOARD ---"</span>);'),
+    L('gm.lb3', 4, '        playerScores.<span class="fn">entrySet</span>().<span class="fn">stream</span>()'),
+    L('gm.lb4', 4, '            .<span class="fn">sorted</span>(<span class="ty">Map</span>.Entry.&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt;'),
+    L('gm.lb4b', 4, '                    <span class="fn">comparingByValue</span>().<span class="fn">reversed</span>())'),
+    L('gm.lb5', 4, '            .<span class="fn">forEach</span>(e -&gt; server.<span class="fn">broadcastMessage</span>('),
+    L('gm.lb5b', 4, '                    e.<span class="fn">getKey</span>() + <span class="st">" : "</span> + e.<span class="fn">getValue</span>()));'),
+    L('gm.lb6', 4, '        server.<span class="fn">closeAll</span>();  <span class="cm">// flush, then close every socket</span>'),
+    L('gm.lb7', 4, '    }'),
+    L('gm.end', 4, '}')
+  ],
+
+  MathicsClient: [
+    L('cl.class', 1, '<span class="kw">public class</span> <span class="ty">MathicsClient</span> {'),
+    L('cl.f1', 1, '    <span class="kw">private</span> <span class="ty">Socket</span> serverSocket;'),
+    L('cl.f2', 1, '    <span class="kw">private</span> <span class="ty">BufferedReader</span> in;'),
+    L('cl.f3', 1, '    <span class="kw">private</span> <span class="ty">PrintWriter</span> out;'),
+    L('cl.gap1', 1, ''),
+    L('cl.m1', 1, '    <span class="kw">public void</span> <span class="fn">connectToServer</span>(<span class="ty">String</span> host, <span class="kw">int</span> port) <span class="kw">throws</span> IOException {'),
+    L('cl.connect', 1, '        serverSocket = <span class="kw">new</span> <span class="ty">Socket</span>(host, port);  <span class="cm">// localhost:8080</span>'),
+    L('cl.streams', 1, '        in  = <span class="kw">new</span> <span class="ty">BufferedReader</span>('),
+    L('cl.streams2', 1, '            <span class="kw">new</span> <span class="ty">InputStreamReader</span>(serverSocket.<span class="fn">getInputStream</span>()));'),
+    L('cl.streams3', 1, '        out = <span class="kw">new</span> <span class="ty">PrintWriter</span>(serverSocket.<span class="fn">getOutputStream</span>(), <span class="kw">true</span>);'),
+    L('cl.scan', 1, '        <span class="ty">Scanner</span> scanner = <span class="kw">new</span> <span class="ty">Scanner</span>(System.in);'),
+    L('cl.ask', 1, '        System.out.<span class="fn">print</span>(<span class="st">"Your name: "</span>);'),
+    L('cl.sendname', 1, '        out.<span class="fn">println</span>(scanner.<span class="fn">nextLine</span>());'),
+    L('cl.hear', 1, '        System.out.<span class="fn">println</span>(in.<span class="fn">readLine</span>());  <span class="cm">// one reply, then deaf</span>', 2),
+    L('cl.spawn', 3, '        <span class="kw">new</span> <span class="ty">ServerListener</span>(in).<span class="fn">start</span>();  <span class="cm">// ears of its own</span>'),
+    L('cl.play', 3, '        <span class="fn">startPlaying</span>(scanner);'),
+    L('cl.endm', 1, '    }'),
+    L('cl.gap2', 3, ''),
+    L('cl.sp1', 3, '    <span class="kw">public void</span> <span class="fn">startPlaying</span>(<span class="ty">Scanner</span> scanner) {'),
+    L('cl.sp2', 3, '        <span class="kw">while</span> (<span class="kw">true</span>) {'),
+    L('cl.next', 3, '            <span class="ty">String</span> typed = scanner.<span class="fn">nextLine</span>();  <span class="cm">// main waits here</span>'),
+    L('cl.send', 3, '            out.<span class="fn">println</span>(typed);'),
+    L('cl.sp3', 3, '        }'),
+    L('cl.sp4', 3, '    }'),
+    L('cl.gap3', 1, ''),
+    L('cl.main', 1, '    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) <span class="kw">throws</span> IOException {'),
+    L('cl.main2', 1, '        <span class="kw">new</span> <span class="ty">MathicsClient</span>().<span class="fn">connectToServer</span>(<span class="st">"localhost"</span>, <span class="nu">8080</span>);'),
+    L('cl.main3', 1, '    }'),
+    L('cl.end', 1, '}')
+  ],
+
+  ServerListener: [
+    L('sl.class', 3, '<span class="kw">public class</span> <span class="ty">ServerListener</span> <span class="kw">extends</span> <span class="ty">Thread</span> {'),
+    L('sl.f1', 3, '    <span class="kw">private</span> <span class="ty">BufferedReader</span> in;'),
+    L('sl.gap1', 3, ''),
+    L('sl.ctor', 3, '    <span class="fn">ServerListener</span>(<span class="ty">BufferedReader</span> in) { <span class="kw">this</span>.in = in; }'),
+    L('sl.gap2', 3, ''),
+    L('sl.run', 3, '    <span class="kw">public void</span> <span class="fn">run</span>() {'),
+    L('sl.try', 3, '        <span class="kw">try</span> {'),
+    L('sl.decl', 3, '            <span class="ty">String</span> line;'),
+    L('sl.read', 3, '            <span class="kw">while</span> ((line = in.<span class="fn">readLine</span>()) != <span class="kw">null</span>) {  <span class="cm">// waits here</span>'),
+    L('sl.print', 3, '                System.out.<span class="fn">println</span>(line);  <span class="cm">// lands mid-typing</span>'),
+    L('sl.endw', 3, '            }'),
+    L('sl.catch', 3, '        } <span class="kw">catch</span> (IOException e) {'),
+    L('sl.catch2', 3, '            System.out.<span class="fn">println</span>(<span class="st">"Connection closed."</span>);'),
+    L('sl.catch3', 3, '        }'),
+    L('sl.endrun', 3, '    }'),
+    L('sl.end', 3, '}')
+  ]
+};
+const CLASS_ORDER = ['MathicsServer', 'ClientHandler', 'GameManager', 'MathicsClient', 'ServerListener'];
+const CLASS_SINCE = { MathicsServer: 1, ClientHandler: 2, GameManager: 4, MathicsClient: 1, ServerListener: 3 };
+
+/* ------------------------------------------------------------- state */
+const PLAYER_NAMES = ['Arjun', 'Bhavna', 'Chetan', 'Divya'];
+const PLAYER_COLORS = ['#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'];
+
+let sim = {};
+let ui = { page: 'home', view: 'split', jtab: 'MathicsServer', pinned: false, running: false, timer: null };
+
+function blankSim(stage) {
+  return {
+    stage: stage,
+    tick: 0,
+    totalTicks: stage === 1 ? 26 : stage === 4 ? 96 : 60,
+    threads: [],
+    clients: [],
+    server: { bound: false, port: 8080, pending: [], activeClients: [], closed: false },
+    monitor: { owner: null, entry: [] },
+    game: { on: false, round: 0, rounds: 3, problem: '', currentAnswer: 0,
+            isRoundActive: false, scores: {}, winners: 0, doubled: false },
+    opts: { sync: true, listener: stage >= 3, players: stage === 4 ? 3 : 0 },
+    bias: 0, flying: [], trace: [], banner: '', log: [], nextId: 1, changed: {}
+  };
+}
+
+const byId = (id) => sim.threads.find((t) => t.id === id);
+const clientOf = (cid) => sim.clients.find((c) => c.id === cid);
+const liveHandlers = () => sim.threads.filter((t) => t.kind === 'handler' && t.state !== 'TERMINATED');
+
+/** Handlers are visited in an order the JVM never promises. `bias` is that
+ *  promise-less order, and flipping it is what "re-run this race" does. */
+function threadsInOrder() {
+  const hs = sim.threads.filter((t) => t.kind === 'handler');
+  const rest = sim.threads.filter((t) => t.kind !== 'handler');
+  const ordered = sim.bias ? hs.slice().reverse() : hs.slice();
+  return rest.concat(ordered);
+}
+
+function addThread(o) {
+  const t = Object.assign({
+    id: 'T' + sim.nextId++, pc: 0, state: 'RUNNABLE', doing: '', blockedOn: null,
+    hist: [], tmp: null, won: false, color: '#64748b', kind: 'other'
+  }, o);
+  sim.threads.push(t);
+  return t;
+}
+
+function addClient(name, idx) {
+  const c = {
+    id: 'c' + (idx + 1), name: name, color: PLAYER_COLORS[idx], socket: null,
+    remotePort: 52300 + idx * 7 + 11, console: [], toServer: [], toClient: [],
+    armed: -1, pending: null, reaction: idx === 2 ? 5 : 3, wrong: false,
+    typing: '', hang: false, dead: false, unread: 0
+  };
+  sim.clients.push(c);
+  return c;
+}
+
+/* ------------------------------------------------------------- wiring */
+function sendToClient(c, label, kind) {
+  if (!c || c.dead) return;
+  c.toClient.push({ text: label, kind: kind });
+  sim.flying.push({ id: 'f' + Math.random(), client: c.id, dir: 'toClient', label: label, kind: kind });
+}
+function sendToServer(c, label, kind) {
+  c.toServer.push({ text: label, kind: kind });
+  sim.flying.push({ id: 'f' + Math.random(), client: c.id, dir: 'toServer', label: label, kind: kind });
+}
+function broadcast(label, kind) {
+  sim.clients.forEach((c) => { if (c.socket) sendToClient(c, label, kind); });
+  sim.log.push(label);
+}
+function printTo(c, text, cls) {
+  c.console.push({ t: text, c: cls || '' });
+  if (c.console.length > 40) c.console.shift();
+}
+/** Whatever the listener thread is not there to read stays in the socket
+ *  buffer. This is the only place unread text ever reaches the screen. */
+function drainInbox(c) {
+  while (c.toClient.length) {
+    const m = c.toClient.shift();
+    printTo(c, m.text, m.kind === 'verdict' ? 'hit' : m.kind === 'reject' ? 'miss' : '');
+  }
+  c.unread = 0;
+}
+
+function mark(key) { sim.changed[key] = sim.tick; }
+function isFresh(key) { return sim.changed[key] === sim.tick; }
+
+/* --------------------------------------------------------- the rounds */
+function openRound() {
+  const g = sim.game;
+  g.round++;
+  const a = 2 + Math.floor(Math.random() * 18), b = 2 + Math.floor(Math.random() * 9),
+        cc = 1 + Math.floor(Math.random() * 9);
+  g.problem = a + ' * ' + b + ' - ' + cc;
+  g.currentAnswer = a * b - cc;
+  g.isRoundActive = true;
+  g.winners = 0;
+  mark('isRoundActive'); mark('currentAnswer');
+  sim.clients.forEach((c) => {
+    if (!c.socket || c.dead) return;
+    c.armed = c.reaction;
+    c.pending = String(c.wrong ? g.currentAnswer + 3 : g.currentAnswer);
+  });
+}
+
+/* --------------------------------------------------------- programs */
+/* Every entry is one instruction: the Java line it sits on, what the JVM
+ * would say the thread is doing, and what running it actually changes.
+ * `run` returns 'next', 'wait', or { goto: <line id> }. */
+const PROGS = {
+
+  /* ---- stage 1: one thread doing everything, and the queue behind it */
+  srv1: [
+    { line: 'srv.bind', cls: 'MathicsServer', doing: 'binding :8080',
+      run: function () { sim.server.bound = true; return 'next'; } },
+    { line: 'srv.log', cls: 'MathicsServer', doing: 'starting up', run: function () { return 'next'; } },
+    { line: 'srv.accept', cls: 'MathicsServer', doing: 'in accept()', io: true,
+      run: function (th) {
+        if (!sim.server.pending.length) return 'wait';
+        const c = clientOf(sim.server.pending.shift());
+        c.socket = 's-' + c.id; c.hang = false;
+        th.tmp = c.id;
+        return 'next';
+      } },
+    { line: 'srv.s1in', cls: 'MathicsServer', doing: 'wrapping the streams', run: function () { return 'next'; } },
+    { line: 'srv.s1out', cls: 'MathicsServer', doing: 'wrapping the streams', run: function () { return 'next'; } },
+    { line: 'srv.s1name', cls: 'MathicsServer', doing: 'in readLine()', io: true,
+      run: function (th) {
+        const c = clientOf(th.tmp);
+        if (!c.toServer.length) return 'wait';
+        th.name2 = c.toServer.shift().text;
+        return 'next';
+      } },
+    { line: 'srv.s1welcome', cls: 'MathicsServer', doing: 'replying',
+      run: function (th) { sendToClient(clientOf(th.tmp), 'Welcome, ' + th.name2 + '!', 'join'); return 'next'; } },
+    { line: 'srv.s1loop', cls: 'MathicsServer', doing: 'in readLine() - stuck with client 1', io: true,
+      run: function (th) {
+        const c = clientOf(th.tmp);
+        if (c.toServer.length) c.toServer.shift();
+        if (sim.server.pending.length) {
+          sim.server.pending.forEach(function (id) { clientOf(id).hang = true; });
+        }
+        return 'wait';
+      } }
+  ],
+
+  /* ---- stage 2+: accept, hand the socket to a thread, go back and wait */
+  srv2: [
+    { line: 'srv.bind', cls: 'MathicsServer', doing: 'binding :8080',
+      run: function () { sim.server.bound = true; return 'next'; } },
+    { line: 'srv.log', cls: 'MathicsServer', doing: 'starting up', run: function () { return 'next'; } },
+    { line: 'srv.accept', cls: 'MathicsServer', doing: 'in accept()', io: true,
+      run: function (th) {
+        if (!sim.server.pending.length) return 'wait';
+        const c = clientOf(sim.server.pending.shift());
+        c.socket = 's-' + c.id; c.hang = false;
+        th.tmp = c.id;
+        return 'next';
+      } },
+    { line: 'srv.mk', cls: 'MathicsServer', doing: 'building a ClientHandler',
+      run: function (th) {
+        th.made = addThread({ kind: 'handler', name: 'CH-' + clientOf(th.tmp).name,
+          machine: 'server', cls: 'ClientHandler', prog: 'handler', state: 'NEW',
+          clientId: th.tmp, color: clientOf(th.tmp).color, doing: 'not started yet' });
+        return 'next';
+      } },
+    { line: 'srv.add', cls: 'MathicsServer', doing: 'activeClients.add(handler)',
+      run: function (th) { sim.server.activeClients.push(th.made.id); mark('active'); return 'next'; } },
+    { line: 'srv.start', cls: 'MathicsServer', doing: 'handler.start()',
+      run: function (th) { th.made.state = 'RUNNABLE'; toast(th.made.name + ' started - accept() is free again', 'good'); return 'next'; } },
+    { line: 'srv.kick', cls: 'MathicsServer', doing: 'enough players?',
+      run: function () {
+        if (sim.stage >= 4 && !sim.game.on && sim.server.activeClients.length >= sim.opts.players) {
+          sim.game.on = true;
+          addThread({ kind: 'gm', name: 'GameMaster', machine: 'server', cls: 'GameManager',
+            prog: 'gm', color: '#f59e0b', doing: 'starting the game loop' });
+          toast('Enough players - the Game Master thread starts', 'good');
+        }
+        return 'next';
+      } },
+    { line: 'srv.endw', cls: 'MathicsServer', doing: 'back to the top of the loop',
+      run: function () { return { goto: 'srv.accept' }; } }
+  ],
+
+  /* ---- one of these per connected player */
+  handler: [
+    { line: 'ch.name', cls: 'ClientHandler', doing: 'in readLine()', io: true,
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        if (!c.toServer.length) return 'wait';
+        th.player = c.toServer.shift().text;
+        return 'next';
+      } },
+    { line: 'ch.welcome', cls: 'ClientHandler', doing: 'sendMessage(welcome)',
+      run: function (th) { sendToClient(clientOf(th.clientId), 'Welcome, ' + th.player + '!', 'join'); return 'next'; } },
+    { line: 'ch.read', cls: 'ClientHandler', doing: 'in readLine()', io: true,
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        if (c.dead) { th.state = 'TERMINATED'; return 'wait'; }
+        if (!c.toServer.length) return 'wait';
+        th.tmp = c.toServer.shift().text;
+        return { goto: sim.stage >= 4 ? 'ch.parse' : 'ch.echo' };
+      } },
+    { line: 'ch.echo', cls: 'ClientHandler', doing: 'printing what the player said',
+      run: function (th) {
+        sim.log.push(th.player + ' said ' + th.tmp);
+        return { goto: 'ch.read' };
+      } },
+    { line: 'ch.parse', cls: 'ClientHandler', doing: 'parsing the answer',
+      run: function (th) { th.answer = parseInt(th.tmp, 10); return 'next'; } },
+    { line: 'ch.submit', cls: 'ClientHandler', doing: 'calling submitAnswer()',
+      run: function (th) {
+        if (!sim.opts.sync) return 'next';                      /* no gate at all */
+        if (sim.monitor.owner === th.id) return 'next';
+        if (sim.monitor.owner === null) {
+          sim.monitor.owner = th.id;
+          th.state = 'RUNNABLE'; th.blockedOn = null;
+          return 'next';
+        }
+        if (sim.monitor.entry.indexOf(th.id) < 0) sim.monitor.entry.push(th.id);
+        th.state = 'BLOCKED'; th.blockedOn = 'GameManager';
+        toast(th.name + ' is BLOCKED - the monitor is held by ' + byId(sim.monitor.owner).name, 'bad');
+        return 'wait';
+      } },
+    { line: 'gm.check', cls: 'GameManager', doing: 'inside submitAnswer()',
+      run: function (th) {
+        const open = sim.game.isRoundActive;
+        sim.trace.push({ tick: sim.tick, who: th.name, color: th.color,
+          text: 'read isRoundActive -> ' + open });
+        if (!open) { th.won = false; return { goto: 'ch.rel' }; }
+        return 'next';
+      } },
+    { line: 'gm.wrong', cls: 'GameManager', doing: 'inside submitAnswer()',
+      run: function (th) {
+        if (th.answer !== sim.game.currentAnswer) {
+          th.won = false;
+          printTo(clientOf(th.clientId), 'x ' + th.answer + ' is not it.', 'miss');
+          return { goto: 'ch.rel' };
+        }
+        return 'next';
+      } },
+    { line: 'gm.flip', cls: 'GameManager', doing: 'closing the round',
+      run: function () { sim.game.isRoundActive = false; mark('isRoundActive'); return 'next'; } },
+    { line: 'gm.score', cls: 'GameManager', doing: 'scoring',
+      run: function (th) {
+        sim.game.scores[th.player] = (sim.game.scores[th.player] || 0) + 1;
+        sim.game.winners++;
+        mark('score'); return 'next';
+      } },
+    { line: 'gm.say', cls: 'GameManager', doing: 'broadcastMessage(verdict)',
+      run: function (th) {
+        broadcast(th.player + ' answered first! The answer was ' + sim.game.currentAnswer + '.', 'verdict');
+        if (sim.game.winners > 1) {
+          sim.game.doubled = true;
+          sim.banner = 'DATA RACE - round ' + sim.game.round + ' had ' + sim.game.winners + ' winners';
+          toast('Two threads both scored the same round', 'bad');
+        }
+        return 'next';
+      } },
+    { line: 'gm.ret', cls: 'GameManager', doing: 'returning true',
+      run: function (th) { th.won = true; return 'next'; } },
+    { line: 'ch.rel', cls: 'ClientHandler', doing: 'leaving the monitor',
+      run: function (th) {
+        if (sim.monitor.owner === th.id) sim.monitor.owner = null;
+        return 'next';
+      } },
+    { line: 'ch.late', cls: 'ClientHandler', doing: 'answering the player',
+      run: function (th) {
+        if (!th.won && th.answer === sim.game.currentAnswer) {
+          sendToClient(clientOf(th.clientId), 'Too late - the round is already won.', 'reject');
+          toast(th.name + ' was right, but late - locked out', 'warn');
+        }
+        return { goto: 'ch.read' };
+      } }
+  ],
+
+  /* ---- the Game Master: asks, then waits for somebody to get it */
+  gm: [
+    { line: 'gm.gen', cls: 'GameManager', doing: 'generateMathProblem()',
+      run: function () {
+        if (sim.game.round >= sim.game.rounds && sim.game.round > 0) return { goto: 'gm.board' };
+        openRound(); return 'next';
+      } },
+    { line: 'gm.ask', cls: 'GameManager', doing: 'broadcastMessage(problem)',
+      run: function () {
+        broadcast('Round ' + sim.game.round + ' - Solve: ' + sim.game.problem, 'problem');
+        return 'next';
+      } },
+    { line: 'gm.spin', cls: 'GameManager', doing: 'waiting for a winner', wait: true,
+      run: function () { return sim.game.isRoundActive ? 'wait' : 'next'; } },
+    { line: 'gm.gap', cls: 'GameManager', doing: 'pause between rounds', wait: true,
+      run: function (th) {
+        th.gap = (th.gap || 0) + 1;
+        /* pause(1500) in the real thing: long enough that every handler
+           still queued on the monitor gets its turn - and its rejection -
+           before the next round opens */
+        if (th.gap < 8) return 'wait';
+        th.gap = 0;
+        return { goto: 'gm.gen' };
+      } },
+    { line: 'gm.board', cls: 'GameManager', doing: 'broadcastLeaderboard()',
+      run: function () {
+        broadcast('--- FINAL LEADERBOARD ---', 'board');
+        Object.keys(sim.game.scores).sort(function (a, b) { return sim.game.scores[b] - sim.game.scores[a]; })
+          .forEach(function (n) { broadcast(n + ' : ' + sim.game.scores[n], 'board'); });
+        return 'next';
+      } },
+    { line: 'gm.lb6', cls: 'GameManager', doing: 'closing every socket',
+      run: function (th) {
+        sim.server.closed = true;
+        sim.threads.forEach(function (t) { if (t.id !== th.id) t.state = 'TERMINATED'; });
+        th.state = 'TERMINATED';
+        toast('Game over - connections closed', 'good');
+        return 'wait';
+      } }
+  ],
+
+  /* ---- a client with no ears: stages 1 and 2 */
+  client1: [
+    { line: 'cl.connect', cls: 'MathicsClient', doing: 'connecting to localhost:8080', io: true,
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        if (!c.socket) {
+          if (sim.server.pending.indexOf(c.id) < 0 && !c.queued) {
+            sim.server.pending.push(c.id); c.queued = true;
+          }
+          return 'wait';
+        }
+        return 'next';
+      } },
+    { line: 'cl.streams', cls: 'MathicsClient', doing: 'wrapping the streams', run: function () { return 'next'; } },
+    { line: 'cl.sendname', cls: 'MathicsClient', doing: 'out.println(name)',
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        sendToServer(c, c.name, 'join');
+        printTo(c, 'Your name: ' + c.name, 'me');
+        return 'next';
+      } },
+    { line: 'cl.hear', cls: 'MathicsClient', doing: 'in readLine()', io: true,
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        if (!c.toClient.length) return 'wait';
+        const m = c.toClient.shift();
+        printTo(c, m.text);
+        return 'next';
+      } },
+    { line: 'cl.endm', cls: 'MathicsClient', doing: 'main returned - nothing is reading', wait: true,
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        c.unread = c.toClient.length;
+        th.state = 'WAITING';
+        return 'wait';
+      } }
+  ],
+
+  /* ---- a client with a listener thread: stages 3 and 4 */
+  client2: [
+    { line: 'cl.connect', cls: 'MathicsClient', doing: 'connecting to localhost:8080', io: true,
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        if (!c.socket) {
+          if (sim.server.pending.indexOf(c.id) < 0 && !c.queued) {
+            sim.server.pending.push(c.id); c.queued = true;
+          }
+          return 'wait';
+        }
+        return 'next';
+      } },
+    { line: 'cl.streams', cls: 'MathicsClient', doing: 'wrapping the streams', run: function () { return 'next'; } },
+    { line: 'cl.sendname', cls: 'MathicsClient', doing: 'out.println(name)',
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        sendToServer(c, c.name, 'join');
+        printTo(c, 'Your name: ' + c.name, 'me');
+        return 'next';
+      } },
+    { line: 'cl.spawn', cls: 'MathicsClient', doing: 'new ServerListener(in).start()',
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        if (sim.opts.listener && !th.spawned) {
+          th.spawned = addThread({ kind: 'listener', name: 'listener(' + c.name + ')',
+            machine: c.id, cls: 'ServerListener', prog: 'listener', clientId: c.id, color: c.color });
+        }
+        return 'next';
+      } },
+    { line: 'cl.next', cls: 'MathicsClient', doing: 'in nextLine()', io: true,
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        if (c.dead) { th.state = 'TERMINATED'; return 'wait'; }
+        if (c.pending === null) { c.typing = ''; return 'wait'; }
+        if (c.armed > 0) { c.armed--; c.typing = c.pending.slice(0, c.pending.length - c.armed + 1); return 'wait'; }
+        th.tmp = c.pending; c.pending = null; c.typing = '';
+        return 'next';
+      } },
+    { line: 'cl.send', cls: 'MathicsClient', doing: 'out.println(typed)',
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        printTo(c, '> ' + th.tmp, 'me');
+        sendToServer(c, th.tmp, 'answer');
+        if (!sim.opts.listener) drainInbox(c);   /* only now does she see anything */
+        return { goto: 'cl.next' };
+      } }
+  ],
+
+  /* ---- the client's second thread: its only job is to listen */
+  listener: [
+    { line: 'sl.read', cls: 'ServerListener', doing: 'in readLine()', io: true,
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        if (c.dead || sim.server.closed) { th.state = 'TERMINATED'; return 'wait'; }
+        if (!c.toClient.length) return 'wait';
+        th.tmp = c.toClient.shift();
+        return 'next';
+      } },
+    { line: 'sl.print', cls: 'ServerListener', doing: 'printing it, mid-typing',
+      run: function (th) {
+        const c = clientOf(th.clientId);
+        printTo(c, th.tmp.text, th.tmp.kind === 'verdict' ? 'hit' : th.tmp.kind === 'reject' ? 'miss' : '');
+        return { goto: 'sl.read' };
+      } }
+  ]
+};
+
+/* --------------------------------------------------------- the engine */
+function pcOf(progName, lineId) {
+  const p = PROGS[progName];
+  for (let i = 0; i < p.length; i++) if (p[i].line === lineId) return i;
+  return 0;
+}
+
+/** One tick. Every RUNNABLE thread executes exactly one instruction. */
+function tick() {
+  if (sim.tick >= sim.totalTicks) { pause(); return; }
+  sim.tick++;
+  sim.flying = [];
+
+  /* a freed monitor is handed to one waiting thread, and the order it is
+     handed out in is exactly the thing nobody gets to predict */
+  if (sim.opts.sync && sim.monitor.owner === null && sim.monitor.entry.length) {
+    const queue = sim.bias ? sim.monitor.entry.slice().reverse() : sim.monitor.entry.slice();
+    const id = queue[0];
+    sim.monitor.entry = sim.monitor.entry.filter(function (x) { return x !== id; });
+    sim.monitor.owner = id;
+    const t = byId(id);
+    if (t) { t.state = 'RUNNABLE'; t.blockedOn = null; }
+  }
+  if (!sim.opts.sync) { sim.monitor.owner = null; sim.monitor.entry = []; }
+
+  threadsInOrder().forEach(function (th) {
+    if (th.state === 'TERMINATED' || th.state === 'NEW' || th.state === 'BLOCKED') return;
+    const prog = PROGS[th.prog];
+    const ins = prog[th.pc];
+    if (!ins) return;
+    th.cls = ins.cls;
+    th.doing = ins.doing;
+    const r = ins.run(th);
+    th.moved = r !== 'wait';
+    if (r === 'next') th.pc = Math.min(th.pc + 1, prog.length - 1);
+    else if (r && r.goto) th.pc = pcOf(th.prog, r.goto);
+    if (th.state !== 'TERMINATED' && th.state !== 'BLOCKED') {
+      th.state = (r === 'wait' && ins.wait) ? 'WAITING' : 'RUNNABLE';
+    }
+  });
+
+  sim.clients.forEach(function (c) { c.unread = c.toClient.length; });
+  sim.threads.forEach(function (th) {
+    if (th.state === 'TERMINATED') th.doing = 'finished';
+    th.hist.push(th.state[0]);
+    if (th.hist.length > 30) th.hist.shift();
+  });
+  /* ordinary reads scroll away; a tick where two threads both read the
+     same field stays on screen, because that is the evidence */
+  const seen = {};
+  sim.trace.forEach(function (r) { seen[r.tick] = (seen[r.tick] || 0) + 1; });
+  sim.trace = sim.trace.filter(function (r) { return r.tick >= sim.tick - 1 || seen[r.tick] > 1; });
+  render();
+}
+
+function play() {
+  if (ui.running) return pause();
+  ui.running = true;
+  ui.timer = setInterval(tick, 620 / (ui.speed || 1));
+  renderStepBar();
+}
+function pause() {
+  ui.running = false;
+  clearInterval(ui.timer);
+  renderStepBar();
+}
+function step() { pause(); tick(); }
+
+function toast(msg, kind) {
+  const host = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (kind || '');
+  el.textContent = msg;
+  host.appendChild(el);
+  setTimeout(function () { el.remove(); }, 3400);
+}
+
+/* ------------------------------------------------------ stage set-up */
+function setupStage(n) {
+  pause();
+  sim = blankSim(n === 'free' ? 4 : n);
+  sim.mode = n;
+  if (n === 'free') { sim.totalTicks = 999; sim.opts.players = 2; }
+
+  addThread({ kind: 'srvmain', name: 'main (server)', machine: 'server', cls: 'MathicsServer',
+    prog: n === 1 ? 'srv1' : 'srv2', color: '#64748b', doing: 'starting' });
+
+  if (n === 3) { connectPlayer(0); }
+  if (n === 4) { for (let i = 0; i < 3; i++) connectPlayer(i); sim.clients[2].reaction = 5; }
+  if (n === 'free') { for (let i = 0; i < 2; i++) connectPlayer(i); }
+  render();
+}
+
+function connectPlayer(idx) {
+  if (sim.clients.length > idx && sim.clients[idx].socket) return;
+  if (sim.clients.length > idx) return;
+  if (idx > 3) return;
+  const c = addClient(PLAYER_NAMES[idx], idx);
+  addThread({ kind: 'clientmain', name: 'main (' + c.name + ')', machine: c.id,
+    cls: 'MathicsClient', prog: sim.stage >= 3 ? 'client2' : 'client1',
+    clientId: c.id, color: c.color, doing: 'connecting' });
+  render();
+}
+
+function addAnother() {
+  const idx = sim.clients.length;
+  if (idx > 3) return toast('Four terminals is all this canvas can hold', 'warn');
+  connectPlayer(idx);
+  toast(PLAYER_NAMES[idx] + ' knocks on port 8080', 'good');
+}
+
+function killClient() {
+  const live = sim.clients.filter(function (c) { return c.socket && !c.dead; });
+  if (!live.length) return;
+  const c = live[live.length - 1];
+  c.dead = true;
+  toast(c.name + ' dropped - the handler will see readLine() return null', 'warn');
+  render();
+}
+
+function chaos() {
+  if (!sim.game.isRoundActive) return toast('Start a round first', 'warn');
+  sim.clients.forEach(function (c) {
+    if (c.socket && !c.dead) { c.armed = 0; c.pending = String(sim.game.currentAnswer); }
+  });
+  toast('Every player answers on the same tick', 'warn');
+  render();
+}
+
+function manualRound() {
+  if (!sim.game.on) {
+    sim.game.on = true;
+    addThread({ kind: 'gm', name: 'GameMaster', machine: 'server', cls: 'GameManager',
+      prog: 'gm', color: '#f59e0b', doing: 'starting the game loop' });
+    sim.game.rounds = 99;
+  }
+  render();
+}
+
+function serverSays() {
+  broadcast('Ping from the server at tick ' + sim.tick, 'problem');
+  toast('One broadcast sent', 'good');
+  render();
+}
+function typeNow() {
+  const c = sim.clients[0];
+  if (!c || !c.socket) return;
+  c.pending = '42'; c.armed = 2;
+  toast(c.name + ' starts typing', 'good');
+  render();
+}
+
+function reRunRace() {
+  sim.bias = sim.bias ? 0 : 1;
+  const keep = { sync: sim.opts.sync, listener: sim.opts.listener, players: sim.opts.players };
+  const bias = sim.bias, mode = sim.mode;
+  setupStage(mode);
+  sim.bias = bias; sim.opts = keep; sim.mode = mode;
+  toast('Same race, the other scheduling order - watch who wins now', 'warn');
+  render();
+}
+
+function toggleSync() {
+  sim.opts.sync = !sim.opts.sync;
+  if (!sim.opts.sync) { sim.monitor.owner = null; sim.monitor.entry = []; }
+  sim.threads.forEach(function (t) { if (t.state === 'BLOCKED') { t.state = 'RUNNABLE'; t.blockedOn = null; } });
+  toast(sim.opts.sync ? 'synchronized is back on' : 'synchronized removed - nothing guards the round now',
+    sim.opts.sync ? 'good' : 'bad');
+  render();
+}
+function toggleListener() {
+  sim.opts.listener = !sim.opts.listener;
+  if (!sim.opts.listener) {
+    sim.threads.forEach(function (t) {
+      if (t.kind !== 'listener') return;
+      /* it may be holding a line it has read but not yet printed - that
+         line belongs back in the buffer, not in the bin */
+      if (t.tmp && PROGS.listener[t.pc] && PROGS.listener[t.pc].line === 'sl.print') {
+        clientOf(t.clientId).toClient.unshift(t.tmp);
+      }
+      t.state = 'TERMINATED';
+    });
+    toast('ServerListener stopped - nothing reads the socket until you press Enter', 'bad');
+  } else {
+    sim.clients.forEach(function (c) {
+      if (c.socket && !sim.threads.some(function (t) { return t.kind === 'listener' && t.clientId === c.id && t.state !== 'TERMINATED'; })) {
+        addThread({ kind: 'listener', name: 'listener(' + c.name + ')', machine: c.id,
+          cls: 'ServerListener', prog: 'listener', clientId: c.id, color: c.color });
+      }
+    });
+    toast('ServerListener running - messages land the moment they arrive', 'good');
+  }
+  render();
+}
+
+/* ------------------------------------------------------- the canvas */
+function render() {
+  if (['home', 'challenge', 'reference', 'flow'].indexOf(ui.page) >= 0) { renderStepBar(); return; }
+  renderCtrls(); renderServer(); renderClients(); renderLanes(); renderJava(); renderStepBar(); renderTop();
+}
+
+function renderTop() {
+  document.getElementById('tbTick').innerHTML = '&#9201; tick ' + sim.tick;
+  const lk = document.getElementById('tbLock');
+  if (!sim.opts.sync) { lk.className = 'tb-chip lock'; lk.innerHTML = '&#9888; no monitor at all'; }
+  else if (sim.monitor.owner) {
+    lk.className = 'tb-chip lock';
+    lk.innerHTML = '&#128274; held by ' + byId(sim.monitor.owner).name;
+  } else { lk.className = 'tb-chip free'; lk.innerHTML = '&#128275; monitor free'; }
+}
+
+function renderCtrls() {
+  const host = document.getElementById('ctrlStrip');
+  const s = sim.mode;
+  let h = '';
+  if (s === 1) {
+    h = '<button class="sb-btn" onclick="addAnother()">+ Connect a client</button>' +
+        '<span>' + (sim.clients.length < 1 ? 'Connect the first player and watch accept() come back to life.'
+          : sim.clients.length < 2 ? 'Now connect a second one. The server is still inside client 1.'
+          : 'Client 2 is knocking, and nothing is listening. That is the whole problem with one thread.') + '</span>';
+  } else if (s === 2) {
+    h = '<button class="sb-btn" onclick="addAnother()">+ Connect a client</button>' +
+        '<button class="sb-btn" onclick="serverSays()">Broadcast a message</button>' +
+        '<span>Every connection gets a ClientHandler of its own, so accept() is free again immediately.</span>';
+  } else if (s === 3) {
+    h = '<button class="sb-btn" onclick="serverSays()">Server broadcasts now</button>' +
+        '<button class="sb-btn" onclick="typeNow()">' + (sim.clients[0] ? sim.clients[0].name : 'Player') + ' starts typing</button>' +
+        '<span>Turn the listener off, broadcast while she types, and see when it appears.</span>';
+  } else if (s === 4) {
+    h = '<span>Reaction delay</span>' + sim.clients.map(function (c, i) {
+      return '<label style="color:' + c.color + '">' + c.name +
+        '<input type="range" min="1" max="6" value="' + c.reaction + '" oninput="setReact(' + i + ',this.value)">' +
+        '<b style="font-weight:400;color:var(--text3)">' + c.reaction + 't</b>' +
+        '<input type="checkbox" ' + (c.wrong ? 'checked' : '') + ' onchange="setWrong(' + i + ',this.checked)" title="gets it wrong"></label>';
+    }).join('') + '<span style="color:var(--text3)">tie = same delay</span>';
+  } else if (s === 'free') {
+    h = '<button class="sb-btn" onclick="addAnother()">+ Client</button>' +
+        '<button class="sb-btn" onclick="manualRound()">Start rounds</button>' +
+        '<button class="sb-btn" onclick="chaos()">&#9889; Chaos</button>' +
+        '<button class="sb-btn" onclick="killClient()">Kill a client</button>' +
+        '<button class="sb-btn" onclick="serverSays()">Broadcast</button>';
+  }
+  host.className = h ? 'ctrl-strip' : '';
+  host.innerHTML = h;
+}
+function setReact(i, v) { sim.clients[i].reaction = +v; renderCtrls(); }
+function setWrong(i, v) { sim.clients[i].wrong = v; }
+
+function renderServer() {
+  const g = sim.game, m = sim.monitor;
+  let h = '<div class="card srv-card' + (sim.server.bound ? '' : ' off') + '">' +
+    '<div class="srv-head"><i class="dot" style="background:' + (sim.server.bound ? 'var(--green)' : 'var(--text3)') + '"></i>' +
+    '<b>MathicsServer</b><span class="port">:' + sim.server.port + '</span></div>' +
+    '<div class="srv-sub">activeClients: [' +
+      (sim.server.activeClients.map(function (id) { const t = byId(id); return t ? t.name : ''; }).join(', ') || ' ') +
+    ']</div>';
+  if (sim.server.pending.length) {
+    h += '<div class="srv-sub" style="color:var(--amber)">OS backlog: ' +
+      sim.server.pending.map(function (id) { return clientOf(id).name; }).join(', ') +
+      ' &mdash; nobody is in accept()</div>';
+  }
+
+  if (sim.stage >= 4) {
+    const cls = !sim.opts.sync ? 'gm-box unsync' : (m.owner ? 'gm-box locked' : 'gm-box');
+    h += '<div class="' + cls + '">' +
+      '<div class="gm-head"><b>GameManager</b><s>' +
+        (!sim.opts.sync ? '&#9888;' : m.owner ? '&#128274;' : '&#128275;') + '</s></div>' +
+      '<div class="gm-fields">' +
+      '<span><i>currentAnswer</i> <b class="' + (isFresh('currentAnswer') ? 'valchange' : '') + '" style="color:var(--amber)">' + (g.currentAnswer || '-') + '</b></span>' +
+      '<span><i>isRoundActive</i> <b class="' + (isFresh('isRoundActive') ? 'valchange' : '') + '" style="color:' + (g.isRoundActive ? 'var(--green)' : 'var(--red)') + '">' + g.isRoundActive + '</b></span>' +
+      '<span><i>owner</i> <b style="color:var(--red)">' + (m.owner ? byId(m.owner).name : 'none') + '</b></span>' +
+      '</div>';
+    if (m.entry.length) {
+      h += '<div class="entryset">entry set &middot; ' +
+        m.entry.map(function (id) { return byId(id).name; }).join(', ') +
+        ' waiting to enter the monitor</div>';
+    }
+    if (!sim.opts.sync) {
+      h += '<div class="entryset" style="border-color:var(--amber);color:var(--amber)">no monitor &mdash; every thread walks straight in</div>';
+    }
+    h += '</div>';
+  }
+  h += '</div>';
+
+  if (sim.stage >= 4) {
+    const names = Object.keys(g.scores);
+    const total = names.reduce(function (a, n) { return a + g.scores[n]; }, 0);
+    h += '<div class="card scoreboard"><h4>SCOREBOARD &middot; round ' + g.round + ' / ' + (g.rounds > 90 ? '&infin;' : g.rounds) + '</h4>' +
+      (names.length ? names.sort(function (a, b) { return g.scores[b] - g.scores[a]; }).map(function (n) {
+        const c = sim.clients.find(function (x) { return x.name === n; });
+        return '<div class="sb-row"><i class="dot" style="background:' + (c ? c.color : '#64748b') + '"></i>' + n +
+          '<s>' + g.scores[n] + '</s></div>';
+      }).join('') : '<div class="sb-row" style="color:var(--text3)">nothing scored yet</div>') +
+      (total > g.round && g.round > 0
+        ? '<div class="sb-row sb-bad">&#9888; ' + total + ' points in ' + g.round + ' round' + (g.round > 1 ? 's' : '') + '</div>'
+        : '') +
+      '</div>';
+  }
+  document.getElementById('srvCol').innerHTML = h;
+  document.getElementById('wireCol').style.display = 'none';
+}
+
+function renderClients() {
+  const h = sim.clients.map(function (c) {
+    const fly = sim.flying.filter(function (f) { return f.client === c.id; });
+    const wire = '<div class="wire-cell">' +
+      '<div class="wire' + (fly.some(function (f) { return f.dir === 'toClient'; }) ? ' hot' : '') + '" style="top:38%"></div>' +
+      '<div class="wire' + (fly.some(function (f) { return f.dir === 'toServer'; }) ? ' hot' : '') + '" style="top:58%"></div>' +
+      (c.socket ? '<span class="wire-tag" style="top:calc(38% - 13px)">' + (sim.server.closed ? 'closed' : 'in / out') + '</span>' : '') +
+      fly.map(function (f) {
+        return '<span class="pk k-' + f.kind + ' ' + (f.dir === 'toClient' ? 'pk-out' : 'pk-in') + '" style="top:' +
+          (f.dir === 'toClient' ? '38%' : '58%') + '">' + esc(f.label.slice(0, 22)) + '</span>';
+      }).join('') +
+      '</div>';
+
+    const th = sim.threads.filter(function (t) { return t.machine === c.id && t.state !== 'TERMINATED'; });
+    const blocked = sim.threads.some(function (t) { return t.clientId === c.id && t.state === 'BLOCKED'; });
+    const won = sim.log.some(function (l) { return l.indexOf(c.name + ' answered first') === 0; });
+    const cls = c.dead ? 'term' : c.hang ? 'term hang' : blocked ? 'term blocked' : won ? 'term win' : 'term';
+    const body = c.console.slice(-5).map(function (l) {
+      return '<div class="' + l.c + '">' + esc(l.t) + '</div>';
+    }).join('') || '<div style="color:var(--text3)">(nothing yet)</div>';
+
+    const inputRow = c.socket && !c.dead && sim.stage >= 3
+      ? '<div class="me">&gt; ' + esc(c.typing) + '<span class="caret"></span></div>' : '';
+    const unread = c.unread && !sim.opts.listener
+      ? '<div style="color:var(--amber)">[' + c.unread + ' unread sitting in the socket buffer]</div>' : '';
+
+    return '<div class="cli-row">' + wire +
+      '<div class="' + cls + '">' +
+        '<div class="term-bar"><i style="background:#ef4444"></i><i style="background:#f59e0b"></i>' +
+        '<i style="background:#10b981"></i><s>&#128421; ' + c.name +
+        (c.socket ? ' @ localhost:' + c.remotePort : '') + '</s>' +
+        '<u>' + (c.dead ? 'disconnected' : c.hang ? '<span class="spin">&#9696;</span> waiting for accept()'
+          : c.socket ? th.length + ' thread' + (th.length === 1 ? '' : 's') : 'not connected') + '</u></div>' +
+        '<div class="term-body">' + body + unread + inputRow + '</div>' +
+      '</div></div>';
+  }).join('');
+  document.getElementById('cliCol').innerHTML = h ||
+    '<div style="color:var(--text3);font-size:12px;padding:10px">No client has connected yet.</div>';
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+const FILL = { R: 'var(--green)', B: 'var(--red)', W: 'var(--purple)', N: '#334155', T: '#334155' };
+
+function renderLanes() {
+  const h = sim.threads.map(function (t) {
+    const cells = t.hist.slice(-28).map(function (ch, i, a) {
+      return '<i class="' + (i === a.length - 1 ? 'now' : '') + '" style="background:' + FILL[ch] + '"></i>';
+    }).join('');
+    const ins = PROGS[t.prog] && PROGS[t.prog][t.pc];
+    const io = ins && ins.io && t.state === 'RUNNABLE';
+    return '<div class="lane">' +
+      '<span class="lane-name" style="color:' + t.color + '">' + t.name + '</span>' +
+      '<span class="lane-cells">' + cells + '</span>' +
+      '<span class="st-chip st-' + t.state + '">' + t.state + '</span>' +
+      '<span class="lane-doing"><b>' + esc(t.doing) + '</b>' +
+        (io ? '<span class="info" title="A thread parked in accept() or readLine() is still RUNNABLE to the JVM. BLOCKED means one thing only: waiting for a monitor.">i</span>' : '') +
+      '</span></div>';
+  }).join('');
+  document.getElementById('lanes').innerHTML = h;
+
+  const races = {};
+  sim.trace.forEach(function (r) { races[r.tick] = (races[r.tick] || 0) + 1; });
+  let tr = sim.trace.map(function (r) {
+    return '<div class="' + (races[r.tick] > 1 ? 'race' : '') + '">T' + r.tick +
+      ' &#9474; <span style="color:' + r.color + '">' + r.who + '</span>: ' + r.text + '</div>';
+  }).join('');
+  if (Object.keys(races).some(function (k) { return races[k] > 1; }) && !sim.opts.sync) {
+    tr += '<div class="race">&#8593; both read before either wrote. That is the bug.</div>';
+  }
+  if (sim.banner) tr += '<div class="banner"><b>' + esc(sim.banner) + '</b> &mdash; ' +
+    'with no monitor, two threads passed the same guard and both scored.</div>';
+  document.getElementById('trace').innerHTML = tr;
+  document.getElementById('laneNote').innerHTML = sim.threads.length + ' threads &middot; one instruction each per tick';
+}
+
+/* ------------------------------------------------------- the Java pane */
+function activeLines() {
+  const map = {};
+  sim.threads.forEach(function (t) {
+    if (t.state === 'TERMINATED' || t.state === 'NEW') return;
+    const ins = PROGS[t.prog] && PROGS[t.prog][t.pc];
+    if (!ins) return;
+    (map[ins.line] = map[ins.line] || []).push(t);
+  });
+  return map;
+}
+
+function renderJava() {
+  const map = activeLines();
+  /* follow whatever actually moved this tick, and when several did, follow
+     the one furthest inside the program - a thread standing still in
+     readLine() is not what anybody wants to be reading */
+  if (!ui.pinned) {
+    const RANK = { GameManager: 5, ClientHandler: 4, MathicsServer: 3, ServerListener: 2, MathicsClient: 1 };
+    let best = null, bestN = 0;
+    sim.threads.forEach(function (t) {
+      if (!t.moved || t.state === 'TERMINATED') return;
+      const ins = PROGS[t.prog] && PROGS[t.prog][t.pc];
+      const cls = ins ? ins.cls : t.cls;
+      if (!cls || CLASS_SINCE[cls] > sim.stage) return;
+      if (RANK[cls] > bestN) { bestN = RANK[cls]; best = cls; }
+    });
+    if (best) ui.jtab = best;
+  }
+
+  document.getElementById('jtabs').innerHTML = CLASS_ORDER.map(function (name) {
+    const locked = CLASS_SINCE[name] > sim.stage;
+    return '<button class="jtab ' + (locked ? 'locked' : name === ui.jtab ? 'on' : '') + '"' +
+      (locked ? ' title="not written yet - arrives in stage ' + CLASS_SINCE[name] + '"' : ' onclick="pickTab(\'' + name + '\')"') +
+      '>' + name + (locked ? ' &#128274;' : '') + '</button>';
+  }).join('');
+
+  const lines = CLASSES[ui.jtab].filter(function (l) { return l.since <= sim.stage && l.until >= sim.stage; });
+  let n = 0;
+  document.getElementById('jcode').innerHTML = lines.map(function (l) {
+    n++;
+    const here = (map[l.id] || []).filter(function (t) { return t.cls === ui.jtab || true; });
+    const blockedHere = l.id === 'ch.submit'
+      ? sim.threads.filter(function (t) { return t.state === 'BLOCKED'; }) : [];
+    const all = here.concat(blockedHere);
+    const on = here.some(function (t) { return t.state === 'RUNNABLE'; });
+    let html = l.h;
+    if (l.id === 'gm.sig' && !sim.opts.sync) {
+      html = html.replace('<span class="kw" id="syncKw">synchronized</span>',
+        '<span class="kw strike">synchronized</span>');
+    }
+    return '<div class="jline' + (on ? ' on' : blockedHere.length && l.id === 'ch.submit' ? ' blk' : '') +
+      (l.since === sim.stage && CLASS_SINCE[ui.jtab] < sim.stage ? ' fresh' : '') + '">' +
+      '<i>' + n + '</i><em>' + html + '</em>' +
+      (all.length ? '<span class="badges">' + all.map(function (t) {
+        return '<b class="badge' + (t.state === 'BLOCKED' ? ' wait' : '') + '" style="background:' + t.color +
+          '" title="' + esc(t.name + ' - ' + t.state) + '">' + t.name.replace(/[^A-Za-z]/g, '').slice(-5, -4).toUpperCase() +
+          (t.state === 'BLOCKED' ? '' : '') + '</b>';
+      }).join('') + '</span>' : '') +
+      '</div>';
+  }).join('');
+
+  const pane = document.getElementById('jcode');
+  const lit = pane.querySelector('.jline.on') || pane.querySelector('.jline.blk');
+  if (lit && !ui.pinned) {
+    const want = lit.offsetTop - pane.clientHeight / 2 + 20;
+    if (Math.abs(pane.scrollTop - want) > 30) pane.scrollTop = Math.max(0, want);
+  }
+
+  const running = sim.threads.filter(function (t) { return t.state === 'RUNNABLE' && t.cls === ui.jtab; });
+  document.getElementById('jExec').innerHTML = running.length
+    ? '&#9654; executing: ' + running.map(function (t) { return t.name; }).join(', ')
+    : '&#9654; idle in this file';
+  document.getElementById('jPin').className = 'jbtn' + (ui.pinned ? ' on' : '');
+}
+function pickTab(n) { ui.jtab = n; ui.pinned = true; renderJava(); }
+function togglePin() { ui.pinned = !ui.pinned; renderJava(); }
+function copyClass() {
+  const lines = CLASSES[ui.jtab].filter(function (l) { return l.since <= sim.stage && l.until >= sim.stage; });
+  const d = document.createElement('div');
+  const text = lines.map(function (l) { d.innerHTML = l.h; return d.textContent; }).join('\n');
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(
+    function () { toast(ui.jtab + '.java copied', 'good'); },
+    function () { toast('Could not reach the clipboard', 'bad'); });
+  else toast('Could not reach the clipboard', 'bad');
+}
+
+/* --------------------------------------------------------- step bar */
+function renderStepBar() {
+  const bar = document.getElementById('stepbar');
+  if (['home', 'challenge', 'reference', 'flow'].indexOf(ui.page) >= 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  const atEnd = sim.tick >= sim.totalTicks;
+  bar.innerHTML =
+    '<button class="sb-btn primary" onclick="step()"' + (atEnd ? ' disabled' : '') + '>&#9197; Step</button>' +
+    '<button class="sb-btn" onclick="play()"' + (atEnd ? ' disabled' : '') + '>' +
+      (ui.running ? '&#10073;&#10073; Pause' : '&#9654; Run') + '</button>' +
+    '<button class="sb-btn" onclick="setupStage(sim.mode)">&#8635; Reset</button>' +
+    (sim.stage >= 4 ? '<button class="sb-btn" onclick="reRunRace()">&#8635; Re-run this race</button>' : '') +
+    '<div class="sb-right">' +
+      '<span class="mono" style="color:var(--text2);font-size:11px">Tick ' + sim.tick +
+        (sim.totalTicks > 900 ? '' : ' / ' + sim.totalTicks) + '</span>' +
+      'speed <select class="mini-sel" onchange="setSpeed(this.value)">' +
+        [0.5, 1, 2].map(function (s) {
+          return '<option value="' + s + '"' + ((ui.speed || 1) === s ? ' selected' : '') + '>' + s + '&times;</option>';
+        }).join('') + '</select>' +
+      (sim.stage >= 3 ? '<button class="toggle ' + (sim.opts.listener ? 'on' : 'off') + '" onclick="toggleListener()">' +
+        (sim.opts.listener ? '&#9745;' : '&#9744;') + ' ServerListener</button>' : '') +
+      (sim.stage >= 4 ? '<button class="toggle ' + (sim.opts.sync ? 'on' : 'off') + '" onclick="toggleSync()">' +
+        (sim.opts.sync ? '&#9745;' : '&#9744;') + ' synchronized</button>' : '') +
+    '</div>';
+}
+function setSpeed(v) { ui.speed = +v; if (ui.running) { pause(); play(); } }
+
+/* =====================================================================
+ * Class flow
+ * A flow is a small graph: nodes placed on a row/col grid, labelled
+ * arrows between them, and the order the diagram lights up. The arrows
+ * are laid out from where the boxes actually ended up, so nothing has
+ * to be positioned by hand.
+ * ===================================================================== */
+const N = (id, label, o) => Object.assign({ id: id, label: label, kind: 'method' }, o);
+const E = (from, to, label, o) => Object.assign({ id: from + '>' + to, from: from, to: to, label: label || '' }, o);
+const S = (focus, title, text) => ({ focus: [].concat(focus), title: title, text: text });
+
+const FLOWS = [
+  {
+    id: 'start-server', group: 'Connection', name: 'startServer()',
+    title: 'startServer()', subtitle: 'Main -> new ServerSocket(8080) -> accept() -> new ClientHandler(socket).start()',
+    nodes: [
+      N('main', 'MathicsServer.main()', { kind: 'class', row: 0, col: 1, sub: 'the process starts here' }),
+      N('start', 'startServer()', { row: 1, col: 1, sub: 'MathicsServer.java' }),
+      N('ss', 'new ServerSocket(8080)', { kind: 'socket', row: 2, col: 0, note: 'claims the port' }),
+      N('acc', 'serverSocket.accept()', { row: 2, col: 2, note: 'waits until a client knocks' }),
+      N('sock', 'Socket socket', { kind: 'socket', row: 3, col: 1, sub: 'one conversation, two streams' }),
+      N('spawn', 'new ClientHandler(socket).start()', { kind: 'thread', row: 4, col: 1, note: 'accept() is free again' }),
+      N('list', 'List<ClientHandler>', { kind: 'data', row: 5, col: 0, sub: 'activeClients' }),
+      N('gm', 'gameManager.startGameLoop()', { kind: 'monitor', row: 5, col: 2, sub: 'once enough players are in' })
+    ],
+    edges: [
+      E('main', 'start', 'one call, then it never returns'),
+      E('start', 'ss', 'bind the port'),
+      E('ss', 'acc', 'listen'),
+      E('acc', 'sock', 'a client connected'),
+      E('sock', 'spawn', 'hand the socket over'),
+      E('spawn', 'list', 'add(handler)'),
+      E('spawn', 'gm', 'enough players?'),
+      E('spawn', 'acc', 'back to the top of the while loop', { dashed: true })
+    ],
+    steps: [
+      S('main', 'One thread, to begin with', 'The JVM starts main and that single thread does everything: bind the port, wait, greet. Every problem in stage 1 comes from there being only one of it.'),
+      S(['main>start', 'start'], 'startServer() takes over', 'It never returns. The whole life of the server is inside this method, looping forever.'),
+      S(['start>ss', 'ss'], 'new ServerSocket(8080)', 'This is the doorbell, not a conversation. It claims port 8080 from the operating system; if something else already holds it you get BindException right here.'),
+      S(['ss>acc', 'acc'], 'accept() waits', 'The thread stops on this line and does nothing at all until somebody connects. That is normal and cheap - but it is also why one thread can only ever hold one conversation.'),
+      S(['acc>sock', 'sock'], 'A Socket comes back', 'accept() returns a brand new Socket - the conversation with that one client. It carries two streams, one in and one out, not one pipe.'),
+      S(['sock>spawn', 'spawn'], 'Give it a thread of its own', 'new ClientHandler(socket).start() hands the whole conversation to a fresh thread. Note start(), not run(): run() would execute it right here on the main thread and change nothing.'),
+      S(['spawn>list', 'list', 'spawn>gm', 'gm'], 'Remember it, then loop', 'The handler goes into activeClients so broadcasts can reach it, the Game Master starts once the room is full, and the loop comes straight back to accept() for the next player.')
+    ]
+  },
+  {
+    id: 'connect-client', group: 'Connection', name: 'connectToServer()',
+    title: 'connectToServer()', subtitle: 'Main -> new Socket("localhost", 8080) -> streams -> out.println(username)',
+    nodes: [
+      N('main', 'MathicsClient.main()', { kind: 'class', row: 0, col: 1 }),
+      N('conn', 'connectToServer(host, port)', { row: 1, col: 1, sub: 'MathicsClient.java' }),
+      N('sock', 'new Socket("localhost", 8080)', { kind: 'socket', row: 2, col: 0, note: 'the handshake' }),
+      N('streams', 'BufferedReader in / PrintWriter out', { kind: 'data', row: 2, col: 2, note: 'autoflush = true' }),
+      N('name', 'out.println(scanner.nextLine())', { row: 3, col: 1, sub: 'the username goes first' }),
+      N('welcome', '"Welcome, Arjun!"', { kind: 'data', row: 4, col: 1, sub: 'read back off in' })
+    ],
+    edges: [
+      E('main', 'conn', 'host and port'),
+      E('conn', 'sock', 'connect'),
+      E('sock', 'streams', 'wrap both directions'),
+      E('streams', 'name', 'write a line'),
+      E('name', 'welcome', 'the server answers')
+    ],
+    steps: [
+      S('main', 'The other program', 'This is a second JVM. It shares no memory with the server at all - everything they know about each other travels as text over a socket.'),
+      S(['main>conn', 'conn'], 'connectToServer()', 'Host and port are all it needs. localhost:8080 has to match the ServerSocket exactly, or you get ConnectException.'),
+      S(['conn>sock', 'sock'], 'new Socket(...) is the knock', 'Constructing the Socket performs the TCP handshake. The moment this line returns, the server side has returned from accept().'),
+      S(['sock>streams', 'streams'], 'Two streams, not one', 'in reads what the server says, out writes what you say. new PrintWriter(out, true) matters: without autoflush your text can sit in a buffer and never leave.'),
+      S(['streams>name', 'name'], 'The username is just a line of text', 'There is no protocol here beyond "the first line you send is your name". Both sides have to agree on that, and nothing in Java enforces it.'),
+      S(['name>welcome', 'welcome'], 'And the server answers', 'One line back. In stage 1 that is the last thing this client will ever hear, because after this nobody is reading.')
+    ]
+  },
+  {
+    id: 'handler-run', group: 'Concurrency', name: 'ClientHandler.run()', crossing: true,
+    title: 'ClientHandler.run()', subtitle: 'start() -> run() -> while (in.readLine()) -> submitAnswer()',
+    nodes: [
+      N('srv', 'MathicsServer', { kind: 'class', row: 0, col: 0, sub: 'the accept loop' }),
+      N('cli', 'MathicsClient', { kind: 'class', row: 0, col: 2, sub: 'a different machine' }),
+      N('start', 'handler.start()', { kind: 'thread', row: 1, col: 0, note: 'a new thread begins here' }),
+      N('typed', 'out.println(typed)', { row: 1, col: 2, sub: 'the player answers' }),
+      N('run', 'run()', { kind: 'thread', row: 2, col: 0, sub: 'ClientHandler.java', methods: ['readLine()', 'sendMessage()'] }),
+      N('read', 'while ((line = in.readLine()) != null)', { row: 3, col: 0, note: 'waits here between answers' }),
+      N('sub', 'gameManager.submitAnswer(name, answer)', { kind: 'monitor', row: 4, col: 0 })
+    ],
+    edges: [
+      E('srv', 'start', 'per connection'),
+      E('start', 'run', 'the thread enters run()'),
+      E('cli', 'typed', ''),
+      E('typed', 'read', 'one line of text, over TCP', { wire: true }),
+      E('run', 'read', 'loop'),
+      E('read', 'sub', 'parse and submit')
+    ],
+    steps: [
+      S('srv', 'Back on the server', 'The accept loop has already moved on. Everything from here runs on a thread the loop no longer thinks about.'),
+      S(['srv>start', 'start'], 'start() forks', 'start() returns immediately on the caller and begins run() somewhere else. Two program counters now exist where there was one.'),
+      S(['start>run', 'run'], 'run() is the thread body', 'ClientHandler extends Thread, so run() is what the new thread executes. Everything inside it belongs to exactly one player.'),
+      S(['cli', 'typed'], 'Meanwhile, on the other machine', 'The player types an answer and the client writes one line to its socket. Nothing else happened - no method was called across the network.'),
+      S(['typed>read', 'read'], 'The line crosses the wire', 'This arrow is the only one in the whole diagram that is not a method call. It is bytes over TCP, and it is why the two sides can never share an object.'),
+      S(['run>read'], 'readLine() waits, cheaply', 'Between answers the thread sits here doing nothing. getState() still reports RUNNABLE - it is waiting on I/O, not on a lock.'),
+      S(['read>sub', 'sub'], 'And into the shared object', 'Every handler thread calls the same GameManager instance. That is the exact moment the program stops being simple.')
+    ]
+  },
+  {
+    id: 'listener-run', group: 'Concurrency', name: 'ServerListener.run()',
+    title: 'ServerListener.run()', subtitle: 'One class, two threads: one reads the keyboard, one reads the socket',
+    nodes: [
+      N('conn', 'connectToServer()', { kind: 'class', row: 0, col: 1, sub: 'MathicsClient.java' }),
+      N('spawn', 'new ServerListener(in).start()', { kind: 'thread', row: 1, col: 0 }),
+      N('play', 'startPlaying(scanner)', { row: 1, col: 2, sub: 'stays on the main thread' }),
+      N('lrun', 'run(): in.readLine()', { kind: 'thread', row: 2, col: 0, note: 'waits on the socket' }),
+      N('nxt', 'scanner.nextLine()', { row: 2, col: 2, note: 'waits on the keyboard' }),
+      N('print', 'System.out.println(line)', { row: 3, col: 0, sub: 'lands mid-typing' }),
+      N('send', 'out.println(typed)', { row: 3, col: 2, sub: 'goes to the server' })
+    ],
+    edges: [
+      E('conn', 'spawn', 'thread 2'),
+      E('conn', 'play', 'thread 1 (main)'),
+      E('spawn', 'lrun', ''),
+      E('play', 'nxt', ''),
+      E('lrun', 'print', 'whenever something arrives'),
+      E('nxt', 'send', 'when Enter is pressed'),
+      E('lrun', 'lrun', '', { dashed: true })
+    ],
+    steps: [
+      S('conn', 'One method, two futures', 'connectToServer() is the last place the client has a single thread. The next two lines split it in half.'),
+      S(['conn>spawn', 'spawn', 'conn>play', 'play'], 'The split', 'start() creates the listener and returns instantly; startPlaying() then runs on the original main thread. Both are now live at the same time.'),
+      S(['lrun', 'nxt'], 'Two waits, side by side', 'The listener waits on in.readLine(); main waits on scanner.nextLine(). Neither can be hurried, and neither blocks the other - which is the whole point.'),
+      S(['lrun>print', 'print'], 'Why the second thread exists', 'A broadcast can arrive while you are halfway through typing. With the listener, it prints immediately. Without it, nothing reads the socket until you press Enter, and the client looks frozen.'),
+      S(['nxt>send', 'send'], 'And the answer goes out', 'Enter releases nextLine(), the line is written to the socket, and main loops straight back to waiting.')
+    ]
+  },
+  {
+    id: 'game-loop', group: 'The game', name: 'startGameLoop()',
+    title: 'startGameLoop()', subtitle: 'generateMathProblem() -> broadcastMessage() -> for (ClientHandler c : activeClients)',
+    nodes: [
+      N('loop', 'startGameLoop()', { kind: 'class', row: 0, col: 1, sub: 'GameManager.java' }),
+      N('th', 'new Thread(() -> ...).start()', { kind: 'thread', row: 1, col: 1, note: 'the Game Master' }),
+      N('gen', 'generateMathProblem()', { row: 2, col: 0, note: 'sets currentAnswer' }),
+      N('flag', 'isRoundActive = true', { kind: 'data', row: 2, col: 2, note: 'the round is open' }),
+      N('bc', 'server.broadcastMessage(problem)', { row: 3, col: 1 }),
+      N('fan', 'for (ClientHandler c : activeClients) c.sendMessage(msg)', { row: 4, col: 1, sub: 'MathicsServer.java' }),
+      N('spin', 'while (isRoundActive) pause(50)', { row: 5, col: 1, note: 'until somebody gets it' })
+    ],
+    edges: [
+      E('loop', 'th', 'so accept() is never blocked'),
+      E('th', 'gen', 'round r'),
+      E('gen', 'flag', 'open the round'),
+      E('flag', 'bc', 'ask everybody'),
+      E('bc', 'fan', 'one message, N sockets'),
+      E('fan', 'spin', ''),
+      E('spin', 'gen', 'next round', { dashed: true })
+    ],
+    steps: [
+      S('loop', 'The Game Master is a thread too', 'It has to be. If the game loop ran on the accept thread, no one could join mid-game; if it ran on a handler thread, it would die when that player left.'),
+      S(['loop>th', 'th'], 'start(), again', 'Same pattern as ClientHandler: fork, return, let it run. By now the server has one thread for accepting, one per player, and one running the game.'),
+      S(['th>gen', 'gen'], 'generateMathProblem()', 'It builds the text to send and quietly stores the answer in currentAnswer. Only the server ever knows the number.'),
+      S(['gen>flag', 'flag'], 'isRoundActive = true', 'One boolean opens the round. Every handler thread is about to read it, and exactly one of them is about to write it. Remember that.'),
+      S(['flag>bc', 'bc', 'bc>fan', 'fan'], 'Broadcast is just a loop', 'There is no magic in broadcasting - it walks activeClients and writes the same string down each socket in turn. Remove a client from that list while this loop runs and you get ConcurrentModificationException.'),
+      S(['fan>spin', 'spin'], 'Then it waits', 'The Game Master parks until isRoundActive goes false - which only submitAnswer() can do. The round is now a race between the players.')
+    ]
+  },
+  {
+    id: 'submit-answer', group: 'The game', name: 'submitAnswer()',
+    title: 'submitAnswer() - the race', subtitle: 'Two threads, one method, one winner',
+    nodes: [
+      N('cha', 'ClientHandler-Arjun', { kind: 'thread', row: 0, col: 0, sub: 'answer = 50' }),
+      N('chb', 'ClientHandler-Bhavna', { kind: 'thread', row: 0, col: 2, sub: 'answer = 50, same tick' }),
+      N('mon', 'synchronized submitAnswer(player, answer)', { kind: 'monitor', row: 1, col: 1, note: 'one thread inside at a time' }),
+      N('chk', 'if (!isRoundActive) return false;', { row: 2, col: 1, note: 'the guard' }),
+      N('flip', 'isRoundActive = false;', { kind: 'data', row: 3, col: 0, note: 'closes the round' }),
+      N('sc', 'playerScores.merge(player, 1, Integer::sum)', { kind: 'data', row: 3, col: 2 }),
+      N('say', 'broadcastMessage("... answered first!")', { row: 4, col: 1 }),
+      N('late', '"Too late"', { kind: 'data', row: 5, col: 2, sub: 'Bhavna, one tick later' })
+    ],
+    edges: [
+      E('cha', 'mon', 'takes the monitor'),
+      E('chb', 'mon', 'BLOCKED, joins the entry set', { dashed: true }),
+      E('mon', 'chk', 'enters'),
+      E('chk', 'flip', 'round still open'),
+      E('flip', 'sc', 'score it'),
+      E('sc', 'say', 'tell everybody'),
+      E('say', 'late', 'then Bhavna gets in')
+    ],
+    steps: [
+      S(['cha', 'chb'], 'Two threads, one tick', 'Both handlers read an answer from their own socket on the same tick and both call the same method on the same object. Nothing about that is unusual - it is just what a server does.'),
+      S(['cha>mon', 'mon'], 'One of them takes the monitor', 'synchronized means the method is guarded by the lock on this GameManager instance. Whoever the scheduler picks first walks in; there is no rule about who that is.'),
+      S(['chb>mon'], 'The other one stops dead', 'Bhavna does not fail, retry or spin. Her thread goes to BLOCKED and joins the entry set, and getState() would say so. She resumes on the very next line when the lock is free.'),
+      S(['mon>chk', 'chk'], 'Inside, the guard is checked', 'isRoundActive is still true, so Arjun passes. This line is only meaningful because nobody else can be between it and the next one.'),
+      S(['chk>flip', 'flip'], 'And the round is closed', 'Writing false here is what makes the round single-winner. Move this line outside the lock and the whole guarantee is gone.'),
+      S(['flip>sc', 'sc', 'sc>say', 'say'], 'Score, then announce', 'merge() bumps the score, the verdict is broadcast to every socket, and the method returns true. The monitor is released on the way out.'),
+      S(['say>late', 'late'], 'Now Bhavna gets in', 'She runs the same first line she was waiting for - and isRoundActive is false now, so she gets false back and her handler sends "Too late". Same code, same input, different answer, because the state moved underneath her.')
+    ]
+  },
+  {
+    id: 'leaderboard', group: 'The game', name: 'broadcastLeaderboard()',
+    title: 'broadcastLeaderboard() and shutdown', subtitle: 'sort -> broadcast -> flush -> close the sockets -> close the ServerSocket',
+    nodes: [
+      N('lb', 'broadcastLeaderboard()', { kind: 'class', row: 0, col: 1, sub: 'after the last round' }),
+      N('sort', 'entrySet().stream().sorted(byValue().reversed())', { row: 1, col: 0 }),
+      N('bc', 'broadcastMessage(name + " : " + score)', { row: 1, col: 2 }),
+      N('flush', 'out.flush()', { row: 2, col: 1, note: 'before anything closes' }),
+      N('cs', 'socket.close()', { kind: 'socket', row: 3, col: 0, note: 'per client' }),
+      N('ss', 'serverSocket.close()', { kind: 'socket', row: 3, col: 2, note: 'last of all' })
+    ],
+    edges: [
+      E('lb', 'sort', 'rank them'),
+      E('sort', 'bc', 'one line each'),
+      E('bc', 'flush', ''),
+      E('flush', 'cs', 'then, and only then'),
+      E('cs', 'ss', 'release the port')
+    ],
+    steps: [
+      S('lb', 'The last thing the Game Master does', 'The rounds are over, every handler is idle in readLine(), and the scores map is finally safe to read.'),
+      S(['lb>sort', 'sort'], 'Sort by value, descending', 'A HashMap has no order at all, so the leaderboard has to be built every time it is shown.'),
+      S(['sort>bc', 'bc'], 'Sent the same way as everything else', 'The leaderboard is not a special message type - it is the same broadcastMessage() the problems went out on.'),
+      S(['bc>flush', 'flush'], 'Flush before you close', 'Closing a socket with text still in the buffer throws it away. This is the usual reason a client sees half a leaderboard and then nothing.'),
+      S(['flush>cs', 'cs', 'cs>ss', 'ss'], 'Close inwards', 'Each client socket first, the ServerSocket last. Close the ServerSocket early and any client still mid-write gets a broken pipe instead of a goodbye.')
+    ]
+  }
+];
+
+const fs = { flow: null, step: -1, playing: false, speed: 1, timer: null };
+
+function renderFlowSide() {
+  const groups = [];
+  FLOWS.forEach(function (f) {
+    let g = groups.find(function (x) { return x.name === f.group; });
+    if (!g) groups.push((g = { name: f.group, flows: [] }));
+    g.flows.push(f);
+  });
+  document.getElementById('flowSide').innerHTML =
+    '<div class="nav-head" style="padding:4px 7px">Flows</div>' +
+    groups.map(function (g) {
+      return '<div class="flow-group">' + g.name + '</div>' + g.flows.map(function (f) {
+        return '<button class="flow-item' + (fs.flow && fs.flow.id === f.id ? ' on' : '') +
+          '" onclick="loadFlow(\'' + f.id + '\')">' + f.name + '</button>';
+      }).join('');
+    }).join('');
+}
+
+function loadFlow(id) {
+  fpause();
+  fs.flow = FLOWS.find(function (f) { return f.id === id; }) || FLOWS[0];
+  fs.step = -1;
+  renderFlowSide();
+  const f = fs.flow;
+  const rows = Math.max.apply(null, f.nodes.map(function (n) { return n.row; })) + 1;
+  const cols = Math.max.apply(null, f.nodes.map(function (n) { return n.col; })) + 1;
+  document.getElementById('flowMain').innerHTML =
+    '<div class="flow-head"><h2>' + esc(f.title) + '</h2><p>' + esc(f.subtitle) + '</p></div>' +
+    '<div class="fctl">' +
+      '<button onclick="fshow(-1)" title="restart">&#9198;</button>' +
+      '<button onclick="fstep(-1)">&#9194;</button>' +
+      '<button class="primary" id="fplay" onclick="ftoggle()">&#9654; Play</button>' +
+      '<button onclick="fstep(1)">&#9193;</button>' +
+      '<div class="fbar"><i id="fbar"></i></div>' +
+      '<span class="mono" id="fprog" style="color:var(--text3);font-size:11px"></span>' +
+      '<label class="mono" style="color:var(--text3);font-size:11px">speed ' +
+        '<select class="mini-sel" onchange="fs.speed=+this.value">' +
+          '<option value="0.5">0.5&times;</option><option value="1" selected>1&times;</option>' +
+          '<option value="2">2&times;</option></select></label>' +
+    '</div>' +
+    '<div class="fcap" id="fcap"></div>' +
+    '<div class="diagram"><div class="dgm" id="dgm" style="grid-template-columns:repeat(' + cols +
+      ',minmax(0,1fr));min-height:' + (rows * 104) + 'px">' +
+      '<svg class="dgm-edges" id="dgmEdges" aria-hidden="true"><defs>' +
+        '<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" ' +
+        'orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>' +
+      '</defs></svg>' +
+      (f.crossing ? '<div class="boundary" style="left:50%"></div>' +
+        '<span class="boundary-tag" style="left:50%">TCP :8080</span>' +
+        '<span class="side-tag" style="left:0">SERVER SIDE</span>' +
+        '<span class="side-tag" style="right:0">CLIENT SIDE</span>' : '') +
+      f.nodes.map(nodeMarkup).join('') +
+      f.edges.map(function (e) {
+        return '<span class="elabel" data-elabel="' + e.id + '">' + esc(e.label) + '</span>';
+      }).join('') +
+    '</div></div>';
+  fshow(-1);
+  drawEdges();
+  setTimeout(drawEdges, 90);
+  fplay();
+}
+
+function nodeMarkup(n) {
+  return '<div class="dnode dnode--' + n.kind + '" data-node="' + n.id + '" ' +
+    'onclick="jumpToNode(\'' + n.id + '\')" style="grid-row:' + (n.row + 1) + ';grid-column:' + (n.col + 1) + '">' +
+    '<b>' + esc(n.label) + '</b>' +
+    (n.sub ? '<small>' + esc(n.sub) + '</small>' : '') +
+    (n.methods ? '<span class="meth">' + n.methods.map(esc).join('<br>') + '</span>' : '') +
+    (n.note ? '<em>' + esc(n.note) + '</em>' : '') + '</div>';
+}
+
+/** Lay the arrows out from where the boxes actually ended up. */
+function drawEdges() {
+  const inner = document.getElementById('dgm');
+  const svg = document.getElementById('dgmEdges');
+  if (!inner || !svg || !fs.flow) return;
+  const box = inner.getBoundingClientRect();
+  svg.setAttribute('viewBox', '0 0 ' + box.width + ' ' + box.height);
+  svg.style.width = box.width + 'px';
+  svg.style.height = box.height + 'px';
+  Array.prototype.slice.call(svg.querySelectorAll('path.edge')).forEach(function (p) { p.remove(); });
+
+  const rel = function (el) {
+    const r = el.getBoundingClientRect();
+    return { left: r.left - box.left, right: r.left - box.left + r.width,
+      top: r.top - box.top, bottom: r.top - box.top + r.height,
+      cx: r.left - box.left + r.width / 2, mid: r.top - box.top + r.height / 2 };
+  };
+  const obstacles = Array.prototype.slice.call(inner.querySelectorAll('[data-node]')).map(rel);
+  const placed = [];
+
+  fs.flow.edges.forEach(function (e) {
+    const a = inner.querySelector('[data-node="' + e.from + '"]');
+    const b = inner.querySelector('[data-node="' + e.to + '"]');
+    if (!a || !b) return;
+    const s = rel(a), t = rel(b);
+    let d, anchor;
+    if (e.from === e.to) {
+      d = 'M' + s.right + ' ' + s.mid + ' C' + (s.right + 34) + ' ' + (s.mid - 26) + ',' +
+          (s.right + 34) + ' ' + (s.mid + 26) + ',' + s.right + ' ' + (s.mid + 6);
+      anchor = [s.right + 26, s.mid];
+    } else if (t.top >= s.bottom - 2) {
+      if (Math.abs(s.cx - t.cx) < 6) {
+        d = 'M' + s.cx + ' ' + s.bottom + ' L' + t.cx + ' ' + t.top;
+        anchor = [s.cx, (s.bottom + t.top) / 2];
+      } else {
+        const x1 = t.cx > s.cx ? s.right : s.left;
+        d = 'M' + x1 + ' ' + s.mid + ' L' + t.cx + ' ' + s.mid + ' L' + t.cx + ' ' + t.top;
+        anchor = [(x1 + t.cx) / 2, s.mid];
+      }
+    } else if (t.bottom <= s.top + 2) {
+      const x1 = t.cx > s.cx ? s.right : s.left;
+      d = 'M' + x1 + ' ' + s.mid + ' L' + t.cx + ' ' + s.mid + ' L' + t.cx + ' ' + t.bottom;
+      anchor = [(x1 + t.cx) / 2, s.mid];
+    } else {
+      const fromRight = t.left > s.left;
+      d = 'M' + (fromRight ? s.right : s.left) + ' ' + s.mid + ' L' + (fromRight ? t.left : t.right) + ' ' + t.mid;
+      anchor = [((fromRight ? s.right : s.left) + (fromRight ? t.left : t.right)) / 2, (s.mid + t.mid) / 2];
+    }
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'edge' + (e.dashed ? ' edge--dashed' : '') + (e.wire ? ' edge--wire' : ''));
+    path.setAttribute('marker-end', 'url(#ah)');
+    path.dataset.edge = e.id;
+    svg.appendChild(path);
+    placeLabel(e, path, anchor, obstacles.concat(placed), s, t, placed);
+  });
+  paintFocus();
+}
+
+/** Put an arrow's caption on the line, but never on top of a box. */
+function placeLabel(edge, path, anchor, obstacles, s, t, placed) {
+  const label = document.querySelector('[data-elabel="' + edge.id + '"]');
+  if (!label) return;
+  label.hidden = !edge.label;
+  if (!edge.label) return;
+  const w = label.offsetWidth, h = label.offsetHeight;
+  const clear = function (p) {
+    return !obstacles.some(function (o) {
+      return p[0] + w / 2 > o.left - 3 && p[0] - w / 2 < o.right + 3 &&
+             p[1] + h / 2 > o.top - 3 && p[1] - h / 2 < o.bottom + 3;
+    });
+  };
+  let point = anchor;
+  if (!clear(point)) {
+    const len = path.getTotalLength();
+    const onLine = [0.5, 0.35, 0.65, 0.22, 0.78, 0.12, 0.88].map(function (f) {
+      const p = path.getPointAtLength(len * f); return [p.x, p.y];
+    });
+    const offLine = onLine.reduce(function (acc, p) {
+      acc.push([p[0], p[1] - h - 4]); acc.push([p[0], p[1] + h + 4]); return acc;
+    }, []);
+    const beside = [[anchor[0], Math.min(s.top, t.top) - h / 2 - 5],
+                    [anchor[0], Math.max(s.bottom, t.bottom) + h / 2 + 5]];
+    point = onLine.find(clear) || offLine.find(clear) || beside.find(clear) || anchor;
+  }
+  /* a wide caption near an edge would push the diagram wider than its box */
+  const lim = document.getElementById('dgm');
+  if (lim) point = [Math.min(Math.max(point[0], w / 2 + 2), lim.clientWidth - w / 2 - 2), point[1]];
+  label.style.left = point[0] + 'px';
+  label.style.top = point[1] + 'px';
+  if (placed) placed.push({ left: point[0] - w / 2, right: point[0] + w / 2,
+    top: point[1] - h / 2, bottom: point[1] + h / 2 });
+}
+
+function paintFocus() {
+  if (!fs.flow) return;
+  const now = {}, seen = {};
+  if (fs.step >= 0) fs.flow.steps[fs.step].focus.forEach(function (f) { now[f] = 1; });
+  fs.flow.steps.slice(0, Math.max(0, fs.step)).forEach(function (s) {
+    s.focus.forEach(function (f) { seen[f] = 1; });
+  });
+  const mark = function (el, id) {
+    el.classList.toggle('is-on', !!now[id]);
+    el.classList.toggle('is-done', !now[id] && !!seen[id]);
+    el.classList.toggle('is-idle', !now[id] && !seen[id]);
+  };
+  document.querySelectorAll('[data-node]').forEach(function (el) { mark(el, el.dataset.node); });
+  document.querySelectorAll('[data-edge]').forEach(function (el) { mark(el, el.dataset.edge); });
+  document.querySelectorAll('[data-elabel]').forEach(function (el) { mark(el, el.dataset.elabel); });
+}
+
+function fshow(i) {
+  const steps = fs.flow.steps;
+  fs.step = Math.max(-1, Math.min(i, steps.length - 1));
+  const s = steps[fs.step];
+  document.getElementById('fcap').innerHTML = s
+    ? '<span class="fcap-n">' + (fs.step + 1) + '</span><div><b>' + esc(s.title) + '</b><p>' + esc(s.text) + '</p></div>'
+    : '<span class="fcap-idle">Press Play to walk the diagram, or step with the arrow keys. Clicking a box jumps to it.</span>';
+  document.getElementById('fprog').textContent = Math.max(0, fs.step + 1) + ' / ' + steps.length;
+  document.getElementById('fbar').style.width = ((fs.step + 1) / steps.length * 100) + '%';
+  paintFocus();
+}
+function fstep(d) { fpause(); fshow(fs.step + d); }
+function jumpToNode(id) {
+  const i = fs.flow.steps.findIndex(function (s) { return s.focus.indexOf(id) >= 0; });
+  if (i > -1) { fpause(); fshow(i); }
+}
+function ftoggle() { fs.playing ? fpause() : fplay(); }
+function fplay() {
+  if (fs.step >= fs.flow.steps.length - 1) fshow(-1);
+  fs.playing = true;
+  const b = document.getElementById('fplay');
+  if (b) b.innerHTML = '&#10073;&#10073; Pause';
+  ftick();
+}
+function fpause() {
+  fs.playing = false;
+  clearTimeout(fs.timer);
+  const b = document.getElementById('fplay');
+  if (b) b.innerHTML = '&#9654; Play';
+}
+function ftick() {
+  clearTimeout(fs.timer);
+  if (!fs.playing) return;
+  if (fs.step >= fs.flow.steps.length - 1) return fpause();
+  fshow(fs.step + 1);
+  fs.timer = setTimeout(ftick, 4200 / fs.speed);
+}
+
+/* =========================================================== challenge */
+const QUIZ = [
+  {
+    title: 'The missing keyword',
+    code: '<span class="kw">public</span> <span class="slot" data-q="0">______</span> <span class="kw">boolean</span> <span class="fn">submitAnswer</span>(<span class="ty">String</span> player, <span class="kw">int</span> answer) {\n    <span class="kw">if</span> (!isRoundActive) <span class="kw">return false</span>;\n    isRoundActive = <span class="kw">false</span>;\n    playerScores.<span class="fn">merge</span>(player, <span class="nu">1</span>, <span class="ty">Integer</span>::sum);\n}',
+    opts: [
+      { t: 'static', ok: false, why: 'static moves the method off the instance, so it no longer has a GameManager to guard - and it still lets both threads in at once.' },
+      { t: 'synchronized', ok: true, why: 'Right. The method now holds the lock on this GameManager for its whole body, so the guard, the write and the score happen with nobody in between.' },
+      { t: 'volatile', ok: false, why: 'The distractor worth understanding. volatile is not even legal on a method, and on the field it would only make each read fresh - both threads still read true and both still walk through.', out: 'Arjun answered first! The answer was 50.\nBhavna answered first! The answer was 50.\nFINAL: 4 points across 3 rounds' },
+      { t: 'final', ok: false, why: 'final says the method cannot be overridden. It has nothing to say about two threads being inside it.' }
+    ],
+    jump: { page: 'stage4', sync: false, note: 'Watch it run with no keyword at all' }
+  },
+  {
+    title: 'What has to stay inside the lock',
+    q: 'Which line, moved outside the synchronized method, breaks the one-winner rule on its own?',
+    opts: [
+      { t: 'the broadcastMessage() call', ok: false, why: 'Untidy, and the announcements could interleave - but the scores would still be right. This one is cosmetic.' },
+      { t: 'isRoundActive = false;', ok: true, why: 'Right. The guard reads it and this line writes it. Put a gap between those two and a second thread can read true after the first has already decided to win.' },
+      { t: 'the Integer.parseInt() call', ok: false, why: 'parseInt touches only a local variable. Threads never share locals, so it is safe anywhere.' },
+      { t: 'the return statement', ok: false, why: 'A return cannot be moved out of the method it belongs to, and returning is not shared state.' }
+    ]
+  },
+  {
+    title: 'Where does start() go?',
+    code: '<span class="kw">while</span> (<span class="kw">true</span>) {\n    <span class="ty">Socket</span> socket = serverSocket.<span class="fn">accept</span>();\n    <span class="ty">ClientHandler</span> h = <span class="kw">new</span> <span class="ty">ClientHandler</span>(socket, <span class="kw">this</span>);\n    <span class="slot" data-q="2">______</span>\n}',
+    q: 'Which line goes in the slot?',
+    opts: [
+      { t: 'h.run();', ok: false, why: 'run() is an ordinary method call. It executes the whole conversation on the accept thread, so the loop never comes back and the second client hangs - exactly the stage 1 bug, with a Thread subclass to make it look fixed.', out: 'Arjun connected.\nBhavna connecting... (waiting)\nBhavna connecting... (waiting)' },
+      { t: 'h.start();', ok: true, why: 'Right. start() forks a new thread and returns immediately, so accept() is reached again on the next iteration.' },
+      { t: 'new Thread(h).start(); after the loop', ok: false, why: 'The loop is while(true) - there is no after. Nothing below it will ever run.' },
+      { t: 'nothing - the constructor already started it', ok: false, why: 'Starting a thread from inside its own constructor lets the new thread see a half-built object. It is a classic bug, not a shortcut.' }
+    ]
+  },
+  {
+    title: 'The frozen client',
+    q: 'Bhavna types an answer and sees nothing on screen until she presses Enter - then four messages appear at once. Why?',
+    opts: [
+      { t: 'The server batches its broadcasts', ok: false, why: 'The server wrote each line the moment it had it. The delay is entirely on the client side.' },
+      { t: 'Nothing on the client is reading the socket', ok: true, why: 'Right. Her only thread is parked in scanner.nextLine(). The bytes arrive and sit in the socket buffer; the first read after Enter drains all four at once.' },
+      { t: 'PrintWriter autoflush is off', ok: false, why: 'Autoflush would explain the server not sending. Here it did send - she just was not listening.' },
+      { t: 'The messages were lost and resent', ok: false, why: 'TCP does not lose them. They were delivered to her machine and buffered, which is why they all appear together.' }
+    ],
+    jump: { page: 'stage3', listener: false, note: 'Turn the listener off and watch it happen' }
+  },
+  {
+    title: 'Shutdown order',
+    q: 'The leaderboard arrives at one client cut off halfway. Which order fixes it?',
+    opts: [
+      { t: 'close() the sockets, then broadcast the board', ok: false, why: 'Writing to a closed socket throws. Nobody gets a board at all.' },
+      { t: 'broadcast, flush, close each socket, close the ServerSocket', ok: true, why: 'Right. Write it, push it out of the buffer, then close inwards - client sockets first, the listening socket last.' },
+      { t: 'broadcast, close the ServerSocket, then the client sockets', ok: false, why: 'Closing the ServerSocket first does not hurt existing conversations, but it also does not flush them. The truncation is still there.' },
+      { t: 'broadcast and rely on close() to flush', ok: false, why: 'close() on a socket discards whatever is still buffered. This is the single commonest cause of a half-delivered last message.' }
+    ]
+  },
+  {
+    title: 'Spot the bug',
+    code: '<span class="kw">public void</span> <span class="fn">broadcastMessage</span>(<span class="ty">String</span> msg) {\n    <span class="kw">for</span> (<span class="ty">ClientHandler</span> c : activeClients) {\n        <span class="kw">if</span> (c.<span class="fn">isDead</span>()) activeClients.<span class="fn">remove</span>(c);\n        <span class="kw">else</span> c.<span class="fn">sendMessage</span>(msg);\n    }\n}',
+    q: 'What happens the first time a player drops mid-game?',
+    opts: [
+      { t: 'The dead client gets the message anyway', ok: false, why: 'It never gets that far - the loop dies before the next iteration.' },
+      { t: 'ConcurrentModificationException', ok: true, why: 'Right. The list is structurally modified while a for-each is iterating it, and the iterator notices on the next step. Use an Iterator and call remove() on it, or collect the dead into a second list and removeAll() afterwards.', out: 'Exception in thread "Thread-3" java.util.ConcurrentModificationException\n\tat java.base/java.util.ArrayList$Itr.checkForComodification\n\tat MathicsServer.broadcastMessage(MathicsServer.java:31)' },
+      { t: 'Nothing - ArrayList handles it', ok: false, why: 'ArrayList is explicitly fail-fast. It is designed to throw here rather than quietly skip an element.' },
+      { t: 'A deadlock', ok: false, why: 'No lock is involved. This one fails loudly and immediately.' }
+    ]
+  }
+];
+let answers = {};
+
+function renderChallenge() {
+  const done = Object.keys(answers).filter(function (k) { return QUIZ[k].opts[answers[k]].ok; }).length;
+  document.getElementById('navScore').textContent = Object.keys(answers).length ? done + '/' + QUIZ.length : '';
+  document.getElementById('page-challenge').innerHTML = '<div class="page-wrap">' +
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">' +
+      '<h1 style="margin:0">Challenge</h1>' +
+      '<span class="score-chip">&#127919; ' + done + ' / ' + QUIZ.length + '</span></div>' +
+    '<p class="lede">Six things that go wrong in real socket code. Pick an answer and see what it does, not just whether it was right.</p>' +
+    QUIZ.map(function (q, i) {
+      const a = answers[i];
+      const picked = a !== undefined ? q.opts[a] : null;
+      return '<div class="q ' + (picked ? (picked.ok ? 'right' : 'wrong') : '') + '">' +
+        '<div class="q-head"><span class="q-n">' + (picked ? (picked.ok ? '&#10003;' : '&#10007;') : i + 1) + '</span>' +
+        '<b>' + esc(q.title) + '</b></div>' +
+        (q.code ? '<div class="q-code">' + q.code.replace('______', picked ? esc(picked.t) : '______') + '</div>' : '') +
+        (q.q ? '<p style="font-size:12.5px;margin-bottom:9px">' + esc(q.q) + '</p>' : '') +
+        '<div class="opts">' + q.opts.map(function (o, j) {
+          return '<button class="opt' + (a === j ? ' pick' : '') + '" onclick="answer(' + i + ',' + j + ')">' +
+            esc(o.t) + '</button>';
+        }).join('') + '</div>' +
+        (picked ? '<div class="fb ' + (picked.ok ? 'ok' : 'no') + '">' + esc(picked.why) +
+          (picked.out ? '<div class="out">' + esc(picked.out) + '</div>' : '') +
+          (q.jump ? '<div style="margin-top:8px"><button class="sb-btn" onclick="quizJump(' + i + ')">&#9654; ' +
+            esc(q.jump.note) + '</button></div>' : '') +
+          (picked.ok ? '' : '<div style="margin-top:7px"><button class="jbtn" onclick="retry(' + i + ')">try again</button></div>') +
+          '</div>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+}
+function answer(i, j) { answers[i] = j; renderChallenge(); }
+function retry(i) { delete answers[i]; renderChallenge(); }
+function quizJump(i) {
+  const j = QUIZ[i].jump;
+  go(j.page);
+  if (j.sync === false) sim.opts.sync = false;
+  if (j.listener === false) sim.opts.listener = false;
+  render();
+  play();
+}
+
+/* ================================================================ pages */
+function renderHome() {
+  document.getElementById('page-home').innerHTML = '<div class="page-wrap">' +
+  '<h1>MathicsArena</h1>' +
+  '<p class="lede">A live math contest played across four machines. One server hosts the room, every player gets a thread of their own, and each round is a genuine race &mdash; won by whichever thread the scheduler happens to let through first.</p>' +
+  '<div class="grid g3" style="margin-bottom:8px">' +
+    ['<b>Server</b><br>binds :8080, accepts, spawns a ClientHandler per player',
+     '<b>Client</b><br>one thread types, one thread listens',
+     '<b>GameManager</b><br>one synchronized method decides the winner'].map(function (t) {
+      return '<div class="pcard"><p style="font-size:12px">' + t + '</p></div>'; }).join('') +
+  '</div>' +
+  '<h2>Four stages</h2>' +
+  '<div class="grid g2">' +
+    [['stage1', '&#128268;', '1 &middot; The handshake',
+      'ServerSocket, accept(), one client, one welcome. Then connect a second player and watch the whole server stop - the failure that stage 2 exists to fix.'],
+     ['stage2', '&#129525;', '2 &middot; A thread each',
+      'new ClientHandler(socket).start() inside the accept loop. Add up to four players and watch accept() come straight back for the next one.'],
+     ['stage3', '&#127911;', '3 &middot; Two threads in one client',
+      'main waits on the keyboard, ServerListener waits on the socket. Switch the listener off and see a client that looks frozen.'],
+     ['stage4', '&#127937;', '4 &middot; The Game Master',
+      'Rounds, scores, and two players answering on the same tick. Step it to the lock moment, then remove synchronized and watch one round get two winners.']
+    ].map(function (s) {
+      return '<div class="pcard click" onclick="go(\'' + s[0] + '\')"><h3>' + s[1] + ' ' + s[2] + '</h3><p>' + s[3] + '</p></div>';
+    }).join('') +
+  '</div>' +
+  '<h2>Then</h2>' +
+  '<div class="grid g3">' +
+    [['flow', '&#128506;', 'Class flow', 'Seven operations walked box by box, arrow by arrow, across the network boundary.'],
+     ['free', '&#129514;', 'Free play', 'No script. Connect, drop, broadcast, and make everyone answer on the same tick.'],
+     ['challenge', '&#127919;', 'Challenge', 'Six things that go wrong in real socket code.']
+    ].map(function (s) {
+      return '<div class="pcard click" onclick="go(\'' + s[0] + '\')"><h3>' + s[1] + ' ' + s[2] + '</h3><p>' + s[3] + '</p></div>';
+    }).join('') +
+  '</div>' +
+  '<h2>By the end you should be able to say why</h2>' +
+  '<ul class="ul">' +
+    '<li><code>accept()</code> stops the thread, and why that is fine until it is the only thread</li>' +
+    '<li>the server needs one thread per client, and <code>start()</code> is not <code>run()</code></li>' +
+    '<li>the client needs a second thread just to hear anything while you type</li>' +
+    '<li><code>synchronized</code> on <code>submitAnswer()</code> is not decoration &mdash; take it off and a round gets two winners</li>' +
+    '<li>a thread waiting in <code>readLine()</code> is <code>RUNNABLE</code>, and only a thread waiting for a monitor is <code>BLOCKED</code></li>' +
+  '</ul></div>';
+}
+
+function renderReference() {
+  document.getElementById('page-reference').innerHTML = '<div class="page-wrap">' +
+  '<h1>Reference</h1>' +
+  '<p class="lede">The handful of calls this whole application is built from, and the places they bite.</p>' +
+  '<div class="grid g2">' +
+    '<div class="pcard"><h3>&#128268; Sockets</h3><ul class="ul">' +
+      '<li><code>new ServerSocket(8080)</code> &mdash; claim the port. Throws <code>BindException</code> if it is taken.</li>' +
+      '<li><code>accept()</code> &mdash; waits, returns one <code>Socket</code> per client.</li>' +
+      '<li><code>new Socket(host, port)</code> &mdash; the client side of the same handshake.</li>' +
+      '<li><code>getInputStream()</code> / <code>getOutputStream()</code> &mdash; two directions, always.</li>' +
+      '<li><code>new PrintWriter(out, true)</code> &mdash; the <code>true</code> is autoflush. Without it your text can sit in a buffer forever.</li>' +
+      '<li><code>readLine()</code> returns <code>null</code> when the other side closes. That is your disconnect signal.</li>' +
+    '</ul></div>' +
+    '<div class="pcard"><h3>&#129525; Threads</h3><ul class="ul">' +
+      '<li><code>extends Thread</code> and override <code>run()</code>, or pass a <code>Runnable</code>.</li>' +
+      '<li><code>start()</code> forks and returns. <code>run()</code> just calls a method on the current thread.</li>' +
+      '<li><code>synchronized</code> on an instance method locks <code>this</code> for the whole body.</li>' +
+      '<li><code>getState()</code>: <code>RUNNABLE</code> covers waiting on I/O; <code>BLOCKED</code> means waiting for a monitor, and nothing else.</li>' +
+      '<li>Locals are never shared. Fields on a shared object always are.</li>' +
+    '</ul></div>' +
+  '</div>' +
+  '<h2>Where it bites</h2>' +
+  '<div class="grid g2">' +
+    '<div class="pcard"><h3>&#9888; volatile is not a lock</h3><p>It makes every read see the latest write. It does not stop two threads being between the same two lines at the same time, which is the actual problem in <code>submitAnswer()</code>.</p></div>' +
+    '<div class="pcard"><h3>&#9888; Thread.sleep is not synchronization</h3><p>Sleeping long enough that the bug usually does not happen is not a fix. The race is still there and it will surface on a faster machine.</p></div>' +
+    '<div class="pcard"><h3>&#9888; ConcurrentModificationException</h3><p>Removing a dropped client from <code>activeClients</code> inside a for-each over it throws on the next iteration. Use the iterator&rsquo;s own <code>remove()</code>, or collect and <code>removeAll()</code> after.</p></div>' +
+    '<div class="pcard"><h3>&#9888; Close in the right order</h3><p>Flush, then close each client socket, then the <code>ServerSocket</code>. <code>close()</code> throws away whatever is still buffered.</p></div>' +
+    '<div class="pcard"><h3>&#9888; run() instead of start()</h3><p>Compiles, runs, and quietly gives you a single-threaded server. The symptom is the stage 1 failure with a <code>Thread</code> subclass in the stack trace.</p></div>' +
+    '<div class="pcard"><h3>&#9888; Blocking on the only thread</h3><p>Any wait on the accept thread &mdash; a <code>readLine()</code>, a game loop, a <code>Scanner</code> &mdash; stops the whole server accepting. Give it its own thread.</p></div>' +
+  '</div></div>';
+}
+
+/* ------------------------------------------------------------ routing */
+function go(page) {
+  pause(); fpause();
+  ui.page = page;
+  ['stage1', 'stage2', 'stage3', 'stage4', 'flow', 'free', 'challenge', 'reference'].forEach(function (p) {
+    const el = document.getElementById('nav-' + p);
+    if (el) el.classList.toggle('on', p === page);
+  });
+  const isSim = ['stage1', 'stage2', 'stage3', 'stage4', 'free'].indexOf(page) >= 0;
+  document.getElementById('simView').style.display = isSim ? 'flex' : 'none';
+  document.getElementById('flowView').style.display = page === 'flow' ? 'flex' : 'none';
+  document.getElementById('viewToggle').style.display = isSim ? 'flex' : 'none';
+  ['home', 'challenge', 'reference'].forEach(function (p) {
+    document.getElementById('page-' + p).classList.toggle('on', p === page);
+  });
+  if (isSim) {
+    setupStage(page === 'free' ? 'free' : +page.slice(5));
+  } else if (page === 'flow') {
+    renderFlowSide();
+    loadFlow(fs.flow ? fs.flow.id : 'start-server');
+  } else if (page === 'challenge') renderChallenge();
+  renderStepBar();
+  const m = document.getElementById('main');
+  if (m) m.scrollTop = 0;
+}
+
+function setView(v) {
+  ui.view = v;
+  const col = document.getElementById('simView');
+  col.classList.remove('v-net', 'v-thr');
+  if (v !== 'split') col.classList.add('v-' + v);
+  document.querySelectorAll('#viewToggle .view-btn').forEach(function (b, i) {
+    b.classList.toggle('on', ['net', 'thr', 'split'][i] === v);
+  });
+}
+
+document.addEventListener('keydown', function (e) {
+  if (['INPUT', 'TEXTAREA', 'SELECT'].indexOf((document.activeElement || {}).tagName) >= 0) return;
+  if (ui.page === 'flow') {
+    if (e.key === 'ArrowRight') { e.preventDefault(); fstep(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); fstep(-1); }
+    else if (e.key === ' ') { e.preventDefault(); ftoggle(); }
+    return;
+  }
+  if (['stage1', 'stage2', 'stage3', 'stage4', 'free'].indexOf(ui.page) < 0) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); step(); }
+  else if (e.key === ' ') { e.preventDefault(); play(); }
+});
+
+let rsz = null;
+window.addEventListener('resize', function () {
+  clearTimeout(rsz);
+  rsz = setTimeout(function () { if (ui.page === 'flow' && fs.flow) drawEdges(); }, 130);
+}, { passive: true });
+
+/* ---------------------------------------------------------------- boot */
+sim = blankSim(1);
+renderHome();
+renderReference();
+renderChallenge();
+go('home');
+</script>
+</body>
+</html>
