@@ -4,8 +4,9 @@
     {
       "name": "visual-learning",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "client-src", "run", "dev", "--", "--port", "5177", "--strictPort"],
-      "port": 5177
+      "runtimeArgs": ["--prefix", "client-src", "run", "dev"],
+      "autoPort": true,
+      "port": 5178
     }
   ]
 }

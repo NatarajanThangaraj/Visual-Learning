@@ -178,6 +178,29 @@
 .card .cat-badge[data-cat="python"] { background: var(--python-bg); color: var(--python); }
 .card .cat-badge[data-cat="problem-solving"] { background: var(--problem-solving-bg); color: var(--problem-solving); }
 
+/* On a course page the badge reports where the learner is in the path instead
+   of naming the course they are already on. */
+.card .cat-badge[data-status="done"] { background: var(--status-done-bg); color: var(--status-done); }
+.card .cat-badge[data-status="current"] { background: var(--navy-900); color: #fff; }
+.card .cat-badge[data-status="open"] { background: var(--surface-subtle); color: var(--text-muted); }
+.card .cat-badge[data-status="locked"] { background: var(--others-bg); color: var(--others); }
+
+/* A locked lesson is a card you can see but not open — it keeps its place in
+   the grid so the topic's shape is legible, without pretending to be a link. */
+.card.is-locked {
+  background: transparent;
+  border-style: dashed;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.card.is-locked .thumb { background: var(--surface-subtle); }
+.card.is-locked .lthumb { opacity: 0.35; filter: grayscale(1); }
+.card.is-locked .title { color: var(--text-muted); }
+.card.is-locked:hover { transform: none; box-shadow: none; }
+
+/* The one lesson to do next, marked the way the tile above it is. */
+.card.is-current { border-color: var(--navy-900); }
+
 .card .body {
   padding: 16px 18px 18px;
   display: flex;
