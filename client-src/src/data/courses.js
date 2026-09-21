@@ -96,6 +96,15 @@ export const courses = [
         ],
       },
       {
+        id: 'interfaces',
+        title: 'Interfaces',
+        summary: 'One agreed list of methods, and every class that signs up keeping it its own way.',
+        lessons: [
+          { id: 'interface-simulator', title: 'Interface Simulator', minutes: 30,
+            blurb: 'Six things a phone talks to — Wi-Fi, a printer, a camera, notifications, login, payment — and one call that lands somewhere different every time. Step it line by line with the application view and the Java view side by side, watch which class actually answers, then wire your own in the playground and try the challenge.' },
+        ],
+      },
+      {
         id: 'static',
         title: 'Static',
         summary: 'Values that belong to the whole application rather than to any one object.',
