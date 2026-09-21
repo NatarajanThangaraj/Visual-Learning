@@ -121,7 +121,7 @@ export const courses = [
         summary: 'Values that belong to the whole application rather than to any one object.',
         lessons: [
           { id: 'design-studio-static', title: 'Design Studio', minutes: 25,
-            blurb: 'Run a Canva-like design app where one static field decides everything: flip the plan from FREE to PRO and watch templates, videos, audio and exports unlock together. Then follow the call from Templates to PremiumChecker to AppConfig, see five objects all reading the same shared value, edit AppConfig and re-run it, and finish on the one question worth asking before writing static.', thumb: false },
+            blurb: 'Run a Canva-like design app where one static field decides everything: flip the plan from FREE to PRO and watch templates, videos, audio and exports unlock together. Then follow the call from Templates to PremiumChecker to AppConfig, see five objects all reading the same shared value, edit AppConfig and re-run it, and finish on the one question worth asking before writing static.' },
         ],
       },
       {
