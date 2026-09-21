@@ -102,6 +102,17 @@ export const courses = [
         lessons: [
           { id: 'interface-simulator', title: 'Interface Simulator', minutes: 30,
             blurb: 'Six things a phone talks to — Wi-Fi, a printer, a camera, notifications, login, payment — and one call that lands somewhere different every time. Step it line by line with the application view and the Java view side by side, watch which class actually answers, then wire your own in the playground and try the challenge.' },
+          { id: 'interface-lab', title: 'Interface Lab', minutes: 30,
+            blurb: 'The same six devices, worked the other way round: every time you swap the Wi-Fi network or the printer or the bank, Discovery stops and asks you what just changed — the reference type, the object, or the call. Answer, get the reason, then open the class map and see one interface with every class that signed up to it.' },
+        ],
+      },
+      {
+        id: 'abstract-classes',
+        title: 'Abstract Classes',
+        summary: 'A half-written parent: the steps every child shares, and the one step each must write itself.',
+        lessons: [
+          { id: 'abstract-class-simulator', title: 'Abstract Class Simulator', minutes: 30,
+            blurb: 'Four systems — a food order, a support desk, an AI assistant, an AI agent — and the same shape underneath each one. Run an order and watch placeOrder, prepareFood, generateBill and handover come straight from FoodOrder while packFood lands in BiryaniOrder, PizzaOrder or Chicken65Order instead. Switch the subclass and only that one step changes. Then answer the question the lab is really asking: when you add Shawarma tomorrow, which method do you have to write?' },
         ],
       },
       {

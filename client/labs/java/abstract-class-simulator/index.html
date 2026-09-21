@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Abstract Class Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1120;--surf1:#111c2e;--surf2:#172035;--surf3:#1e2d48;--surf4:#263654;
+  --border:#2a3f60;--border2:#1e3050;
+  --accent:#3b82f6;--cyan:#06b6d4;--purple:#8b5cf6;--green:#10b981;
+  --amber:#f59e0b;--red:#ef4444;--orange:#f97316;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#546a8a;
+  --abs-col:#f97316;   /* orange = abstract class */
+  --conc-col:#10b981;  /* green  = concrete method */
+  --abst-col:#f59e0b;  /* amber  = abstract method */
+  --obj-col:#8b5cf6;   /* purple = object */
+  --mono:'JetBrains Mono',monospace;
+  --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);display:flex;flex-direction:column}
+
+/* ── TOP BAR ── */
+.topbar{
+  height:46px;background:var(--surf1);border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;padding:0 0 0 0;flex-shrink:0;z-index:50;
+}
+.tb-brand{
+  display:flex;align-items:center;gap:9px;padding:0 16px;
+  font-size:13px;font-weight:700;letter-spacing:-.3px;
+  border-right:1px solid var(--border2);height:100%;white-space:nowrap;flex-shrink:0;
+}
+.tb-logo{
+  width:26px;height:26px;border-radius:6px;
+  background:linear-gradient(135deg,var(--orange) 0%,var(--amber) 100%);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;
+}
+.tb-scenarios{display:flex;align-items:center;gap:4px;padding:0 14px;flex:1}
+.sc-btn{
+  padding:5px 13px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;
+  border:1px solid var(--border);background:none;color:var(--text2);transition:all .15s;
+}
+.sc-btn:hover{background:var(--surf2);color:var(--text)}
+.sc-btn.active{background:var(--orange);color:#fff;border-color:var(--orange)}
+.tb-right{display:flex;align-items:center;gap:6px;padding:0 14px;border-left:1px solid var(--border2);height:100%;flex-shrink:0}
+.tb-ctrl{
+  padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;
+  border:1px solid var(--border);background:var(--surf2);color:var(--text2);transition:all .15s;
+}
+.tb-ctrl:hover{border-color:var(--accent);color:var(--text)}
+.tb-ctrl.run{background:var(--green);color:#fff;border-color:var(--green)}.tb-ctrl.run:hover{background:#059669}
+.tb-ctrl.step{background:var(--accent);color:#fff;border-color:var(--accent)}.tb-ctrl.step:hover{background:#2563eb}
+
+/* ── BODY SPLIT ── */
+.app-body{display:flex;flex:1;overflow:hidden}
+.left-pane{
+  width:45%;min-width:340px;max-width:560px;
+  display:flex;flex-direction:column;border-right:1px solid var(--border2);
+  overflow:hidden;
+}
+.right-pane{
+  flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg);
+}
+.pane-hdr{
+  height:34px;background:var(--surf1);border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;
+}
+.pane-title{font-size:11px;font-weight:500;color:var(--text3);letter-spacing:.3px}
+.pane-sub{font-size:11px;color:var(--text3);margin-left:auto}
+.pane-body{flex:1;overflow-y:auto;min-height:0}
+
+/* ── STEP BAR ── */
+.step-bar{
+  height:38px;background:var(--surf1);border-top:1px solid var(--border2);
+  display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;
+}
+.step-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700;
+  background:var(--surf2);border:1px solid var(--border);color:var(--text3);
+  transition:all .2s;cursor:pointer;
+}
+.step-pill.active{background:rgba(59,130,246,.15);border-color:var(--accent);color:var(--accent)}
+.step-pill.done{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.4);color:var(--green)}
+.step-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.step-label{font-size:10px;color:var(--text3);margin-left:auto;font-family:var(--mono)}
+
+/* ── USER VIEW ── */
+.uv{padding:20px}
+.os-win{background:var(--surf2);border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.os-tb{
+  background:var(--surf3);padding:9px 12px;display:flex;align-items:center;
+  gap:8px;border-bottom:1px solid var(--border2);
+}
+.os-dots span{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.d1{background:#ef4444}.d2{background:#f59e0b}.d3{background:#10b981}
+.os-title{font-size:11px;font-weight:600;color:var(--text2);flex:1;text-align:center;margin-left:-28px}
+.os-body{padding:16px 18px}
+.os-status{padding:8px 12px;border-top:1px solid var(--border2);display:flex;align-items:center;gap:7px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:all .3s}
+.sdot.on{background:var(--green);box-shadow:0 0 5px var(--green)}
+.sdot.warn{background:var(--amber)}
+.status-text{font-size:11px;color:var(--text2)}
+
+/* Section label */
+.sec-lbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px}
+
+/* Choice buttons */
+.choice-row{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.choice-btn{
+  padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);
+  background:var(--surf3);cursor:pointer;font-size:12px;font-weight:600;
+  color:var(--text2);transition:all .15s;
+}
+.choice-btn:hover{border-color:var(--orange);color:var(--text)}
+.choice-btn.sel{border-color:var(--orange);background:rgba(249,115,22,.1);color:var(--orange)}
+
+/* OS-style action button */
+.os-btn{
+  padding:9px 20px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;
+  border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#2563eb}
+.btn-orange{background:var(--orange);color:#fff}.btn-orange:hover{background:#ea580c}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#059669}
+.btn-ghost{background:var(--surf3);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent)}
+.btn-red{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.35)}
+
+/* Ticket list */
+.ticket-card{
+  padding:12px 14px;border-radius:9px;border:1.5px solid var(--border);
+  background:var(--surf3);cursor:pointer;transition:all .15s;margin-bottom:7px;
+}
+.ticket-card:hover{border-color:rgba(249,115,22,.4)}
+.ticket-card.sel{border-color:var(--orange);background:rgba(249,115,22,.07)}
+.tkt-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.tkt-id{font-size:10px;font-family:var(--mono);color:var(--text3)}
+.tkt-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;letter-spacing:.5px}
+.tkt-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.tkt-sub{font-size:11px;color:var(--text3)}
+.priority-high{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.priority-med{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.priority-low{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+
+/* Text input */
+.prompt-field{
+  width:100%;background:var(--surf3);border:1px solid var(--border);border-radius:7px;
+  padding:9px 12px;color:var(--text);font-size:13px;outline:none;
+  font-family:var(--ui);margin-bottom:10px;resize:none;
+}
+.prompt-field:focus{border-color:var(--accent)}
+
+/* Progress bar */
+.prog-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin:6px 0 10px}
+.prog-fill{height:100%;background:var(--orange);width:0%;border-radius:2px;transition:width .8s ease}
+
+/* ── FLOW DIAGRAM (right pane) ── */
+.flow-wrap{
+  width:100%;height:100%;display:flex;align-items:flex-start;
+  justify-content:center;padding:16px 12px;overflow:auto;
+}
+
+/* Execution dot animation */
+@keyframes travelPath{
+  0%  {opacity:0;offset-distance:0%}
+  10% {opacity:1}
+  90% {opacity:1}
+  100%{opacity:0;offset-distance:100%}
+}
+.exec-dot{
+  offset-rotate:0deg;
+  animation:travelPath 0.7s ease-in-out forwards;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* Challenge card */
+.chal-card{
+  margin-top:16px;border-radius:10px;overflow:hidden;
+  border:1px solid rgba(59,130,246,.25);background:var(--surf2);
+}
+.chal-hdr{
+  padding:10px 16px;background:rgba(59,130,246,.08);border-bottom:1px solid rgba(59,130,246,.18);
+  display:flex;align-items:center;gap:8px;
+}
+.chal-hdr-label{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase}
+.chal-body{padding:14px 16px}
+.chal-q{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;line-height:1.55}
+.chal-opts{display:flex;flex-direction:column;gap:7px}
+.chal-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--surf3);
+  cursor:pointer;transition:all .15s;
+}
+.chal-opt:hover{border-color:var(--accent);background:rgba(59,130,246,.05)}
+.chal-opt-bullet{
+  width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--text3);flex-shrink:0;transition:all .15s;
+}
+.chal-opt-text{font-size:12px;font-weight:600;color:var(--text2);font-family:var(--mono)}
+.chal-opt:hover .chal-opt-bullet{border-color:var(--accent);color:var(--accent)}
+.chal-opt:hover .chal-opt-text{color:var(--text)}
+.chal-opt.correct{border-color:var(--green);background:rgba(16,185,129,.08)}
+.chal-opt.correct .chal-opt-bullet{border-color:var(--green);background:var(--green);color:#fff}
+.chal-opt.correct .chal-opt-text{color:var(--green)}
+.chal-opt.wrong{border-color:var(--red);background:rgba(239,68,68,.06);animation:shake .25s}
+.chal-opt.wrong .chal-opt-bullet{border-color:var(--red);background:var(--red);color:#fff}
+.chal-opt.wrong .chal-opt-text{color:var(--red)}
+@keyframes shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
+.chal-feedback{
+  margin-top:10px;padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.55;
+}
+.chal-feedback.ok{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.25);color:var(--green)}
+.chal-feedback.err{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);color:var(--red)}
+/* Discovery prompt */
+.disc-prompt{
+  padding:12px 14px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surf2);margin-bottom:12px;font-size:12px;color:var(--text2);line-height:1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="toast-area" id="toastArea"></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-brand">
+    <div class="tb-logo">Ab</div>
+    Java Abstract Class Simulator
+  </div>
+  <div class="tb-scenarios">
+    <span style="font-size:10px;color:var(--text3);margin-right:4px;font-weight:700;letter-spacing:.5px">SCENARIO</span>
+    <button class="sc-btn active" data-sc="food"    onclick="loadScenario('food')">🍛 Food Order</button>
+    <button class="sc-btn"        data-sc="desk"    onclick="loadScenario('desk')">🎫 Support Desk</button>
+    <button class="sc-btn"        data-sc="ai"      onclick="loadScenario('ai')">🤖 AI Assistant</button>
+    <button class="sc-btn"        data-sc="agent"   onclick="loadScenario('agent')">⚡ AI Agent</button>
+  </div>
+  <div class="tb-right">
+    <button class="tb-ctrl" onclick="doReset()">↺ Reset</button>
+    <button class="tb-ctrl step" onclick="doStep()">⏭ Step</button>
+    <button class="tb-ctrl run"  onclick="doRun()">▶ Run</button>
+  </div>
+</div>
+
+<div class="app-body">
+  <!-- LEFT PANE: Application View -->
+  <div class="left-pane">
+    <div class="pane-hdr">
+      <span class="pane-title">Application View</span>
+      <span class="pane-sub" id="leftLabel"></span>
+    </div>
+    <div class="pane-body"><div id="leftPane" class="uv"></div></div>
+    <!-- Step bar: just shows current step description -->
+    <div class="step-bar" id="stepBar">
+      <span style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;flex-shrink:0">Step</span>
+      <span class="step-label" id="stepLabel" style="font-size:12px;color:var(--text2)">Not started</span>
+      <span id="stepCount" style="margin-left:auto;font-size:10px;color:var(--text3);font-family:var(--mono)"></span>
+    </div>
+  </div>
+
+  <!-- RIGHT PANE: Java Runtime View -->
+  <div class="right-pane">
+    <div class="pane-hdr">
+      <span class="pane-title">Java Runtime View</span>
+      <span class="pane-sub" id="rightLabel"></span>
+    </div>
+    <div class="pane-body"><div id="rightPane" style="height:100%;display:flex;flex-direction:column"></div></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  SCENARIO DEFINITIONS
+// ═══════════════════════════════════════════════════════
+const SCENARIOS = {
+
+  food: {
+    label: 'Food Order System',
+    abstractClass: 'FoodOrder',
+    abstractKeyword: 'abstract class',
+    refVar: 'order',
+    abstractMethod: 'packFood',
+    concreteMethods: ['placeOrder','prepareFood','generateBill','handoverToDelivery'],
+    allMethods: ['placeOrder','prepareFood','packFood','generateBill','handoverToDelivery'],
+    subclasses: [
+      { id:'biryani', label:'🍛 Biryani',     cls:'BiryaniOrder',   pack:'Pack in leak-proof container' },
+      { id:'pizza',   label:'🍕 Pizza',       cls:'PizzaOrder',     pack:'Place in ventilated pizza box' },
+      { id:'chicken', label:'🍗 Chicken 65',  cls:'Chicken65Order', pack:'Pack in crispy-food container' },
+    ],
+    stepDefs: [
+      { id:'select',   label:'Select',        desc:'Choose food item' },
+      { id:'place',    label:'placeOrder()',   desc:'Order placed — common behavior' },
+      { id:'prepare',  label:'prepareFood()',  desc:'Preparation started — common behavior' },
+      { id:'pack',     label:'packFood()',     desc:'Specialized packing — subclass implements' },
+      { id:'bill',     label:'generateBill()', desc:'Bill generated — common behavior' },
+      { id:'deliver',  label:'handover()',     desc:'Handed to delivery — common behavior' },
+    ],
+    discovery: 'Every food order follows the same process: place → prepare → pack → bill → deliver. But can every food be packed the same way? 🤔',
+    challenge: {
+      q: 'You are adding Shawarma to the Food Order system. Which method should ShawarmaOrder implement?',
+      opts: ['placeOrder()','generateBill()','handoverToDelivery()','packFood()'],
+      ans: 3,
+      explain: 'packFood() is abstract — every food packs differently. placeOrder, generateBill and handoverToDelivery are common to all orders.',
+    },
+  },
+
+  desk: {
+    label: 'Support Desk',
+    abstractClass: 'SupportTicket',
+    abstractKeyword: 'abstract class',
+    refVar: 'ticket',
+    abstractMethod: 'analyzeTicket',
+    concreteMethods: ['createTicket','assignAgent','closeTicket'],
+    allMethods: ['createTicket','assignAgent','analyzeTicket','closeTicket'],
+    subclasses: [
+      { id:'login',   label:'🔑 Login Issue',   cls:'LoginIssue',   pack:'Check authentication and session details' },
+      { id:'payment', label:'💳 Payment Issue', cls:'PaymentIssue', pack:'Check payment transaction and gateway logs' },
+      { id:'delivery',label:'📦 Delivery Issue',cls:'DeliveryIssue',pack:'Check shipment status and courier details' },
+      { id:'tech',    label:'🛠 Technical',     cls:'TechnicalIssue',pack:'Check error logs and system diagnostics' },
+    ],
+    stepDefs: [
+      { id:'select',   label:'Select',           desc:'Choose ticket type' },
+      { id:'create',   label:'createTicket()',    desc:'Ticket created — common behavior' },
+      { id:'assign',   label:'assignAgent()',     desc:'Agent assigned — common behavior' },
+      { id:'analyze',  label:'analyzeTicket()',   desc:'Specialized analysis — subclass implements' },
+      { id:'close',    label:'closeTicket()',     desc:'Ticket closed — common behavior' },
+    ],
+    discovery: 'Every support ticket follows the same workflow: create → assign → analyze → close. But can every issue type be analyzed the same way? 🤔',
+    challenge: {
+      q: 'You are adding a Password Reset ticket. Which method requires a specialized implementation?',
+      opts: ['createTicket()','assignAgent()','analyzeTicket()','closeTicket()'],
+      ans: 2,
+      explain: 'analyzeTicket() is abstract — password reset needs its own specific analysis. The other three steps are common to all ticket types.',
+    },
+  },
+
+  ai: {
+    label: 'AI Assistant',
+    abstractClass: 'AIAssistant',
+    abstractKeyword: 'abstract class',
+    refVar: 'assistant',
+    abstractMethod: 'generateResponse',
+    concreteMethods: ['receivePrompt','validatePrompt','displayResponse'],
+    allMethods: ['receivePrompt','validatePrompt','generateResponse','displayResponse'],
+    subclasses: [
+      { id:'coding',   label:'💻 Coding',   cls:'CodingAssistant',   pack:'Generate programming-focused response with code examples' },
+      { id:'research', label:'🔬 Research', cls:'ResearchAssistant', pack:'Analyze information and generate research-backed response' },
+      { id:'writing',  label:'✍️ Writing',  cls:'WritingAssistant',  pack:'Generate and refine written content for clarity' },
+    ],
+    stepDefs: [
+      { id:'select',   label:'Select',             desc:'Choose assistant type' },
+      { id:'receive',  label:'receivePrompt()',     desc:'Prompt received — common behavior' },
+      { id:'validate', label:'validatePrompt()',    desc:'Prompt validated — common behavior' },
+      { id:'generate', label:'generateResponse()',  desc:'Specialized generation — subclass implements' },
+      { id:'display',  label:'displayResponse()',   desc:'Response shown — common behavior' },
+    ],
+    discovery: 'Every assistant receives a prompt, validates it, and displays the response. But should every assistant generate the response the same way? 🤔',
+    challenge: {
+      q: 'You are adding a Maths Tutor assistant. Which method requires its own implementation?',
+      opts: ['receivePrompt()','validatePrompt()','generateResponse()','displayResponse()'],
+      ans: 2,
+      explain: 'generateResponse() is abstract — each assistant type generates responses using completely different logic. The other three steps are shared.',
+    },
+  },
+
+  agent: {
+    label: 'AI Agent',
+    abstractClass: 'AIAgent',
+    abstractKeyword: 'abstract class',
+    refVar: 'agent',
+    abstractMethod: 'executeTask',
+    concreteMethods: ['receiveTask','understandTask','reportResult'],
+    allMethods: ['receiveTask','understandTask','executeTask','reportResult'],
+    subclasses: [
+      { id:'coding',  label:'💻 Code Review', cls:'CodingAgent',   pack:'Analyze code structure, identify issues and suggest improvements' },
+      { id:'research',label:'🔬 Research',    cls:'ResearchAgent', pack:'Break task into information-gathering steps and synthesize findings' },
+      { id:'support', label:'🎧 Support',     cls:'SupportAgent',  pack:'Analyze customer issue, check history, suggest resolution' },
+      { id:'data',    label:'📊 Data Analysis',cls:'DataAgent',    pack:'Parse dataset, run analysis, generate insights and charts' },
+    ],
+    stepDefs: [
+      { id:'select',      label:'Select',           desc:'Choose agent type' },
+      { id:'receive',     label:'receiveTask()',     desc:'Task received — common behavior' },
+      { id:'understand',  label:'understandTask()',  desc:'Task understood — common behavior' },
+      { id:'execute',     label:'executeTask()',     desc:'Specialized execution — subclass implements' },
+      { id:'report',      label:'reportResult()',    desc:'Result reported — common behavior' },
+    ],
+    discovery: 'Every agent receives, understands, executes and reports. But should every agent execute the task using the same logic? 🤔',
+    challenge: {
+      q: 'You are adding a DataAnalysisAgent to the system. Which method must it implement?',
+      opts: ['receiveTask()','understandTask()','executeTask()','reportResult()'],
+      ans: 2,
+      explain: 'executeTask() is abstract — data analysis needs completely different execution logic than code review or customer support.',
+    },
+  },
+};
+
+// ═══════════════════════════════════════════════════════
+//  GLOBAL STATE
+// ═══════════════════════════════════════════════════════
+let S = 'food';            // current scenario id
+let sel = null;            // selected subclass
+let currentStep = -1;      // -1 = not started
+let running = false;
+let stepTimer = null;
+
+function sc() { return SCENARIOS[S]; }
+
+// ═══════════════════════════════════════════════════════
+//  LOAD SCENARIO
+// ═══════════════════════════════════════════════════════
+function loadScenario(id) {
+  S = id;
+  sel = null;
+  currentStep = -1;
+  running = false;
+  clearTimeout(stepTimer);
+  document.querySelectorAll('.sc-btn').forEach(b => b.classList.toggle('active', b.dataset.sc === id));
+  document.getElementById('leftLabel').textContent = sc().label;
+  document.getElementById('rightLabel').textContent = sc().abstractClass;
+  renderLeft();
+  renderRight();
+  renderStepPills();
+}
+
+// ═══════════════════════════════════════════════════════
+//  LEFT PANE RENDERERS
+// ═══════════════════════════════════════════════════════
+function renderLeft() {
+  const s = sc();
+  const fn = { food:leftFood, desk:leftDesk, ai:leftAI, agent:leftAgent }[S];
+  document.getElementById('leftPane').innerHTML = fn();
+}
+
+function leftFood() {
+  const s = sc();
+  const item = sel ? s.subclasses.find(x=>x.id===sel) : null;
+  const stepIdx = currentStep;
+  let progress = stepIdx < 0 ? 0 : Math.round((stepIdx / (s.stepDefs.length-2)) * 100);
+
+  let statusTxt = 'Select a food item to begin';
+  if (item && stepIdx === 0) statusTxt = `${item.label} selected`;
+  if (stepIdx === 1) statusTxt = 'Order placed';
+  if (stepIdx === 2) statusTxt = 'Preparing food…';
+  if (stepIdx === 3) statusTxt = `Packing: ${item?.pack}`;
+  if (stepIdx === 4) statusTxt = 'Bill generated';
+  if (stepIdx === 5) statusTxt = '✓ Handed to delivery partner';
+
+  return `<div class="os-win">
+    <div class="os-tb"><div class="os-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="os-title">Food Order System</div></div>
+    <div class="os-body">
+      <div class="disc-prompt">${s.discovery}</div>
+      <div class="sec-lbl">Choose food item</div>
+      <div class="choice-row">
+        ${s.subclasses.map(x=>`<button class="choice-btn ${sel===x.id?'sel':''}" onclick="selectImpl('${x.id}')">${x.label}</button>`).join('')}
+      </div>
+      ${item ? `
+      <div style="margin:12px 0;padding:12px 14px;border-radius:8px;background:var(--surf3);border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;margin-bottom:4px">${item.label}</div>
+        <div style="font-size:11px;color:var(--text3)">Class: <span style="color:var(--orange);font-family:var(--mono)">${item.cls}</span></div>
+        ${stepIdx>=3?`<div style="font-size:11px;color:var(--amber);margin-top:6px">📦 ${item.pack}</div>`:''}
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${Math.min(progress,100)}%"></div></div>
+      <button class="os-btn btn-orange" onclick="doRun()" style="margin-top:4px">Place Order →</button>
+      ` : ''}
+    </div>
+    <div class="os-status">
+      <div class="sdot ${stepIdx>=5?'on':stepIdx>=0?'warn':''}"></div>
+      <span class="status-text">${statusTxt}</span>
+    </div>
+  </div>
+  ${sel ? renderChallenge() : ''}`;
+}
+
+function leftDesk() {
+  const s = sc();
+  const tickets = [
+    {id:'login',   title:'Login Issue',    customer:'Priya',  priority:'high',  desc:'Cannot log in to account'},
+    {id:'payment', title:'Payment Failed', customer:'Arun',   priority:'high',  desc:'Transaction declined at checkout'},
+    {id:'delivery',title:'Delivery Delay', customer:'Kavya',  priority:'med',   desc:'Order not arrived in 5 days'},
+    {id:'tech',    title:'App Crashing',   customer:'Manoj',  priority:'low',   desc:'App crashes on startup (v3.2.1)'},
+  ];
+
+  return `<div class="os-win">
+    <div class="os-tb"><div class="os-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="os-title">Support Desk — Tickets</div></div>
+    <div class="os-body">
+      <div class="disc-prompt">${s.discovery}</div>
+      <div class="sec-lbl">Open Tickets</div>
+      ${tickets.map((t,i) => `
+        <div class="ticket-card ${sel===t.id?'sel':''}" onclick="selectImpl('${t.id}')">
+          <div class="tkt-hdr">
+            <span class="tkt-id">ZD-10${24+i}</span>
+            <span class="tkt-badge priority-${t.priority}">${t.priority.toUpperCase()}</span>
+          </div>
+          <div class="tkt-title">${t.title}</div>
+          <div class="tkt-sub">${t.customer} · ${t.desc}</div>
+          ${sel===t.id && currentStep>=3 ? `<div style="margin-top:6px;font-size:11px;color:var(--amber)">🔍 ${s.subclasses.find(x=>x.id===t.id)?.pack}</div>` : ''}
+        </div>`).join('')}
+    </div>
+    <div class="os-status">
+      <div class="sdot ${currentStep>=4?'on':currentStep>=0?'warn':''}"></div>
+      <span class="status-text">${currentStep<0?'Select a ticket to begin':currentStep===0?'Ticket selected':currentStep===1?'Ticket created':currentStep===2?'Agent assigned':currentStep===3?'Analyzing…':currentStep===4?'✓ Ticket resolved':'Idle'}</span>
+    </div>
+  </div>
+  ${sel ? renderChallenge() : ''}`;
+}
+
+function leftAI() {
+  const s = sc();
+  const prompts = {
+    coding:'Explain how recursion works in Java with an example.',
+    research:'What are the key differences between REST and GraphQL?',
+    writing:'Write a professional email declining a meeting invitation.',
+  };
+  const responses = {
+    coding:`\`\`\`java\n// Recursion example\npublic int factorial(int n) {\n  if (n <= 1) return 1;\n  return n * factorial(n-1);\n}\n\`\`\`\nRecursion calls itself with a smaller problem until base case.`,
+    research:`**REST vs GraphQL:**\n• REST: multiple endpoints, fixed data\n• GraphQL: single endpoint, flexible queries\n• Use REST for simple CRUD; GraphQL for complex data graphs.`,
+    writing:`Subject: Unable to Attend — [Meeting Name]\n\nThank you for the invitation. Unfortunately I have a conflicting commitment and will be unable to attend. I look forward to connecting soon.`,
+  };
+  const prompt = sel ? (prompts[sel] || 'Ask me anything…') : '';
+  const resp = sel ? (responses[sel] || '') : '';
+
+  return `<div class="os-win">
+    <div class="os-tb"><div class="os-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="os-title">AI Assistant</div></div>
+    <div class="os-body">
+      <div class="disc-prompt">${s.discovery}</div>
+      <div class="sec-lbl">Choose Assistant</div>
+      <div class="choice-row">
+        ${s.subclasses.map(x=>`<button class="choice-btn ${sel===x.id?'sel':''}" onclick="selectImpl('${x.id}')">${x.label}</button>`).join('')}
+      </div>
+      ${sel?`
+      <div style="margin:10px 0">
+        <div class="sec-lbl">Prompt</div>
+        <div class="msg-bubble" style="background:var(--surf3);border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--text);line-height:1.5;margin-bottom:10px">${prompt}</div>
+        ${currentStep>=3?`<div style="background:#040c1a;border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--green);line-height:1.7;white-space:pre-wrap;font-family:var(--mono)">${resp}</div>`:''}
+      </div>
+      <button class="os-btn btn-orange" onclick="doRun()">Ask →</button>
+      ` : ''}
+    </div>
+    <div class="os-status">
+      <div class="sdot ${currentStep>=4?'on':currentStep>=0?'warn':''}"></div>
+      <span class="status-text">${currentStep<0?'Choose an assistant':currentStep===0?`${s.subclasses.find(x=>x.id===sel)?.label} selected`:currentStep===1?'Prompt received':currentStep===2?'Validating…':currentStep===3?'Generating response…':currentStep>=4?'✓ Response ready':'Idle'}</span>
+    </div>
+  </div>
+  ${sel ? renderChallenge() : ''}`;
+}
+
+function leftAgent() {
+  const s = sc();
+  const tasks = {
+    coding:  'Review this Java class for design issues and suggest improvements.',
+    research:'Summarize the key trends in large language models in 2024.',
+    support: 'Customer says their subscription renewal failed but was charged twice.',
+    data:    'Analyze monthly sales data and identify top-performing regions.',
+  };
+  const results = {
+    coding:  'Found 3 issues: (1) Missing null checks in constructor (2) Mutable field exposed via getter (3) Long method — split into smaller units.',
+    research:'Key 2024 LLM trends: (1) Multimodal models (2) Smaller, efficient models (3) Agent frameworks (4) Long-context windows up to 2M tokens.',
+    support: 'Issue identified: duplicate charge on 2024-08-14. Resolution: initiate refund for second charge, send confirmation email.',
+    data:    'Top regions: South (₹4.2M, +12%), West (₹3.8M, +8%). Decline: North (−5%). Recommendation: increase inventory in South.',
+  };
+  const selImpl = sel ? s.subclasses.find(x=>x.id===sel) : null;
+
+  return `<div class="os-win">
+    <div style="padding:16px 18px 0">
+      <div class="disc-prompt">${s.discovery}</div>
+      <div class="sec-lbl">Choose Task Type</div>
+      <div class="choice-row">
+        ${s.subclasses.map(x=>`<button class="choice-btn ${sel===x.id?'sel':''}" onclick="selectImpl('${x.id}')">${x.label}</button>`).join('')}
+      </div>
+    </div>
+    ${sel ? `
+    <div style="padding:0 18px 16px">
+      <div class="sec-lbl" style="margin-top:12px">Task</div>
+      <div style="background:var(--surf3);border:1px solid var(--border);border-radius:8px;
+                  padding:12px 14px;font-size:14px;font-weight:700;color:var(--text);
+                  line-height:1.55;margin-bottom:10px">${tasks[sel]||''}</div>
+      ${currentStep>=3 ? `
+      <div class="sec-lbl">Result</div>
+      <div style="background:#040c1a;border:1px solid rgba(139,92,246,.3);border-radius:8px;
+                  padding:11px 14px;font-size:13px;font-weight:600;color:#c4b5fd;line-height:1.65">${results[sel]||''}</div>
+      ` : ''}
+      <button class="os-btn btn-orange" style="margin-top:12px" onclick="doRun()">Execute →</button>
+    </div>
+    ` : ''}
+    <div class="os-status">
+      <div class="sdot ${currentStep>=4?'on':currentStep>=0?'warn':''}"></div>
+      <span class="status-text">${
+        currentStep<0  ? 'Choose a task type' :
+        currentStep===0 ? `${selImpl?.label||''} selected` :
+        currentStep===1 ? 'Task received' :
+        currentStep===2 ? 'Understanding task…' :
+        currentStep===3 ? 'Executing…' :
+        '✓ Result reported'
+      }</span>
+    </div>
+  </div>
+  ${sel ? renderChallenge() : ''}`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  RIGHT PANE — ANIMATED SVG FLOW DIAGRAM
+// ═══════════════════════════════════════════════════════
+function renderRight() {
+  const s    = sc();
+  const impl = sel ? s.subclasses.find(x=>x.id===sel) : null;
+  const step = currentStep;
+
+  const activeIdx    = (step >= 1 && step-1 < s.allMethods.length) ? step-1 : -1;
+  const activeMethod = activeIdx >= 0 ? s.allMethods[activeIdx] : null;
+  const absIsActive  = activeMethod === s.abstractMethod;
+  const done         = impl && step >= s.stepDefs.length - 1;
+
+  // Layout
+  const W       = 560;
+  const absX    = 24;
+  const absW    = W - 48;
+  const absHdrH = 40;
+  const rowH    = 30;
+  const padV    = 10;
+  const absH    = absHdrH + padV + s.allMethods.length * rowH + padV;
+  const absAbsMY = absHdrH + padV + s.allMethods.indexOf(s.abstractMethod) * rowH + rowH/2;
+
+  const gapZone = 100;   // tall gap — enough for the chevron arrow + label
+  const subY    = absH + gapZone;
+  const subH    = 72;    // taller nodes
+
+  const n         = s.subclasses.length;
+  // Give each node enough width for full class name
+  const subW      = Math.min(Math.floor((W - 48) / n) - 8, 130);
+  const totalSubW = n * subW + (n-1) * 8;
+  const rowStartX = absX + (absW - totalSubW) / 2;
+  const subCenters = s.subclasses.map((_,i) => rowStartX + i*(subW+8) + subW/2);
+
+  const absCX  = absX + absW/2;
+  const hBarY  = absH + gapZone * 0.42;  // horizontal bar Y
+  const selIdx = impl ? s.subclasses.findIndex(x=>x.id===sel) : -1;
+  const selCX  = selIdx >= 0 ? subCenters[selIdx] : absCX;
+
+  const objRowY    = subY + subH + 24;
+  const invokeRowY = objRowY + 48;
+  const resultRowY = invokeRowY + 48;
+
+  const totalSvgH = impl
+    ? (done ? resultRowY + 50 : (step >= 1 ? invokeRowY + 40 : objRowY + 40))
+    : subY + subH + 24;
+
+  // Rounded rect
+  const rr = (x,y,w,h,r=8) =>
+    `M${x+r},${y} h${w-2*r} a${r},${r} 0 0 1 ${r},${r} v${h-2*r} a${r},${r} 0 0 1 -${r},${r} h-${w-2*r} a${r},${r} 0 0 1 -${r},-${r} v-${h-2*r} a${r},${r} 0 0 1 ${r},-${r} z`;
+
+  // Abstract class box
+  const absBox = `
+    <path d="${rr(absX,0,absW,absH)}"
+      fill="rgba(249,115,22,.05)" stroke="rgba(249,115,22,.4)" stroke-width="1.5" stroke-dasharray="7 3"/>
+    <rect x="${absX}" y="0" width="${absW}" height="${absHdrH}" rx="8"
+      fill="rgba(249,115,22,.1)" stroke="none"/>
+    <text x="${absX+14}" y="14" fill="rgba(249,115,22,.6)"
+      font-family="JetBrains Mono,monospace" font-size="9" font-weight="700" letter-spacing="1">ABSTRACT CLASS</text>
+    <text x="${absX+14}" y="32" fill="#f97316"
+      font-family="JetBrains Mono,monospace" font-size="16" font-weight="700">${s.abstractClass}</text>
+    ${s.allMethods.map((m,i) => {
+      const isAbs = m === s.abstractMethod;
+      const isAct = i === activeIdx;
+      const ry    = absHdrH + padV + i*rowH;
+      const tc    = isAbs ? '#f59e0b' : '#10b981';
+      const bgF   = isAct ? 'rgba(59,130,246,.15)' : 'none';
+      const bgS   = isAct ? 'rgba(59,130,246,.45)' : 'none';
+      const bw    = isAbs ? 66 : 64;
+      const bx    = absX + absW - bw - 12;
+      return `
+        <rect x="${absX+8}" y="${ry+3}" width="${absW-16}" height="${rowH-6}" rx="5"
+          fill="${bgF}" stroke="${bgS}" stroke-width="1"/>
+        <text x="${absX+18}" y="${ry+rowH/2+5}"
+          fill="${tc}" font-family="JetBrains Mono,monospace"
+          font-size="12.5" font-weight="${isAct?700:500}">${m}()</text>
+        <rect x="${bx}" y="${ry+8}" width="${bw}" height="14" rx="7"
+          fill="${isAbs?'rgba(245,158,11,.12)':'rgba(16,185,129,.1)'}"
+          stroke="${isAbs?'rgba(245,158,11,.3)':'rgba(16,185,129,.28)'}" stroke-width="1"/>
+        <text x="${bx+bw/2}" y="${ry+19}" text-anchor="middle"
+          fill="${isAbs?'#f59e0b':'#10b981'}"
+          font-family="JetBrains Mono,monospace" font-size="8" font-weight="700">${isAbs?'ABSTRACT':'CONCRETE'}</text>`;
+    }).join('')}`;
+
+  // ── Fan connectors: vertical stem → horizontal bar → vertical down → arrowhead
+  // All subclasses always shown; selected branch is orange/blue and thick
+  // The "extends" label sits on the selected branch in the gap zone
+  const fanLines = (() => {
+    // shared vertical stem from abstract class bottom
+    const stemCol  = '#2a3f60';
+    const stemSVG  = `<line x1="${absCX}" y1="${absH}" x2="${absCX}" y2="${hBarY}"
+      stroke="${stemCol}" stroke-width="1.2"/>`;
+
+    // horizontal bar spanning all subclass centers
+    const leftCX   = subCenters[0];
+    const rightCX  = subCenters[n-1];
+    const hBarSVG  = `<line x1="${leftCX}" y1="${hBarY}" x2="${rightCX}" y2="${hBarY}"
+      stroke="${stemCol}" stroke-width="1.2"/>`;
+
+    // Per-subclass vertical drops
+    const drops = s.subclasses.map((_,i) => {
+      const cx    = subCenters[i];
+      const isSel = i === selIdx;
+      const col   = isSel ? (absIsActive ? '#3b82f6' : '#f97316') : '#2a3f60';
+      const sw    = isSel ? '2.5' : '1';
+      const op    = isSel ? '1' : '0.3';
+
+      // Large chevron arrowhead for selected; small for others
+      const arrowSz = isSel ? 8 : 5;
+      const arrow   = `<polygon points="${cx-arrowSz},${subY-arrowSz*1.4} ${cx+arrowSz},${subY-arrowSz*1.4} ${cx},${subY}"
+        fill="${col}" opacity="${op}"/>`;
+
+      // "extends" label on selected branch — sits in mid-gap
+      const extendsLabel = isSel ? (() => {
+        const lx  = cx;
+        const ly  = hBarY + (subY - hBarY) * 0.46;   // midpoint of drop
+        const lbl = `${impl.cls} extends ${s.abstractClass}`;
+        // pill background
+        const tw  = lbl.length * 6.4;   // approx text width at font-size 10
+        const bx  = lx - tw/2 - 8;
+        const bw  = tw + 16;
+        return `
+          <rect x="${bx}" y="${ly-11}" width="${bw}" height="20" rx="10"
+            fill="${absIsActive?'rgba(59,130,246,.18)':'rgba(249,115,22,.13)'}"
+            stroke="${absIsActive?'rgba(59,130,246,.55)':'rgba(249,115,22,.5)'}" stroke-width="1.2"/>
+          <text x="${lx}" y="${ly+4}" text-anchor="middle"
+            fill="${absIsActive?'#93c5fd':'#fb923c'}"
+            font-family="JetBrains Mono,monospace" font-size="10" font-weight="700">${lbl}</text>`;
+      })() : '';
+
+      return `
+        <line x1="${cx}" y1="${hBarY}" x2="${cx}" y2="${subY - arrowSz*1.4}"
+          stroke="${col}" stroke-width="${sw}" opacity="${op}"/>
+        ${arrow}
+        ${extendsLabel}`;
+    }).join('');
+
+    return stemSVG + hBarSVG + drops;
+  })();
+
+  // Animated dot: travels from abstract method → selected subclass
+  const animDotSVG = (absIsActive && impl) ? (() => {
+    const path = `M${absCX},${absAbsMY} L${absCX},${hBarY} L${selCX},${hBarY} L${selCX},${subY}`;
+    return `
+      <circle r="6" fill="#3b82f6" filter="url(#glow)" opacity="0">
+        <animateMotion dur="0.7s" fill="freeze" path="${path}"
+          calcMode="spline" keyTimes="0;1" keySplines="0.4 0 0.2 1"/>
+        <animate attributeName="opacity" values="0;1;1;0"
+          keyTimes="0;0.07;0.9;1" dur="0.7s" fill="freeze"/>
+      </circle>`;
+  })() : '';
+
+  // Subclass nodes — always show full class name
+  const subNodes = s.subclasses.map((sub,i) => {
+    const cx    = subCenters[i];
+    const x     = cx - subW/2;
+    const isSel = i === selIdx;
+    const fA    = isSel ? 'rgba(245,158,11,.13)' : 'rgba(16,185,129,.05)';
+    const sA    = isSel ? 'rgba(245,158,11,.75)' : 'rgba(16,185,129,.25)';
+    const sw    = isSel ? '2' : '1';
+    const tCol  = isSel ? '#f59e0b' : '#10b981';
+    // Scale font to fit; use 10px for names longer than 13 chars
+    const fs    = sub.cls.length > 13 ? '9.5' : '11';
+    const execHL = (isSel && absIsActive)
+      ? `<rect x="${x-1}" y="${subY-1}" width="${subW+2}" height="${subH+2}" rx="9"
+           fill="rgba(59,130,246,.07)" stroke="rgba(59,130,246,.6)" stroke-width="2"/>`
+      : '';
+    return `
+      <path d="${rr(x,subY,subW,subH)}" fill="${fA}" stroke="${sA}" stroke-width="${sw}"/>
+      ${execHL}
+      <text x="${cx}" y="${subY+19}" text-anchor="middle"
+        fill="${tCol}" font-family="JetBrains Mono,monospace"
+        font-size="${fs}" font-weight="700">${sub.cls}</text>
+      <text x="${cx}" y="${subY+33}" text-anchor="middle"
+        fill="rgba(245,158,11,.5)" font-family="JetBrains Mono,monospace" font-size="8">@Override</text>
+      <text x="${cx}" y="${subY+48}" text-anchor="middle"
+        fill="${isSel?'#f59e0b':'rgba(245,158,11,.28)'}"
+        font-family="JetBrains Mono,monospace" font-size="10"
+        font-weight="${isSel?700:400}">${s.abstractMethod}()</text>`;
+  }).join('');
+
+  // Object creation row
+  let objectRow = '';
+  let invokeRow = '';
+  let resultRow = '';
+
+  if (impl) {
+    objectRow = `
+      <line x1="${selCX}" y1="${subY+subH}" x2="${selCX}" y2="${objRowY-3}"
+        stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="4 2"/>
+      <polygon points="${selCX-5},${objRowY-8} ${selCX+5},${objRowY-8} ${selCX},${objRowY-1}"
+        fill="#8b5cf6"/>
+      <rect x="${absX}" y="${objRowY}" width="${absW}" height="36" rx="8"
+        fill="rgba(139,92,246,.08)" stroke="rgba(139,92,246,.4)" stroke-width="1.5"/>
+      <text x="${absX+14}" y="${objRowY+13}" fill="rgba(139,92,246,.65)"
+        font-family="JetBrains Mono,monospace" font-size="9" font-weight="700">OBJECT CREATED</text>
+      <text x="${absX+14}" y="${objRowY+28}" fill="#a78bfa"
+        font-family="JetBrains Mono,monospace" font-size="11.5" font-weight="700">${s.abstractClass} ${s.refVar} = new ${impl.cls}()</text>`;
+
+    if (step >= 1) {
+      const calledMethod  = activeMethod || s.abstractMethod;
+      const isSpec        = calledMethod === s.abstractMethod;
+      const invokeCol     = isSpec ? '#f59e0b' : '#10b981';
+      const dispatchNote  = isSpec
+        ? `→ dispatches to ${impl.cls}.${s.abstractMethod}()`
+        : `(inherited from ${s.abstractClass})`;
+
+      invokeRow = `
+        <line x1="${selCX}" y1="${objRowY+36}" x2="${selCX}" y2="${invokeRowY-3}"
+          stroke="${invokeCol}" stroke-width="1.5"/>
+        <polygon points="${selCX-5},${invokeRowY-8} ${selCX+5},${invokeRowY-8} ${selCX},${invokeRowY-1}"
+          fill="${invokeCol}"/>
+        <rect x="${absX}" y="${invokeRowY}" width="${absW}" height="36" rx="8"
+          fill="${isSpec?'rgba(245,158,11,.07)':'rgba(16,185,129,.07)'}"
+          stroke="${isSpec?'rgba(245,158,11,.4)':'rgba(16,185,129,.35)'}" stroke-width="1.5"/>
+        <text x="${absX+14}" y="${invokeRowY+13}" fill="${isSpec?'rgba(245,158,11,.6)':'rgba(16,185,129,.6)'}"
+          font-family="JetBrains Mono,monospace" font-size="9" font-weight="700">METHOD CALL</text>
+        <text x="${absX+14}" y="${invokeRowY+28}" fill="${invokeCol}"
+          font-family="JetBrains Mono,monospace" font-size="11" font-weight="700">${s.refVar}.${calledMethod}()  ${dispatchNote}</text>`;
+    }
+
+    if (done) {
+      resultRow = `
+        <line x1="${selCX}" y1="${invokeRowY+36}" x2="${selCX}" y2="${resultRowY-3}"
+          stroke="#10b981" stroke-width="1.5"/>
+        <polygon points="${selCX-5},${resultRowY-8} ${selCX+5},${resultRowY-8} ${selCX},${resultRowY-1}"
+          fill="#10b981"/>
+        <rect x="${absX}" y="${resultRowY}" width="${absW}" height="38" rx="8"
+          fill="rgba(16,185,129,.07)" stroke="rgba(16,185,129,.3)" stroke-width="1.5"/>
+        <text x="${absX+14}" y="${resultRowY+14}" fill="rgba(16,185,129,.6)"
+          font-family="JetBrains Mono,monospace" font-size="9" font-weight="700">RESULT</text>
+        <text x="${absX+14}" y="${resultRowY+30}" fill="#10b981"
+          font-family="JetBrains Mono,monospace" font-size="11">&#10003; ${impl.pack}</text>`;
+    }
+  }
+
+  const legY = totalSvgH + 12;
+  const legend = `
+    <circle cx="${absX+6}" cy="${legY}" r="4" fill="#f97316"/>
+    <text x="${absX+14}" y="${legY+4}" fill="#546a8a" font-size="9" font-family="sans-serif">Abstract class</text>
+    <circle cx="${absX+108}" cy="${legY}" r="4" fill="#10b981"/>
+    <text x="${absX+116}" y="${legY+4}" fill="#546a8a" font-size="9" font-family="sans-serif">Concrete</text>
+    <circle cx="${absX+172}" cy="${legY}" r="4" fill="#f59e0b"/>
+    <text x="${absX+180}" y="${legY+4}" fill="#546a8a" font-size="9" font-family="sans-serif">Abstract method</text>
+    <circle cx="${absX+280}" cy="${legY}" r="4" fill="#8b5cf6"/>
+    <text x="${absX+288}" y="${legY+4}" fill="#546a8a" font-size="9" font-family="sans-serif">Object</text>`;
+
+  document.getElementById('rightPane').innerHTML = `
+    <div class="flow-wrap">
+      <svg class="flow-svg" viewBox="0 0 ${W} ${legY+16}"
+           style="max-width:100%;width:${W}px" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        ${absBox}
+        ${fanLines}
+        ${animDotSVG}
+        ${subNodes}
+        ${objectRow}
+        ${invokeRow}
+        ${resultRow}
+        ${legend}
+      </svg>
+    </div>`;
+}
+
+
+
+// ═══════════════════════════════════════════════════════
+//  CHALLENGE
+// ═══════════════════════════════════════════════════════
+function renderChallenge() {
+  const ch = sc().challenge;
+  const letters = ['A','B','C','D'];
+  return `<div class="chal-card">
+    <div class="chal-hdr">
+      <span style="font-size:16px">🎯</span>
+      <span class="chal-hdr-label">Challenge</span>
+    </div>
+    <div class="chal-body">
+      <div class="chal-q">${ch.q}</div>
+      <div class="chal-opts">
+        ${ch.opts.map((o,i)=>`
+          <div class="chal-opt" onclick="answerChallenge(${i})">
+            <div class="chal-opt-bullet">${letters[i]}</div>
+            <span class="chal-opt-text">${o}</span>
+          </div>`).join('')}
+      </div>
+      <div class="chal-feedback" id="chalFeedback" style="display:none"></div>
+    </div>
+  </div>`;
+}
+
+function answerChallenge(idx) {
+  const ch = sc().challenge;
+  const opts = document.querySelectorAll('.chal-opt');
+  opts.forEach(o => o.style.pointerEvents='none');
+  opts[idx].classList.add(idx===ch.ans ? 'correct' : 'wrong');
+  if (idx !== ch.ans) opts[ch.ans].classList.add('correct');
+  const fb = document.getElementById('chalFeedback');
+  if (fb) {
+    fb.className = 'chal-feedback ' + (idx===ch.ans ? 'ok' : 'err');
+    fb.style.display = 'block';
+    fb.textContent = (idx===ch.ans ? '✓ Correct! ' : '✗ Not quite. ') + ch.explain;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  STEP PILLS
+// ═══════════════════════════════════════════════════════
+function renderStepPills() {
+  const s = sc();
+  const label = document.getElementById('stepLabel');
+  const count = document.getElementById('stepCount');
+  const total = s.stepDefs.length - 1; // exclude select step
+  if (currentStep < 0) {
+    label.textContent = 'Select an option to begin';
+    if (count) count.textContent = '';
+  } else if (currentStep < s.stepDefs.length) {
+    label.textContent = s.stepDefs[currentStep].desc;
+    if (count) count.textContent = currentStep + ' / ' + total;
+  } else {
+    label.textContent = 'Complete';
+    if (count) count.textContent = total + ' / ' + total;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SELECTION
+// ═══════════════════════════════════════════════════════
+function selectImpl(id) {
+  sel = id;
+  currentStep = 0;
+  renderLeft();
+  renderRight();
+  renderStepPills();
+}
+
+// ═══════════════════════════════════════════════════════
+//  STEP / RUN / RESET
+// ═══════════════════════════════════════════════════════
+function doStep() {
+  if (!sel) { toast('Select an option first', 'warn'); return; }
+  const maxStep = sc().stepDefs.length - 1;
+  if (currentStep < maxStep) {
+    currentStep++;
+    renderLeft();
+    renderRight();
+    renderStepPills();
+    const sd = sc().stepDefs[currentStep];
+    if (sd) toast(sd.desc, 'info');
+  } else {
+    toast('Already at last step. Reset to start over.', 'info');
+  }
+}
+
+function doRun() {
+  if (!sel) { toast('Select an option first', 'warn'); return; }
+  if (running) return;
+  running = true;
+  const maxStep = sc().stepDefs.length - 1;
+  function next() {
+    if (currentStep < maxStep && running) {
+      currentStep++;
+      renderLeft();
+      renderRight();
+      renderStepPills();
+      stepTimer = setTimeout(next, 700);
+    } else {
+      running = false;
+      toast('✓ Complete', 'success');
+    }
+  }
+  next();
+}
+
+function doReset() {
+  running = false;
+  clearTimeout(stepTimer);
+  sel = null;
+  currentStep = -1;
+  renderLeft();
+  renderRight();
+  renderStepPills();
+  toast('Reset', 'info');
+}
+
+// ═══════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg, type='info') {
+  const area = document.getElementById('toastArea');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  const colors = {success:'var(--green)',info:'var(--accent)',warn:'var(--amber)',error:'var(--red)'};
+  el.innerHTML = `<div style="width:6px;height:6px;border-radius:50%;background:${colors[type]||colors.info};flex-shrink:0"></div>${msg}`;
+  area.appendChild(el);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),250);},2400);
+}
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+loadScenario('food');
+</script>
+</body>
+</html>

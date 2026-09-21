@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Interface Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0b1120;
+  --surf1:    #111c2e;
+  --surf2:    #172035;
+  --surf3:    #1e2d48;
+  --surf4:    #263654;
+  --border:   #2a3f60;
+  --border2:  #1e3050;
+  --accent:   #3b82f6;
+  --cyan:     #06b6d4;
+  --purple:   #8b5cf6;
+  --green:    #10b981;
+  --amber:    #f59e0b;
+  --red:      #ef4444;
+  --text:     #e2e8f0;
+  --text2:    #94a3b8;
+  --text3:    #546a8a;
+  --ref-col:  #8b5cf6;
+  --obj-col:  #f59e0b;
+  --iface-col:#06b6d4;
+  --impl-col: #10b981;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+  --ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);display:flex;flex-direction:column}
+
+/* TOP BAR */
+.topbar{
+  height:44px;background:var(--surf1);border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;
+  justify-content:space-between;z-index:50;
+}
+.topbar-brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:-.2px}
+.topbar-logo{
+  width:24px;height:24px;border-radius:5px;
+  background:linear-gradient(135deg,var(--accent),var(--purple));
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff
+}
+.topbar-controls{display:flex;align-items:center;gap:8px}
+.view-toggle{
+  display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;
+  background:var(--surf2);
+}
+.view-btn{
+  padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;
+  border:none;background:none;color:var(--text2);transition:all .15s;
+}
+.view-btn.active{background:var(--accent);color:#fff}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{
+  width:200px;background:var(--surf1);border-right:1px solid var(--border2);
+  flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;
+}
+.sidebar-section{padding:8px 0}
+.sidebar-label{
+  font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.8px;
+  text-transform:uppercase;padding:6px 14px 4px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:8px 14px;
+  cursor:pointer;font-size:13px;color:var(--text2);
+  border-left:2px solid transparent;transition:all .12s;border-radius:0;
+}
+.nav-item:hover{color:var(--text);background:var(--surf2)}
+.nav-item.active{color:var(--accent);background:rgba(59,130,246,.08);border-left-color:var(--accent)}
+.nav-icon{font-size:15px;width:18px;text-align:center}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* SPLIT PANES */
+.split-container{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.pane{flex:1;overflow-y:auto;min-height:0;position:relative}
+.pane-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;background:var(--surf1);border-bottom:1px solid var(--border2);
+  font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;
+  flex-shrink:0;sticky:top 0;position:sticky;top:0;z-index:10;
+}
+.pane-header-actions{display:flex;gap:6px}
+.pane-divider{height:1px;background:var(--border);flex-shrink:0;position:relative}
+.pane-divider-label{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  background:var(--surf2);border:1px solid var(--border);border-radius:100px;
+  padding:3px 12px;font-size:10px;font-weight:700;color:var(--text3);white-space:nowrap;
+}
+
+/* RIGHT PANEL */
+.right-panel{
+  width:260px;background:var(--surf1);border-left:1px solid var(--border2);
+  flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;
+}
+.right-panel.hidden{display:none}
+.rp-header{
+  padding:10px 14px;border-bottom:1px solid var(--border2);
+  font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;
+  display:flex;justify-content:space-between;align-items:center;flex-shrink:0;
+}
+.rp-body{flex:1;overflow-y:auto;padding:12px}
+.rp-tab-row{display:flex;border-bottom:1px solid var(--border2);flex-shrink:0}
+.rp-tab{
+  flex:1;padding:7px 0;font-size:11px;font-weight:600;text-align:center;
+  color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;
+}
+.rp-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* USER VIEW STYLES - OS look */
+.uv-screen{padding:20px 24px}
+.os-panel{
+  background:var(--surf2);border-radius:10px;overflow:hidden;
+  max-width:520px;
+}
+.os-titlebar{
+  background:var(--surf3);padding:10px 14px;display:flex;align-items:center;
+  gap:8px;border-bottom:1px solid var(--border2);
+}
+.os-dots span{
+  display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;
+}
+.os-dots .d1{background:#ef4444}.os-dots .d2{background:#f59e0b}.os-dots .d3{background:#10b981}
+.os-title{font-size:12px;font-weight:600;color:var(--text2);flex:1;text-align:center;margin-left:-28px}
+.os-body{padding:20px}
+
+/* Network list */
+.net-list{display:flex;flex-direction:column;gap:2px;margin:12px 0}
+.net-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-radius:8px;cursor:pointer;
+  background:transparent;border:1.5px solid transparent;transition:all .15s;
+}
+.net-item:hover{background:var(--surf3)}
+.net-item.selected{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.4)}
+.net-item-left{display:flex;align-items:center;gap:10px}
+.net-radio{
+  width:16px;height:16px;border-radius:50%;border:1.5px solid var(--text3);
+  display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;
+}
+.net-item.selected .net-radio{border-color:var(--accent)}
+.net-radio-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:none}
+.net-item.selected .net-radio-dot{display:block}
+.net-name{font-size:13px;font-weight:600}
+.net-sub{font-size:11px;color:var(--text3)}
+.net-signal{display:flex;align-items:flex-end;gap:2px;height:16px}
+.sig-bar{width:4px;border-radius:1px;background:var(--text3);transition:background .3s}
+.sig-bar.lit{background:var(--green)}
+.sig1{height:5px}.sig2{height:8px}.sig3{height:11px}.sig4{height:16px}
+
+/* OS button */
+.os-btn{
+  padding:9px 20px;border-radius:7px;font-size:13px;font-weight:600;
+  cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.os-btn-primary{background:var(--accent);color:#fff}
+.os-btn-primary:hover{background:#2563eb;transform:translateY(-1px)}
+.os-btn-secondary{background:var(--surf3);color:var(--text);border:1px solid var(--border)}
+.os-btn-secondary:hover{border-color:var(--accent)}
+.os-btn-green{background:var(--green);color:#fff}
+.os-btn-green:hover{background:#059669}
+.os-status-bar{
+  padding:10px 14px;border-top:1px solid var(--border2);
+  display:flex;align-items:center;gap:8px;font-size:12px;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.status-dot.connected{background:var(--green);box-shadow:0 0 6px var(--green)}
+.status-dot.error{background:var(--red)}
+
+/* Printer dialog */
+.doc-icon{
+  width:44px;height:56px;background:var(--surf4);border-radius:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding:4px;position:relative;border:1px solid var(--border);margin-bottom:2px;
+}
+.doc-icon::before{
+  content:'';position:absolute;top:0;right:0;width:12px;height:12px;
+  background:var(--surf2);border-bottom-left-radius:4px;border:1px solid var(--border);
+  border-top:none;border-right:none;
+}
+.doc-corner{position:absolute;top:0;right:0;width:0;height:0;
+  border-left:12px solid var(--surf1);border-bottom:12px solid var(--surf4);}
+.doc-lines{width:100%;padding:0 4px}
+.doc-line{height:2px;background:var(--border);border-radius:1px;margin:2px 0}
+.printer-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.printer-opt{
+  padding:12px;border-radius:8px;border:1.5px solid var(--border);
+  background:var(--surf3);cursor:pointer;transition:all .15s;text-align:center;
+}
+.printer-opt:hover{border-color:rgba(59,130,246,.4)}
+.printer-opt.selected{border-color:var(--accent);background:rgba(59,130,246,.1)}
+.printer-opt .p-icon{font-size:22px;margin-bottom:4px}
+.printer-opt .p-name{font-size:11px;font-weight:600;color:var(--text2)}
+.printer-opt.selected .p-name{color:var(--accent)}
+.print-progress{
+  height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin:8px 0;
+}
+.print-fill{height:100%;background:var(--green);width:0%;transition:width 1.4s ease;border-radius:2px}
+
+/* Camera preview */
+.cam-preview{
+  width:100%;aspect-ratio:16/9;border-radius:10px;background:#050d1a;
+  display:flex;align-items:center;justify-content:center;
+  border:1.5px solid var(--border);position:relative;overflow:hidden;
+  margin-bottom:12px;transition:border-color .3s;
+}
+.cam-preview.active{border-color:var(--cyan)}
+.cam-icon-big{font-size:40px;opacity:.2;transition:opacity .3s}
+.cam-preview.active .cam-icon-big{opacity:.7}
+.cam-label-overlay{
+  position:absolute;bottom:8px;left:10px;
+  font-size:10px;font-weight:600;color:rgba(255,255,255,.5);font-family:var(--mono);
+}
+.cam-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;border-radius:8px}
+.cam-flash.pop{animation:camFlash .25s}
+@keyframes camFlash{0%{opacity:.7}100%{opacity:0}}
+.cam-thumb{
+  position:absolute;bottom:8px;right:8px;width:44px;height:32px;
+  border-radius:4px;border:1.5px solid var(--cyan);background:var(--surf3);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  opacity:0;transition:opacity .4s;
+}
+
+/* Notif channels */
+.channel-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.channel-btn{
+  display:flex;align-items:center;gap:7px;padding:10px 16px;
+  border-radius:8px;border:1.5px solid var(--border);background:var(--surf3);
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:all .15s;
+}
+.channel-btn:hover{border-color:var(--cyan);color:var(--text)}
+.channel-btn.selected{border-color:var(--cyan);background:rgba(6,182,212,.1);color:var(--cyan)}
+
+/* Message bubble */
+.msg-bubble{
+  background:var(--surf3);border:1px solid var(--border);border-radius:12px;
+  padding:12px 16px;font-size:13px;color:var(--text);line-height:1.5;
+  position:relative;margin-bottom:12px;
+}
+.msg-bubble::after{
+  content:'';position:absolute;bottom:-8px;left:20px;
+  border:6px solid transparent;border-top-color:var(--border);
+}
+.notif-phone{
+  width:120px;height:160px;border:2px solid var(--border);border-radius:18px;
+  background:var(--surf2);display:flex;flex-direction:column;align-items:center;
+  padding:10px 8px;position:relative;overflow:hidden;flex-shrink:0;
+}
+.notif-screen{flex:1;width:100%;background:#050d1a;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;padding:6px;overflow:hidden}
+.notif-msg-small{font-size:8px;color:var(--text2);text-align:center;
+  padding:6px;background:var(--surf3);border-radius:6px;opacity:0;
+  transform:translateY(8px);transition:all .4s}
+.notif-msg-small.pop{opacity:1;transform:translateY(0)}
+.notif-channel-tag{font-size:7px;font-weight:700;color:var(--cyan);margin-bottom:4px}
+
+/* Auth styles */
+.auth-field{
+  width:100%;background:var(--surf3);border:1px solid var(--border);
+  border-radius:7px;padding:9px 12px;color:var(--text);font-size:13px;
+  outline:none;font-family:var(--ui);margin-bottom:10px;
+}
+.auth-field:focus{border-color:var(--accent)}
+.auth-methods{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.auth-method{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;
+  border-radius:8px;border:1.5px solid var(--border);background:var(--surf3);
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:all .15s;flex:1;min-width:100px;
+}
+.auth-method:hover{border-color:rgba(59,130,246,.5)}
+.auth-method.selected{border-color:var(--accent);background:rgba(59,130,246,.1);color:var(--accent)}
+.auth-method .am-icon{font-size:16px}
+
+/* QR animation */
+.qr-scan{
+  width:80px;height:80px;border:2px solid var(--accent);border-radius:4px;
+  display:flex;align-items:center;justify-content:center;position:relative;margin:12px auto;
+}
+.qr-line{position:absolute;width:100%;height:2px;background:rgba(59,130,246,.6);top:0;
+  animation:scanLine 1.5s ease-in-out infinite}
+@keyframes scanLine{0%{top:0;opacity:1}100%{top:100%;opacity:.5}}
+.qr-grid{display:grid;grid-template-columns:repeat(5,12px);gap:2px;opacity:.5}
+.qr-cell{width:12px;height:12px;border-radius:1px}
+
+/* Biometric */
+.bio-circle{
+  width:64px;height:64px;border-radius:50%;border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;margin:12px auto;
+  font-size:28px;position:relative;
+}
+.bio-circle.scanning{border-color:var(--accent);animation:bioScan .8s ease-in-out 3}
+@keyframes bioScan{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.4)}50%{box-shadow:0 0 0 10px rgba(59,130,246,0)}}
+
+/* Payment */
+.pay-amount{
+  font-size:32px;font-weight:800;color:var(--text);letter-spacing:-1px;
+  text-align:center;margin:12px 0;display:flex;align-items:flex-start;justify-content:center;gap:4px;
+}
+.pay-currency{font-size:18px;font-weight:600;color:var(--text2);margin-top:6px}
+.account-list{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+.account-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-radius:9px;border:1.5px solid var(--border);
+  background:var(--surf3);cursor:pointer;transition:all .15s;
+}
+.account-item:hover{border-color:rgba(59,130,246,.4)}
+.account-item.selected{border-color:var(--accent);background:rgba(59,130,246,.1)}
+.account-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:16px;background:var(--surf4);flex-shrink:0}
+.account-name{font-size:13px;font-weight:700}
+.account-num{font-size:11px;color:var(--text3)}
+.account-check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;transition:all .15s}
+.account-item.selected .account-check{border-color:var(--accent);background:var(--accent)}
+
+/* ===== JAVA RUNTIME VIEW ===== */
+.jrv{padding:16px 20px;font-family:var(--mono)}
+.jrv-code{
+  background:#070f1d;border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;font-size:12.5px;line-height:1.9;margin-bottom:16px;
+  position:relative;overflow:auto;
+}
+.jrv-line{display:block;position:relative;transition:background .2s}
+.jrv-line.hl{background:rgba(59,130,246,.15);border-left:2px solid var(--accent);
+  padding-left:6px;margin-left:-6px}
+.jrv-line.changed{background:rgba(16,185,129,.12);border-left:2px solid var(--green);
+  padding-left:6px;margin-left:-6px;animation:lineFlash .5s}
+@keyframes lineFlash{0%{background:rgba(16,185,129,.35)}100%{background:rgba(16,185,129,.12)}}
+.kw{color:#c084fc}.ty{color:#67e8f9}.st{color:#fde68a}.cm{color:#4b6082}.fn{color:#86efac}
+.nu{color:#fcd34d}
+
+/* Runtime diagram */
+.rtd{display:flex;flex-direction:column;align-items:flex-start;gap:0;padding:0 4px}
+.rtd-row{display:flex;align-items:center;gap:10px;margin:2px 0}
+.rtd-box{
+  padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;position:relative;
+  transition:all .3s;font-family:var(--mono);
+}
+.rtd-box.app{background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.35);color:#93c5fd}
+.rtd-box.iface{background:rgba(6,182,212,.1);border:1.5px dashed rgba(6,182,212,.5);color:var(--cyan)}
+.rtd-box.ref{background:rgba(139,92,246,.1);border:1.5px solid rgba(139,92,246,.35);color:#c4b5fd}
+.rtd-box.obj{background:rgba(245,158,11,.1);border:1.5px solid rgba(245,158,11,.35);color:var(--amber);transition:all .4s}
+.rtd-box.mth{background:rgba(16,185,129,.1);border:1.5px solid rgba(16,185,129,.35);color:var(--green)}
+.rtd-box.res{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);color:var(--green)}
+.rtd-box.null-box{background:rgba(148,163,184,.07);border:1.5px dashed rgba(148,163,184,.25);color:var(--text3)}
+
+.rtd-arrow{
+  display:flex;flex-direction:column;align-items:flex-start;gap:0;
+  margin-left:18px;padding:2px 0;
+}
+.rtd-arr-line{width:2px;height:20px;background:var(--border);transition:background .5s}
+.rtd-arr-line.lit{background:var(--accent)}
+.rtd-arr-head{color:var(--text3);font-size:14px;margin-left:-3px;transition:color .5s}
+.rtd-arr-head.lit{color:var(--accent)}
+.rtd-arr-label{font-size:10px;color:var(--text3);margin-left:10px;font-family:var(--ui);font-weight:500}
+
+/* Ref arrow (the hero element) */
+.ref-row{display:flex;align-items:center;gap:0;margin:8px 0}
+.ref-var{
+  padding:8px 14px;border-radius:8px;
+  background:rgba(139,92,246,.1);border:1.5px solid rgba(139,92,246,.4);
+  color:#c4b5fd;font-family:var(--mono);font-size:12px;font-weight:600;white-space:nowrap;
+}
+.ref-arrow-wrap{flex:1;display:flex;align-items:center;padding:0 4px;min-width:60px}
+.ref-arrow-line{flex:1;height:2px;background:var(--purple);position:relative;transition:all .5s}
+.ref-arrow-line::after{
+  content:'▶';position:absolute;right:-6px;top:-7px;font-size:14px;color:var(--purple);
+}
+.ref-arrow-pulse{
+  position:absolute;width:8px;height:8px;border-radius:50%;
+  background:var(--purple);top:-3px;left:0;
+  box-shadow:0 0 8px var(--purple);
+  animation:pulseDot 1.5s ease-in-out infinite;
+  transition:left .5s;
+}
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+.ref-obj-box{
+  padding:10px 14px;border-radius:8px;border:1.5px solid rgba(245,158,11,.45);
+  background:rgba(245,158,11,.08);font-family:var(--mono);font-size:12px;
+  color:var(--amber);transition:all .4s;min-width:160px;
+}
+.ref-obj-box.changing{animation:objChange .4s}
+@keyframes objChange{0%{transform:translateX(8px);opacity:.5}100%{transform:translateX(0);opacity:1}}
+.ref-null{color:var(--text3);font-style:italic;font-family:var(--mono);font-size:12px;
+  padding:8px 14px;border:1.5px dashed var(--border);border-radius:8px}
+
+/* Object memory panel */
+.obj-card{
+  border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:8px;
+  transition:all .3s;
+}
+.obj-card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px;background:var(--surf2);border-bottom:1px solid var(--border);
+}
+.obj-card-id{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--amber)}
+.obj-card-class{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.obj-card-body{padding:8px 10px}
+.obj-field{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.obj-field:last-child{border-bottom:none}
+.obj-field-name{color:var(--text3);font-family:var(--mono)}
+.obj-field-val{color:var(--text);font-family:var(--mono);font-weight:600}
+.obj-field-val.changed{color:var(--green);animation:valChange .5s}
+@keyframes valChange{0%{color:var(--amber)}100%{color:var(--green)}}
+
+/* Step controls */
+.step-bar{
+  padding:10px 16px;border-top:1px solid var(--border2);
+  display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--surf1);
+}
+.step-btn{
+  padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;
+  border:1px solid var(--border);background:var(--surf2);color:var(--text2);
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;
+}
+.step-btn:hover{border-color:var(--accent);color:var(--text)}
+.step-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.step-btn.primary:hover{background:#2563eb}
+.step-btn:disabled{opacity:.4;cursor:not-allowed}
+.step-count{font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:auto}
+
+/* Class map overlay */
+.overlay{
+  position:fixed;inset:0;background:rgba(7,15,29,.85);backdrop-filter:blur(6px);
+  z-index:200;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.overlay.show{opacity:1;pointer-events:all}
+.overlay-panel{
+  background:var(--surf1);border:1px solid var(--border);border-radius:14px;
+  padding:28px;max-width:560px;width:90%;max-height:80vh;overflow-y:auto;
+}
+.overlay-title{font-size:18px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px}
+.overlay-sub{font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.6}
+
+/* Class map diagram */
+.cm-iface{
+  text-align:center;padding:10px 24px;border-radius:8px;
+  border:1.5px dashed rgba(6,182,212,.6);background:rgba(6,182,212,.07);
+  color:var(--cyan);font-family:var(--mono);font-weight:700;font-size:14px;margin-bottom:0;display:inline-block;
+}
+.cm-tag{font-size:9px;font-weight:700;color:var(--cyan);opacity:.7;letter-spacing:1px;display:block;margin-bottom:2px}
+.cm-impls{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:0}
+.cm-impl{
+  padding:10px 16px;border-radius:8px;border:1.5px solid rgba(16,185,129,.35);
+  background:rgba(16,185,129,.07);color:var(--green);font-family:var(--mono);font-size:13px;font-weight:600;text-align:center;
+}
+.cm-obj-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.cm-obj{
+  padding:10px 16px;border-radius:8px;border:1.5px solid rgba(245,158,11,.4);
+  background:rgba(245,158,11,.07);color:var(--amber);font-family:var(--mono);font-size:12px;font-weight:600;
+}
+
+/* Challenge section */
+.challenge-q{
+  font-size:15px;font-weight:600;margin-bottom:16px;line-height:1.5;
+}
+.challenge-code-edit{
+  background:#070f1d;border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;font-family:var(--mono);font-size:13px;line-height:1.9;margin-bottom:14px;
+}
+.editable-slot{
+  display:inline-block;min-width:160px;border-bottom:2px solid var(--amber);
+  color:var(--amber);cursor:pointer;padding:1px 4px;border-radius:4px 4px 0 0;
+  transition:all .2s;position:relative;
+}
+.editable-slot:hover{background:rgba(245,158,11,.1)}
+.slot-dropdown{
+  position:absolute;top:100%;left:0;min-width:200px;
+  background:var(--surf2);border:1px solid var(--border);border-radius:8px;
+  overflow:hidden;z-index:50;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.slot-dropdown.open{display:block}
+.slot-opt{
+  padding:8px 14px;cursor:pointer;font-size:12px;color:var(--text2);
+  transition:background .1s;white-space:nowrap;
+}
+.slot-opt:hover{background:var(--surf3);color:var(--text)}
+.slot-opt.chosen{color:var(--green);font-weight:700}
+
+/* Discovery mode */
+.disc-prompt{
+  background:var(--surf2);border:1px solid var(--border);border-radius:10px;
+  padding:18px;margin-bottom:14px;
+}
+.disc-q{font-size:14px;font-weight:600;margin-bottom:12px;line-height:1.5}
+.disc-opts{display:flex;flex-direction:column;gap:6px}
+.disc-opt{
+  padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);
+  background:var(--surf3);cursor:pointer;font-size:13px;font-weight:500;
+  color:var(--text2);transition:all .15s;
+}
+.disc-opt:hover{border-color:var(--accent);color:var(--text)}
+.disc-opt.correct{border-color:var(--green);background:rgba(16,185,129,.1);color:var(--green)}
+.disc-opt.wrong{border-color:var(--red);background:rgba(239,68,68,.08);color:var(--red);animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* Tooltip */
+.legend-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* Notification area */
+.notif-area{
+  position:fixed;top:52px;right:12px;z-index:300;display:flex;flex-direction:column;gap:6px;
+  pointer-events:none;
+}
+.notif-toast{
+  padding:10px 14px;border-radius:8px;background:var(--surf2);border:1px solid var(--border);
+  font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;
+  animation:toastIn .3s ease;pointer-events:all;max-width:280px;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.toastOut{animation:toastOut .3s ease forwards}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px)}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Playground */
+.pg-iface-select{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.pg-opt{
+  padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surf3);
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);
+  display:flex;align-items:center;gap:10px;transition:all .15s;
+}
+.pg-opt:hover{border-color:var(--cyan);color:var(--text)}
+.pg-opt.active{border-color:var(--cyan);background:rgba(6,182,212,.08);color:var(--cyan)}
+.pg-impl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:12px 0}
+.pg-impl{
+  padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surf3);
+  cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);text-align:center;transition:all .15s;
+}
+.pg-impl:hover{border-color:var(--green);color:var(--green)}
+.pg-impl.chosen{border-color:var(--green);background:rgba(16,185,129,.1);color:var(--green)}
+.pg-call-btn{
+  padding:8px 18px;border-radius:7px;background:var(--green);color:#fff;
+  border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;
+}
+.pg-call-btn:hover{background:#059669}
+.pg-reset-btn{
+  padding:8px 14px;border-radius:7px;background:var(--surf3);color:var(--text2);
+  border:1px solid var(--border);font-size:12px;font-weight:600;cursor:pointer;
+}
+
+/* Concept map final */
+.concept-flow{display:flex;flex-direction:column;align-items:center;gap:0;padding:16px 0}
+.cf-box{
+  padding:10px 28px;border-radius:8px;font-size:13px;font-weight:700;
+  text-align:center;min-width:200px;
+}
+.cf-box.app{background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.4);color:#93c5fd}
+.cf-box.ref{background:rgba(139,92,246,.1);border:1.5px solid rgba(139,92,246,.4);color:#c4b5fd}
+.cf-box.obj{background:rgba(245,158,11,.1);border:1.5px solid rgba(245,158,11,.4);color:var(--amber)}
+.cf-box.cls{background:rgba(16,185,129,.1);border:1.5px solid rgba(16,185,129,.4);color:var(--green)}
+.cf-box.mth{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);color:var(--green)}
+.cf-box.res{background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.25);color:var(--cyan)}
+.cf-arrow{display:flex;flex-direction:column;align-items:center;padding:2px 0;gap:0}
+.cf-arr-line{width:2px;height:18px;background:var(--border)}
+.cf-arr-label{font-size:10px;color:var(--text3);margin:2px 0}
+.cf-arr-head{color:var(--text3);font-size:14px;margin-top:-2px}
+
+/* Fade-in utility */
+.fadein{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- TOAST AREA -->
+<div class="notif-area" id="toastArea"></div>
+
+<!-- CLASS MAP OVERLAY -->
+<div class="overlay" id="classMapOverlay" onclick="closeClassMap(event)">
+  <div class="overlay-panel" id="classMapPanel">
+    <div class="overlay-title" id="cmTitle">Class Map</div>
+    <div class="overlay-sub" id="cmSub"></div>
+    <div id="cmContent"></div>
+    <button class="step-btn primary" style="margin-top:20px" onclick="document.getElementById('classMapOverlay').classList.remove('show')">Close</button>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">Ji</div>
+    Java Interface Simulator
+  </div>
+  <div class="topbar-controls">
+    <div class="view-toggle">
+      <button class="view-btn active" id="vbSplit" onclick="setView('split')">Split</button>
+      <button class="view-btn" id="vbUser" onclick="setView('user')">User</button>
+      <button class="view-btn" id="vbJava" onclick="setView('java')">Java</button>
+    </div>
+    <button class="step-btn" onclick="showClassMap()">Show Class Map</button>
+  </div>
+</div>
+
+<!-- APP BODY -->
+<div class="app-body">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Scenarios</div>
+      <div class="nav-item active" onclick="loadScenario('wifi')"><span class="nav-icon">📶</span>Wi-Fi</div>
+      <div class="nav-item" onclick="loadScenario('printer')"><span class="nav-icon">🖨</span>Printer</div>
+      <div class="nav-item" onclick="loadScenario('camera')"><span class="nav-icon">📷</span>Camera</div>
+      <div class="nav-item" onclick="loadScenario('notif')"><span class="nav-icon">🔔</span>Notification</div>
+      <div class="nav-item" onclick="loadScenario('auth')"><span class="nav-icon">🔐</span>Authentication</div>
+      <div class="nav-item" onclick="loadScenario('payment')"><span class="nav-icon">💳</span>Payment</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Practice</div>
+      <div class="nav-item" onclick="loadScenario('playground')"><span class="nav-icon">🧪</span>Interface Playground</div>
+      <div class="nav-item" onclick="loadScenario('challenge')"><span class="nav-icon">🎯</span>Challenge Mode</div>
+      <div class="nav-item" onclick="loadScenario('concept')"><span class="nav-icon">🗺</span>Concept Map</div>
+    </div>
+    <div style="padding:12px 14px;margin-top:auto;border-top:1px solid var(--border2)">
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div>Interface</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Reference</div>
+      </div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Object</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Method/Result</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main">
+    <div class="split-container" id="splitContainer">
+      <!-- USER PANE -->
+      <div class="pane" id="userPane">
+        <div class="pane-header">
+          <span id="uPaneLabel">User View — What you see</span>
+          <div class="pane-header-actions" id="uPaneActions"></div>
+        </div>
+        <div class="uv-screen" id="userContent"></div>
+      </div>
+
+      <div class="pane-divider" id="paneDivider">
+        <div class="pane-divider-label">↕ Java Runtime</div>
+      </div>
+
+      <!-- JAVA PANE -->
+      <div class="pane" id="javaPane">
+        <div class="pane-header">
+          <span>Java View — What's happening</span>
+        </div>
+        <div class="jrv" id="javaContent"></div>
+      </div>
+    </div>
+
+    <!-- STEP BAR -->
+    <div class="step-bar" id="stepBar">
+      <button class="step-btn" id="btnStep" onclick="doStep()">⏭ Step</button>
+      <button class="step-btn primary" id="btnRun" onclick="doRun()">▶ Run</button>
+      <button class="step-btn" id="btnReset" onclick="doReset()">↺ Reset</button>
+      <div class="step-count" id="stepCount">Step 0 / 3</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel" id="rightPanel">
+    <div class="rp-tab-row">
+      <div class="rp-tab active" onclick="setRpTab('objects',this)">Objects</div>
+      <div class="rp-tab" onclick="setRpTab('discovery',this)">Discover</div>
+    </div>
+    <div class="rp-header" id="rpHeader" style="border-top:1px solid var(--border2)">
+      <span id="rpTitle">Memory</span>
+    </div>
+    <div class="rp-body" id="rpBody">
+      <div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">Select a network and connect to see objects created in memory.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== STATE =====================
+let currentScenario = 'wifi';
+let currentView = 'split';
+let currentStep = 0;
+let totalSteps = 3;
+let rpTab = 'objects';
+let scenarioState = {};
+
+// ===================== VIEW TOGGLE =====================
+function setView(v) {
+  currentView = v;
+  ['Split','User','Java'].forEach(x => document.getElementById('vb'+x).classList.remove('active'));
+  document.getElementById('vb'+v.charAt(0).toUpperCase()+v.slice(1)).classList.add('active');
+  const up = document.getElementById('userPane');
+  const jp = document.getElementById('javaPane');
+  const div = document.getElementById('paneDivider');
+  if (v==='split'){up.style.display='';jp.style.display='';div.style.display='';}
+  else if(v==='user'){up.style.display='';jp.style.display='none';div.style.display='none';}
+  else{up.style.display='none';jp.style.display='';div.style.display='none';}
+}
+
+function setRpTab(tab, el) {
+  rpTab = tab;
+  document.querySelectorAll('.rp-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(tab==='discovery') renderDiscovery();
+  else renderObjects();
+}
+
+// ===================== NAV =====================
+function loadScenario(name) {
+  currentScenario = name;
+  currentStep = 0;
+  scenarioState = {};
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.textContent.trim().toLowerCase().replace(/[^a-z]/g,'').includes(name.replace(/[^a-z]/g,'')))
+      n.classList.add('active');
+  });
+  scenarios[name] ? scenarios[name].init() : (() => {})();
+  renderObjects();
+}
+
+// ===================== SCENARIOS =====================
+const scenarios = {};
+
+// ─── WIFI ───────────────────────────────────────────
+const wifiNets = [
+  {id:'office', name:'Office Wi-Fi', sub:'Zoho Office', cls:'OfficeWiFi', bars:4, ip:'10.0.1.42'},
+  {id:'home',   name:'Home Wi-Fi',   sub:'Home Network', cls:'HomeWiFi',   bars:3, ip:'192.168.1.100'},
+  {id:'hotspot',name:'Mobile Hotspot',sub:'Phone Hotspot', cls:'MobileHotspot', bars:2, ip:'172.20.10.5'},
+];
+let wifiSel = null, wifiConnected = false;
+
+scenarios.wifi = {
+  init() {
+    wifiSel = null; wifiConnected = false;
+    document.getElementById('uPaneLabel').textContent = 'Wi-Fi Settings — Network & Internet';
+    document.getElementById('uPaneActions').innerHTML = '';
+    totalSteps = 3; updateStepUI();
+    this.renderUser();
+    this.renderJava(null, false);
+  },
+  renderUser() {
+    const uc = document.getElementById('userContent');
+    uc.innerHTML = `
+      <div class="os-panel" style="max-width:460px">
+        <div class="os-titlebar">
+          <div class="os-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+          <div class="os-title">Network Settings</div>
+        </div>
+        <div class="os-body">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">Wi-Fi</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Available Networks</div>
+          <div class="net-list" id="netList">${wifiNets.map(n=>wifiNetHTML(n)).join('')}</div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="os-btn os-btn-primary" onclick="wifiConnect()" id="wifiConnBtn">Connect</button>
+            ${wifiConnected?`<button class="os-btn os-btn-secondary" onclick="wifiDisconnect()">Disconnect</button>`:''}
+          </div>
+        </div>
+        <div class="os-status-bar">
+          <div class="status-dot ${wifiConnected?'connected':''}" id="wifiStatusDot"></div>
+          <span id="wifiStatusText" style="font-size:12px;color:var(--text2)">${wifiConnected&&wifiSel?`Connected to ${wifiSel.name}`:'Not connected'}</span>
+        </div>
+      </div>`;
+  },
+  renderJava(net, connected) {
+    const jc = document.getElementById('javaContent');
+    const step = currentStep;
+    jc.innerHTML = `
+      <div class="jrv-code" id="jrvCode">
+        <span class="jrv-line ${step===0?'hl':''}"><span class="cm">// Step 1: declare reference</span></span>
+        <span class="jrv-line ${step===0?'hl':''}"><span class="ty">NetworkConnection</span> connection;</span>
+        <span class="jrv-line"> </span>
+        <span class="jrv-line ${step===1?'changed':''}"><span class="cm">// Step 2: assign object</span></span>
+        <span class="jrv-line ${step===1?'changed':''}">connection = <span class="kw">new</span> <span class="ty">${net?net.cls:'?'}</span>();</span>
+        <span class="jrv-line"> </span>
+        <span class="jrv-line ${step===2?'hl':''}"><span class="cm">// Step 3: call method</span></span>
+        <span class="jrv-line ${step===2?'hl':''}">connection.<span class="fn">connect</span>();</span>
+      </div>
+      <div class="legend-row" style="margin-bottom:14px">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div>Interface</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Reference</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Object</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Result</div>
+      </div>
+      <div class="ref-row" id="refRow">
+        <div class="ref-var">NetworkConnection<br>connection</div>
+        <div class="ref-arrow-wrap">
+          <div class="ref-arrow-line" id="refArrowLine">
+            <div class="ref-arrow-pulse" id="refPulse"></div>
+          </div>
+        </div>
+        ${net ? `<div class="ref-obj-box" id="refObjBox"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;font-family:var(--mono)">OBJECT</div><div style="font-weight:700">${net.cls}</div><div style="font-size:10px;color:var(--text3);margin-top:2px">→ new ${net.cls}()</div></div>`
+        : `<div class="ref-null">null</div>`}
+      </div>
+      ${net && connected ? `
+      <div class="rtd" style="margin-top:16px">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:8px;letter-spacing:.5px">METHOD CALL TRACE</div>
+        <div class="rtd-row"><div class="rtd-box ref">connection</div><span style="font-size:11px;color:var(--text3);margin-left:8px">.connect()</span></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div><div class="rtd-arr-label">follows reference</div></div>
+        <div class="rtd-row"><div class="rtd-box obj">${net.cls} OBJECT</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box mth">${net.cls}.connect()</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box res">✓ Connected — ${net.ip}</div></div>
+      </div>` : ''}
+      ${!net ? `<div style="margin-top:16px;color:var(--text3);font-size:12px;font-family:var(--mono)">Select a network to create an object.</div>` : ''}
+    `;
+  }
+};
+
+function wifiNetHTML(n) {
+  const sel = wifiSel && wifiSel.id === n.id;
+  const bars = [1,2,3,4].map(i=>`<div class="sig-bar sig${i} ${i<=n.bars&&sel?'lit':''}"></div>`).join('');
+  return `<div class="net-item ${sel?'selected':''}" onclick="selectWifi('${n.id}')">
+    <div class="net-item-left">
+      <div class="net-radio"><div class="net-radio-dot"></div></div>
+      <div><div class="net-name">${n.name}</div><div class="net-sub">${n.sub}</div></div>
+    </div>
+    <div class="net-signal">${bars}</div>
+  </div>`;
+}
+
+function selectWifi(id) {
+  const prev = wifiSel;
+  wifiSel = wifiNets.find(n=>n.id===id);
+  wifiConnected = false;
+  currentStep = 1;
+  updateStepUI();
+  scenarios.wifi.renderUser();
+  scenarios.wifi.renderJava(wifiSel, false);
+  // Animate object change
+  if (prev && prev.id !== id) {
+    setTimeout(()=>{
+      const box = document.getElementById('refObjBox');
+      if(box) box.classList.add('changing');
+    }, 50);
+  }
+  updateObjMemory(wifiSel, {status:'disconnected', ip:null});
+  renderObjects();
+}
+
+function wifiConnect() {
+  if (!wifiSel) { showToast('⚠️ Select a network first', 'warn'); return; }
+  wifiConnected = true;
+  currentStep = 2;
+  updateStepUI();
+  scenarios.wifi.renderUser();
+  scenarios.wifi.renderJava(wifiSel, true);
+  updateObjMemory(wifiSel, {status:'CONNECTED', ip: wifiSel.ip});
+  renderObjects();
+  showToast(`✓ Connected to ${wifiSel.name}`, 'success');
+}
+
+function wifiDisconnect() {
+  wifiConnected = false;
+  scenarios.wifi.renderUser();
+  scenarios.wifi.renderJava(wifiSel, false);
+  updateObjMemory(wifiSel, {status:'disconnected', ip:null});
+  renderObjects();
+  showToast('Disconnected', 'info');
+}
+
+// ─── PRINTER ──────────────────────────────────────
+const printers = [
+  {id:'chennai',  name:'Chennai Office',    cls:'ChennaiPrinter',    icon:'🖨', addr:'10.0.1.20'},
+  {id:'kumba',    name:'Kumbakonam Office', cls:'KumbakonamPrinter', icon:'🖨', addr:'10.0.2.20'},
+  {id:'network',  name:'Network Printer',   cls:'NetworkPrinter',    icon:'🌐', addr:'192.168.1.50'},
+  {id:'home',     name:'Home Printer',      cls:'HomePrinter',       icon:'🏠', addr:'USB'},
+];
+let printerSel = null, printProgress = 0;
+
+scenarios.printer = {
+  init() {
+    printerSel = null; printProgress = 0;
+    document.getElementById('uPaneLabel').textContent = 'Print — Java_Assignment.pdf';
+    totalSteps = 3; currentStep = 0; updateStepUI();
+    this.renderUser(); this.renderJava(null, false);
+  },
+  renderUser() {
+    const uc = document.getElementById('userContent');
+    uc.innerHTML = `
+      <div class="os-panel" style="max-width:480px">
+        <div class="os-titlebar">
+          <div class="os-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+          <div class="os-title">Print — Java_Assignment.pdf</div>
+        </div>
+        <div class="os-body">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+            <div class="doc-icon">
+              <div class="doc-corner"></div>
+              <div class="doc-lines">
+                <div class="doc-line"></div><div class="doc-line" style="width:60%"></div>
+                <div class="doc-line"></div><div class="doc-line" style="width:80%"></div>
+              </div>
+            </div>
+            <div><div style="font-size:13px;font-weight:700">Java_Assignment.pdf</div>
+            <div style="font-size:11px;color:var(--text3)">12 pages · 2.4 MB</div></div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">SELECT PRINTER</div>
+          <div class="printer-grid">
+            ${printers.map(p=>`
+              <div class="printer-opt ${printerSel&&printerSel.id===p.id?'selected':''}" onclick="selectPrinter('${p.id}')">
+                <div class="p-icon">${p.icon}</div>
+                <div class="p-name">${p.name}</div>
+              </div>`).join('')}
+          </div>
+          <div class="print-progress"><div class="print-fill" id="printFill" style="width:${printProgress}%"></div></div>
+          <button class="os-btn os-btn-primary" onclick="doPrint()" style="margin-top:8px">🖨 Print</button>
+        </div>
+        <div class="os-status-bar">
+          <div class="status-dot ${printProgress===100?'connected':''}"></div>
+          <span style="font-size:12px;color:var(--text2)" id="printStatusText">
+            ${printProgress===100?`Printed on ${printerSel?printerSel.name:''}`:printerSel?`Ready — ${printerSel.name}`:'Select a printer'}
+          </span>
+        </div>
+      </div>`;
+  },
+  renderJava(p, done) {
+    const jc = document.getElementById('javaContent');
+    jc.innerHTML = `
+      <div class="jrv-code">
+        <span class="jrv-line ${currentStep===0?'hl':''}"><span class="ty">Printer</span> printer;</span>
+        <span class="jrv-line ${currentStep===1?'changed':''}">printer = <span class="kw">new</span> <span class="ty">${p?p.cls:'?'}</span>();</span>
+        <span class="jrv-line"> </span>
+        <span class="jrv-line ${currentStep===2?'hl':''}">printer.<span class="fn">print</span>(<span class="st">"Java_Assignment.pdf"</span>);</span>
+      </div>
+      <div class="ref-row">
+        <div class="ref-var">Printer<br>printer</div>
+        <div class="ref-arrow-wrap"><div class="ref-arrow-line"><div class="ref-arrow-pulse"></div></div></div>
+        ${p?`<div class="ref-obj-box ${done?'rtd-box res':''}"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">OBJECT</div><div style="font-weight:700">${p.cls}</div><div style="font-size:10px;color:var(--text3)">addr: ${p.addr}</div></div>`:`<div class="ref-null">null</div>`}
+      </div>
+      ${done&&p?`
+      <div class="rtd" style="margin-top:16px">
+        <div class="rtd-row"><div class="rtd-box ref">printer</div><span style="font-size:11px;color:var(--text3);margin-left:6px">.print("Java_Assignment.pdf")</span></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div><div class="rtd-arr-label">reference → object</div></div>
+        <div class="rtd-row"><div class="rtd-box obj">${p.cls} OBJECT</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box mth">${p.cls}.print()</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box res">✓ Document sent to ${p.name}</div></div>
+      </div>`:''}`; 
+  }
+};
+
+function selectPrinter(id) {
+  printerSel = printers.find(p=>p.id===id);
+  printProgress = 0;
+  currentStep = 1; updateStepUI();
+  scenarios.printer.renderUser();
+  scenarios.printer.renderJava(printerSel, false);
+  updateObjMemory(printerSel, {status:'idle', doc:null});
+  renderObjects();
+}
+
+function doPrint() {
+  if (!printerSel) { showToast('⚠️ Select a printer first', 'warn'); return; }
+  currentStep = 2; updateStepUI();
+  scenarios.printer.renderJava(printerSel, false);
+  setTimeout(()=>{
+    printProgress = 100;
+    scenarios.printer.renderUser();
+    scenarios.printer.renderJava(printerSel, true);
+    document.getElementById('printFill').style.width='100%';
+    updateObjMemory(printerSel, {status:'PRINTING', doc:'Java_Assignment.pdf'});
+    renderObjects();
+    showToast(`✓ Printed on ${printerSel.name}`, 'success');
+  }, 800);
+}
+
+// ─── CAMERA ──────────────────────────────────────
+const cameras = [
+  {id:'builtin', name:'Built-in Camera', cls:'BuiltInCamera', icon:'📷', res:'1920×1080'},
+  {id:'usb',     name:'USB Webcam',      cls:'USBWebcam',     icon:'🎥', res:'1280×720'},
+  {id:'external',name:'External Camera', cls:'ExternalCamera', icon:'📸', res:'3840×2160'},
+];
+let camSel = null, camCaptured = false;
+
+scenarios.camera = {
+  init() {
+    camSel = null; camCaptured = false;
+    document.getElementById('uPaneLabel').textContent = 'Camera Settings — Video Call App';
+    totalSteps = 3; currentStep = 0; updateStepUI();
+    this.renderUser(); this.renderJava(null, false);
+  },
+  renderUser() {
+    const uc = document.getElementById('userContent');
+    uc.innerHTML = `
+      <div class="os-panel" style="max-width:440px">
+        <div class="os-titlebar">
+          <div class="os-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+          <div class="os-title">Camera Settings</div>
+        </div>
+        <div class="os-body">
+          <div class="cam-preview ${camSel?'active':''}" id="camPreview">
+            <div class="cam-icon-big" id="camIconBig">${camSel?camSel.icon:'📷'}</div>
+            <div class="cam-label-overlay">${camSel?camSel.cls:'No camera selected'}</div>
+            <div class="cam-flash" id="camFlash"></div>
+            <div class="cam-thumb" id="camThumb" style="${camCaptured?'opacity:1':'opacity:0'}">🖼</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">CAMERA SOURCE</div>
+          <div class="net-list">
+            ${cameras.map(c=>`
+              <div class="net-item ${camSel&&camSel.id===c.id?'selected':''}" onclick="selectCamera('${c.id}')">
+                <div class="net-item-left">
+                  <div class="net-radio"><div class="net-radio-dot"></div></div>
+                  <div><div class="net-name">${c.name}</div><div class="net-sub">${c.res}</div></div>
+                </div>
+                <span style="font-size:16px">${c.icon}</span>
+              </div>`).join('')}
+          </div>
+          <button class="os-btn os-btn-primary" onclick="doCapture()" style="margin-top:4px">📸 Test Camera</button>
+        </div>
+        <div class="os-status-bar">
+          <div class="status-dot ${camSel?'connected':''}"></div>
+          <span style="font-size:12px;color:var(--text2)">${camCaptured?'Frame captured — preview shown bottom-right':camSel?`${camSel.name} ready`:'No camera selected'}</span>
+        </div>
+      </div>`;
+  },
+  renderJava(c, captured) {
+    const jc = document.getElementById('javaContent');
+    jc.innerHTML = `
+      <div class="jrv-code">
+        <span class="jrv-line ${currentStep===0?'hl':''}"><span class="ty">Camera</span> camera;</span>
+        <span class="jrv-line ${currentStep===1?'changed':''}">camera = <span class="kw">new</span> <span class="ty">${c?c.cls:'?'}</span>();</span>
+        <span class="jrv-line"> </span>
+        <span class="jrv-line ${currentStep===2?'hl':''}">camera.<span class="fn">capture</span>();</span>
+      </div>
+      <div class="ref-row">
+        <div class="ref-var">Camera<br>camera</div>
+        <div class="ref-arrow-wrap"><div class="ref-arrow-line"><div class="ref-arrow-pulse"></div></div></div>
+        ${c?`<div class="ref-obj-box"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">OBJECT</div><div style="font-weight:700">${c.cls}</div><div style="font-size:10px;color:var(--text3)">${c.res}</div></div>`:`<div class="ref-null">null</div>`}
+      </div>
+      ${captured&&c?`
+      <div class="rtd" style="margin-top:16px">
+        <div class="rtd-row"><div class="rtd-box ref">camera</div><span style="font-size:11px;color:var(--text3);margin-left:6px">.capture()</span></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box obj">${c.cls} OBJECT</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box mth">${c.cls}.capture() → ${c.res} frame</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box res">✓ Frame captured at ${c.res}</div></div>
+      </div>` : ''}`;
+  }
+};
+
+function selectCamera(id) {
+  camSel = cameras.find(c=>c.id===id);
+  camCaptured = false;
+  currentStep = 1; updateStepUI();
+  scenarios.camera.renderUser();
+  scenarios.camera.renderJava(camSel, false);
+  updateObjMemory(camSel, {resolution: camSel.res, status:'ready'});
+  renderObjects();
+}
+
+function doCapture() {
+  if (!camSel) { showToast('⚠️ Select a camera first', 'warn'); return; }
+  camCaptured = true;
+  currentStep = 2; updateStepUI();
+  const flash = document.getElementById('camFlash');
+  if(flash){flash.classList.add('pop');setTimeout(()=>flash.classList.remove('pop'),300);}
+  setTimeout(()=>{
+    scenarios.camera.renderUser();
+    scenarios.camera.renderJava(camSel, true);
+    updateObjMemory(camSel, {resolution: camSel.res, status:'CAPTURED'});
+    renderObjects();
+    showToast(`✓ Frame captured — ${camSel.res}`, 'success');
+  }, 300);
+}
+
+// ─── NOTIFICATION ────────────────────────────────
+const channels = [
+  {id:'email',   name:'Email',    cls:'EmailNotification',    icon:'📧', dest:'Inbox'},
+  {id:'sms',     name:'SMS',      cls:'SMSNotification',      icon:'📱', dest:'Phone'},
+  {id:'whatsapp',name:'WhatsApp', cls:'WhatsAppNotification', icon:'💬', dest:'Chat'},
+  {id:'ai',      name:'ChatGPT',  cls:'ChatGPTNotification',  icon:'🤖', dest:'AI Chat'},
+];
+let notifSel = null, notifSent = false;
+const notifMsg = 'Your assignment is due tomorrow.';
+
+scenarios.notif = {
+  init() {
+    notifSel = null; notifSent = false;
+    document.getElementById('uPaneLabel').textContent = 'Notification — Assignment System';
+    totalSteps = 3; currentStep = 0; updateStepUI();
+    this.renderUser(); this.renderJava(null, false);
+  },
+  renderUser() {
+    const uc = document.getElementById('userContent');
+    uc.innerHTML = `
+      <div class="os-panel" style="max-width:480px">
+        <div class="os-titlebar">
+          <div class="os-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+          <div class="os-title">Assignment Reminder — Send Notification</div>
+        </div>
+        <div class="os-body">
+          <div class="msg-bubble">${notifMsg}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">DELIVERY CHANNEL</div>
+          <div class="channel-row">
+            ${channels.map(c=>`<button class="channel-btn ${notifSel&&notifSel.id===c.id?'selected':''}" onclick="selectNotif('${c.id}')">${c.icon} ${c.name}</button>`).join('')}
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:16px">
+            <button class="os-btn os-btn-primary" onclick="doSendNotif()">▶ Send</button>
+            <div class="notif-phone" id="notifPhone">
+              <div class="notif-screen">
+                <div class="notif-channel-tag">${notifSel?notifSel.icon+' '+notifSel.name:''}</div>
+                <div class="notif-msg-small ${notifSent?'pop':''}" id="notifMsgSmall">${notifMsg}</div>
+              </div>
+              <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin-top:6px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="os-status-bar">
+          <div class="status-dot ${notifSent?'connected':''}"></div>
+          <span style="font-size:12px;color:var(--text2)">${notifSent?`Delivered via ${notifSel?notifSel.name:''}`:notifSel?`${notifSel.name} selected`:'Choose a channel'}</span>
+        </div>
+      </div>`;
+  },
+  renderJava(c, sent) {
+    const jc = document.getElementById('javaContent');
+    jc.innerHTML = `
+      <div class="jrv-code">
+        <span class="jrv-line ${currentStep===0?'hl':''}"><span class="ty">Notification</span> notif;</span>
+        <span class="jrv-line ${currentStep===1?'changed':''}">notif = <span class="kw">new</span> <span class="ty">${c?c.cls:'?'}</span>();</span>
+        <span class="jrv-line"> </span>
+        <span class="jrv-line ${currentStep===2?'hl':''}">notif.<span class="fn">send</span>(<span class="st">"${notifMsg}"</span>);</span>
+      </div>
+      <div class="ref-row">
+        <div class="ref-var">Notification<br>notif</div>
+        <div class="ref-arrow-wrap"><div class="ref-arrow-line"><div class="ref-arrow-pulse"></div></div></div>
+        ${c?`<div class="ref-obj-box"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">OBJECT</div><div style="font-weight:700">${c.cls}</div><div style="font-size:10px;color:var(--text3)">dest: ${c.dest}</div></div>`:`<div class="ref-null">null</div>`}
+      </div>
+      ${sent&&c?`
+      <div class="rtd" style="margin-top:16px">
+        <div class="rtd-row"><div class="rtd-box ref">notif</div><span style="font-size:11px;color:var(--text3);margin-left:6px">.send(msg)</span></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box obj">${c.cls} OBJECT</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box mth">${c.cls}.send()</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box res">✓ Delivered to ${c.dest}</div></div>
+      </div>` : ''}`;
+  }
+};
+
+function selectNotif(id) {
+  notifSel = channels.find(c=>c.id===id);
+  notifSent = false;
+  currentStep = 1; updateStepUI();
+  scenarios.notif.renderUser();
+  scenarios.notif.renderJava(notifSel, false);
+  updateObjMemory(notifSel, {destination: notifSel.dest, status:'ready'});
+  renderObjects();
+}
+
+function doSendNotif() {
+  if (!notifSel) { showToast('⚠️ Choose a channel first', 'warn'); return; }
+  notifSent = true;
+  currentStep = 2; updateStepUI();
+  scenarios.notif.renderUser();
+  scenarios.notif.renderJava(notifSel, true);
+  updateObjMemory(notifSel, {destination: notifSel.dest, status:'DELIVERED'});
+  renderObjects();
+  showToast(`${notifSel.icon} Delivered via ${notifSel.name}`, 'success');
+}
+
+// ─── AUTHENTICATION ──────────────────────────────
+const authMethods = [
+  {id:'password', name:'Password', cls:'PasswordAuthenticator', icon:'🔑', verify:'Hash check'},
+  {id:'otp',      name:'OTP',      cls:'OTPAuthenticator',      icon:'📱', verify:'Code valid (30s)'},
+  {id:'qr',       name:'QR Scan',  cls:'QRAuthenticator',       icon:'📷', verify:'QR payload verified'},
+  {id:'bio',      name:'Biometric',cls:'BiometricAuthenticator',icon:'👆', verify:'Fingerprint match 98.7%'},
+];
+let authSel = null, authGranted = false;
+
+scenarios.auth = {
+  init() {
+    authSel = null; authGranted = false;
+    document.getElementById('uPaneLabel').textContent = 'Sign In — Authentication';
+    totalSteps = 3; currentStep = 0; updateStepUI();
+    this.renderUser(); this.renderJava(null, false);
+  },
+  renderUser() {
+    const uc = document.getElementById('userContent');
+    uc.innerHTML = `
+      <div class="os-panel" style="max-width:420px">
+        <div class="os-titlebar">
+          <div class="os-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+          <div class="os-title">Sign In</div>
+        </div>
+        <div class="os-body">
+          <div style="font-size:22px;font-weight:800;margin-bottom:16px;letter-spacing:-.5px">Welcome back</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:4px">USERNAME</div>
+          <input class="auth-field" type="text" placeholder="Enter username" value="student@cse.edu">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">AUTHENTICATION METHOD</div>
+          <div class="auth-methods">
+            ${authMethods.map(a=>`
+              <div class="auth-method ${authSel&&authSel.id===a.id?'selected':''}" onclick="selectAuth('${a.id}')">
+                <span class="am-icon">${a.icon}</span>${a.name}
+              </div>`).join('')}
+          </div>
+          ${authSel&&authSel.id==='qr'?`<div class="qr-scan"><div class="qr-line"></div><div style="display:grid;grid-template-columns:repeat(5,10px);gap:2px;opacity:.5">${Array(25).fill(0).map(()=>`<div style="width:10px;height:10px;background:${Math.random()>.5?'var(--text3)':'transparent'};border-radius:1px"></div>`).join('')}</div></div>`:''}
+          ${authSel&&authSel.id==='bio'?`<div class="bio-circle ${authGranted?'':'scanning'}">👆</div>`:''}
+          <button class="os-btn os-btn-primary" onclick="doAuth()" style="margin-top:12px;width:100%">🔐 Authenticate</button>
+          ${authGranted?`<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green);font-size:13px;font-weight:600">✓ Access Granted</div>`:''}
+        </div>
+      </div>`;
+  },
+  renderJava(a, granted) {
+    const jc = document.getElementById('javaContent');
+    jc.innerHTML = `
+      <div class="jrv-code">
+        <span class="jrv-line ${currentStep===0?'hl':''}"><span class="ty">Authenticator</span> authenticator;</span>
+        <span class="jrv-line ${currentStep===1?'changed':''}">authenticator = <span class="kw">new</span> <span class="ty">${a?a.cls:'?'}</span>();</span>
+        <span class="jrv-line"> </span>
+        <span class="jrv-line ${currentStep===2?'hl':''}"><span class="kw">boolean</span> ok = authenticator.<span class="fn">authenticate</span>();</span>
+      </div>
+      <div class="ref-row">
+        <div class="ref-var">Authenticator<br>authenticator</div>
+        <div class="ref-arrow-wrap"><div class="ref-arrow-line"><div class="ref-arrow-pulse"></div></div></div>
+        ${a?`<div class="ref-obj-box"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">OBJECT</div><div style="font-weight:700">${a.cls}</div><div style="font-size:10px;color:var(--text3)">${a.verify}</div></div>`:`<div class="ref-null">null</div>`}
+      </div>
+      ${granted&&a?`
+      <div class="rtd" style="margin-top:16px">
+        <div class="rtd-row"><div class="rtd-box obj">${a.cls} OBJECT</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box mth">${a.cls}.authenticate()</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box res">${a.verify}</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box res">✓ returns true → Access Granted</div></div>
+      </div>` : ''}`;
+  }
+};
+
+function selectAuth(id) {
+  authSel = authMethods.find(a=>a.id===id);
+  authGranted = false;
+  currentStep = 1; updateStepUI();
+  scenarios.auth.renderUser();
+  scenarios.auth.renderJava(authSel, false);
+  updateObjMemory(authSel, {verifyMethod: authSel.verify, result: 'pending'});
+  renderObjects();
+}
+
+function doAuth() {
+  if (!authSel) { showToast('⚠️ Choose an auth method', 'warn'); return; }
+  authGranted = true;
+  currentStep = 2; updateStepUI();
+  scenarios.auth.renderUser();
+  scenarios.auth.renderJava(authSel, true);
+  updateObjMemory(authSel, {verifyMethod: authSel.verify, result: 'GRANTED'});
+  renderObjects();
+  showToast(`${authSel.icon} Access Granted via ${authSel.name}`, 'success');
+}
+
+// ─── PAYMENT ──────────────────────────────────────
+const accounts = [
+  {id:'sbi',  name:'SBI',  cls:'SBIAccount',  icon:'🏦', last:'4521', type:'NetBanking'},
+  {id:'hdfc', name:'HDFC', cls:'HDFCAccount', icon:'🏦', last:'8192', type:'NetBanking'},
+  {id:'upi',  name:'UPI',  cls:'UPIAccount',  icon:'📲', last:'@upi', type:'NPCI Rail'},
+];
+let paySel = null, payDone = false, payAmount = 500;
+
+scenarios.payment = {
+  init() {
+    paySel = null; payDone = false;
+    document.getElementById('uPaneLabel').textContent = 'Pay ₹500 — Payment';
+    totalSteps = 3; currentStep = 0; updateStepUI();
+    this.renderUser(); this.renderJava(null, false);
+  },
+  renderUser() {
+    const uc = document.getElementById('userContent');
+    uc.innerHTML = `
+      <div class="os-panel" style="max-width:420px">
+        <div class="os-titlebar">
+          <div class="os-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+          <div class="os-title">Pay</div>
+        </div>
+        <div class="os-body">
+          <div class="pay-amount"><span class="pay-currency">₹</span>500</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">PAYMENT ACCOUNT</div>
+          <div class="account-list">
+            ${accounts.map(a=>`
+              <div class="account-item ${paySel&&paySel.id===a.id?'selected':''}" onclick="selectPayment('${a.id}')">
+                <div class="account-icon">${a.icon}</div>
+                <div style="flex:1;margin-left:10px">
+                  <div class="account-name">${a.name} ••••${a.last}</div>
+                  <div class="account-num">${a.type}</div>
+                </div>
+                <div class="account-check">${paySel&&paySel.id===a.id?'<span style="color:#fff;font-size:10px">✓</span>':''}</div>
+              </div>`).join('')}
+          </div>
+          <button class="os-btn os-btn-green" onclick="doPay()" style="width:100%;margin-top:8px;justify-content:center">Pay ₹500</button>
+          ${payDone?`<div style="margin-top:10px;padding:10px;border-radius:8px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green);font-size:13px;font-weight:600;text-align:center">✓ Payment Successful via ${paySel?paySel.name:''}</div>`:''}
+        </div>
+      </div>`;
+  },
+  renderJava(a, done) {
+    const jc = document.getElementById('javaContent');
+    jc.innerHTML = `
+      <div class="jrv-code">
+        <span class="jrv-line ${currentStep===0?'hl':''}"><span class="ty">PaymentAccount</span> account;</span>
+        <span class="jrv-line ${currentStep===1?'changed':''}">account = <span class="kw">new</span> <span class="ty">${a?a.cls:'?'}</span>();</span>
+        <span class="jrv-line"> </span>
+        <span class="jrv-line ${currentStep===2?'hl':''}">account.<span class="fn">pay</span>(<span class="nu">500</span>);</span>
+      </div>
+      ${a?`<div style="margin:10px 0;padding:10px 14px;border-radius:8px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);font-size:11px;font-family:var(--mono)">
+        <span style="color:var(--text3)">SAME CALL</span> → <span style="color:var(--accent)">account.pay(500)</span> &nbsp;
+        <span style="color:var(--text3)">SAME REFERENCE</span> → <span style="color:var(--purple)">account</span> &nbsp;
+        <span style="color:var(--text3)">DIFFERENT OBJECT</span> → <span style="color:var(--amber)">${a.cls}</span>
+      </div>`:''}
+      <div class="ref-row">
+        <div class="ref-var">PaymentAccount<br>account</div>
+        <div class="ref-arrow-wrap"><div class="ref-arrow-line"><div class="ref-arrow-pulse"></div></div></div>
+        ${a?`<div class="ref-obj-box ${done?'':''}" id="payObjBox"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">OBJECT</div><div style="font-weight:700">${a.cls}</div><div style="font-size:10px;color:var(--text3)">••••${a.last} · ${a.type}</div></div>`:`<div class="ref-null">null</div>`}
+      </div>
+      ${done&&a?`
+      <div class="rtd" style="margin-top:16px">
+        <div class="rtd-row"><div class="rtd-box ref">account</div><span style="font-size:11px;color:var(--text3);margin-left:6px">.pay(500)</span></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box obj">${a.cls} OBJECT</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box mth">${a.cls}.pay(500)</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box res">✓ ₹500 debited from ${a.name} ••••${a.last}</div></div>
+      </div>` : ''}`;
+  }
+};
+
+function selectPayment(id) {
+  const prev = paySel;
+  paySel = accounts.find(a=>a.id===id);
+  payDone = false;
+  currentStep = 1; updateStepUI();
+  scenarios.payment.renderUser();
+  setTimeout(()=>{
+    const box = document.getElementById('payObjBox');
+    if(box&&prev&&prev.id!==id){box.classList.add('changing');setTimeout(()=>box.classList.remove('changing'),400);}
+  },50);
+  scenarios.payment.renderJava(paySel, false);
+  updateObjMemory(paySel, {account:`${paySel.name} ••••${paySel.last}`, status:'idle'});
+  renderObjects();
+}
+
+function doPay() {
+  if (!paySel) { showToast('⚠️ Select an account', 'warn'); return; }
+  payDone = true;
+  currentStep = 2; updateStepUI();
+  scenarios.payment.renderUser();
+  scenarios.payment.renderJava(paySel, true);
+  updateObjMemory(paySel, {account:`${paySel.name} ••••${paySel.last}`, status:'DEBITED ₹500'});
+  renderObjects();
+  showToast(`💳 ₹500 paid via ${paySel.name}`, 'success');
+}
+
+// ─── PLAYGROUND ──────────────────────────────────
+const pgInterfaces = {
+  NetworkConnection: {
+    iface: 'NetworkConnection',
+    method: 'connect()',
+    impls: [
+      {cls:'OfficeWiFi', icon:'📡'},
+      {cls:'HomeWiFi', icon:'🏠'},
+      {cls:'MobileHotspot', icon:'📱'},
+    ]
+  },
+  Printer: {
+    iface: 'Printer',
+    method: 'print("doc")',
+    impls: [
+      {cls:'ChennaiPrinter', icon:'🖨'},
+      {cls:'NetworkPrinter', icon:'🌐'},
+      {cls:'HomePrinter', icon:'🏠'},
+    ]
+  },
+  Camera: {
+    iface: 'Camera',
+    method: 'capture()',
+    impls: [
+      {cls:'BuiltInCamera', icon:'📷'},
+      {cls:'USBWebcam', icon:'🎥'},
+      {cls:'ExternalCamera', icon:'📸'},
+    ]
+  },
+  Notification: {
+    iface: 'Notification',
+    method: 'send(msg)',
+    impls: [
+      {cls:'EmailNotification', icon:'📧'},
+      {cls:'WhatsAppNotification', icon:'💬'},
+      {cls:'SMSNotification', icon:'📱'},
+    ]
+  },
+};
+let pgIface = 'NetworkConnection', pgImpl = null, pgCalled = false;
+
+scenarios.playground = {
+  init() {
+    pgImpl = null; pgCalled = false;
+    document.getElementById('uPaneLabel').textContent = 'Interface Playground — Free Play';
+    document.getElementById('stepBar').style.display='none';
+    this.render();
+  },
+  render() {
+    const uc = document.getElementById('userContent');
+    const cfg = pgInterfaces[pgIface];
+    uc.innerHTML = `
+      <div style="max-width:560px">
+        <div style="font-size:18px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px">Interface Playground</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Choose any interface and implementation. Call the method and watch Java's runtime model update.</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:8px;letter-spacing:.5px">INTERFACE</div>
+        <div class="pg-iface-select">
+          ${Object.keys(pgInterfaces).map(k=>`<div class="pg-opt ${k===pgIface?'active':''}" onclick="pgSelectIface('${k}')"><span style="font-size:13px;font-family:var(--mono);color:var(--cyan)">${k}</span></div>`).join('')}
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:8px;letter-spacing:.5px">IMPLEMENTATION</div>
+        <div class="pg-impl-grid">
+          ${cfg.impls.map(i=>`<div class="pg-impl ${pgImpl&&pgImpl.cls===i.cls?'chosen':''}" onclick="pgSelectImpl('${i.cls}','${i.icon}')">${i.icon} ${i.cls}</div>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;align-items:center">
+          <button class="pg-call-btn" onclick="pgCall()">▶ ${cfg.method}</button>
+          <button class="pg-reset-btn" onclick="pgReset()">↺ Reset</button>
+        </div>
+        ${pgCalled&&pgImpl?`<div style="margin-top:14px;padding:10px 14px;border-radius:8px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green);font-size:12px;font-family:var(--mono)">✓ ${pgImpl.cls}.${cfg.method} executed</div>`:''}
+      </div>`;
+    this.renderJava();
+  },
+  renderJava() {
+    const jc = document.getElementById('javaContent');
+    const cfg = pgInterfaces[pgIface];
+    const methodName = cfg.method.split('(')[0];
+    jc.innerHTML = `
+      <div class="jrv-code">
+        <span class="jrv-line hl"><span class="ty">${pgIface}</span> ref;</span>
+        <span class="jrv-line ${pgImpl?'changed':''}">ref = <span class="kw">new</span> <span class="ty">${pgImpl?pgImpl.cls:'?'}</span>();</span>
+        <span class="jrv-line"> </span>
+        <span class="jrv-line ${pgCalled?'hl':''}">ref.<span class="fn">${methodName}</span>(...);</span>
+      </div>
+      <div class="ref-row">
+        <div class="ref-var">${pgIface}<br>ref</div>
+        <div class="ref-arrow-wrap"><div class="ref-arrow-line"><div class="ref-arrow-pulse"></div></div></div>
+        ${pgImpl?`<div class="ref-obj-box"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">OBJECT</div><div style="font-weight:700">${pgImpl.cls}</div><div style="font-size:10px;color:var(--text3)">implements ${pgIface}</div></div>`:`<div class="ref-null">null</div>`}
+      </div>
+      ${pgCalled&&pgImpl?`
+      <div class="rtd" style="margin-top:16px">
+        <div class="rtd-row"><div class="rtd-box iface">${pgIface}</div><span style="font-size:10px;color:var(--text3);margin-left:6px">declares ${methodName}()</span></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div><div class="rtd-arr-label">reference points to</div></div>
+        <div class="rtd-row"><div class="rtd-box obj">${pgImpl.cls} OBJECT</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box mth">${pgImpl.cls}.${methodName}() — overriding implementation</div></div>
+        <div class="rtd-arrow"><div class="rtd-arr-line lit"></div><div class="rtd-arr-head lit">↓</div></div>
+        <div class="rtd-row"><div class="rtd-box res">✓ Result</div></div>
+      </div>`:''}`; 
+  }
+};
+
+function pgSelectIface(k) { pgIface = k; pgImpl = null; pgCalled = false; scenarios.playground.render(); }
+function pgSelectImpl(cls, icon) { pgImpl = {cls, icon}; pgCalled = false; scenarios.playground.render(); }
+function pgCall() {
+  if (!pgImpl) { showToast('⚠️ Select an implementation first', 'warn'); return; }
+  pgCalled = true;
+  scenarios.playground.render();
+  updateObjMemory(pgImpl, {implements: pgIface, state:'called'});
+  renderObjects();
+}
+function pgReset() { pgImpl = null; pgCalled = false; scenarios.playground.render(); renderObjects(); }
+
+// ─── CHALLENGE ────────────────────────────────────
+const challenges = [
+  {
+    q: 'The team wants to switch from Email to WhatsApp notifications. What changes?',
+    code: `<span class="ty">Notification</span> notif = <span class="kw">new</span> <span class="editable-slot" id="implSlot" onclick="openSlot()"><span id="slotVal">EmailNotification</span><div class="slot-dropdown" id="slotDd"><div class="slot-opt" onclick="pickSlot('EmailNotification',event)">EmailNotification</div><div class="slot-opt" onclick="pickSlot('WhatsAppNotification',event)">WhatsAppNotification</div><div class="slot-opt" onclick="pickSlot('SMSNotification',event)">SMSNotification</div></div></span>();\n\nnotif.<span class="fn">send</span>(<span class="st">"Assignment due"</span>);`,
+    correct: 'WhatsAppNotification',
+    explain: 'Only new EmailNotification() changes to new WhatsAppNotification(). The reference type (Notification) and the method call (notif.send()) are UNCHANGED. This is programming to the interface.'
+  },
+  {
+    q: 'User switches payment from SBI to HDFC. The application calls account.pay(500). What part of this call changes?',
+    code: `<span class="ty">PaymentAccount</span> account = <span class="kw">new</span> <span class="editable-slot" id="implSlot" onclick="openSlot()"><span id="slotVal">SBIAccount</span><div class="slot-dropdown" id="slotDd"><div class="slot-opt" onclick="pickSlot('SBIAccount',event)">SBIAccount</div><div class="slot-opt" onclick="pickSlot('HDFCAccount',event)">HDFCAccount</div></div></span>();\n\naccount.<span class="fn">pay</span>(<span class="nu">500</span>);`,
+    correct: 'HDFCAccount',
+    explain: 'The object changes: new HDFCAccount() instead of new SBIAccount(). The call account.pay(500) stays exactly the same — same reference, same method, different implementation.'
+  },
+  {
+    q: 'A user connects a USB Webcam instead of the built-in camera. Can the app still call camera.capture()?',
+    code: `<span class="ty">Camera</span> camera = <span class="kw">new</span> <span class="editable-slot" id="implSlot" onclick="openSlot()"><span id="slotVal">BuiltInCamera</span><div class="slot-dropdown" id="slotDd"><div class="slot-opt" onclick="pickSlot('BuiltInCamera',event)">BuiltInCamera</div><div class="slot-opt" onclick="pickSlot('USBWebcam',event)">USBWebcam</div><div class="slot-opt" onclick="pickSlot('ExternalCamera',event)">ExternalCamera</div></div></span>();\n\ncamera.<span class="fn">capture</span>();`,
+    correct: 'USBWebcam',
+    explain: 'Yes — both implement Camera and provide capture(). Switch to USBWebcam and the same call camera.capture() invokes USBWebcam.capture(). The calling code doesn\'t change.'
+  },
+];
+let cIdx = 0, cSlotVal = '', cDone = false;
+
+scenarios.challenge = {
+  init() {
+    cIdx = 0; cDone = false;
+    document.getElementById('uPaneLabel').textContent = 'Challenge Mode';
+    document.getElementById('stepBar').style.display='none';
+    this.render();
+  },
+  render() {
+    const ch = challenges[cIdx];
+    const uc = document.getElementById('userContent');
+    uc.innerHTML = `
+      <div style="max-width:560px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3)">CHALLENGE ${cIdx+1} OF ${challenges.length}</div>
+          <div style="flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden">
+            <div style="width:${((cIdx+1)/challenges.length)*100}%;height:100%;background:var(--accent);border-radius:2px"></div>
+          </div>
+        </div>
+        <div class="challenge-q">${ch.q}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px">Change the highlighted part:</div>
+        <div class="challenge-code-edit" id="challengeCodeBlock">${ch.code}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="step-btn primary" onclick="checkChallenge()">Check Answer</button>
+          ${cIdx<challenges.length-1?`<button class="step-btn" onclick="nextChallenge()">Next →</button>`:''}
+        </div>
+        <div id="challengeFeedback" style="margin-top:12px"></div>
+      </div>`;
+    cSlotVal = 'EmailNotification';
+    const jc = document.getElementById('javaContent');
+    jc.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:20px;line-height:1.7">Edit the code on the left. The highlighted slot shows what can change.<br><br>After checking your answer, the Java runtime view will show the before/after object diagram.</div>`;
+  }
+};
+
+function openSlot() {
+  const dd = document.getElementById('slotDd');
+  if(dd) dd.classList.toggle('open');
+}
+function pickSlot(val, e) {
+  e.stopPropagation();
+  cSlotVal = val;
+  const sv = document.getElementById('slotVal');
+  if(sv) sv.textContent = val;
+  const dd = document.getElementById('slotDd');
+  if(dd) { dd.classList.remove('open');
+    dd.querySelectorAll('.slot-opt').forEach(o=>{
+      o.classList.toggle('chosen', o.textContent===val);
+    });
+  }
+}
+function checkChallenge() {
+  const ch = challenges[cIdx];
+  const correct = cSlotVal === ch.correct;
+  const fb = document.getElementById('challengeFeedback');
+  if(fb) fb.innerHTML = correct
+    ? `<div style="padding:12px 14px;border-radius:8px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green);font-size:13px;line-height:1.6"><strong>✓ Correct!</strong><br>${ch.explain}</div>`
+    : `<div style="padding:12px 14px;border-radius:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:var(--red);font-size:13px">✗ Not quite. Try selecting a different implementation from the dropdown.</div>`;
+  
+  const jc = document.getElementById('javaContent');
+  if(correct) jc.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:12px;letter-spacing:.5px">BEFORE → AFTER</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:6px">BEFORE</div>
+        <div class="ref-row"><div class="ref-var" style="font-size:11px">${ch.q.includes('Email')?'Notification notif':'PaymentAccount account'.includes(ch.q)?'PaymentAccount account':'Camera camera'}</div><div class="ref-arrow-wrap"><div class="ref-arrow-line"></div></div><div class="ref-obj-box" style="opacity:.7"><div style="font-weight:700;font-size:11px">${ch.q.includes('WhatsApp')?'EmailNotification':ch.q.includes('HDFC')?'SBIAccount':'BuiltInCamera'} OBJECT</div></div></div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:6px">AFTER</div>
+        <div class="ref-row"><div class="ref-var" style="font-size:11px">${ch.q.includes('Email')?'Notification notif':ch.q.includes('HDFC')?'PaymentAccount account':'Camera camera'}</div><div class="ref-arrow-wrap"><div class="ref-arrow-line" style="background:var(--green)"></div></div><div class="ref-obj-box"><div style="font-weight:700;font-size:11px">${ch.correct} OBJECT</div></div></div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:10px 14px;border-radius:8px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);font-size:12px;font-family:var(--mono);color:var(--text2)">
+      Same reference. Same method call. Different object. → Polymorphism.
+    </div>`;
+}
+function nextChallenge() {
+  cIdx = Math.min(cIdx+1, challenges.length-1);
+  cSlotVal = '';
+  scenarios.challenge.render();
+}
+
+// ─── CONCEPT MAP ──────────────────────────────────
+scenarios.concept = {
+  init() {
+    document.getElementById('uPaneLabel').textContent = 'Concept Map — Java Interfaces';
+    document.getElementById('stepBar').style.display='none';
+    const uc = document.getElementById('userContent');
+    uc.innerHTML = `
+      <div style="max-width:600px">
+        <div style="font-size:20px;font-weight:800;margin-bottom:4px;letter-spacing:-.4px">The complete mental model</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.6">Everything you've experienced across all scenarios reduces to this single runtime flow.</div>
+        <div class="concept-flow">
+          <div class="cf-box app">APPLICATION</div>
+          <div class="cf-arrow"><div class="cf-arr-line"></div><div class="cf-arr-label">uses</div><div class="cf-arr-head">↓</div></div>
+          <div class="cf-box ref">INTERFACE REFERENCE<br><span style="font-size:10px;font-weight:400;opacity:.7">NetworkConnection connection</span></div>
+          <div class="cf-arrow"><div class="cf-arr-line"></div><div class="cf-arr-label">points to</div><div class="cf-arr-head">↓</div></div>
+          <div class="cf-box obj">ACTUAL OBJECT<br><span style="font-size:10px;font-weight:400;opacity:.7">HomeWiFi #101</span></div>
+          <div class="cf-arrow"><div class="cf-arr-line"></div><div class="cf-arr-label">belongs to</div><div class="cf-arr-head">↓</div></div>
+          <div class="cf-box cls">IMPLEMENTATION CLASS<br><span style="font-size:10px;font-weight:400;opacity:.7">HomeWiFi implements NetworkConnection</span></div>
+          <div class="cf-arrow"><div class="cf-arr-line"></div><div class="cf-arr-label">executes</div><div class="cf-arr-head">↓</div></div>
+          <div class="cf-box mth">METHOD<br><span style="font-size:10px;font-weight:400;opacity:.7">HomeWiFi.connect()</span></div>
+          <div class="cf-arrow"><div class="cf-arr-line"></div><div class="cf-arr-head">↓</div></div>
+          <div class="cf-box res">RESULT<br><span style="font-size:10px;font-weight:400;opacity:.7">Connected to Home Wi-Fi</span></div>
+        </div>
+        <div style="margin-top:24px;padding:16px;border-radius:10px;border:1px solid var(--border);background:var(--surf2)">
+          <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px">POLYMORPHISM IN ONE LINE</div>
+          <div style="font-family:var(--mono);font-size:13px;line-height:1.8">
+            <span class="ty">NetworkConnection</span> connection = <span class="kw">new</span> <span class="ty">OfficeWiFi</span>();<br>
+            connection = <span class="kw">new</span> <span class="ty">HomeWiFi</span>();<br>
+            connection = <span class="kw">new</span> <span class="ty">MobileHotspot</span>();<br>
+            <span class="cm">// Same reference. Same call. Different objects. Different behaviour.</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+          ${[{t:'Interface',col:'var(--cyan)',d:'Declares what methods must exist. No implementation.'},
+             {t:'Reference',col:'var(--purple)',d:'The variable that holds a pointer to an object.'},
+             {t:'Object',col:'var(--amber)',d:'Created with new. Lives in memory. Belongs to a class.'},
+             {t:'Polymorphism',col:'var(--green)',d:'Same reference, same call, different objects → different behaviour.'},
+          ].map(x=>`<div style="padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surf3)">
+            <div style="font-size:11px;font-weight:800;color:${x.col};margin-bottom:4px">${x.t}</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.5">${x.d}</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    const jc = document.getElementById('javaContent');
+    jc.innerHTML = `<div style="font-family:var(--mono);font-size:12px;line-height:1.9;color:var(--text2)">
+      <span class="cm">// All scenarios you worked through follow this ONE pattern</span><br><br>
+      <span class="cm">// 1. Interface declares capability</span><br>
+      <span class="kw">interface</span> <span class="ty">NetworkConnection</span> {<br>
+      &nbsp;&nbsp;<span class="kw">void</span> <span class="fn">connect</span>();<br>
+      }<br><br>
+      <span class="cm">// 2. Classes implement it</span><br>
+      <span class="kw">class</span> <span class="ty">OfficeWiFi</span> <span class="kw">implements</span> <span class="ty">NetworkConnection</span> {<br>
+      &nbsp;&nbsp;<span class="kw">public void</span> <span class="fn">connect</span>() { <span class="cm">/* office logic */</span> }<br>
+      }<br><br>
+      <span class="cm">// 3. App uses reference — NOT the class</span><br>
+      <span class="ty">NetworkConnection</span> connection = <span class="kw">new</span> <span class="ty">OfficeWiFi</span>();<br><br>
+      <span class="cm">// 4. Method call goes to current object</span><br>
+      connection.<span class="fn">connect</span>(); <span class="cm">// → OfficeWiFi.connect()</span><br><br>
+      <span class="cm">// 5. Swap object — same call, new behaviour</span><br>
+      connection = <span class="kw">new</span> <span class="ty">HomeWiFi</span>();<br>
+      connection.<span class="fn">connect</span>(); <span class="cm">// → HomeWiFi.connect()</span>
+    </div>`;
+  }
+};
+
+// ===================== OBJECT MEMORY =====================
+let objMemory = {};
+
+function updateObjMemory(item, fields) {
+  if (!item) return;
+  const id = `#${Math.floor(Math.random()*900+100)}`;
+  const key = item.cls || item.id;
+  objMemory[key] = { id, cls: item.cls || item.name, fields };
+}
+
+function renderObjects() {
+  if (rpTab !== 'objects') return;
+  const body = document.getElementById('rpBody');
+  const keys = Object.keys(objMemory);
+  if (keys.length === 0) {
+    body.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">Interact with a scenario to create objects.</div>`;
+    return;
+  }
+  body.innerHTML = keys.map(k => {
+    const obj = objMemory[k];
+    const fieldRows = Object.entries(obj.fields).map(([fn,fv])=>`
+      <div class="obj-field">
+        <span class="obj-field-name">${fn}</span>
+        <span class="obj-field-val ${String(fv).toUpperCase()===fv&&fv!=='?'?'changed':''}">${fv}</span>
+      </div>`).join('');
+    return `<div class="obj-card fadein">
+      <div class="obj-card-header">
+        <span class="obj-card-id">${obj.cls} ${obj.id}</span>
+        <span class="obj-card-class">OBJECT</span>
+      </div>
+      <div class="obj-card-body">
+        <div class="obj-field"><span class="obj-field-name">class</span><span class="obj-field-val" style="color:var(--cyan)">${obj.cls}</span></div>
+        ${fieldRows}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===================== DISCOVERY =====================
+const discoveryQs = {
+  wifi: [
+    {q:'You selected Home Wi-Fi. What does the application now have?', opts:['A HomeWiFi class','A NetworkConnection reference','A connect() method directly'], ans:1, explain:'The application holds a NetworkConnection reference. That reference points to a HomeWiFi object. The object is separate from the reference.'},
+    {q:'What does the variable "connection" point to?', opts:['The NetworkConnection interface','A HomeWiFi object in memory','The connect() method'], ans:1, explain:'connection is a reference variable. Right now it points to a HomeWiFi object created by new HomeWiFi().'},
+    {q:'When we call connection.connect(), which class\'s code actually executes?', opts:['NetworkConnection','The connection variable','HomeWiFi'], ans:2, explain:'The method call travels through the reference to the actual object. HomeWiFi.connect() executes — not NetworkConnection (which has no implementation).'},
+  ],
+  printer: [
+    {q:'You changed from ChennaiPrinter to NetworkPrinter. What changed in the code?', opts:['The print() call changed','The Printer reference type changed','Only the object: new NetworkPrinter()'], ans:2, explain:'Only new NetworkPrinter() changed. printer.print("doc") is identical. Same reference type. Different object.'},
+  ]
+};
+let discIdx = {};
+
+function renderDiscovery() {
+  const body = document.getElementById('rpBody');
+  const qs = discoveryQs[currentScenario];
+  if (!qs) { body.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">Interact with the ${currentScenario} scenario, then discovery questions will appear here.</div>`; return; }
+  if (!discIdx[currentScenario]) discIdx[currentScenario] = 0;
+  const idx = discIdx[currentScenario];
+  const q = qs[Math.min(idx, qs.length-1)];
+  body.innerHTML = `
+    <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:12px;letter-spacing:.5px">DISCOVERY</div>
+    <div class="disc-prompt">
+      <div class="disc-q">${q.q}</div>
+      <div class="disc-opts">
+        ${q.opts.map((o,i)=>`<div class="disc-opt" onclick="ansDisc(${i},${q.ans},'${q.explain.replace(/'/g,"\\'")}',this)">${String.fromCharCode(65+i)}. ${o}</div>`).join('')}
+      </div>
+    </div>
+    <div id="discExplain" style="display:none;padding:10px 12px;border-radius:8px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);font-size:12px;color:var(--text2);line-height:1.6;margin-top:6px"></div>
+    ${idx < qs.length-1 ? `<button class="step-btn" onclick="nextDisc()" style="margin-top:10px;width:100%">Next question →</button>` : ''}
+  `;
+}
+
+function ansDisc(picked, correct, explain, el) {
+  const opts = el.parentElement.querySelectorAll('.disc-opt');
+  opts.forEach(o=>o.style.pointerEvents='none');
+  el.classList.add(picked===correct?'correct':'wrong');
+  opts[correct].classList.add('correct');
+  const exp = document.getElementById('discExplain');
+  if(exp){exp.textContent=explain;exp.style.display='block';}
+}
+function nextDisc() {
+  if (!discIdx[currentScenario]) discIdx[currentScenario] = 0;
+  discIdx[currentScenario]++;
+  renderDiscovery();
+}
+
+// ===================== CLASS MAP =====================
+const classMaps = {
+  wifi: {
+    title:'NetworkConnection Class Map',
+    iface:'NetworkConnection',
+    methods:['connect()','disconnect()'],
+    impls:['OfficeWiFi','HomeWiFi','MobileHotspot'],
+    current: ()=>wifiSel?wifiSel.cls:null,
+  },
+  printer:{
+    title:'Printer Class Map',
+    iface:'Printer',
+    methods:['print(String doc)'],
+    impls:['ChennaiPrinter','KumbakonamPrinter','NetworkPrinter','HomePrinter'],
+    current: ()=>printerSel?printerSel.cls:null,
+  },
+  camera:{
+    title:'Camera Class Map',
+    iface:'Camera',
+    methods:['capture()'],
+    impls:['BuiltInCamera','USBWebcam','ExternalCamera'],
+    current: ()=>camSel?camSel.cls:null,
+  },
+  notif:{
+    title:'Notification Class Map',
+    iface:'Notification',
+    methods:['send(String message)'],
+    impls:['EmailNotification','SMSNotification','WhatsAppNotification','ChatGPTNotification'],
+    current: ()=>notifSel?notifSel.cls:null,
+  },
+  auth:{
+    title:'Authenticator Class Map',
+    iface:'Authenticator',
+    methods:['boolean authenticate()'],
+    impls:['PasswordAuthenticator','OTPAuthenticator','QRAuthenticator','BiometricAuthenticator'],
+    current: ()=>authSel?authSel.cls:null,
+  },
+  payment:{
+    title:'PaymentAccount Class Map',
+    iface:'PaymentAccount',
+    methods:['pay(double amount)'],
+    impls:['SBIAccount','HDFCAccount','UPIAccount'],
+    current: ()=>paySel?paySel.cls:null,
+  },
+};
+
+function showClassMap() {
+  const cm = classMaps[currentScenario];
+  if (!cm) { showToast('No class map for this view', 'info'); return; }
+  document.getElementById('cmTitle').textContent = cm.title;
+  document.getElementById('cmSub').textContent = `The ${cm.iface} interface and its implementing classes. The <<interface>> keyword means this is a contract.`;
+  const cur = cm.current();
+  document.getElementById('cmContent').innerHTML = `
+    <div style="text-align:center;margin-bottom:16px">
+      <div class="cm-iface"><span class="cm-tag">«interface»</span>${cm.iface}<div style="font-size:11px;color:var(--cyan);opacity:.7;margin-top:4px">${cm.methods.join(' · ')}</div></div>
+    </div>
+    <div style="width:2px;height:20px;background:var(--border);margin:0 auto"></div>
+    <div style="font-size:20px;color:var(--text3);text-align:center;margin:-2px 0">↓</div>
+    <div class="cm-impls">
+      ${cm.impls.map(i=>`<div class="cm-impl" style="${cur===i?'border-color:var(--amber);background:rgba(245,158,11,.1);color:var(--amber)':''}">${i}${cur===i?' ← current':''}</div>`).join('')}
+    </div>
+    ${cur?`
+    <div class="cm-obj-row" style="margin-top:16px;flex-direction:column">
+      <div style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:8px">Current runtime state</div>
+      <div class="ref-row" style="justify-content:center">
+        <div class="ref-var">${cm.iface} ref</div>
+        <div class="ref-arrow-wrap" style="min-width:50px"><div class="ref-arrow-line"></div></div>
+        <div class="ref-obj-box"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">OBJECT</div><div style="font-weight:700">${cur}</div></div>
+      </div>
+    </div>`:'<div style="text-align:center;margin-top:16px;font-size:12px;color:var(--text3)">Interact with the scenario to see the runtime object.</div>'}
+  `;
+  document.getElementById('classMapOverlay').classList.add('show');
+}
+function closeClassMap(e) {
+  if (e.target.id==='classMapOverlay') document.getElementById('classMapOverlay').classList.remove('show');
+}
+
+// ===================== STEP MODE =====================
+function updateStepUI() {
+  document.getElementById('stepCount').textContent = `Step ${currentStep} / ${totalSteps}`;
+  document.getElementById('stepBar').style.display = 'flex';
+}
+
+function doStep() {
+  const s = scenarios[currentScenario];
+  if (!s) return;
+  if (currentScenario === 'wifi') {
+    if (currentStep === 0) { currentStep=1; updateStepUI(); showToast('Step 1: Declare reference → connection = null', 'info'); }
+    else if (currentStep === 1 && wifiSel) { currentStep=1; showToast('Object assigned: new '+wifiSel.cls+'()', 'info'); }
+    else if (currentStep === 2) { wifiConnect(); }
+  }
+}
+
+function doRun() {
+  if (currentScenario==='wifi') {
+    if (!wifiSel) { showToast('Select a network first', 'warn'); return; }
+    wifiConnect();
+  } else if (currentScenario==='printer') {
+    doPrint();
+  } else if (currentScenario==='camera') {
+    doCapture();
+  } else if (currentScenario==='notif') {
+    doSendNotif();
+  } else if (currentScenario==='auth') {
+    doAuth();
+  } else if (currentScenario==='payment') {
+    doPay();
+  }
+}
+
+function doReset() {
+  objMemory = {};
+  scenarios[currentScenario]&&scenarios[currentScenario].init();
+  renderObjects();
+  showToast('Reset', 'info');
+}
+
+// ===================== TOAST =====================
+function showToast(msg, type='info') {
+  const area = document.getElementById('toastArea');
+  const el = document.createElement('div');
+  el.className = 'notif-toast';
+  const colors = {success:'var(--green)',warn:'var(--amber)',info:'var(--accent)',error:'var(--red)'};
+  el.innerHTML = `<div style="width:6px;height:6px;border-radius:50%;background:${colors[type]||colors.info};flex-shrink:0"></div>${msg}`;
+  area.appendChild(el);
+  setTimeout(()=>{
+    el.classList.add('toastOut');
+    setTimeout(()=>el.remove(), 300);
+  }, 2400);
+}
+
+// ===================== INIT =====================
+window.addEventListener('click', ()=>{
+  document.querySelectorAll('.slot-dropdown.open').forEach(d=>d.classList.remove('open'));
+});
+
+loadScenario('wifi');
+</script>
+</body>
+</html>
