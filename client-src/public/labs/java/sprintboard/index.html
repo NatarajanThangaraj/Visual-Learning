@@ -451,8 +451,8 @@ body::before{
   .lane > .nm{width:46px;font-size:11.5px}
   .cards{padding:10px 12px;gap:8px}
   .card{width:150px;padding:10px}
-  .fp-grid{--fp-row:46px;--fp-row-gap:14px;--fp-col-gap:14px}
-  .fp-node{max-width:186px;padding:6px 9px}
+  .fp-grid{--fp-row:44px;--fp-row-gap:10px;--fp-col-gap:14px}
+  .fp-node{max-width:186px;padding:5px 9px}
   .fp-node b{font-size:11px}
   .fp-node small,.fp-node em{font-size:9px}
   .fp-node .mets{font-size:9.5px;margin-top:4px;padding-top:4px}
@@ -661,7 +661,17 @@ function st(focus, title, text){
 /* Every flow is four rows by three columns, and every arrow points down or
    sideways-within-a-row. drawEdges() has no upward case, and a sideways-then-
    drop arrow runs along its source's middle — so a box parked in that row
-   between the two ends would be drawn straight through. */
+   between the two ends would be drawn straight through.
+
+   The spine every operation shares:
+
+       Main  →  SprintBoard  →  FileHandling  →  UserOperations
+                                                 AdminOperations
+
+   SprintBoard never hands straight to an operations class. After sign-in it
+   has an employee id and nothing else, so it asks FileHandling to fetch the
+   work filed under that id, and what comes back is what the operations class
+   then holds and works on. */
 var FLOWS = [
 
   /* ══════ authentication ══════ */
@@ -673,7 +683,7 @@ var FLOWS = [
       nd('board','SprintBoard.java',{kind:'class',icon:'key',row:1,col:1,methods:['signUp()']}),
       nd('users','[ users ]',{kind:'data',row:2,col:0,note:'the whole login list'}),
       nd('role','lead, or employee?',{row:2,col:2,sub:'SprintBoard.java'}),
-      nd('file','write()',{kind:'file',icon:'disk',row:3,col:1,sub:'FileHandling.java'})
+      nd('file','FileHandling.java',{kind:'file',icon:'disk',row:3,col:1,methods:['write()']})
     ],
     edges:[
       eg('main','board','option 2 → name, password, role'),
@@ -690,7 +700,7 @@ var FLOWS = [
       st('board','SprintBoard.signUp()',
          'The front door. It owns one rule — you must not already exist — and builds the user record once that rule passes.'),
       st(['board>users','users'],'The new user joins the list',
-         '<code>[ users ]</code> is the whole login database. Every sign-in from now on searches this same list.'),
+         '<code>[ users ]</code> is the whole login database, and it is where the employee id that every later screen depends on is minted.'),
       st(['board>role','role'],'One field decides two apps',
          'The role chosen here is what <code>signIn()</code> reads later. Nothing else about the lead side and the employee side differs yet.'),
       st(['users>file','file'],'FileHandling.write()',
@@ -700,19 +710,19 @@ var FLOWS = [
 
   {
     id:'sign-in', group:'Authentication', name:'signIn()', title:'Sign in',
-    sub:'Main → SprintBoard.signIn() → getAllUsersDetails() → UserOperations or AdminOperations',
+    sub:'Main → SprintBoard.signIn() → FileHandling.getAllUsersDetails() → UserOperations or AdminOperations',
     nodes:[
       nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'menu · Scanner'}),
       nd('board','SprintBoard.java',{kind:'class',icon:'key',row:1,col:1,methods:['signIn()']}),
-      nd('get','getAllUsersDetails()',{kind:'file',icon:'disk',row:2,col:0,sub:'FileHandling.java'}),
+      nd('file','FileHandling.java',{kind:'file',icon:'disk',row:2,col:0,methods:['getAllUsersDetails()']}),
       nd('role','role == "lead" ?',{row:2,col:2,sub:'SprintBoard.java'}),
-      nd('user','UserOperations.java',{kind:'class',icon:'user',row:3,col:1,note:'holds [ tasks ]'}),
+      nd('user','UserOperations.java',{kind:'class',icon:'user',row:3,col:1,note:'holds [ mytasks ]'}),
       nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:3,col:2,note:'holds [ employee → [tasks] ]'})
     ],
     edges:[
       eg('main','board','option 1 → name, password'),
-      eg('board','get','is this really you?'),
-      eg('get','role','the stored user, role and all'),
+      eg('board','file','is this really you?'),
+      eg('file','role','the stored user, id and role'),
       eg('role','user','employee'),
       eg('role','admin','lead')
     ],
@@ -721,170 +731,173 @@ var FLOWS = [
          'A name and a password, read from the Scanner. Main has no list to check them against, so it cannot answer the question itself.'),
       st('main>board','Straight to the front door',
          '<code>signIn()</code> is the only way in. Both halves of the app sit behind this one call.'),
-      st(['board','board>get'],'signIn() cannot answer alone',
-         'The users live in the file, not in memory, so <code>signIn()</code> asks FileHandling for them.'),
-      st(['get','get>role'],'getAllUsersDetails()',
-         'FileHandling hands back every stored user. Matching a password against one of them is SprintBoard&rsquo;s job, not the file&rsquo;s.'),
+      st(['board','board>file'],'signIn() cannot answer alone',
+         'The users live in the file, not in memory, so SprintBoard asks FileHandling for them. It reads; it never opens the file itself.'),
+      st(['file','file>role'],'getAllUsersDetails()',
+         'Back comes the stored user — and with it the employee id. That id is the key every screen after this one is fetched by.'),
       st('role','The role is read back',
          'The same field that was written at sign-up. One string, and it picks which class you spend the rest of the session inside.'),
       st(['role>user','user'],'Employee → UserOperations',
-         'An employee only ever gets the class that holds <code>[ tasks ]</code> — their own. It cannot reach anyone else&rsquo;s work, because it was never handed it.'),
+         'An employee gets the class that will hold <code>[ mytasks ]</code>. It is still empty here: nothing has been fetched yet.'),
       st(['role>admin','admin'],'Lead → AdminOperations',
-         'The lead gets the class that holds <code>[ employee → [tasks] ]</code>. Same file underneath, a different view of it.')
+         'The lead gets the class that will hold <code>[ employee → [tasks] ]</code>. Same file underneath, a wider view of it.')
     ]
   },
 
   /* ══════ the employee side ══════ */
   {
     id:'view-tasks', group:'My work', name:'viewTasks()', title:'View my tasks',
-    sub:'Main → UserOperations.viewTasks() → getEmployeeTasks() → [ tasks ]',
+    sub:'Main → SprintBoard → FileHandling.getTasksByEmployeeId() → UserOperations [ mytasks ]',
     nodes:[
-      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'signed in as an employee'}),
-      nd('user','UserOperations.java',{kind:'class',icon:'user',row:1,col:1,methods:['viewTasks()']}),
-      nd('get','getEmployeeTasks()',{kind:'file',icon:'disk',row:2,col:0,sub:'FileHandling.java'}),
-      nd('tasks','[ tasks ]',{kind:'data',row:2,col:2,note:'mine, and only mine'}),
-      nd('print','print the list',{row:3,col:1,sub:'Main.java'})
+      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'menu · Scanner'}),
+      nd('board','SprintBoard.java',{kind:'class',icon:'key',row:1,col:1,note:'signed in · knows the employee id'}),
+      nd('file','FileHandling.java',{kind:'file',icon:'disk',row:2,col:0,methods:['getTasksByEmployeeId()']}),
+      nd('store','[ employee → [tasks] ]',{kind:'data',row:2,col:2,note:'what the file holds'}),
+      nd('user','UserOperations.java',{kind:'class',icon:'user',row:3,col:1,
+         methods:['[ mytasks ]','viewTasks()']})
     ],
     edges:[
-      eg('main','user','option 1'),
-      eg('user','get','my name'),
-      eg('get','tasks','one name, everything filed under it'),
-      eg('tasks','print','[ tasks ]')
+      eg('main','board','option 1'),
+      eg('board','file','get the user employee id'),
+      eg('file','store','look that id up'),
+      eg('store','user','load all the user tasks')
     ],
     steps:[
       st('main','Main offers the menu',
          'The employee picks &ldquo;my tasks&rdquo;. Main knows who is signed in and nothing else about the work.'),
-      st(['main>user','user'],'UserOperations.viewTasks()',
-         'The employee side of the app. Its whole job is answering questions about one person&rsquo;s work.'),
-      st('user>get','It asks for one row, not the file',
-         '<code>viewTasks()</code> sends a name down, not a search. The filing was done at assign time, so there is nothing to scan.'),
-      st('get','getEmployeeTasks()',
-         'FileHandling looks the name up and hands back what is filed under it. It reads; it never filters.'),
-      st(['get>tasks','tasks'],'Everything under one name',
-         'This is the payoff of filing work under the person who holds it: <code>[ tasks ]</code> arrives whole, with no loop and no search.'),
-      st(['tasks>print','print'],'Main prints it',
-         'Back where it started. The list came from the file, through one method, untouched by anything that did not need to see it.')
+      st(['main>board','board'],'SprintBoard holds the session',
+         'After sign-in the only thing SprintBoard carries is the employee id. Not the tasks — it has never seen them.'),
+      st(['board>file','file'],'It asks the file, not UserOperations',
+         'This is the hop that is easy to get wrong. SprintBoard does not hand straight to UserOperations, because there would be nothing to hand it.'),
+      st(['file>store','store'],'One id, everything filed under it',
+         'The file is stored as <code>[ employee → [tasks] ]</code>, so fetching one person is a lookup — no loop, no search.'),
+      st(['store>user','user'],'The tasks arrive in the user view',
+         'What came back becomes <code>[ mytasks ]</code>. Only now does UserOperations have anything to operate on.'),
+      st('user','viewTasks() just prints it',
+         'By the time this method runs, the hard part is done. It holds the right list already, so showing it is the easy half.')
     ]
   },
 
   {
     id:'modify-status', group:'My work', name:'modifyStatus()', title:'Change a status',
-    sub:'Main → UserOperations.modifyStatus() → [ tasks ] → FileHandling.write()',
+    sub:'Main → SprintBoard → FileHandling.getTasksByEmployeeId() → UserOperations.modifyStatus()',
     nodes:[
-      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'signed in as an employee'}),
-      nd('user','UserOperations.java',{kind:'class',icon:'user',row:1,col:1,
-         methods:['modifyStatus()']}),
-      nd('tasks','[ tasks ]',{kind:'data',row:2,col:0,note:'WAITING · WORKING · DONE'}),
-      nd('prev','viewPreviousTasks()',{row:2,col:2,sub:'UserOperations.java'}),
-      nd('file','write()',{kind:'file',icon:'disk',row:3,col:1,sub:'FileHandling.java'})
+      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'menu · Scanner'}),
+      nd('board','SprintBoard.java',{kind:'class',icon:'key',row:1,col:1,note:'after sign in · the employee id'}),
+      nd('file','FileHandling.java',{kind:'file',icon:'disk',row:2,col:0,methods:['getTasksByEmployeeId()']}),
+      nd('mytasks','[ mytasks ]',{kind:'data',row:2,col:2,note:'WAITING · WORKING · DONE'}),
+      nd('user','UserOperations.java',{kind:'class',icon:'user',row:3,col:1,methods:['modifyStatus()']})
     ],
     edges:[
-      eg('main','user','option 2 → task, new status'),
-      eg('user','tasks','find the task, set the status'),
-      eg('tasks','prev','', true),
-      eg('tasks','file','save the change')
+      eg('main','board','option 2 → task, new status'),
+      eg('board','file','get all tasks by employee id'),
+      eg('file','mytasks','the tasks filed under that id'),
+      eg('mytasks','user','upload them into the user view')
     ],
     steps:[
       st('main','Main takes the change',
          'Which task, and what it should say now. Main does not own the task, so it cannot apply the change itself.'),
-      st(['main>user','user'],'UserOperations.modifyStatus()',
-         'The only class allowed to change a task&rsquo;s status is the one that holds the task.'),
-      st(['user>tasks','tasks'],'One entry in the list moves',
-         'The task is found in <code>[ tasks ]</code> and its status is set. Nothing is added and nothing is removed — the list is the same length.'),
-      st(['tasks>prev','prev'],'viewPreviousTasks() reads the same list',
-         'It needs no data of its own. Anything already marked DONE in <code>[ tasks ]</code> is exactly what &ldquo;previous&rdquo; means.'),
-      st(['tasks>file','file'],'FileHandling.write()',
-         'The change is in memory until this box runs. Everything above it edited a list; only this one makes it survive a restart.')
+      st(['main>board','board'],'SprintBoard has the id, not the work',
+         'The same position as every other employee screen: an id in hand, and a fetch still to do.'),
+      st(['board>file','file'],'getTasksByEmployeeId()',
+         'The work is loaded before anything can be changed. You cannot modify a list you have not been given.'),
+      st(['file>mytasks','mytasks'],'The list comes back',
+         'These are the tasks filed under this one employee — the same list <code>viewTasks()</code> would have printed.'),
+      st(['mytasks>user','user'],'Uploaded into the user view',
+         'Now it is <code>[ mytasks ]</code> inside UserOperations, and <code>modifyStatus()</code> can set the new status on one entry of it.')
     ]
   },
 
-  /* ══════ the lead side ══════ */
+  /* ══════ the lead side — same spine, wider data ══════ */
   {
     id:'assign-tasks', group:'The lead', name:'assignTasks()', title:'Assign a task',
-    sub:'Main → AdminOperations.assignTasks() → [ employee → [tasks] ] → FileHandling.write()',
+    sub:'Main → SprintBoard → FileHandling.getAllUsersDetails() → AdminOperations.assignTasks()',
     nodes:[
       nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'signed in as the lead'}),
-      nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:1,col:1,methods:['assignTasks()']}),
-      nd('all','[ all tasks ]',{kind:'data',row:2,col:0,note:'not handed out yet'}),
-      nd('map','[ employee → [tasks] ]',{kind:'data',row:2,col:2,note:'one name, one list'}),
-      nd('file','write()',{kind:'file',icon:'disk',row:3,col:1,sub:'FileHandling.java'})
+      nd('board','SprintBoard.java',{kind:'class',icon:'key',row:1,col:1,note:'after sign in · role == lead'}),
+      nd('file','FileHandling.java',{kind:'file',icon:'disk',row:2,col:0,methods:['getAllUsersDetails()']}),
+      nd('store','[ employee → [tasks] ]',{kind:'data',row:2,col:2,note:'every person, every list'}),
+      nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:3,col:1,
+         methods:['[ all tasks ]','assignTasks()']})
     ],
     edges:[
-      eg('main','admin','option 1 → stage, person'),
-      eg('admin','all','take it off the board'),
-      eg('all','map','file it under the person'),
-      eg('map','file','save')
+      eg('main','board','option 1 → stage, person'),
+      eg('board','file','the lead needs everybody'),
+      eg('file','store','read the whole file'),
+      eg('store','admin','load it into the lead view')
     ],
     steps:[
-      st('main','The lead picks a pair',
-         'A stage, and a teammate. This is the same move as dragging a chip onto a lane on the board view.'),
-      st(['main>admin','admin'],'AdminOperations.assignTasks()',
-         'The lead side of the app. It is the only class that can move work from &ldquo;nobody&rsquo;s&rdquo; to &ldquo;somebody&rsquo;s&rdquo;.'),
-      st(['admin>all','all'],'It leaves the unassigned pile',
-         '<code>[ all tasks ]</code> is what the band at the top of the board shows. The stage comes out of here first.'),
-      st(['all>map','map'],'And it is filed under a name',
-         'This single line is what the whole lesson is about. Filing the task under its owner now is what makes &ldquo;what is Meera on?&rdquo; an instant answer later.'),
-      st(['map>file','file'],'FileHandling.write()',
-         'The pairing goes to disk. Every later question — mine, by status, by person — reads back this one structure.')
+      st(['main','main>board'],'The lead signs in',
+         'Same front door as the employee. The only difference so far is one field on the stored user.'),
+      st(['board','board>file'],'A lead is fetched wider',
+         'An employee asks for one id. The lead asks for all of them, because the lead has to be able to file work under anyone.'),
+      st(['file>store','store'],'The whole pairing comes back',
+         '<code>[ employee → [tasks] ]</code> — every teammate and what is already on them.'),
+      st(['store>admin','admin'],'Loaded into the lead view',
+         'AdminOperations now holds both sides: the work nobody has yet, and who is carrying what.'),
+      st('admin','assignTasks() files the pair',
+         'A stage comes out of <code>[ all tasks ]</code> and goes under a name. This one line is what makes &ldquo;what is Meera on?&rdquo; an instant answer later.')
     ]
   },
 
   {
     id:'view-by-status', group:'The lead', name:'viewTasksByStatus()', title:'View by status',
-    sub:'Main → AdminOperations.viewTasksByStatus() → [ employee → [tasks] ] → filter → print',
+    sub:'Main → SprintBoard → FileHandling.getAllTasks() → AdminOperations.viewTasksByStatus()',
     nodes:[
       nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'signed in as the lead'}),
-      nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:1,col:1,methods:['viewTasksByStatus()']}),
-      nd('map','[ employee → [tasks] ]',{kind:'data',row:2,col:0,note:'every person, every list'}),
-      nd('filter','keep status == asked',{row:2,col:2,sub:'AdminOperations.java'}),
-      nd('print','print the list',{row:3,col:1,sub:'Main.java'})
+      nd('board','SprintBoard.java',{kind:'class',icon:'key',row:1,col:1,note:'after sign in · role == lead'}),
+      nd('file','FileHandling.java',{kind:'file',icon:'disk',row:2,col:0,methods:['getAllTasks()']}),
+      nd('store','[ employee → [tasks] ]',{kind:'data',row:2,col:2,note:'every person, every list'}),
+      nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:3,col:1,
+         methods:['[ employee → [tasks] ]','viewTasksByStatus()']})
     ],
     edges:[
-      eg('main','admin','which status?'),
-      eg('admin','map','walk every list'),
-      eg('map','filter','WAITING / WORKING / DONE'),
-      eg('filter','print','[ tasks ]')
+      eg('main','board','which status?'),
+      eg('board','file','the lead asks across everybody'),
+      eg('file','store','read the whole file'),
+      eg('store','admin','load it into the lead view')
     ],
     steps:[
-      st('main','Main asks for a status',
+      st(['main','main>board'],'Main asks for a status',
          'WAITING, WORKING or DONE. One word in, a list out.'),
-      st(['main>admin','admin'],'AdminOperations.viewTasksByStatus()',
-         'The lead can ask across everybody, because the lead is the side that holds everybody&rsquo;s lists.'),
-      st(['admin>map','map'],'It walks the pairings it already has',
-         'No new read. <code>[ employee → [tasks] ]</code> is already in hand, so this is a loop over what is there.'),
-      st(['map>filter','filter'],'The filter lives here, not in the file',
-         'FileHandling reads and writes and nothing else. Deciding which tasks to keep is the lead side&rsquo;s rule, so it sits in the lead side&rsquo;s class.'),
-      st(['filter>print','print'],'Main prints what came back',
-         'Main never knew what WORKING means. It asked a question and printed an answer.')
+      st(['board>file','file'],'Fetch before filter',
+         'Nothing can be filtered until it has been loaded, so the file read happens first — exactly as it does for an employee, just wider.'),
+      st(['file>store','store'],'Every list, not one',
+         'The lead needs all of <code>[ employee → [tasks] ]</code>, because a status can sit on anybody.'),
+      st(['store>admin','admin'],'Loaded into the lead view',
+         'Only once AdminOperations holds the pairings can it walk them.'),
+      st('admin','The filter lives here, not in the file',
+         'FileHandling reads and writes and nothing else. Deciding which tasks to keep is the lead side&rsquo;s rule, so it sits in the lead side&rsquo;s class.')
     ]
   },
 
   {
     id:'view-employees', group:'The lead', name:'viewEmployees()', title:'View the team',
-    sub:'Main → AdminOperations.viewEmployees() → getAllUsersDetails() → [ employee → [tasks] ]',
+    sub:'Main → SprintBoard → FileHandling.getAllUsersDetails() → AdminOperations.viewEmployees()',
     nodes:[
       nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'signed in as the lead'}),
-      nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:1,col:1,methods:['viewEmployees()']}),
-      nd('get','getAllUsersDetails()',{kind:'file',icon:'disk',row:2,col:0,sub:'FileHandling.java'}),
-      nd('map','[ employee → [tasks] ]',{kind:'data',row:2,col:2,note:'one lookup per name'}),
-      nd('print','one line per person',{row:3,col:1,sub:'Main.java'})
+      nd('board','SprintBoard.java',{kind:'class',icon:'key',row:1,col:1,note:'after sign in · role == lead'}),
+      nd('file','FileHandling.java',{kind:'file',icon:'disk',row:2,col:0,methods:['getAllUsersDetails()']}),
+      nd('store','[ employee → [tasks] ]',{kind:'data',row:2,col:2,note:'one entry per person'}),
+      nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:3,col:1,
+         methods:['[ employee → [tasks] ]','viewEmployees()']})
     ],
     edges:[
-      eg('main','admin','option 3'),
-      eg('admin','get','who is on the team?'),
-      eg('get','map','look each name up'),
-      eg('map','print','name + [ tasks ]')
+      eg('main','board','option 3'),
+      eg('board','file','who is on the team?'),
+      eg('file','store','read the whole file'),
+      eg('store','admin','load it into the lead view')
     ],
     steps:[
-      st('main','Main asks for the team',
+      st(['main','main>board'],'Main asks for the team',
          'No arguments. This is the lead&rsquo;s version of the lanes on the board view.'),
-      st(['main>admin','admin'],'AdminOperations.viewEmployees()',
-         'Two questions in one: who exists, and what is each of them carrying.'),
-      st(['admin>get','get'],'The names come from the file',
-         '<code>getAllUsersDetails()</code> answers &ldquo;who exists&rdquo;. It is the same read <code>signIn()</code> uses — one method, two callers.'),
-      st(['get>map','map'],'Each name is looked up once',
-         'A name goes in, a list comes out. Because the work was filed by owner at assign time, there is nothing to search through here.'),
-      st(['map>print','print'],'A row per teammate',
+      st(['board>file','file'],'getAllUsersDetails()',
+         'The same read <code>signIn()</code> uses — one method, two callers. Nothing above FileHandling opens the file itself.'),
+      st(['file>store','store'],'Names and work in one structure',
+         'Because the file is keyed by employee, &ldquo;who exists&rdquo; and &ldquo;what are they carrying&rdquo; come back together.'),
+      st(['store>admin','admin'],'Loaded into the lead view',
+         'AdminOperations holds the pairings it is about to print.'),
+      st('admin','A row per teammate',
          'Name, then their tasks. Exactly the lanes on the board — the same structure, printed instead of drawn.')
     ]
   }
@@ -1253,7 +1266,12 @@ function drawEdges(){
     if (rot) head.setAttribute('transform','rotate('+rot+','+hx+','+hy+')');
     svg.appendChild(head);
 
-    placeLabel(e, path, anchor, obstacles, s, t, box);
+    /* A caption that has been placed is something the next one has to dodge,
+       so it joins the obstacle list. Arrows are drawn in the order they are
+       written, which is the order they are stepped through — so where two
+       captions compete, the earlier one in the walkthrough keeps its spot. */
+    var placed = placeLabel(e, path, anchor, obstacles, s, t, box);
+    if (placed) obstacles.push(placed);
   }
 
   paintFocus();
@@ -1262,9 +1280,9 @@ function drawEdges(){
 /* Put an arrow's caption on the line, but never on top of a box. */
 function placeLabel(edge, path, anchor, obstacles, s, t, box){
   var label = $('fpGrid').querySelector('[data-elabel="'+edge.id+'"]');
-  if (!label) return;
+  if (!label) return null;
   label.hidden = !edge.label;      /* the implied, label-less arrows */
-  if (!edge.label) return;
+  if (!edge.label) return null;
 
   var w = label.offsetWidth, h = label.offsetHeight;
 
@@ -1326,6 +1344,8 @@ function placeLabel(edge, path, anchor, obstacles, s, t, box){
 
   label.style.left = px + 'px';
   label.style.top  = py + 'px';
+
+  return { left:px - w/2, right:px + w/2, top:py - h/2, bottom:py + h/2 };
 }
 
 /* ── stepping ──────────────────────────── */
