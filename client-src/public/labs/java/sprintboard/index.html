@@ -264,58 +264,170 @@ body::before{
 .cards-empty{margin:auto;text-align:center;color:var(--tx3);font-size:12.5px}
 .cards-empty svg{width:38px;height:38px;opacity:.35;margin-bottom:9px}
 
-/* ─────────── blueprint: the classes behind all of this ───────────
-   A reference, not a walkthrough: everything is on screen at once and you
-   click whichever piece you want to know about. */
-.mapwrap{
-  flex:1;min-height:0;border-radius:var(--r2);border:1px solid var(--hair);
-  background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  overflow:auto;position:relative;display:flex;align-items:safe center;
+/* ─────────── blueprint: one walkthrough per operation ───────────
+   Not a reference any more: you pick an operation and step through it, and
+   each step lights the one box or arrow it is talking about. Everything here
+   is namespaced fp- because .row, .items, .card, .bar, .dot, .state and .act
+   are all already taken by the two views above. */
+.fp-picker{
+  flex:none;display:flex;align-items:center;gap:13px;
+  overflow-x:auto;overflow-y:hidden;padding:1px 2px;scrollbar-width:none;
 }
-/* fixed height, not 100%: the boxes are placed by percentage, so letting the
-   map stretch on a tall screen would drift them apart */
-.map{position:relative;flex:none;width:100%;min-width:980px;height:330px}
-.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.wire{fill:none;stroke:rgba(255,255,255,.14);stroke-width:1.8;transition:stroke .35s,stroke-width .35s}
-.wire.hot{
+.fp-picker::-webkit-scrollbar{display:none}
+.fp-group{flex:none;display:flex;align-items:center;gap:5px}
+.fp-group > b{
+  font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  color:var(--tx3);white-space:nowrap;
+}
+.fp-flow{
+  flex:none;padding:5px 11px;cursor:pointer;white-space:nowrap;
+  border:1px solid var(--hair);border-radius:999px;background:var(--glass);
+  font-family:var(--mono);font-size:11px;color:var(--tx2);
+  transition:border-color .26s,box-shadow .26s,color .26s;
+}
+.fp-flow:hover{color:var(--tx)}
+.fp-flow.is-on{
+  color:#fff;font-weight:600;border-color:var(--cyan);
+  box-shadow:0 0 0 1px rgba(34,211,238,.4),0 0 20px rgba(34,211,238,.35);
+}
+
+.fp-bar{
+  flex:none;display:flex;align-items:center;gap:8px;padding:5px 10px;
+  border-radius:999px;border:1px solid var(--hair);background:var(--glass);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.fp-btn{
+  flex:none;width:26px;height:26px;display:grid;place-items:center;
+  border:0;border-radius:999px;cursor:pointer;
+  background:rgba(255,255,255,.08);color:var(--tx2);
+  transition:background .22s,color .22s,transform .22s;
+}
+.fp-btn svg{width:13px;height:13px}
+.fp-btn:hover{color:#fff;background:rgba(255,255,255,.15);transform:translateY(-1px)}
+.fp-btn.go{
+  width:auto;display:flex;gap:6px;padding:0 13px;height:26px;color:#fff;
+  font-family:inherit;font-size:11.5px;font-weight:600;
+  background:linear-gradient(120deg,var(--blue),var(--purple));
+  box-shadow:0 0 18px var(--glow-b);
+}
+.fp-btn.go:hover{box-shadow:0 0 24px var(--glow-p)}
+.fp-prog{
+  flex:1;min-width:40px;height:3px;border-radius:2px;overflow:hidden;
+  background:rgba(255,255,255,.08);
+}
+.fp-prog i{
+  display:block;height:100%;width:0;transition:width .35s ease;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+}
+.fp-count{flex:none;min-width:34px;text-align:right;font-size:10.5px;font-weight:600;color:var(--tx3)}
+.fp-speed{flex:none;display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx3)}
+.fp-speed select{
+  font-family:inherit;font-size:10.5px;color:var(--tx2);outline:none;
+  background:var(--s2);border:1px solid var(--hair);border-radius:7px;padding:2px 4px;
+}
+
+.fp-cap{
+  flex:none;display:flex;align-items:flex-start;gap:10px;padding:9px 13px;min-height:54px;
+  border-radius:var(--r);border:1px solid var(--hair);background:var(--glass);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.fp-cap-n{
+  flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+  font-size:11px;font-weight:700;color:#06101E;
+  background:linear-gradient(120deg,var(--cyan),var(--blue));
+}
+.fp-cap-t{display:block;font-size:12.5px;font-weight:600;color:#fff;margin-bottom:2px}
+.fp-cap p{font-size:11.5px;line-height:1.5;color:var(--tx2)}
+.fp-cap code{font-family:var(--mono);font-size:11px;color:var(--cyan)}
+.fp-cap-idle{font-size:11.5px;line-height:1.5;color:var(--tx3)}
+.fp-cap-idle b{color:var(--tx2)}
+.fp-cap-idle .chain{font-family:var(--mono);font-size:10.5px;color:var(--tx3)}
+
+/* Not .panel: that is a flex column, and a flex column that also scrolls
+   fights the min-height:100% the grid below leans on. */
+.fp-dia{
+  flex:1;min-height:0;overflow:auto;padding:10px;
+  border-radius:var(--r2);border:1px solid var(--hair);background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+/* min-height:100% plus align-content:center, rather than a pixel height
+   written in from JS: the grid then centres itself when it fits and grows
+   when it does not, and the two viewport tiers only have to disagree about
+   one custom property. */
+.fp-grid{
+  position:relative;display:grid;min-height:100%;align-content:center;
+  min-width:560px;padding:4px 2px;
+  grid-template-columns:repeat(var(--cols),minmax(0,1fr));
+  grid-auto-rows:minmax(var(--fp-row),auto);
+  gap:var(--fp-row-gap) var(--fp-col-gap);
+  --fp-row:86px;--fp-row-gap:30px;--fp-col-gap:22px;
+}
+/* absolute, or the svg is auto-placed as a grid item of its own */
+.fp-edges{position:absolute;left:0;top:0;pointer-events:none;z-index:1}
+.fp-edge{fill:none;stroke:rgba(255,255,255,.14);stroke-width:1.8;transition:stroke .35s,stroke-width .35s}
+.fp-edge.dash{stroke-dasharray:5 4}
+.fp-edge.is-on{
   stroke:var(--cyan);stroke-width:2.6;stroke-dasharray:7 7;
   animation:flow 1s linear infinite;filter:drop-shadow(0 0 6px rgba(34,211,238,.7));
 }
-.head{fill:rgba(255,255,255,.22);transition:fill .35s}
-.head.hot{fill:var(--cyan)}
+.fp-edge.is-done{stroke:rgba(255,255,255,.28)}
+.fp-edge.is-idle{opacity:.3}
+/* a real triangle, not a marker: a marker resolves currentColor against its
+   own cascade inside <defs>, so it can never follow the line that used it */
+.fp-head{fill:rgba(255,255,255,.22);transition:fill .35s}
+.fp-head.is-on{fill:var(--cyan)}
+.fp-head.is-done{fill:rgba(255,255,255,.34)}
+.fp-head.is-idle{opacity:.3}
 
-.cls{
-  position:absolute;width:var(--w,228px);padding:10px 12px 11px;cursor:pointer;
+.fp-node{
+  position:relative;z-index:2;align-self:center;justify-self:center;
+  width:100%;max-width:200px;padding:8px 11px;text-align:center;cursor:pointer;
   border-radius:var(--r);border:1px solid var(--hair);
   background:linear-gradient(170deg,rgba(255,255,255,.07),rgba(255,255,255,.025));
   transition:border-color .3s,box-shadow .3s,transform .3s,opacity .3s;
 }
-.cls .cn{font-family:var(--mono);font-size:12.5px;font-weight:600;color:#fff;display:flex;align-items:center;gap:7px}
-.cls .cn svg{width:14px;height:14px;flex:none;color:var(--blue)}
-.cls .row{display:flex;gap:6px;margin-top:8px;align-items:flex-start}
-.cls .tagd{flex:none;font-size:9px;font-weight:700;letter-spacing:.6px;padding:2px 5px;border-radius:4px;margin-top:1px}
-.cls .tagd.h{background:rgba(34,211,238,.16);color:var(--cyan)}
-.cls .tagd.d{background:rgba(139,92,246,.18);color:#C4B5FD}
-.cls .items{display:flex;flex-direction:column;gap:3px;min-width:0}
-.cls .items span{font-family:var(--mono);font-size:10.5px;color:var(--tx2);line-height:1.35}
-.cls:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.5)}
-.cls.hot{
-  border-color:var(--cyan);
-  box-shadow:0 0 0 1px rgba(34,211,238,.4),0 0 34px rgba(34,211,238,.35);
-  transform:translateY(-3px);
+.fp-node b{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-family:var(--mono);font-size:11.5px;font-weight:600;color:#fff;
+  line-height:1.3;overflow-wrap:break-word;
 }
-.cls.dim{opacity:.34}
-.cls.entry{--w:132px}
-.cls.entry .items span{color:var(--tx3)}
+.fp-node b svg{width:13px;height:13px;flex:none;color:var(--blue)}
+.fp-node small{display:block;font-size:9.5px;color:var(--tx3);margin-top:2px}
+.fp-node em{display:block;font-size:9.5px;font-style:normal;color:var(--tx3);margin-top:4px;line-height:1.4}
+.fp-node .mets{
+  display:block;margin-top:5px;padding-top:5px;border-top:1px dashed var(--hair);
+  font-family:var(--mono);font-size:10px;color:var(--tx2);line-height:1.5;
+}
+.fp-node.k-class{background:linear-gradient(170deg,rgba(255,255,255,.09),rgba(255,255,255,.03))}
+.fp-node.k-data{background:rgba(139,92,246,.08);border-style:dashed;border-radius:14px}
+.fp-node.k-data b{color:#C4B5FD;font-weight:500}
+.fp-node.k-file{background:rgba(34,211,238,.06);border-color:rgba(34,211,238,.2)}
+.fp-node.k-file b svg{color:var(--cyan)}
+.fp-node:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.5)}
+.fp-node.is-on{
+  border-color:var(--cyan);transform:translateY(-3px);
+  box-shadow:0 0 0 1px rgba(34,211,238,.4),0 0 30px rgba(34,211,238,.35);
+}
+.fp-node.is-on b{color:var(--cyan)}
+.fp-node.is-done{opacity:.85}
+.fp-node.is-idle{opacity:.34}
 
-.plan-note{
-  flex:none;display:flex;align-items:center;gap:9px;margin-top:10px;
-  padding:9px 14px;border-radius:999px;border:1px solid var(--hair);background:var(--glass);
+/* opaque, not glass: the caption sits on the arrow and has to hide it */
+.fp-lab{
+  position:absolute;z-index:3;transform:translate(-50%,-50%);pointer-events:none;
+  padding:2px 7px;border-radius:999px;border:1px solid var(--hair);background:var(--s1);
+  font-size:9.5px;color:var(--tx3);white-space:nowrap;
+  max-width:190px;overflow:hidden;text-overflow:ellipsis;transition:.2s;
 }
-.plan-note .dot{width:6px;height:6px;border-radius:50%;flex:none;background:var(--tx3);transition:background .3s}
-.plan-note.on .dot{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
-.plan-note p{font-size:12px;color:var(--tx2);line-height:1.35}
-.plan-note code{font-family:var(--mono);font-size:11.5px;color:var(--cyan)}
+/* this page has no global [hidden] rule, and placeLabel() hides the captions
+   of the implied, label-less arrows */
+.fp-lab[hidden]{display:none}
+.fp-lab.is-on{
+  color:#06101E;font-weight:700;border-color:transparent;
+  background:linear-gradient(120deg,var(--cyan),var(--blue));
+}
+.fp-lab.is-done{color:var(--tx2)}
+.fp-lab.is-idle{opacity:.35}
 
 @keyframes flow{to{stroke-dashoffset:-28}}
 @keyframes viewIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -339,10 +451,16 @@ body::before{
   .lane > .nm{width:46px;font-size:11.5px}
   .cards{padding:10px 12px;gap:8px}
   .card{width:150px;padding:10px}
-  .map{height:290px}
-  .cls{padding:8px 10px 9px}
-  .cls .items span{font-size:10px}
-  .plan-note{margin-top:8px;padding:8px 12px}
+  .fp-grid{--fp-row:46px;--fp-row-gap:14px;--fp-col-gap:14px}
+  .fp-node{max-width:186px;padding:6px 9px}
+  .fp-node b{font-size:11px}
+  .fp-node small,.fp-node em{font-size:9px}
+  .fp-node .mets{font-size:9.5px;margin-top:4px;padding-top:4px}
+  .fp-cap{min-height:50px;padding:8px 11px}
+  .fp-cap p,.fp-cap-idle{font-size:11px}
+  .fp-dia{padding:8px}
+  .fp-bar{padding:4px 8px;gap:6px}
+  .fp-picker{gap:11px}
 }
 @media (max-width:700px){
   .brand b,.brand .proj{display:none}
@@ -381,7 +499,7 @@ body::before{
       <span class="thumb" id="thumb"></span>
       <button class="seg is-on" data-view="lead" id="segLead" aria-label="The lead's board"></button>
       <button class="seg" data-view="me" id="segMe" aria-label="One person's work"></button>
-      <button class="seg" data-view="plan" id="segPlan" aria-label="The classes behind the board"></button>
+      <button class="seg" data-view="plan" id="segPlan" aria-label="Walk through the classes behind the board"></button>
     </div>
     <div class="clockbox" id="clockbox">
       <span class="clock" id="clock">09:00</span>
@@ -416,13 +534,24 @@ body::before{
 
     <!-- ══════ blueprint ══════ -->
     <section class="view" id="viewPlan">
-      <div class="mapwrap">
-        <div class="map" id="map"><svg class="wires" id="wires" aria-hidden="true"></svg></div>
+      <div class="fp-picker" id="fpPicker"></div>
+      <div class="fp-bar" id="fpBar">
+        <button class="fp-btn" data-ctl="restart" aria-label="Back to the start"></button>
+        <button class="fp-btn" data-ctl="prev" aria-label="Previous step"></button>
+        <button class="fp-btn go" data-ctl="play" id="fpPlay"></button>
+        <button class="fp-btn" data-ctl="next" aria-label="Next step"></button>
+        <span class="fp-prog"><i id="fpFill"></i></span>
+        <span class="fp-count" id="fpCount"></span>
+        <label class="fp-speed">speed
+          <select id="fpSpeed" aria-label="How fast the walkthrough steps">
+            <option value="0.5">0.5&times;</option>
+            <option value="1" selected>1&times;</option>
+            <option value="2">2&times;</option>
+          </select>
+        </label>
       </div>
-      <div class="plan-note" id="planNote">
-        <span class="dot"></span>
-        <p id="planText"></p>
-      </div>
+      <div class="fp-cap" id="fpCap"></div>
+      <div class="fp-dia" id="fpDia"><div class="fp-grid" id="fpGrid"></div></div>
     </section>
 
   </main>
@@ -463,7 +592,12 @@ var I = {
   door:'<svg viewBox="0 0 24 24" fill="none"><path d="M14 4.5H6.5v15H14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 12h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   key:'<svg viewBox="0 0 24 24" fill="none"><circle cx="8" cy="12" r="3.6" stroke="currentColor" stroke-width="1.9"/><path d="M11.6 12H20m-3 0v3m-2.5-3v2.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
   disk:'<svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h11L19.5 8v11.5h-15z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 4.5v5h7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
-  crown:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 18h16M4.5 7l4 4 3.5-5 3.5 5 4-4-1.5 9h-12z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+  crown:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 18h16M4.5 7l4 4 3.5-5 3.5 5 4-4-1.5 9h-12z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+
+  /* the walkthrough's transport — play and again are already above */
+  prev:'<svg viewBox="0 0 24 24" fill="none"><path d="M17 6.5l-8 5.5 8 5.5z" fill="currentColor"/><path d="M7 6.5v11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  next:'<svg viewBox="0 0 24 24" fill="none"><path d="M7 6.5l8 5.5-8 5.5z" fill="currentColor"/><path d="M17 6.5v11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  pause:'<svg viewBox="0 0 24 24" fill="none"><path d="M9 6v12M15 6v12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>'
 };
 
 /* ════════════════════════════════════════
@@ -498,36 +632,264 @@ var STEP  = 30;    /* how far one tap of the clock moves */
 var clock = 540;   /* 09:00 */
 /* ════════════════════════════════════════
    THE CLASSES BEHIND ALL OF THIS
-   a reference page: click any box to see what it talks to
+   One walkthrough per operation. A flow is a handful of boxes on a row/col
+   grid, the arrows between them, and an ordered list of which box or arrow
+   lights up next — so the picture and the prose can never drift apart.
+
+   Edge ids are derived, never written: 'from>to'. That one convention is why
+   a step's `focus` can name a box and an arrow in the same flat list, and why
+   one painter drives boxes, arrows and captions together.
+
+   Authoring rules, both learnt the hard way:
+     · ids stay lowercase alphanumeric — they go straight into a selector
+     · write Java generics as &lt; — these strings are interpolated as HTML
+       so that the prose can keep marking data up as <code>
 ════════════════════════════════════════ */
-var CLASSES = [
-  { id:'main', name:'Main.java', icon:'door', entry:true, x:1.5, y:40,
-    holds:[], does:['starts the program'],
-    note:'Where the program begins. It opens the board and then gets out of the way.' },
+function nd(id, label, o){
+  o = o || {};
+  return { id:id, label:label, kind:o.kind || 'method', icon:o.icon || null,
+           row:o.row || 0, col:o.col || 0, sub:o.sub || '',
+           methods:o.methods || null, note:o.note || '' };
+}
+function eg(from, to, label, dashed){
+  return { id:from + '>' + to, from:from, to:to, label:label || '', dashed:!!dashed };
+}
+function st(focus, title, text){
+  return { focus:(focus instanceof Array) ? focus : [focus], title:title, text:text };
+}
 
-  { id:'board', name:'SprintBoard.java', icon:'key', x:16, y:35,
-    holds:['[ users ]'], does:['signIn()','signUp()'],
-    note:'The front door. It keeps <code>[ users ]</code> and decides, on the way in, whether you get the lead side or the employee side.' },
+/* Every flow is four rows by three columns, and every arrow points down or
+   sideways-within-a-row. drawEdges() has no upward case, and a sideways-then-
+   drop arrow runs along its source's middle — so a box parked in that row
+   between the two ends would be drawn straight through. */
+var FLOWS = [
 
-  { id:'user', name:'UserOperations.java', icon:'user', x:41, y:2,
-    holds:['[ tasks ]'], does:['updateTasks()','viewPreviousTasks()'],
-    note:'The employee side. It only ever holds <code>[ tasks ]</code> — the ones belonging to the person signed in.' },
+  /* ══════ authentication ══════ */
+  {
+    id:'sign-up', group:'Authentication', name:'signUp()', title:'Sign up',
+    sub:'Main → SprintBoard.signUp() → [ users ] → FileHandling.write()',
+    nodes:[
+      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'menu · Scanner'}),
+      nd('board','SprintBoard.java',{kind:'class',icon:'key',row:1,col:1,methods:['signUp()']}),
+      nd('users','[ users ]',{kind:'data',row:2,col:0,note:'the whole login list'}),
+      nd('role','lead, or employee?',{row:2,col:2,sub:'SprintBoard.java'}),
+      nd('file','write()',{kind:'file',icon:'disk',row:3,col:1,sub:'FileHandling.java'})
+    ],
+    edges:[
+      eg('main','board','option 2 → name, password, role'),
+      eg('board','users','add the new user'),
+      eg('board','role','which side of the app?'),
+      eg('users','file','save the list'),
+      eg('role','file','', true)
+    ],
+    steps:[
+      st('main','Main reads the form',
+         'Main prints the first menu and reads a name, a password and which side you are on. It never decides whether any of it is valid.'),
+      st('main>board','Main hands over',
+         'The strings go straight to <code>signUp()</code>. Main never looks inside <code>[ users ]</code> — it does not hold it.'),
+      st('board','SprintBoard.signUp()',
+         'The front door. It owns one rule — you must not already exist — and builds the user record once that rule passes.'),
+      st(['board>users','users'],'The new user joins the list',
+         '<code>[ users ]</code> is the whole login database. Every sign-in from now on searches this same list.'),
+      st(['board>role','role'],'One field decides two apps',
+         'The role chosen here is what <code>signIn()</code> reads later. Nothing else about the lead side and the employee side differs yet.'),
+      st(['users>file','file'],'FileHandling.write()',
+         'One class, one job: put the lists on disk. Nothing above this box ever opens a stream itself.')
+    ]
+  },
 
-  { id:'admin', name:'AdminOperations.java', icon:'crown', x:41, y:58,
-    holds:['[ all tasks ]','[ employee → [tasks] ]'], does:['assignTasks()'],
-    note:'The lead side. <code>assignTasks()</code> files a stage under a person, and that <code>[ employee → [tasks] ]</code> pairing is what makes every later question instant.' },
+  {
+    id:'sign-in', group:'Authentication', name:'signIn()', title:'Sign in',
+    sub:'Main → SprintBoard.signIn() → getAllUsersDetails() → UserOperations or AdminOperations',
+    nodes:[
+      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'menu · Scanner'}),
+      nd('board','SprintBoard.java',{kind:'class',icon:'key',row:1,col:1,methods:['signIn()']}),
+      nd('get','getAllUsersDetails()',{kind:'file',icon:'disk',row:2,col:0,sub:'FileHandling.java'}),
+      nd('role','role == "lead" ?',{row:2,col:2,sub:'SprintBoard.java'}),
+      nd('user','UserOperations.java',{kind:'class',icon:'user',row:3,col:1,note:'holds [ tasks ]'}),
+      nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:3,col:2,note:'holds [ employee → [tasks] ]'})
+    ],
+    edges:[
+      eg('main','board','option 1 → name, password'),
+      eg('board','get','is this really you?'),
+      eg('get','role','the stored user, role and all'),
+      eg('role','user','employee'),
+      eg('role','admin','lead')
+    ],
+    steps:[
+      st('main','Main asks for two things',
+         'A name and a password, read from the Scanner. Main has no list to check them against, so it cannot answer the question itself.'),
+      st('main>board','Straight to the front door',
+         '<code>signIn()</code> is the only way in. Both halves of the app sit behind this one call.'),
+      st(['board','board>get'],'signIn() cannot answer alone',
+         'The users live in the file, not in memory, so <code>signIn()</code> asks FileHandling for them.'),
+      st(['get','get>role'],'getAllUsersDetails()',
+         'FileHandling hands back every stored user. Matching a password against one of them is SprintBoard&rsquo;s job, not the file&rsquo;s.'),
+      st('role','The role is read back',
+         'The same field that was written at sign-up. One string, and it picks which class you spend the rest of the session inside.'),
+      st(['role>user','user'],'Employee → UserOperations',
+         'An employee only ever gets the class that holds <code>[ tasks ]</code> — their own. It cannot reach anyone else&rsquo;s work, because it was never handed it.'),
+      st(['role>admin','admin'],'Lead → AdminOperations',
+         'The lead gets the class that holds <code>[ employee → [tasks] ]</code>. Same file underneath, a different view of it.')
+    ]
+  },
 
-  { id:'file', name:'FileOperations.java', icon:'disk', x:73, y:30,
-    holds:['[ employee, [tasks] ]'], does:['getAllUsersDetails()','getEmployeeTasks()'],
-    note:'The part that remembers. <code>getEmployeeTasks()</code> hands back <code>[ employee, [tasks] ]</code> — one name, and everything filed under it.' }
+  /* ══════ the employee side ══════ */
+  {
+    id:'view-tasks', group:'My work', name:'viewTasks()', title:'View my tasks',
+    sub:'Main → UserOperations.viewTasks() → getEmployeeTasks() → [ tasks ]',
+    nodes:[
+      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'signed in as an employee'}),
+      nd('user','UserOperations.java',{kind:'class',icon:'user',row:1,col:1,methods:['viewTasks()']}),
+      nd('get','getEmployeeTasks()',{kind:'file',icon:'disk',row:2,col:0,sub:'FileHandling.java'}),
+      nd('tasks','[ tasks ]',{kind:'data',row:2,col:2,note:'mine, and only mine'}),
+      nd('print','print the list',{row:3,col:1,sub:'Main.java'})
+    ],
+    edges:[
+      eg('main','user','option 1'),
+      eg('user','get','my name'),
+      eg('get','tasks','one name, everything filed under it'),
+      eg('tasks','print','[ tasks ]')
+    ],
+    steps:[
+      st('main','Main offers the menu',
+         'The employee picks &ldquo;my tasks&rdquo;. Main knows who is signed in and nothing else about the work.'),
+      st(['main>user','user'],'UserOperations.viewTasks()',
+         'The employee side of the app. Its whole job is answering questions about one person&rsquo;s work.'),
+      st('user>get','It asks for one row, not the file',
+         '<code>viewTasks()</code> sends a name down, not a search. The filing was done at assign time, so there is nothing to scan.'),
+      st('get','getEmployeeTasks()',
+         'FileHandling looks the name up and hands back what is filed under it. It reads; it never filters.'),
+      st(['get>tasks','tasks'],'Everything under one name',
+         'This is the payoff of filing work under the person who holds it: <code>[ tasks ]</code> arrives whole, with no loop and no search.'),
+      st(['tasks>print','print'],'Main prints it',
+         'Back where it started. The list came from the file, through one method, untouched by anything that did not need to see it.')
+    ]
+  },
+
+  {
+    id:'modify-status', group:'My work', name:'modifyStatus()', title:'Change a status',
+    sub:'Main → UserOperations.modifyStatus() → [ tasks ] → FileHandling.write()',
+    nodes:[
+      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'signed in as an employee'}),
+      nd('user','UserOperations.java',{kind:'class',icon:'user',row:1,col:1,
+         methods:['modifyStatus()']}),
+      nd('tasks','[ tasks ]',{kind:'data',row:2,col:0,note:'WAITING · WORKING · DONE'}),
+      nd('prev','viewPreviousTasks()',{row:2,col:2,sub:'UserOperations.java'}),
+      nd('file','write()',{kind:'file',icon:'disk',row:3,col:1,sub:'FileHandling.java'})
+    ],
+    edges:[
+      eg('main','user','option 2 → task, new status'),
+      eg('user','tasks','find the task, set the status'),
+      eg('tasks','prev','', true),
+      eg('tasks','file','save the change')
+    ],
+    steps:[
+      st('main','Main takes the change',
+         'Which task, and what it should say now. Main does not own the task, so it cannot apply the change itself.'),
+      st(['main>user','user'],'UserOperations.modifyStatus()',
+         'The only class allowed to change a task&rsquo;s status is the one that holds the task.'),
+      st(['user>tasks','tasks'],'One entry in the list moves',
+         'The task is found in <code>[ tasks ]</code> and its status is set. Nothing is added and nothing is removed — the list is the same length.'),
+      st(['tasks>prev','prev'],'viewPreviousTasks() reads the same list',
+         'It needs no data of its own. Anything already marked DONE in <code>[ tasks ]</code> is exactly what &ldquo;previous&rdquo; means.'),
+      st(['tasks>file','file'],'FileHandling.write()',
+         'The change is in memory until this box runs. Everything above it edited a list; only this one makes it survive a restart.')
+    ]
+  },
+
+  /* ══════ the lead side ══════ */
+  {
+    id:'assign-tasks', group:'The lead', name:'assignTasks()', title:'Assign a task',
+    sub:'Main → AdminOperations.assignTasks() → [ employee → [tasks] ] → FileHandling.write()',
+    nodes:[
+      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'signed in as the lead'}),
+      nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:1,col:1,methods:['assignTasks()']}),
+      nd('all','[ all tasks ]',{kind:'data',row:2,col:0,note:'not handed out yet'}),
+      nd('map','[ employee → [tasks] ]',{kind:'data',row:2,col:2,note:'one name, one list'}),
+      nd('file','write()',{kind:'file',icon:'disk',row:3,col:1,sub:'FileHandling.java'})
+    ],
+    edges:[
+      eg('main','admin','option 1 → stage, person'),
+      eg('admin','all','take it off the board'),
+      eg('all','map','file it under the person'),
+      eg('map','file','save')
+    ],
+    steps:[
+      st('main','The lead picks a pair',
+         'A stage, and a teammate. This is the same move as dragging a chip onto a lane on the board view.'),
+      st(['main>admin','admin'],'AdminOperations.assignTasks()',
+         'The lead side of the app. It is the only class that can move work from &ldquo;nobody&rsquo;s&rdquo; to &ldquo;somebody&rsquo;s&rdquo;.'),
+      st(['admin>all','all'],'It leaves the unassigned pile',
+         '<code>[ all tasks ]</code> is what the band at the top of the board shows. The stage comes out of here first.'),
+      st(['all>map','map'],'And it is filed under a name',
+         'This single line is what the whole lesson is about. Filing the task under its owner now is what makes &ldquo;what is Meera on?&rdquo; an instant answer later.'),
+      st(['map>file','file'],'FileHandling.write()',
+         'The pairing goes to disk. Every later question — mine, by status, by person — reads back this one structure.')
+    ]
+  },
+
+  {
+    id:'view-by-status', group:'The lead', name:'viewTasksByStatus()', title:'View by status',
+    sub:'Main → AdminOperations.viewTasksByStatus() → [ employee → [tasks] ] → filter → print',
+    nodes:[
+      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'signed in as the lead'}),
+      nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:1,col:1,methods:['viewTasksByStatus()']}),
+      nd('map','[ employee → [tasks] ]',{kind:'data',row:2,col:0,note:'every person, every list'}),
+      nd('filter','keep status == asked',{row:2,col:2,sub:'AdminOperations.java'}),
+      nd('print','print the list',{row:3,col:1,sub:'Main.java'})
+    ],
+    edges:[
+      eg('main','admin','which status?'),
+      eg('admin','map','walk every list'),
+      eg('map','filter','WAITING / WORKING / DONE'),
+      eg('filter','print','[ tasks ]')
+    ],
+    steps:[
+      st('main','Main asks for a status',
+         'WAITING, WORKING or DONE. One word in, a list out.'),
+      st(['main>admin','admin'],'AdminOperations.viewTasksByStatus()',
+         'The lead can ask across everybody, because the lead is the side that holds everybody&rsquo;s lists.'),
+      st(['admin>map','map'],'It walks the pairings it already has',
+         'No new read. <code>[ employee → [tasks] ]</code> is already in hand, so this is a loop over what is there.'),
+      st(['map>filter','filter'],'The filter lives here, not in the file',
+         'FileHandling reads and writes and nothing else. Deciding which tasks to keep is the lead side&rsquo;s rule, so it sits in the lead side&rsquo;s class.'),
+      st(['filter>print','print'],'Main prints what came back',
+         'Main never knew what WORKING means. It asked a question and printed an answer.')
+    ]
+  },
+
+  {
+    id:'view-employees', group:'The lead', name:'viewEmployees()', title:'View the team',
+    sub:'Main → AdminOperations.viewEmployees() → getAllUsersDetails() → [ employee → [tasks] ]',
+    nodes:[
+      nd('main','Main.java',{kind:'class',icon:'door',row:0,col:1,sub:'signed in as the lead'}),
+      nd('admin','AdminOperations.java',{kind:'class',icon:'crown',row:1,col:1,methods:['viewEmployees()']}),
+      nd('get','getAllUsersDetails()',{kind:'file',icon:'disk',row:2,col:0,sub:'FileHandling.java'}),
+      nd('map','[ employee → [tasks] ]',{kind:'data',row:2,col:2,note:'one lookup per name'}),
+      nd('print','one line per person',{row:3,col:1,sub:'Main.java'})
+    ],
+    edges:[
+      eg('main','admin','option 3'),
+      eg('admin','get','who is on the team?'),
+      eg('get','map','look each name up'),
+      eg('map','print','name + [ tasks ]')
+    ],
+    steps:[
+      st('main','Main asks for the team',
+         'No arguments. This is the lead&rsquo;s version of the lanes on the board view.'),
+      st(['main>admin','admin'],'AdminOperations.viewEmployees()',
+         'Two questions in one: who exists, and what is each of them carrying.'),
+      st(['admin>get','get'],'The names come from the file',
+         '<code>getAllUsersDetails()</code> answers &ldquo;who exists&rdquo;. It is the same read <code>signIn()</code> uses — one method, two callers.'),
+      st(['get>map','map'],'Each name is looked up once',
+         'A name goes in, a list comes out. Because the work was filed by owner at assign time, there is nothing to search through here.'),
+      st(['map>print','print'],'A row per teammate',
+         'Name, then their tasks. Exactly the lanes on the board — the same structure, printed instead of drawn.')
+    ]
+  }
+
 ];
-
-var WIRES = [
-  ['main','board'], ['board','user'], ['board','admin'],
-  ['board','file'], ['user','file'], ['admin','file']
-];
-
-var picked = null;   /* the class being looked at, if any */
 
 var view  = 'lead';
 var me    = PEOPLE[0].id;
@@ -691,8 +1053,17 @@ function setView(next){
   /* the clock runs the day; it means nothing on the blueprint */
   $('clockbox').style.visibility = (view === 'plan') ? 'hidden' : '';
   moveThumb();
-  /* wires can only be measured once the view is actually on screen */
-  if (view === 'plan'){ drawWires(); paintPlan(); }
+  /* Boxes can only be measured once the view is actually on screen — hence
+     the draw here rather than at load. The pause matters just as much: left
+     running, the player would step a diagram nobody is looking at and you
+     would come back to a finished walkthrough. */
+  if (view === 'plan'){
+    drawEdges();
+    setTimeout(drawEdges, 80);
+    if (stepI < 0) play();
+  } else {
+    pause();
+  }
 }
 
 /* ════════════════════════════════════════
@@ -751,107 +1122,340 @@ function act(kind, id){
 }
 
 /* ════════════════════════════════════════
-   BLUEPRINT — build it, draw it, answer clicks
+   BLUEPRINT — one walkthrough, played a step at a time
 ════════════════════════════════════════ */
-function klass(id){ for (var i=0;i<CLASSES.length;i++) if (CLASSES[i].id===id) return CLASSES[i]; return null; }
-function wireId(a,b){ return 'w-'+a+'-'+b; }
+var FP_DWELL = 3400;   /* how long a step is left on screen, at 1x */
+var flow    = null;    /* the walkthrough being played */
+var stepI   = -1;      /* -1 is the idle "press play" state */
+var playing = false;
+var fpSpeed = 1;
+var fpTimer = null;
+var fpDraw  = null;
 
-function buildClasses(){
-  var map = $('map');
-  CLASSES.forEach(function(c){
-    var el = document.createElement('div');
-    el.className = 'cls' + (c.entry ? ' entry' : '');
-    el.id = 'k-' + c.id;
-    el.style.left = c.x + '%';
-    el.style.top  = c.y + '%';
-    el.setAttribute('role','button');
-    el.setAttribute('tabindex','0');
-    el.setAttribute('aria-label', c.name);
-    var rows = '';
-    if (c.holds.length){
-      rows += '<div class="row"><span class="tagd h">HOLDS</span><span class="items">' +
-              c.holds.map(function(h){ return '<span>'+h+'</span>'; }).join('') + '</span></div>';
+function flowById(id){ for (var i=0;i<FLOWS.length;i++) if (FLOWS[i].id===id) return FLOWS[i]; return null; }
+
+/* ── markup ────────────────────────────── */
+
+/* The groups are not written down anywhere: they are the order the flows
+   appear in, first seen first. */
+function renderPicker(){
+  var groups = [], html = '', i, j, g, f;
+  for (i=0;i<FLOWS.length;i++){
+    g = null;
+    for (j=0;j<groups.length;j++) if (groups[j].name === FLOWS[i].group) g = groups[j];
+    if (!g){ g = {name:FLOWS[i].group, flows:[]}; groups.push(g); }
+    g.flows.push(FLOWS[i]);
+  }
+  for (i=0;i<groups.length;i++){
+    html += '<div class="fp-group"><b>' + groups[i].name + '</b>';
+    for (j=0;j<groups[i].flows.length;j++){
+      f = groups[i].flows[j];
+      html += '<button class="fp-flow" data-flow="'+f.id+'" title="'+f.sub+'">'+f.name+'</button>';
     }
-    if (c.does.length){
-      rows += '<div class="row"><span class="tagd d">DOES</span><span class="items">' +
-              c.does.map(function(d){ return '<span>'+d+'</span>'; }).join('') + '</span></div>';
-    }
-    el.innerHTML = '<span class="cn">'+I[c.icon]+c.name+'</span>' + rows;
-    map.appendChild(el);
-  });
+    html += '</div>';
+  }
+  $('fpPicker').innerHTML = html;
 }
 
-/* Wires are measured from where the boxes actually ended up, so the picture
-   survives a resize, a late font, or a longer method name. */
-function drawWires(){
-  var map = $('map'), svg = $('wires');
-  var box = map.getBoundingClientRect();
-  if (!box.width) return;
-  svg.setAttribute('viewBox', '0 0 ' + box.width + ' ' + box.height);
-  svg.innerHTML = '';
+function nodeHTML(n){
+  var h = '<div class="fp-node k-'+n.kind+'" data-node="'+n.id+'" role="button" tabindex="0"'+
+          ' style="grid-row:'+(n.row+1)+';grid-column:'+(n.col+1)+'">';
+  h += '<b>' + (n.icon ? I[n.icon] : '') + '<span>'+n.label+'</span></b>';
+  if (n.sub)     h += '<small>'+n.sub+'</small>';
+  if (n.methods) h += '<span class="mets">'+n.methods.join('<br>')+'</span>';
+  if (n.note)    h += '<em>'+n.note+'</em>';
+  return h + '</div>';
+}
 
-  WIRES.forEach(function(w){
-    var a = $('k-'+w[0]).getBoundingClientRect();
-    var b = $('k-'+w[1]).getBoundingClientRect();
-    var x1 = a.right - box.left, y1 = a.top - box.top + a.height/2;
-    var x2 = b.left  - box.left, y2 = b.top - box.top + b.height/2;
-    var dx = Math.max(38, (x2 - x1) * 0.45);
+function flowHTML(f){
+  var html = '<svg class="fp-edges" aria-hidden="true"></svg>', i;
+  for (i=0;i<f.nodes.length;i++) html += nodeHTML(f.nodes[i]);
+  for (i=0;i<f.edges.length;i++)
+    html += '<span class="fp-lab" data-elabel="'+f.edges[i].id+'">'+f.edges[i].label+'</span>';
+  return html;
+}
+
+/* ── drawing ───────────────────────────── */
+
+/* Arrows are measured from where the boxes actually ended up, so the picture
+   survives a resize, a late font, or a longer method name. */
+function drawEdges(){
+  if (!flow) return;
+  var grid = $('fpGrid'), svg = grid.querySelector('.fp-edges');
+  if (!svg) return;
+  var box = grid.getBoundingClientRect();
+  if (!box.width) return;   /* the view has not been shown yet */
+
+  svg.setAttribute('viewBox','0 0 '+box.width+' '+box.height);
+  svg.style.width  = box.width + 'px';
+  svg.style.height = box.height + 'px';
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  function rel(el){
+    var r = el.getBoundingClientRect();
+    return {
+      left:   r.left - box.left,
+      right:  r.left - box.left + r.width,
+      top:    r.top  - box.top,
+      bottom: r.top  - box.top + r.height,
+      cx:     r.left - box.left + r.width/2,
+      mid:    r.top  - box.top + r.height/2
+    };
+  }
+
+  /* every box, so the captions can be kept off them */
+  var boxes = grid.querySelectorAll('[data-node]'), obstacles = [], i;
+  for (i=0;i<boxes.length;i++) obstacles.push(rel(boxes[i]));
+
+  for (i=0;i<flow.edges.length;i++){
+    var e = flow.edges[i];
+    var a = grid.querySelector('[data-node="'+e.from+'"]');
+    var b = grid.querySelector('[data-node="'+e.to+'"]');
+    if (!a || !b) continue;
+    var s = rel(a), t = rel(b), d, anchor, hx, hy, rot, x1, ax, bx, right;
+
+    if (t.top >= s.bottom - 2){
+      if (Math.abs(s.cx - t.cx) < 6){
+        /* straight down the same column */
+        d = 'M'+s.cx+' '+s.bottom+' L'+t.cx+' '+t.top;
+        anchor = [s.cx, (s.bottom + t.top)/2];
+      } else {
+        /* leave sideways, run across, then drop — this keeps the line out of
+           whatever sits directly below the source box */
+        x1 = (t.cx > s.cx) ? s.right : s.left;
+        d = 'M'+x1+' '+s.mid+' L'+t.cx+' '+s.mid+' L'+t.cx+' '+t.top;
+        anchor = [(x1 + t.cx)/2, s.mid];
+      }
+      hx = t.cx; hy = t.top; rot = 90;         /* arriving from above */
+    } else {
+      /* same row */
+      right = t.left > s.left;
+      ax = right ? s.right : s.left;
+      bx = right ? t.left  : t.right;
+      d = 'M'+ax+' '+s.mid+' L'+bx+' '+t.mid;
+      anchor = [(ax + bx)/2, (s.mid + t.mid)/2];
+      hx = bx; hy = t.mid; rot = right ? 0 : 180;
+    }
 
     var path = document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('d','M'+x1+','+y1+' C'+(x1+dx)+','+y1+' '+(x2-dx)+','+y2+' '+x2+','+y2);
-    path.setAttribute('class','wire');
-    path.id = wireId(w[0], w[1]);
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'fp-edge' + (e.dashed ? ' dash' : ''));
+    path.setAttribute('data-edge', e.id);
     svg.appendChild(path);
 
+    /* A triangle of our own, turned to match the last leg. A <marker> cannot
+       do this job: it resolves currentColor against its own cascade inside
+       <defs>, so it could never follow the line that used it. */
     var head = document.createElementNS('http://www.w3.org/2000/svg','path');
-    head.setAttribute('d','M'+x2+','+y2+' l-7,-4.5 l0,9 z');
-    head.setAttribute('class','head');
-    head.id = 'h-' + wireId(w[0], w[1]);
+    head.setAttribute('d','M'+hx+','+hy+' l-7,-4.5 l0,9 z');
+    head.setAttribute('class','fp-head');
+    head.setAttribute('data-edge', e.id);
+    if (rot) head.setAttribute('transform','rotate('+rot+','+hx+','+hy+')');
     svg.appendChild(head);
-  });
-}
 
-var PLAN_HINT = 'Five classes, and every arrow between them. Tap one to see what it holds and who it talks to.';
-
-function paintPlan(){
-  CLASSES.forEach(function(c){
-    var el = $('k-'+c.id);
-    if (!el) return;
-    el.classList.toggle('hot', picked === c.id);
-    el.classList.toggle('dim', !!picked && picked !== c.id);
-  });
-
-  WIRES.forEach(function(w){
-    var on = !!picked && (w[0] === picked || w[1] === picked);
-    var p = $(wireId(w[0], w[1])), h = $('h-'+wireId(w[0], w[1]));
-    if (!p) return;
-    p.classList.toggle('hot', on);
-    h.classList.toggle('hot', on);
-  });
-
-  var c = picked ? klass(picked) : null;
-  $('planText').innerHTML = c ? c.note : PLAN_HINT;
-  $('planNote').classList.toggle('on', !!c);
-
-  /* In a narrow frame the diagram is wider than the window. Set the scroll
-     position outright — smooth scrolling is animation, and animation is
-     exactly what cannot be relied on to run here. */
-  if (c) centreOn($('k-'+c.id));
-}
-
-function centreOn(el){
-  if (!el) return;
-  var wrap = $('viewPlan').querySelector('.mapwrap');
-  var max = wrap.scrollWidth - wrap.clientWidth;
-  if (max <= 0) return;
-  var want = el.offsetLeft + el.offsetWidth / 2 - wrap.clientWidth / 2;
-  want = Math.max(0, Math.min(want, max));
-  if (wrap.scrollTo){
-    try { wrap.scrollTo({left:want, behavior:'smooth'}); } catch (e) { wrap.scrollLeft = want; }
-    setTimeout(function(){ if (Math.abs(wrap.scrollLeft - want) > 2) wrap.scrollLeft = want; }, 420);
-  } else {
-    wrap.scrollLeft = want;
+    placeLabel(e, path, anchor, obstacles, s, t, box);
   }
+
+  paintFocus();
+}
+
+/* Put an arrow's caption on the line, but never on top of a box. */
+function placeLabel(edge, path, anchor, obstacles, s, t, box){
+  var label = $('fpGrid').querySelector('[data-elabel="'+edge.id+'"]');
+  if (!label) return;
+  label.hidden = !edge.label;      /* the implied, label-less arrows */
+  if (!edge.label) return;
+
+  var w = label.offsetWidth, h = label.offsetHeight;
+
+  function clear(p){
+    for (var oi=0; oi<obstacles.length; oi++){
+      var o = obstacles[oi];
+      if (p[0] + w/2 > o.left - 3 && p[0] - w/2 < o.right  + 3 &&
+          p[1] + h/2 > o.top  - 3 && p[1] - h/2 < o.bottom + 3) return false;
+    }
+    return true;
+  }
+  function firstClear(list){
+    for (var k=0;k<list.length;k++) if (clear(list[k])) return list[k];
+    return null;
+  }
+
+  var point = anchor;
+  if (!clear(point)){
+    var len = path.getTotalLength();
+    var fr = [0.5, 0.35, 0.65, 0.22, 0.78, 0.12, 0.88];
+    var onLine = [], offLine = [], k, pt;
+    for (k=0;k<fr.length;k++){
+      pt = path.getPointAtLength(len * fr[k]);
+      onLine.push([pt.x, pt.y]);
+    }
+    /* A caption is taller than the gap between two stacked rows, so on a
+       straight-down arrow nothing on the line can ever be clear. Step it out
+       past both boxes instead, keeping its height — the columns are far wider
+       than the boxes sitting in them, so the room is there. Clearing the line
+       is not enough; it has to clear the box the line came out of. */
+    var outR = Math.max(s.right, t.right) + w/2 + 8;
+    var outL = Math.min(s.left,  t.left)  - w/2 - 8;
+    var sideLine = [];
+    for (k=0;k<onLine.length;k++){
+      sideLine.push([outR, onLine[k][1]]);
+      sideLine.push([outL, onLine[k][1]]);
+    }
+    /* if the line itself is too tight — short hops between neighbours —
+       step the caption just above or below it */
+    for (k=0;k<onLine.length;k++){
+      offLine.push([onLine[k][0], onLine[k][1] - h - 4]);
+      offLine.push([onLine[k][0], onLine[k][1] + h + 4]);
+    }
+    /* last resort, for boxes almost shoulder to shoulder: park the caption
+       clear of both of them, above or below */
+    var beside = [
+      [anchor[0], Math.min(s.top, t.top) - h/2 - 5],
+      [anchor[0], Math.max(s.bottom, t.bottom) + h/2 + 5]
+    ];
+    point = firstClear(onLine) || firstClear(sideLine) || firstClear(offLine) ||
+            firstClear(beside) || anchor;
+  }
+
+  /* Every candidate above can fall outside the diagram — the last two
+     deliberately reach past the top and bottom rows. Clipped is worse than
+     overlapping, so the chosen spot is pulled back inside. */
+  var px = Math.max(w/2 + 2, Math.min(point[0], box.width  - w/2 - 2));
+  var py = Math.max(h/2 + 2, Math.min(point[1], box.height - h/2 - 2));
+
+  label.style.left = px + 'px';
+  label.style.top  = py + 'px';
+}
+
+/* ── stepping ──────────────────────────── */
+
+/* Three states, one painter. Because an edge's id is 'from>to', a step's
+   focus list can name a box and an arrow together and this still works. */
+function paintFocus(){
+  if (!flow) return;
+  var grid = $('fpGrid'), now = {}, seen = {}, i, j, f;
+
+  if (stepI >= 0){
+    f = flow.steps[stepI].focus;
+    for (i=0;i<f.length;i++) now[f[i]] = 1;
+  }
+  for (i=0;i<stepI;i++){
+    f = flow.steps[i].focus;
+    for (j=0;j<f.length;j++) seen[f[j]] = 1;
+  }
+
+  function mark(el, id){
+    el.classList.toggle('is-on',   now[id] === 1);
+    el.classList.toggle('is-done', now[id] !== 1 && seen[id] === 1);
+    el.classList.toggle('is-idle', now[id] !== 1 && seen[id] !== 1);
+  }
+
+  var nodes = grid.querySelectorAll('[data-node]');
+  for (i=0;i<nodes.length;i++) mark(nodes[i], nodes[i].getAttribute('data-node'));
+  /* one query covers the line and its arrowhead — they share the edge id */
+  var edges = grid.querySelectorAll('[data-edge]');
+  for (i=0;i<edges.length;i++) mark(edges[i], edges[i].getAttribute('data-edge'));
+  var labs = grid.querySelectorAll('[data-elabel]');
+  for (i=0;i<labs.length;i++) mark(labs[i], labs[i].getAttribute('data-elabel'));
+}
+
+function show(i){
+  if (!flow) return;
+  var steps = flow.steps;
+  stepI = Math.max(-1, Math.min(i, steps.length - 1));
+  var s = steps[stepI];
+
+  $('fpCap').innerHTML = s
+    ? '<span class="fp-cap-n">'+(stepI+1)+'</span>' +
+      '<div><b class="fp-cap-t">'+s.title+'</b><p>'+s.text+'</p></div>'
+    : '<div class="fp-cap-idle"><span class="chain">'+flow.sub+'</span><br>'+
+      'Press <b>Play</b> to walk it through, or step with the arrow keys.</div>';
+
+  $('fpCount').textContent = Math.max(0, stepI + 1) + ' / ' + steps.length;
+  $('fpFill').style.width  = ((stepI + 1) / steps.length * 100) + '%';
+
+  paintFocus();
+  scrollFocusIntoView();
+  if (A && s) A({targets:'#fpCap .fp-cap-n', scale:[.8,1], duration:280, easing:'easeOutQuad'});
+}
+
+/* Every flow is sized to fit, so this is insurance rather than a feature —
+   but it is what makes the diagram's overflow:auto honest. Set the scroll
+   position outright: smooth scrolling is animation, and animation is exactly
+   what cannot be relied on to run here. */
+function scrollFocusIntoView(){
+  var dia = $('fpDia'), el = dia.querySelector('.fp-node.is-on');
+  if (!el) return;
+  var maxX = dia.scrollWidth  - dia.clientWidth;
+  var maxY = dia.scrollHeight - dia.clientHeight;
+  if (maxX > 0)
+    dia.scrollLeft = Math.max(0, Math.min(el.offsetLeft + el.offsetWidth/2 - dia.clientWidth/2, maxX));
+  if (maxY > 0)
+    dia.scrollTop  = Math.max(0, Math.min(el.offsetTop + el.offsetHeight/2 - dia.clientHeight/2, maxY));
+}
+
+function play(){
+  if (!flow) return;
+  if (stepI >= flow.steps.length - 1) show(-1);
+  playing = true;
+  var b = $('fpPlay');
+  if (b) b.innerHTML = I.pause + '<span>Pause</span>';
+  tick();
+}
+function pause(){
+  playing = false;
+  clearTimeout(fpTimer);
+  var b = $('fpPlay');
+  if (b) b.innerHTML = I.play + '<span>Play</span>';
+}
+function tick(){
+  clearTimeout(fpTimer);
+  if (!playing) return;
+  if (stepI >= flow.steps.length - 1){ pause(); return; }
+  show(stepI + 1);
+  fpTimer = setTimeout(tick, FP_DWELL / fpSpeed);
+}
+
+function selectFlow(id){
+  pause();
+  flow = flowById(id) || FLOWS[0];
+  stepI = -1;
+
+  var btns = $('fpPicker').querySelectorAll('.fp-flow'), i, cols = 0;
+  for (i=0;i<btns.length;i++)
+    btns[i].classList.toggle('is-on', btns[i].getAttribute('data-flow') === flow.id);
+
+  for (i=0;i<flow.nodes.length;i++)
+    if (flow.nodes[i].col + 1 > cols) cols = flow.nodes[i].col + 1;
+
+  var grid = $('fpGrid');
+  grid.style.setProperty('--cols', cols);
+  grid.innerHTML = flowHTML(flow);
+
+  show(-1);
+  /* Draw synchronously — reading the boxes forces the layout we need. A second
+     pass shortly after catches any late reflow; requestAnimationFrame is not
+     used because it never fires while the page is hidden or not compositing. */
+  if (view === 'plan'){
+    drawEdges();
+    setTimeout(drawEdges, 80);
+    play();
+  }
+}
+
+/* drawEdges() reads a rect per box and a width per caption, so unlike the old
+   one-shot wire draw it is worth keeping off the resize event's hot path */
+function queueDraw(){ clearTimeout(fpDraw); fpDraw = setTimeout(drawEdges, 120); }
+
+/* jump to wherever a box is first talked about */
+function stepOfNode(id){
+  var i, j;
+  for (i=0;i<flow.steps.length;i++){
+    for (j=0;j<flow.steps[i].focus.length;j++)
+      if (flow.steps[i].focus[j] === id) return i;
+  }
+  return -1;
 }
 
 /* ════════════════════════════════════════
@@ -862,6 +1466,10 @@ $('segLead').innerHTML = I.board + '<span class="lb">The board</span>';
 $('segMe').innerHTML   = I.user  + '<span class="lb">My work</span><span class="pip">0</span>';
 $('segPlan').innerHTML = I.plan  + '<span class="lb">Blueprint</span>';
 $('adv').innerHTML     = I.fwd   + '<span>+30m</span>';
+$('fpBar').querySelector('[data-ctl="restart"]').innerHTML = I.again;
+$('fpBar').querySelector('[data-ctl="prev"]').innerHTML    = I.prev;
+$('fpBar').querySelector('[data-ctl="next"]').innerHTML    = I.next;
+$('fpPlay').innerHTML = I.play + '<span>Play</span>';
 
 $('toggle').addEventListener('click', function(e){
   var seg = e.target.closest('.seg');
@@ -895,6 +1503,23 @@ $('cards').addEventListener('click', function(e){
 
 /* keyboard: the chips and avatars are real controls */
 document.addEventListener('keydown', function(e){
+  /* one handler, one place: on the walkthrough the keys mean something else
+     entirely, so it takes the event first and hands nothing back */
+  if (view === 'plan'){
+    var a = document.activeElement, tag = a ? a.tagName : '';
+    /* inside the speed menu the arrows belong to the menu */
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if ((e.key === 'Enter' || e.key === ' ') && a && a.classList.contains('fp-node')){
+      e.preventDefault();
+      var at = stepOfNode(a.getAttribute('data-node'));
+      if (at > -1){ pause(); show(at); }
+      return;
+    }
+    if (e.key === 'ArrowRight'){ e.preventDefault(); pause(); show(stepI + 1); }
+    else if (e.key === 'ArrowLeft'){ e.preventDefault(); pause(); show(stepI - 1); }
+    else if (e.key === ' '){ e.preventDefault(); if (playing) pause(); else play(); }
+    return;
+  }
   if (e.key === 'Escape' && sel){ sel = null; renderBand(); renderLanes(); return; }
   if (e.key !== 'Enter' && e.key !== ' ') return;
   var t = document.activeElement;
@@ -923,35 +1548,43 @@ document.addEventListener('drop', function(e){
 });
 document.addEventListener('dragend', function(){ if (sel){ sel = null; renderBand(); renderLanes(); } });
 
-/* the blueprint is a reference: click a class, or click it again to clear */
-$('map').addEventListener('click', function(e){
-  var el = e.target.closest('.cls');
-  if (!el) { picked = null; paintPlan(); return; }
-  var id = el.id.slice(2);
-  picked = (picked === id) ? null : id;
-  paintPlan();
+/* the walkthrough: pick an operation, drive it, or click a box to jump to
+   wherever it is first talked about */
+$('fpPicker').addEventListener('click', function(e){
+  var b = e.target.closest('.fp-flow');
+  if (b) selectFlow(b.getAttribute('data-flow'));
 });
-$('map').addEventListener('keydown', function(e){
-  if (e.key !== 'Enter' && e.key !== ' ') return;
-  var el = e.target.closest && e.target.closest('.cls');
-  if (!el) return;
-  e.preventDefault();
-  var id = el.id.slice(2);
-  picked = (picked === id) ? null : id;
-  paintPlan();
+$('fpBar').addEventListener('click', function(e){
+  var b = e.target.closest('.fp-btn');
+  if (!b) return;
+  var ctl = b.getAttribute('data-ctl');
+  if (ctl === 'play'){ if (playing) pause(); else play(); return; }
+  pause();
+  if (ctl === 'next') show(stepI + 1);
+  else if (ctl === 'prev') show(stepI - 1);
+  else if (ctl === 'restart') show(-1);
+});
+$('fpSpeed').addEventListener('change', function(){ fpSpeed = Number(this.value) || 1; });
+$('fpDia').addEventListener('click', function(e){
+  var n = e.target.closest('.fp-node');
+  if (!n) return;
+  var i = stepOfNode(n.getAttribute('data-node'));
+  if (i > -1){ pause(); show(i); }
 });
 
 window.addEventListener('resize', function(){
   moveThumb();
-  if (view === 'plan'){ drawWires(); paintPlan(); }
+  if (view === 'plan') queueDraw();
 });
 
-buildClasses();
+renderPicker();
+selectFlow(FLOWS[0].id);   /* paints the caption; skips the draw, since the view is still hidden */
 renderAll();
-paintPlan();
 moveThumb();
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveThumb);
-setTimeout(moveThumb, 300);
+/* a late font changes every box's width, so the arrows have to be re-measured */
+function settle(){ moveThumb(); if (view === 'plan') drawEdges(); }
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(settle);
+setTimeout(settle, 300);
 </script>
 </body>
 </html>
