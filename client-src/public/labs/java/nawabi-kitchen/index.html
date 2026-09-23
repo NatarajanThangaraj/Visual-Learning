@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nawabi Kitchen</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127858;</text></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app"></div>
+  <div id="toast" class="toast"></div>
+
+  <!-- --------------------------------------------------------- WELCOME -->
+  <template id="tpl-welcome">
+    <section class="welcome">
+      <div class="welcome__in">
+        <span class="crest">&#10023;</span>
+        <h1>Nawabi Kitchen</h1>
+        <div class="welcome__rule"><span></span>&#10022;<span></span></div>
+        <p class="welcome__tag">Awadhi cooking, taken slowly</p>
+        <p class="welcome__sub">Biryani on dum, kebabs off the coals, and a kitchen
+          that never cooks one order at a time.</p>
+        <div class="welcome__acts">
+          <button class="btn btn--primary btn--lg" data-go="menu">Place Order</button>
+          <button class="btn btn--lg" data-go="assignment">Assignment</button>
+        </div>
+      </div>
+    </section>
+  </template>
+
+  <!-- ------------------------------------------------------------ SHELL -->
+  <template id="tpl-shell">
+    <div class="wrap">
+      <header class="masthead">
+        <span class="crest">&#10023;</span>
+        <div class="masthead__id">
+          <h1>Nawabi Kitchen</h1>
+          <p>Awadhi Kitchen</p>
+        </div>
+        <div class="masthead__act" data-act></div>
+      </header>
+      <main data-view></main>
+    </div>
+  </template>
+</body>
+<script src="menu.js"></script>
+<script src="app.js"></script>
+</html>
