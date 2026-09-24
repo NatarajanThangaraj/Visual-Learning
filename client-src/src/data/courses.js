@@ -163,8 +163,6 @@ export const courses = [
         title: 'Networking & Threads',
         summary: 'Two programs talking over a wire, and several things happening at once inside each one.',
         lessons: [
-          { id: 'mathics-arena', title: 'MathicsArena', minutes: 45,
-            blurb: 'A live math contest played across four machines. Bind port 8080 and watch accept() sit and wait until a player knocks, give every player who joins a thread of their own, then run a round: two players answer on the very same tick. Step it and watch one thread take the lock while the other waits its turn - then switch synchronized off and watch them both win.' },
           { id: 'nawabi-kitchen', title: 'Nawabi Kitchen', minutes: 35,
             blurb: 'Order a biryani and watch it walk six stages on its own clock. Order four more while the first is still cooking and you get five cards sitting at five different stages at once — nothing queues behind anything. Then build the same restaurant as a Java console app: Main opens the Hall, the Hall takes the order and comes straight back for the next one, and the Kitchen gives every order a thread of its own. Make the Hall wait for the food instead and the whole restaurant stops.' },
         ],
