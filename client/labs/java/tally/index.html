@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tally</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F4FF; --surface:#FFFFFF; --ink:#1B1440; --muted:#5B5486; --line:#E3DEF7;
+  --brand:#2E2266; --sun:#FFC93C; --coral:#E8503F; --mint:#1E9E74; --key:#EEEAFE;
+  --font:"Bricolage Grotesque", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#150F33; --surface:#211A4B; --ink:#F3F0FF; --muted:#ABA4D8; --line:#372E6E;
+    --brand:#FFC93C; --coral:#FF7A6B; --mint:#5FE3B5; --key:#2C2461;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#150F33; --surface:#211A4B; --ink:#F3F0FF; --muted:#ABA4D8; --line:#372E6E;
+  --brand:#FFC93C; --coral:#FF7A6B; --mint:#5FE3B5; --key:#2C2461;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%; scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0; min-height:100%; background:var(--bg); color:var(--ink); font-family:var(--font);
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--sun); outline-offset:3px}
+
+/* ---------- Splash ---------- */
+#splash{position:fixed; inset:0; z-index:50; background:#2E2266; display:grid; place-items:center;
+  padding:env(safe-area-inset-top,0px) 1rem env(safe-area-inset-bottom,0px);
+  transition:clip-path .7s cubic-bezier(.7,0,.2,1); clip-path:inset(0 0 0 0)}
+#splash.leaving{clip-path:inset(0 0 100% 0)}
+#splash.gone{display:none}
+.splash-inner{display:flex; flex-direction:column; align-items:center; gap:1.6rem}
+.tiles{display:flex; gap:clamp(.35rem,1.5vw,.6rem)}
+.tile{width:clamp(3.2rem,14vw,5rem); aspect-ratio:1; border-radius:18%; background:#3C2F80; color:#8F84CF;
+  display:grid; place-items:center; font-size:clamp(1.8rem,8vw,2.9rem); font-weight:800;
+  transform:translateY(40px) scale(.6); opacity:0; transition:transform .45s cubic-bezier(.3,1.6,.5,1), opacity .3s}
+.tile.in{transform:none; opacity:1}
+.tile.locked{background:#FFC93C; color:#1B1440; animation:pop .28s ease-out}
+@keyframes pop{50%{transform:scale(1.12) rotate(-4deg)}}
+.tagline{color:#E6E1FF; font-size:1.05rem; letter-spacing:.01em; opacity:0; transform:translateY(8px); transition:.4s ease}
+.bar{width:9rem; height:4px; border-radius:4px; background:#46398F; overflow:hidden; opacity:0; transition:opacity .3s}
+.bar i{display:block; height:100%; width:0; background:#FFC93C; transition:width .8s ease-in-out}
+#splash.ready .tagline{opacity:1; transform:none}
+#splash.ready .bar{opacity:1}
+#splash.ready .bar i{width:100%}
+.skip{position:absolute; right:1rem; bottom:calc(1rem + env(safe-area-inset-bottom,0px)); background:none; border:0;
+  color:#ABA4D8; font-size:.9rem; padding:.5rem .75rem}
+
+/* ---------- App shell ---------- */
+.app{max-width:34rem; margin:0 auto; padding:1rem 1.25rem 3rem}
+header{display:flex; align-items:center; justify-content:space-between; padding:.5rem 0 1.5rem}
+.logo{display:flex; gap:3px}
+.logo span{width:1.6rem; height:1.6rem; border-radius:6px; background:var(--sun); color:#1B1440; display:grid; place-items:center;
+  font-weight:800; font-size:1rem}
+.best-chip{font-size:.9rem; color:var(--muted)}
+.best-chip b{color:var(--ink)}
+
+.hero h1{font-size:clamp(2rem,7vw,2.6rem); line-height:1.05; margin:0 0 .6rem; font-weight:800; letter-spacing:-.02em}
+.hero p{margin:0 0 1.5rem; color:var(--muted); line-height:1.5; max-width:30ch}
+.start{width:100%; border:0; border-radius:1.1rem; background:var(--sun); color:#1B1440; padding:1.1rem 1.25rem;
+  display:flex; justify-content:space-between; align-items:center; font-size:1.2rem; font-weight:800;
+  box-shadow:0 5px 0 #D9A300; transition:transform .08s}
+.start:active{transform:translateY(3px); box-shadow:0 2px 0 #D9A300}
+.start small{font-weight:600; font-size:.9rem}
+
+.modes{margin-top:2.25rem}
+.modes h2{font-size:1.05rem; margin:0 0 .75rem; font-weight:600}
+.mode{display:flex; align-items:center; gap:1rem; padding:.95rem 0; border-top:1px solid var(--line)}
+.mode:last-child{border-bottom:1px solid var(--line)}
+.mode .glyph{width:2.6rem; height:2.6rem; border-radius:.8rem; background:var(--key); display:grid; place-items:center; font-weight:800; font-size:1.2rem; flex:none}
+.mode div{flex:1}
+.mode strong{display:block}
+.mode span{color:var(--muted); font-size:.92rem}
+.mode em{font-style:normal; font-size:.85rem; color:var(--muted)}
+
+/* ---------- Game ---------- */
+#game,#result{display:none}
+.topline{display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem}
+.quit{background:none; border:0; color:var(--muted); padding:.4rem 0}
+.score{font-weight:800; font-size:1.2rem}
+.timer{height:8px; border-radius:8px; background:var(--line); overflow:hidden; margin-bottom:2.5rem}
+.timer i{display:block; height:100%; width:100%; background:var(--sun); transform-origin:left}
+.question{text-align:center; font-size:clamp(2.6rem,12vw,4rem); font-weight:800; letter-spacing:-.02em; min-height:1.2em}
+.answer{margin:1rem auto 2rem; width:min(14rem,80%); min-height:4.2rem; border-radius:1rem; border:2px solid var(--line);
+  display:grid; place-items:center; font-size:2.2rem; font-weight:800; background:var(--surface); transition:border-color .15s, background .15s}
+.answer.ok{border-color:var(--mint)}
+.answer.bad{border-color:var(--coral); animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.pad{display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem}
+.pad button{border:0; border-radius:1rem; background:var(--key); padding:1rem 0; font-size:1.5rem; font-weight:600}
+.pad button:active{transform:scale(.96)}
+
+#result{text-align:center; padding-top:2rem}
+#result .big{font-size:5rem; font-weight:800; line-height:1; margin:.5rem 0}
+#result p{color:var(--muted); margin:.25rem 0 2rem}
+.row{display:flex; gap:.75rem}
+.row button{flex:1}
+.ghost{border:2px solid var(--line); background:none; border-radius:1.1rem; padding:1rem; font-weight:600}
+.replay{margin-top:2.5rem; background:none; border:0; color:var(--muted); text-decoration:underline; font-size:.9rem}
+
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex; gap:.25rem; padding:.25rem; background:var(--key); border-radius:.9rem; margin:0 0 1.75rem}
+.tabs button{flex:1; border:0; background:none; border-radius:.7rem; padding:.6rem .5rem; font-weight:600; color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 0 var(--line)}
+.app.wide{max-width:46rem}
+
+/* ---------- Assignment ---------- */
+#assignment{line-height:1.6}
+#assignment.offstage{position:absolute; left:-10000px; top:0; width:46rem; visibility:hidden}
+#assignment h1{font-size:clamp(1.9rem,6vw,2.4rem); line-height:1.1; margin:0 0 .75rem; font-weight:800; letter-spacing:-.02em}
+#assignment h2{font-size:1.35rem; margin:2.5rem 0 .6rem; font-weight:800; letter-spacing:-.01em}
+#assignment h3{font-size:1.05rem; margin:0 0 .25rem}
+#assignment p, #assignment li{max-width:68ch}
+#assignment .lede{color:var(--muted); font-size:1.08rem}
+#assignment code{font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size:.88em; background:var(--key); padding:.1em .35em; border-radius:.35em}
+#assignment ol, #assignment ul{padding-left:1.25rem}
+#assignment li{margin:.35rem 0}
+.diagram{overflow-x:auto; border:2px solid var(--line); border-radius:1rem; padding:1rem; background:var(--surface); margin:1rem 0}
+.diagram pre.mermaid{margin:0; display:flex; justify-content:center; background:none}
+.cls{border-top:1px solid var(--line); padding:1.1rem 0}
+.cls:last-of-type{border-bottom:1px solid var(--line)}
+.cls .kind{color:var(--muted); font-size:.9rem; font-weight:400; margin-left:.4rem}
+.cls dl{display:grid; grid-template-columns:4.5rem 1fr; gap:.3rem .75rem; margin:.6rem 0 0}
+.cls dt{color:var(--muted); font-weight:600}
+.cls dd{margin:0}
+.checks{list-style:none; padding:0!important}
+.checks li{position:relative; padding-left:2rem}
+.checks li::before{content:""; position:absolute; left:0; top:.3rem; width:1.1rem; height:1.1rem; border:2px solid var(--muted); border-radius:.3rem}
+.console{overflow-x:auto; background:#1B1440; color:#E6E1FF; border-radius:1rem; padding:1rem 1.25rem; font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size:.88rem; line-height:1.55; margin:1rem 0}
+.console .in{color:#FFC93C}
+.rule{border-left:4px solid var(--sun); padding:.25rem 0 .25rem 1rem; margin:1rem 0}
+/* ---------- Welcome ---------- */
+#welcome{display:none; padding-top:2rem}
+#welcome h1{font-size:clamp(2rem,7vw,2.6rem); line-height:1.05; margin:0 0 .6rem; font-weight:800; letter-spacing:-.02em}
+#welcome p{margin:0 0 2rem; color:var(--muted); line-height:1.5; max-width:32ch}
+#welcome label{display:block; font-weight:600; margin-bottom:.5rem}
+.name-field{display:flex; align-items:center; gap:.75rem; border:2px solid var(--line); border-radius:1.1rem; padding:.5rem .75rem; background:var(--surface); margin-bottom:.5rem; transition:border-color .15s}
+.name-field:focus-within{border-color:var(--sun)}
+.name-field .avatar{width:2.6rem; height:2.6rem; font-size:.95rem; background:var(--sun); transition:transform .2s}
+.name-field input{flex:1; min-width:0; border:0; outline:0; background:none; color:var(--ink); font:inherit; font-size:1.3rem; font-weight:600; padding:.4rem 0}
+.name-hint{font-size:.9rem; color:var(--muted); min-height:1.4em; margin-bottom:1.5rem}
+.name-hint.err{color:var(--coral)}
+.hello{font-weight:600}
+.link{background:none; border:0; color:var(--muted); text-decoration:underline; padding:0; font-size:.9rem}
+.me-avatar{background:var(--sun)}
+/* ---------- Duel ---------- */
+.mode.play{width:100%; background:none; border-left:0; border-right:0; border-bottom:1px solid var(--line); text-align:left; border-radius:0}
+.mode.play em{color:var(--ink); font-weight:600}
+.mode.play:hover .glyph{background:var(--sun); color:#1B1440}
+#matching,#duel,#duelResult{display:none}
+#matching{text-align:center; padding-top:3rem}
+.radar{width:9rem; height:9rem; margin:0 auto 2rem; border-radius:50%; position:relative; display:grid; place-items:center}
+.radar::before,.radar::after{content:""; position:absolute; inset:0; border-radius:50%; border:3px solid var(--sun); animation:ping 1.6s ease-out infinite}
+.radar::after{animation-delay:.8s}
+@keyframes ping{from{transform:scale(.4); opacity:1} to{transform:scale(1.2); opacity:0}}
+.avatar{width:3rem; height:3rem; border-radius:50%; display:grid; place-items:center; font-weight:800; color:#1B1440; flex:none}
+.radar .avatar{width:4.5rem; height:4.5rem; font-size:1.6rem; background:var(--key); color:var(--ink); transition:background .2s}
+.match-status{font-size:1.4rem; font-weight:800; margin:0 0 .4rem}
+.match-sub{color:var(--muted); margin:0 0 2rem; min-height:1.5em}
+.versus{display:flex; align-items:center; justify-content:center; gap:1.25rem; margin:0 0 2rem; opacity:0; transform:scale(.9); transition:.35s ease}
+.versus.show{opacity:1; transform:none}
+.versus .side{display:flex; flex-direction:column; align-items:center; gap:.4rem; width:7.5rem}
+.versus .avatar{width:4rem; height:4rem; font-size:1.4rem}
+.versus .vs{font-weight:800; color:var(--muted)}
+.versus small{color:var(--muted)}
+.racer{display:flex; align-items:center; gap:.75rem}
+.racer .avatar{width:2.2rem; height:2.2rem; font-size:.9rem}
+.racer .track{flex:1; height:12px; border-radius:12px; background:var(--line); overflow:hidden}
+.racer .track i{display:block; height:100%; width:0; border-radius:12px; transition:width .25s ease}
+.racer .count{width:3rem; text-align:right; font-weight:800}
+.racer .who{font-size:.85rem; color:var(--muted); width:5.5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.me .track i{background:var(--sun)}
+.opp .track i{background:var(--coral)}
+.countdown{position:fixed; inset:0; z-index:20; display:none; place-items:center; background:color-mix(in srgb, var(--bg) 88%, transparent);
+  font-size:6rem; font-weight:800}
+.countdown.on{display:grid}
+.countdown span{animation:pop .5s ease-out}
+.opp-typing{text-align:center; color:var(--muted); font-size:.9rem; min-height:1.4em; margin-top:-1.4rem; margin-bottom:1rem}
+.facing{display:flex; align-items:center; gap:.6rem; margin-bottom:2.5rem; color:var(--muted)}
+.facing .avatar{width:2.2rem; height:2.2rem; font-size:.85rem}
+.facing strong{color:var(--ink)}
+.scoreline{display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin:1.5rem 0 .5rem}
+.sl{border:2px solid var(--line); border-radius:1.1rem; padding:1rem .5rem; display:flex; flex-direction:column; align-items:center; gap:.3rem}
+.sl.win{border-color:var(--sun)}
+.sl strong{font-size:.95rem; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sl .avatar{width:2.6rem; height:2.6rem; font-size:.9rem}
+.sl-num{font-size:2.6rem; font-weight:800; line-height:1}
+.sl small{color:var(--muted)}
+#duelResult .delta{margin-top:1rem}
+#duelResult{text-align:center; padding-top:2rem}
+#duelResult h2{font-size:2.4rem; margin:.5rem 0 .25rem; font-weight:800; letter-spacing:-.02em}
+#duelResult p{color:var(--muted); margin:.25rem 0}
+.delta{display:inline-block; margin:1rem 0 2rem; padding:.35rem .9rem; border-radius:2rem; font-weight:800; background:var(--key)}
+.delta.up{color:var(--mint)} .delta.down{color:var(--coral)}
+.stack{display:grid; gap:.75rem}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important; transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<div id="splash" role="img" aria-label="Tally is loading">
+  <div class="splash-inner">
+    <div class="tiles" id="tiles"></div>
+    <div class="tagline">Think fast. Count faster.</div>
+    <div class="bar"><i></i></div>
+  </div>
+  <button class="skip" id="skip">Skip</button>
+</div>
+
+<main class="app">
+  <header>
+    <div class="logo" aria-label="Tally"><span>T</span><span>+</span></div>
+    <div class="best-chip"><span class="hello" id="helloName"></span>&nbsp;&nbsp;&nbsp;Rating <b id="ratingTop">1000</b>&nbsp;&nbsp;&nbsp;Best sprint <b id="bestTop">0</b></div>
+  </header>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="tabPlay" aria-selected="true">Play</button>
+    <button role="tab" id="tabAssignment" aria-selected="false">Assignment</button>
+  </nav>
+
+  <section id="welcome">
+    <h1>Pick a name to play.</h1>
+    <p>Other players see it in duels and on the scores.</p>
+    <label for="nameInput">Username</label>
+    <div class="name-field">
+      <div class="avatar me-avatar" id="nameAvatar">?</div>
+      <input id="nameInput" maxlength="16" autocomplete="nickname" autocapitalize="off" spellcheck="false" placeholder="e.g. quickmaths">
+    </div>
+    <div class="name-hint" id="nameHint">3 to 16 letters, numbers, dots or underscores</div>
+    <button class="start" id="saveName" style="justify-content:center">Let's play</button>
+  </section>
+
+  <section id="home">
+    <div class="hero">
+      <h1>Sixty seconds. How many can you solve?</h1>
+      <p>Quick sums get harder as you go. The answer checks itself the moment it's right.</p>
+      <button class="start" id="startBtn">Start sprint <small>60s</small></button>
+    </div>
+
+    <div class="modes">
+      <h2>More ways to play</h2>
+      <button class="mode play" id="duelBtn"><div class="glyph">⚔</div><div><strong>Duel</strong><span>Race an online player. First to 10 correct wins.</span></div><em>Play</em></button>
+    </div>
+    <div style="display:flex; gap:1.5rem; margin-top:2.5rem"><button class="link" id="changeName">Change username</button><button class="link" id="replaySplash">Replay intro</button></div>
+  </section>
+
+  <section id="game" aria-live="polite">
+    <div class="topline">
+      <button class="quit" id="quitBtn">Quit</button>
+      <div class="score" id="score">0</div>
+    </div>
+    <div class="timer"><i id="timerBar"></i></div>
+    <div class="question" id="question"></div>
+    <div class="answer" id="answer" aria-label="Your answer"></div>
+    <div class="pad" id="pad"></div>
+  </section>
+
+  <section id="result">
+    <div>Time's up</div>
+    <div class="big" id="finalScore">0</div>
+    <p id="finalNote"></p>
+    <div class="row">
+      <button class="ghost" id="homeBtn">Home</button>
+      <button class="start" id="againBtn" style="justify-content:center">Play again</button>
+    </div>
+  </section>
+
+  <section id="matching">
+    <div class="radar"><div class="avatar" id="radarAvatar">?</div></div>
+    <p class="match-status" id="matchStatus">Finding an opponent</p>
+    <p class="match-sub" id="matchSub">Looking for players near your rating</p>
+    <div class="versus" id="versus">
+      <div class="side"><div class="avatar me-avatar" data-me-initials></div><strong data-me-name></strong><small id="vsMyRating">1000</small></div>
+      <div class="vs">vs</div>
+      <div class="side"><div class="avatar" id="vsOppAvatar"></div><strong id="vsOppName"></strong><small id="vsOppRating"></small></div>
+    </div>
+    <button class="ghost" id="cancelMatch">Cancel</button>
+  </section>
+
+  <section id="duel" aria-live="polite">
+    <div class="topline">
+      <button class="quit" id="leaveDuel">Leave</button>
+      <div class="score" id="duelClock">0.0s</div>
+    </div>
+    <div class="facing">
+      <div class="avatar me-avatar" data-me-initials></div>
+      <strong data-me-name></strong>
+      <span>vs</span>
+      <div class="avatar" id="oppAvatar"></div>
+      <strong id="oppName"></strong>
+    </div>
+    <div class="question" id="duelQuestion"></div>
+    <div class="answer" id="duelAnswer" aria-label="Your answer"></div>
+    <div class="opp-typing" id="oppTyping"></div>
+    <div class="pad" id="duelPad"></div>
+  </section>
+
+  <section id="duelResult">
+    <div id="drLabel">Duel over</div>
+    <h2 id="drTitle"></h2>
+    <p id="drTimes"></p>
+    <div class="scoreline">
+      <div class="sl" id="slMe"><div class="avatar me-avatar" data-me-initials></div><strong data-me-name></strong><div class="sl-num" id="slMeNum">0</div><small>of 10 solved</small></div>
+      <div class="sl" id="slOpp"><div class="avatar" id="slOppAvatar"></div><strong id="slOppName"></strong><div class="sl-num" id="slOppNum">0</div><small>of 10 solved</small></div>
+    </div>
+    <div class="delta" id="drDelta"></div>
+    <div class="stack">
+      <button class="start" id="rematchBtn" style="justify-content:center">Rematch</button>
+      <div class="row">
+        <button class="ghost" id="duelHomeBtn">Home</button>
+        <button class="ghost" id="newOppBtn">New opponent</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="assignment" class="offstage" role="tabpanel" aria-labelledby="tabAssignment">
+    <h1>The flow</h1>
+    <div class="diagram">
+<pre class="mermaid">
+flowchart TD
+  M[Main] --> D["Dashboard&lt;br/&gt;(client socket created)"]
+  D -->|"Ask username&lt;br/&gt;(set it to the thread)"| GC["Game Center&lt;br/&gt;(client connected to server)"]
+  GC -->|store score| FH[File Handling]
+  FH -->|get all questions and answers| GC
+  GC -->|if Sprint| S["Sprint&lt;br/&gt;Run 60 sec&lt;br/&gt;Show question to the client and get answer"]
+  GC -->|if Duel| DU["Duel&lt;br/&gt;Waiting for another client&lt;br/&gt;If new client connected, start the game"]
+</pre>
+    </div>
+
+    <h2>The classes</h2>
+    <div class="diagram">
+<pre class="mermaid">
+classDiagram
+  class Main {
+    +main(String[] args)
+  }
+  class Dashboard {
+    -Socket clientSocket
+    +askUsername()
+  }
+  class GameCenter {
+    -ServerSocket serverSocket
+    -questionsAndAnswers
+    -List~Player~ players
+    +runSprint()
+    +runDuel()
+  }
+  class Thread
+  class Player {
+    -String playerName
+  }
+  class FileHandling {
+    +storeScore()
+    +getAllQuestionsAndAnswers()
+  }
+  class Sprint {
+    +run60Seconds()
+    +showQuestion()
+    +getAnswer()
+  }
+  class Duel {
+    +waitForAnotherClient()
+    +startGame()
+  }
+  Main --> Dashboard
+  Dashboard --> GameCenter : client connected to server
+  Thread &lt;|-- Player
+  GameCenter o-- Player : manages all clients
+  GameCenter --> FileHandling
+  GameCenter --> Sprint
+  GameCenter --> Duel
+</pre>
+    </div>
+  </section>
+</main>
+<div class="countdown" id="countdown" aria-live="assertive"></div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+if (window.mermaid){
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default', securityLevel: 'strict' });
+}
+</script>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  /* ---------- Splash ---------- */
+  const splash = $('splash'), tilesEl = $('tiles');
+  const WORD = ['T','A','L','L','Y'];
+  let timers = [], spins = [];
+  function clearAll(){ timers.forEach(clearTimeout); spins.forEach(clearInterval); timers = []; spins = []; }
+
+  function runSplash(){
+    clearAll();
+    splash.className = '';
+    tilesEl.innerHTML = '';
+    const tiles = WORD.map(() => {
+      const t = document.createElement('div'); t.className = 'tile'; t.textContent = '0';
+      tilesEl.appendChild(t); return t;
+    });
+    const symbols = '0123456789+−×÷';
+    tiles.forEach((t,i) => {
+      timers.push(setTimeout(() => t.classList.add('in'), 80 * i));
+      const spin = setInterval(() => { t.textContent = symbols[Math.random()*symbols.length|0]; }, 55);
+      spins.push(spin);
+      timers.push(setTimeout(() => {
+        clearInterval(spin); t.textContent = WORD[i]; t.classList.add('locked');
+      }, 750 + i * 190));
+    });
+    timers.push(setTimeout(() => splash.classList.add('ready'), 750 + WORD.length * 190));
+    timers.push(setTimeout(closeSplash, 2900));
+  }
+  function closeSplash(){
+    clearAll();
+    splash.classList.add('leaving');
+    setTimeout(() => { splash.classList.add('gone'); afterSplash(); }, 700);
+  }
+  $('skip').addEventListener('click', closeSplash);
+  $('replaySplash').addEventListener('click', runSplash);
+  runSplash();
+
+  /* ---------- Saved stats ---------- */
+  let best = 0, rating = 1000;
+  try {
+    best = parseInt(localStorage.getItem('tally-best') || '0', 10) || 0;
+    rating = parseInt(localStorage.getItem('tally-rating') || '1000', 10) || 1000;
+  } catch(e){}
+  const save = () => { try { localStorage.setItem('tally-best', String(best)); localStorage.setItem('tally-rating', String(rating)); } catch(e){} };
+  const paintStats = () => { $('bestTop').textContent = best; $('ratingTop').textContent = rating; };
+  paintStats();
+
+  const SCREENS = ['assignment','welcome','home','game','result','matching','duel','duelResult'];
+  let mode = 'home';
+  function showScreen(name){
+    mode = name;
+    SCREENS.forEach(s => {
+      if (s === 'assignment') $(s).classList.toggle('offstage', name !== 'assignment');
+      else $(s).style.display = s === name ? 'block' : 'none';
+    });
+    window.scrollTo(0,0);
+  }
+
+  /* ---------- Username ---------- */
+  let username = '';
+  try { username = localStorage.getItem('tally-name') || ''; } catch(e){}
+  const NAME_OK = /^[A-Za-z0-9_.]{3,16}$/;
+  const initialsOf = n => (n.replace(/[^a-zA-Z0-9]/g,'').slice(0,2) || '?').toUpperCase();
+  function paintName(){
+    document.querySelectorAll('[data-me-name]').forEach(el => el.textContent = username);
+    document.querySelectorAll('[data-me-initials]').forEach(el => el.textContent = initialsOf(username));
+    $('helloName').textContent = username;
+  }
+  function openWelcome(){
+    $('nameInput').value = username;
+    $('nameAvatar').textContent = initialsOf(username);
+    $('nameHint').textContent = '3 to 16 letters, numbers, dots or underscores';
+    $('nameHint').classList.remove('err');
+    showScreen('welcome');
+  }
+  $('nameInput').addEventListener('input', e => {
+    $('nameAvatar').textContent = initialsOf(e.target.value);
+    $('nameHint').classList.remove('err');
+  });
+  function saveName(){
+    const v = $('nameInput').value.trim();
+    if (!NAME_OK.test(v)){
+      const hint = $('nameHint'); hint.classList.add('err');
+      hint.textContent = v.length < 3 ? 'Use at least 3 characters' : 'Use only letters, numbers, dots or underscores';
+      $('nameInput').focus(); return;
+    }
+    username = v;
+    try { localStorage.setItem('tally-name', username); } catch(e){}
+    paintName(); showScreen('home'); $('startBtn').focus({preventScroll:true});
+  }
+  $('saveName').addEventListener('click', saveName);
+  $('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
+  $('changeName').addEventListener('click', openWelcome);
+  function afterSplash(){
+    if (mode === 'welcome') $('nameInput').focus({preventScroll:true});
+    else $('startBtn').focus({preventScroll:true});
+  }
+
+  paintName();
+  openWelcome();
+
+  /* ---------- Questions ---------- */
+  const rand = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+  function makeQuestion(level){
+    const ops = ['+','−','×','÷'].slice(0, Math.min(4, 2 + Math.floor(level/1.5)));
+    const op = ops[rand(0, ops.length-1)];
+    const hi = [9, 20, 40, 75, 99][level];
+    let a, b, ans;
+    if (op === '+'){ a = rand(2,hi); b = rand(2,hi); ans = a+b; }
+    else if (op === '−'){ a = rand(5,hi+10); b = rand(1,a-1); ans = a-b; }
+    else if (op === '×'){ a = rand(2, 5+level*2); b = rand(2, 9+level); ans = a*b; }
+    else { b = rand(2, 5+level*2); ans = rand(2, 9+level); a = ans*b; }
+    return { text: `${a} ${op} ${b}`, answer: ans, op, level };
+  }
+
+  /* Shared answer box behaviour: auto-accepts the right answer, shakes on a wrong one */
+  function makeInput(boxId, onCorrect){
+    const box = $(boxId);
+    const st = { typed: '', answer: 0, locked: false };
+    st.render = () => { box.textContent = st.typed || '\u00A0'; };
+    st.set = ans => { st.answer = ans; st.typed = ''; st.locked = false; st.render(); };
+    st.press = d => {
+      if (st.locked) return;
+      box.classList.remove('bad','ok');
+      if (d === 'del'){ st.typed = st.typed.slice(0,-1); st.render(); return; }
+      if (d === 'clr'){ st.typed = ''; st.render(); return; }
+      st.typed += d; st.render();
+      if (+st.typed === st.answer){
+        st.locked = true; box.classList.add('ok');
+        setTimeout(() => { box.classList.remove('ok'); onCorrect(); }, 140);
+      } else if (st.typed.length >= String(st.answer).length){
+        void box.offsetWidth; box.classList.add('bad');
+        setTimeout(() => { st.typed = ''; st.render(); }, 260);
+      }
+    };
+    return st;
+  }
+  function buildPad(padId, input){
+    ['1','2','3','4','5','6','7','8','9','clr','0','del'].forEach(k => {
+      const b = document.createElement('button');
+      b.textContent = k === 'del' ? '⌫' : k === 'clr' ? 'C' : k;
+      b.setAttribute('aria-label', k === 'del' ? 'Delete' : k === 'clr' ? 'Clear' : k);
+      b.addEventListener('click', () => input.press(k));
+      $(padId).appendChild(b);
+    });
+  }
+
+  /* ---------- Sprint ---------- */
+  const DURATION = 60;
+  let score = 0, endAt = 0, raf = 0, playing = false;
+  const sprintIn = makeInput('answer', () => { score++; $('score').textContent = score; nextSprint(); });
+  buildPad('pad', sprintIn);
+  function nextSprint(){
+    const q = makeQuestion(Math.min(4, Math.floor(score / 5)));
+    $('question').textContent = q.text; sprintIn.set(q.answer);
+  }
+  function tick(){
+    const left = Math.max(0, endAt - performance.now());
+    $('timerBar').style.transform = `scaleX(${left / (DURATION*1000)})`;
+    if (left <= 0) return finish();
+    raf = requestAnimationFrame(tick);
+  }
+  function startSprint(){
+    score = 0; $('score').textContent = 0; playing = true;
+    showScreen('game'); nextSprint();
+    endAt = performance.now() + DURATION*1000;
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+  }
+  function stopSprint(){ playing = false; cancelAnimationFrame(raf); }
+  function finish(){
+    stopSprint();
+    const isBest = score > best;
+    if (isBest){ best = score; save(); }
+    paintStats();
+    $('finalScore').textContent = score;
+    $('finalNote').textContent = isBest && score > 0 ? 'New personal best.' : `Your best is ${best}.`;
+    showScreen('result'); $('againBtn').focus();
+  }
+  $('startBtn').addEventListener('click', startSprint);
+  $('againBtn').addEventListener('click', startSprint);
+  $('homeBtn').addEventListener('click', () => showScreen('home'));
+  $('quitBtn').addEventListener('click', () => { stopSprint(); showScreen('home'); });
+
+  /* ---------- Duel ---------- */
+  const TARGET = 10;
+  const NAMES = ['Aarav_K','mira.solves','Kenji42','zoe_adds','RaviR','lena.m','Tomas9','priya_x','quickfox','Omar.sums','Yuki_7','devnull'];
+  const COLORS = ['#FF8A7A','#7FD8FF','#B79CFF','#7CE3B0','#FFB86B','#F7A8D8'];
+  let opp = null, duelQs = [], meIdx = 0, oppIdx = 0, duelOn = false, duelStart = 0;
+  let duelTimers = [], clockRaf = 0, myFinish = 0, oppFinish = 0;
+
+  const duelIn = makeInput('duelAnswer', () => { if (!duelOn) return; meIdx++; paintRace(); if (meIdx >= TARGET) endDuel('me'); else showDuelQ(); });
+  buildPad('duelPad', duelIn);
+
+  const later = (fn, ms) => { const t = setTimeout(fn, ms); duelTimers.push(t); return t; };
+  const clearDuel = () => { duelTimers.forEach(clearTimeout); duelTimers = []; cancelAnimationFrame(clockRaf); duelOn = false; };
+  const initials = n => n.replace(/[^a-zA-Z]/g,'').slice(0,2).toUpperCase() || 'P';
+
+  function pickOpponent(){
+    const pool = NAMES.filter(n => n.toLowerCase() !== username.toLowerCase());
+    const name = pool[rand(0, pool.length-1)];
+    return { name, rating: Math.max(600, rating + rand(-120, 120)), color: COLORS[rand(0, COLORS.length-1)] };
+  }
+  function paintAvatar(el, o){ el.textContent = initials(o.name); el.style.background = o.color; }
+
+  function findMatch(keepOpponent){
+    clearDuel();
+    showScreen('matching');
+    $('versus').classList.remove('show');
+    $('cancelMatch').style.display = '';
+    const radar = $('radarAvatar');
+    if (keepOpponent && opp){
+      $('matchStatus').textContent = 'Rematch accepted';
+      $('matchSub').textContent = `${opp.name} is ready`;
+      paintAvatar(radar, opp);
+      return later(() => revealOpponent(), 700);
+    }
+    $('matchStatus').textContent = 'Finding an opponent';
+    $('matchSub').textContent = 'Looking for players near your rating';
+    radar.textContent = '?'; radar.style.background = '';
+    const wait = rand(1600, 3200);
+    let n = 0;
+    const flick = () => {
+      if (mode !== 'matching') return;
+      const o = pickOpponent(); paintAvatar(radar, o);
+      if ((n += 180) < wait) later(flick, 180);
+    };
+    later(flick, 300);
+    later(() => { opp = pickOpponent(); paintAvatar(radar, opp); revealOpponent(); }, wait);
+  }
+  function revealOpponent(){
+    $('matchStatus').textContent = 'Opponent found';
+    $('matchSub').textContent = 'Get ready';
+    $('vsMyRating').textContent = rating;
+    paintAvatar($('vsOppAvatar'), opp);
+    $('vsOppName').textContent = opp.name;
+    $('vsOppRating').textContent = opp.rating;
+    $('versus').classList.add('show');
+    $('cancelMatch').style.display = 'none';
+    later(startDuel, 1600);
+  }
+
+  function startDuel(){
+    duelQs = Array.from({length: TARGET}, (_, i) => makeQuestion(Math.min(4, Math.floor(i / 2.2))));
+    meIdx = 0; oppIdx = 0; myFinish = 0; oppFinish = 0;
+    paintAvatar($('oppAvatar'), opp); $('oppName').textContent = opp.name;
+    paintRace(); showScreen('duel');
+    $('duelQuestion').textContent = ''; duelIn.set(-1); duelIn.locked = true;
+    $('duelClock').textContent = '0.0s'; $('oppTyping').textContent = '';
+    const cd = $('countdown'); cd.classList.add('on');
+    ['3','2','1','Go'].forEach((t, i) => later(() => { cd.innerHTML = `<span>${t}</span>`; }, i * 700));
+    later(() => {
+      cd.classList.remove('on');
+      duelOn = true; duelStart = performance.now();
+      showDuelQ(); scheduleOpponent(); runClock();
+    }, 2800);
+  }
+  function showDuelQ(){ const q = duelQs[meIdx]; $('duelQuestion').textContent = q.text; duelIn.set(q.answer); }
+  function paintRace(){ /* progress stays hidden until the duel ends */ }
+  function runClock(){
+    if (!duelOn) return;
+    $('duelClock').textContent = ((performance.now() - duelStart) / 1000).toFixed(1) + 's';
+    clockRaf = requestAnimationFrame(runClock);
+  }
+
+  /* The opponent solves the same sums; stronger opponents answer faster, and harder sums take them longer */
+  function scheduleOpponent(){
+    if (!duelOn || oppIdx >= TARGET) return;
+    const q = duelQs[oppIdx];
+    const base = Math.min(3200, Math.max(1400, 2200 - (opp.rating - rating) * 4));
+    const opCost = { '+': .85, '−': .95, '×': 1.2, '÷': 1.35 }[q.op];
+    let ms = base * opCost * (1 + q.level * 0.08) * (0.7 + Math.random() * 0.6);
+    const slip = Math.random() < 0.1;
+    if (slip) ms += rand(700, 1300);
+    if (slip) later(() => { if (duelOn) $('oppTyping').textContent = `${opp.name} got one wrong`; }, ms * 0.6);
+    later(() => {
+      if (!duelOn) return;
+      oppIdx++; paintRace();
+      $('oppTyping').textContent = '';
+      if (oppIdx >= TARGET) endDuel('opp'); else scheduleOpponent();
+    }, ms);
+  }
+
+  function endDuel(winner){
+    const t = (performance.now() - duelStart) / 1000;
+    clearDuel(); duelIn.locked = true;
+    const won = winner === 'me';
+    // Expected-score rating update, like chess ratings
+    const expected = 1 / (1 + Math.pow(10, (opp.rating - rating) / 400));
+    const change = Math.round(32 * ((won ? 1 : 0) - expected));
+    rating = Math.max(100, rating + change); save(); paintStats();
+    later(() => {
+      $('drLabel').textContent = won ? 'Duel won' : 'Duel lost';
+      $('drTitle').textContent = won ? `${username} was first` : `${opp.name} was first`;
+      $('drTimes').textContent = `Finished in ${t.toFixed(1)}s`;
+      $('slMeNum').textContent = meIdx;
+      $('slOppNum').textContent = oppIdx;
+      paintAvatar($('slOppAvatar'), opp);
+      $('slOppName').textContent = opp.name;
+      $('slMe').classList.toggle('win', won);
+      $('slOpp').classList.toggle('win', !won);
+      const d = $('drDelta');
+      d.textContent = `${change >= 0 ? '+' : ''}${change} rating, now ${rating}`;
+      d.className = 'delta ' + (change >= 0 ? 'up' : 'down');
+      showScreen('duelResult'); $('rematchBtn').focus();
+    }, 450);
+  }
+
+  $('duelBtn').addEventListener('click', () => findMatch(false));
+  $('cancelMatch').addEventListener('click', () => { clearDuel(); showScreen('home'); });
+  $('leaveDuel').addEventListener('click', () => { clearDuel(); $('countdown').classList.remove('on'); showScreen('home'); });
+  $('rematchBtn').addEventListener('click', () => findMatch(true));
+  $('newOppBtn').addEventListener('click', () => findMatch(false));
+  $('duelHomeBtn').addEventListener('click', () => showScreen('home'));
+
+
+  /* ---------- Tabs ---------- */
+  function selectTab(which){
+    const toAssignment = which === 'assignment';
+    $('tabPlay').setAttribute('aria-selected', String(!toAssignment));
+    $('tabAssignment').setAttribute('aria-selected', String(toAssignment));
+    document.querySelector('main.app').classList.toggle('wide', toAssignment);
+    if (toAssignment){
+      stopSprint(); clearDuel(); $('countdown').classList.remove('on');
+      showScreen('assignment');
+    } else if (mode === 'assignment'){
+      if (username) showScreen('home'); else openWelcome();
+    }
+  }
+  $('tabPlay').addEventListener('click', () => selectTab('play'));
+  $('tabAssignment').addEventListener('click', () => selectTab('assignment'));
+
+  /* ---------- Keyboard ---------- */
+  document.addEventListener('keydown', e => {
+    const input = mode === 'game' && playing ? sprintIn : mode === 'duel' && duelOn ? duelIn : null;
+    if (!input) return;
+    if (/^[0-9]$/.test(e.key)) input.press(e.key);
+    else if (e.key === 'Backspace') input.press('del');
+  });
+})();
+</script>
+</body>
+</html>

@@ -165,6 +165,8 @@ export const courses = [
         lessons: [
           { id: 'nawabi-kitchen', title: 'Nawabi Kitchen', minutes: 35,
             blurb: 'Order a biryani and watch it walk six stages on its own clock. Order four more while the first is still cooking and you get five cards sitting at five different stages at once — nothing queues behind anything. Then build the same restaurant as a Java console app: Main opens the Hall, the Hall takes the order and comes straight back for the next one, and the Kitchen gives every order a thread of its own. Make the Hall wait for the food instead and the whole restaurant stops.' },
+          { id: 'tally', title: 'Tally', minutes: 30,
+            blurb: 'A sixty-second mental-maths sprint and a head-to-head duel against an online player — then open the Assignment tab and see the client socket, the game server and the one thread per player that make it work.' },
         ],
       },
     ],
