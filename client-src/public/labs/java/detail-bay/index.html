@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Detail Bay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F7F8; --surface:#FFFFFF; --ink:#16232A; --muted:#55707A; --line:#DCE6E9;
+  --brand:#0E7C8C; --accent:#FFC93C; --done:#1E9E74; --wait:#E8503F; --key:#E2F0F2;
+  --font:"Bricolage Grotesque", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B1518; --surface:#122026; --ink:#E8F5F7; --muted:#83A0A8; --line:#1D323A;
+    --brand:#3FD7E8; --accent:#FFC93C; --done:#5FE3B5; --wait:#FF7A6B; --key:#162A30;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B1518; --surface:#122026; --ink:#E8F5F7; --muted:#83A0A8; --line:#1D323A;
+  --brand:#3FD7E8; --accent:#FFC93C; --done:#5FE3B5; --wait:#FF7A6B; --key:#162A30;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%}
+body{margin:0; min-height:100%; background:var(--bg); color:var(--ink); font-family:var(--font);
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--accent); outline-offset:3px}
+
+.app{max-width:44rem; margin:0 auto; padding:1rem 1.25rem 3rem}
+header{display:flex; align-items:center; justify-content:space-between; padding:.5rem 0 1.5rem}
+.logo{display:flex; align-items:center; gap:.5rem; font-weight:800; font-size:1.05rem}
+.logo span{width:1.8rem; height:1.8rem; border-radius:7px; background:var(--brand); color:#fff; display:grid; place-items:center; font-size:1.05rem}
+.subtitle{color:var(--muted); font-size:.85rem}
+
+/* ---------- Tabs (shared) ---------- */
+.tabs{display:flex; gap:.25rem; padding:.25rem; background:var(--key); border-radius:.9rem; margin:0 0 1.75rem}
+.tabs button{flex:1; border:0; background:none; border-radius:.7rem; padding:.6rem .5rem; font-weight:600; color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 0 var(--line)}
+.app.wide{max-width:50rem}
+
+/* ---------- Assignment (shared) ---------- */
+#assignment{line-height:1.6}
+#assignment.offstage{position:absolute; left:-10000px; top:0; width:50rem; visibility:hidden}
+#assignment h1{font-size:clamp(1.9rem,6vw,2.4rem); line-height:1.1; margin:0 0 .75rem; font-weight:800; letter-spacing:-.02em}
+#assignment h2{font-size:1.35rem; margin:2.5rem 0 .6rem; font-weight:800; letter-spacing:-.01em}
+#assignment p, #assignment li{max-width:68ch}
+#assignment .lede{color:var(--muted); font-size:1.08rem}
+#assignment code{font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size:.88em; background:var(--key); padding:.1em .35em; border-radius:.35em}
+#assignment ol, #assignment ul{padding-left:1.25rem}
+#assignment li{margin:.35rem 0}
+.diagram{overflow-x:auto; border:2px solid var(--line); border-radius:1rem; padding:1rem; background:var(--surface); margin:1rem 0}
+.diagram pre.mermaid{margin:0; display:flex; justify-content:center; background:none}
+.checks{list-style:none; padding:0!important}
+.checks li{position:relative; padding-left:2rem}
+.checks li::before{content:""; position:absolute; left:0; top:.3rem; width:1.1rem; height:1.1rem; border:2px solid var(--muted); border-radius:.3rem}
+.console{overflow-x:auto; white-space:pre-wrap; background:#1B1440; color:#E6E1FF; border-radius:1rem; padding:1rem 1.25rem; font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size:.88rem; line-height:1.55; margin:1rem 0}
+.console .in{color:#FFC93C}
+.rule{border-left:4px solid var(--accent); padding:.25rem 0 .25rem 1rem; margin:1rem 0}
+
+/* ---------- Play: Detail Bay ---------- */
+.hero p{margin:0 0 1.25rem; color:var(--muted); line-height:1.5}
+.banner{display:none; align-items:center; gap:.6rem; background:var(--key); border:1px solid var(--line); color:var(--ink);
+  border-radius:1rem; padding:.75rem 1rem; margin-bottom:1.25rem; font-weight:600; font-size:.92rem}
+.banner.show{display:flex}
+.banner .dot{width:.55rem; height:.55rem; border-radius:50%; background:var(--wait); animation:blink 1s infinite; flex:none}
+@keyframes blink{0%,100%{opacity:.3} 50%{opacity:1}}
+.bay-wrap{display:grid; grid-template-columns:1.1fr 1fr; gap:1.25rem}
+@media (max-width:640px){ .bay-wrap{grid-template-columns:1fr} }
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:1.4rem; padding:1.1rem;
+  box-shadow:0 18px 40px -24px rgba(10,30,35,.3)}
+.panel h3{margin:0 0 .9rem; font-size:1rem}
+.queue{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.8rem}
+.car{border-top:1px solid var(--line); padding-top:.8rem}
+.car:first-child{border-top:0; padding-top:0}
+.car-info{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.5rem}
+.car-info strong{font-size:.98rem}
+.car-info span{color:var(--muted); font-size:.85rem}
+.send{width:100%; border:0; border-radius:.8rem; padding:.6rem; font-weight:700; background:var(--brand); color:#fff; margin-bottom:.6rem}
+.send:disabled{background:var(--key); color:var(--muted); cursor:default}
+.invoice{border:1px dashed var(--line); border-radius:.8rem; padding:.55rem .7rem; font-size:.85rem; color:var(--muted)}
+.receipt{opacity:0; transform:translateY(-8px) rotate(-3deg); transition:opacity .4s cubic-bezier(.3,1.6,.5,1), transform .4s cubic-bezier(.3,1.6,.5,1)}
+.receipt.in{opacity:1; transform:rotate(-1.5deg)}
+.receipt ul{list-style:none; margin:.2rem 0; padding:0; color:var(--ink)}
+.receipt li{display:flex; justify-content:space-between}
+.receipt .total{font-weight:800; color:var(--done); margin-top:.3rem; display:flex; justify-content:space-between}
+.bay-idle{color:var(--muted); font-size:.92rem; padding:2rem 0; text-align:center}
+.bay-car{margin-bottom:1rem}
+.bay-car strong{display:block; font-size:1.05rem}
+.bay-car span{color:var(--muted); font-size:.85rem}
+.steps{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.5rem}
+.step{display:flex; align-items:center; gap:.6rem; padding:.65rem .85rem; border-radius:.85rem; background:var(--key); color:var(--muted); font-weight:600; font-size:.92rem}
+.step.is-now{background:var(--accent); color:#1B1440}
+.step.is-past{background:var(--done); color:#0B1518}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important; transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<main class="app">
+  <header>
+    <div class="logo"><span>&#128663;</span> Detail Bay</div>
+    <div class="subtitle">Shine &amp; Go Car Wash</div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="tabPlay" aria-selected="true">Play</button>
+    <button role="tab" id="tabAssignment" aria-selected="false">Assignment</button>
+  </nav>
+
+  <section id="play">
+    <div class="hero"><p>Send a car to the Detail Bay and wait for its receipt &mdash; the
+      front desk can't do anything else until it comes back.</p></div>
+    <div class="banner" id="busyBanner"><span class="dot"></span> Front desk is waiting on the Detail Bay&hellip;</div>
+    <div class="bay-wrap">
+      <section class="panel">
+        <h3>Front desk</h3>
+        <ul class="queue" id="queue"></ul>
+      </section>
+      <section class="panel">
+        <h3>Detail Bay</h3>
+        <div id="bayView"></div>
+      </section>
+    </div>
+  </section>
+
+  <section id="assignment" class="offstage" role="tabpanel" aria-labelledby="tabAssignment">
+    <h1>Behind Detail Bay</h1>
+    <p class="lede">Every other "Send to Detail Bay" button is disabled the moment one car
+      goes in, because the front desk is a single program and it is standing still, waiting
+      for that one car to come all the way back.</p>
+
+    <h2>The classes</h2>
+    <div class="diagram">
+<pre class="mermaid">
+classDiagram
+  class Main {
+    +main(String[] args)
+  }
+  class FrontDesk {
+    +sendToDetailBay(Car c) Receipt
+  }
+  class DetailBayLauncher {
+    +runAndCapture() List~String~
+  }
+  class Process
+  class BufferedReader
+  class HelloWorld {
+    +main(String[] args)
+  }
+  Main --> FrontDesk
+  FrontDesk --> DetailBayLauncher
+  DetailBayLauncher --> Process : Runtime.exec("java HelloWorld")
+  DetailBayLauncher --> Process : process.waitFor()
+  DetailBayLauncher --> BufferedReader : wraps getInputStream()
+  Process ..> HelloWorld : runs as its own JVM
+</pre>
+    </div>
+
+    <h2>What the terminal sees</h2>
+    <div class="console">
+Front desk: sending TN 09 AB 1234 to the Detail Bay...
+<span class="in">Process p = Runtime.getRuntime().exec("java HelloWorld");</span>
+[main]       p.waitFor() -- nothing below this line runs yet
+[HelloWorld] Hello, world!
+[HelloWorld] Wash complete
+[HelloWorld] Wax complete
+[HelloWorld] Dry complete
+[main]       child exited with code 0
+[main]       receipt attached to invoice for TN 09 AB 1234
+    </div>
+
+    <h2>The task</h2>
+    <p>From the master program, start a second, completely independent Java program and wait
+      for it to hand its results back &mdash; exactly what the front desk does with the bay.</p>
+    <ul class="checks">
+      <li>Launch a separate program with <code>Runtime.getRuntime().exec("java HelloWorld")</code>
+        &mdash; it runs in its own JVM, with its own <code>main()</code>, unrelated to your call stack.</li>
+      <li>Call <code>process.waitFor()</code> right after: this <b>blocks</b> that line, so your
+        program does not continue until the child finishes &mdash; unlike starting a
+        <code>Thread</code>, which would run alongside it.</li>
+      <li>Once <code>waitFor()</code> returns, wrap <code>process.getInputStream()</code> in a
+        <code>new BufferedReader(new InputStreamReader(...))</code> and read every line the
+        child printed with <code>readLine()</code>.</li>
+      <li>Print each line inside your own program's console, as if it were your own output.</li>
+    </ul>
+    <div class="rule">This is exactly why sending a car to the bay freezes every other
+      "Send" button: the front desk is blocked inside <code>waitFor()</code> until that one
+      car's receipt comes back.</div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+if (window.mermaid){
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default', securityLevel: 'strict' });
+}
+</script>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const STAGES = ['Wash', 'Wax', 'Dry'];
+  const STAGE_MS = 2200;
+
+  const PLATE_POOL = ['TN 09 AB 1234', 'KA 03 CJ 7781', 'MH 12 XQ 4420', 'DL 4C UV 9001', 'AP 29 BR 6612'];
+  const MODEL_POOL = ['Hatchback · Teal', 'Sedan · White', 'SUV · Graphite', 'Hatchback · Red', 'Sedan · Silver'];
+  let nextId = 1;
+  let usedPlates = [];
+  function makeCar(){
+    let pool = PLATE_POOL.map((_, i) => i).filter(i => !usedPlates.includes(i));
+    if (!pool.length){ usedPlates = []; pool = PLATE_POOL.map((_, i) => i); }
+    const i = pool[Math.floor(Math.random() * pool.length)];
+    usedPlates.push(i);
+    return { id: nextId++, plate: PLATE_POOL[i], model: MODEL_POOL[i], status: 'waiting', stageIndex: -1, receipt: null };
+  }
+
+  let cars = [makeCar(), makeCar(), makeCar()];
+  let bayBusy = false;
+
+  function renderQueue(){
+    $('queue').innerHTML = cars.map(car => {
+      let btn;
+      if (car.status === 'waiting') btn = `<button class="send" data-send="${car.id}" ${bayBusy ? 'disabled' : ''}>Send to Detail Bay</button>`;
+      else if (car.status === 'in-bay') btn = `<button class="send" disabled>In the Detail Bay&hellip;</button>`;
+      else btn = `<button class="send" disabled>Detail complete</button>`;
+
+      const invoice = car.status === 'done' && car.receipt
+        ? `<div class="receipt in">
+            <ul>${car.receipt.items.map(i => `<li><span>${i}</span><span>Done</span></li>`).join('')}</ul>
+            <div class="total"><span>Total</span><span>${car.receipt.total}</span></div>
+           </div>`
+        : `Awaiting detail&hellip;`;
+
+      return `<li class="car" data-id="${car.id}">
+        <div class="car-info"><strong>${esc(car.plate)}</strong><span>${esc(car.model)}</span></div>
+        ${btn}
+        <div class="invoice">${invoice}</div>
+      </li>`;
+    }).join('');
+  }
+
+  function renderBay(car){
+    const view = $('bayView');
+    if (!car){
+      view.innerHTML = `<p class="bay-idle">The bay is idle.<br>Send a car over.</p>`;
+      return;
+    }
+    view.innerHTML = `
+      <div class="bay-car"><strong>${esc(car.plate)}</strong><span>${esc(car.model)}</span></div>
+      <ul class="steps">${STAGES.map((s, i) => {
+        const cls = i < car.stageIndex ? 'is-past' : i === car.stageIndex ? 'is-now' : '';
+        return `<li class="step ${cls}">${s}</li>`;
+      }).join('')}</ul>`;
+  }
+
+  function showBanner(on){ $('busyBanner').classList.toggle('show', on); }
+
+  function buildReceipt(){
+    const total = 180 + Math.floor(Math.random() * 6) * 10;
+    return { items: STAGES.slice(), total: `₹${total}` };
+  }
+
+  function runBayCycle(car){
+    let i = -1;
+    const step = () => {
+      i++;
+      if (i < STAGES.length){
+        car.stageIndex = i;
+        renderBay(car);
+        setTimeout(step, STAGE_MS);
+      } else {
+        car.status = 'done';
+        car.receipt = buildReceipt();
+        bayBusy = false;
+        showBanner(false);
+        renderBay(null);
+        renderQueue();
+      }
+    };
+    step();
+  }
+
+  function sendToDetailBay(id){
+    if (bayBusy) return;
+    const car = cars.find(c => c.id === id && c.status === 'waiting');
+    if (!car) return;
+    bayBusy = true;
+    car.status = 'in-bay';
+    car.stageIndex = -1;
+    showBanner(true);
+    renderQueue();
+    renderBay(car);
+    runBayCycle(car);
+  }
+
+  $('queue').addEventListener('click', e => {
+    const b = e.target.closest('[data-send]');
+    if (b) sendToDetailBay(Number(b.dataset.send));
+  });
+
+  renderQueue();
+  renderBay(null);
+
+  setInterval(() => {
+    if (cars.filter(c => c.status !== 'done').length >= 5) return;
+    cars.push(makeCar());
+    renderQueue();
+  }, 18000);
+
+  /* ---------- Tabs ---------- */
+  function selectTab(which){
+    const toAssignment = which === 'assignment';
+    $('tabPlay').setAttribute('aria-selected', String(!toAssignment));
+    $('tabAssignment').setAttribute('aria-selected', String(toAssignment));
+    document.querySelector('main.app').classList.toggle('wide', toAssignment);
+    $('assignment').classList.toggle('offstage', !toAssignment);
+    $('play').style.display = toAssignment ? 'none' : 'block';
+  }
+  $('tabPlay').addEventListener('click', () => selectTab('play'));
+  $('tabAssignment').addEventListener('click', () => selectTab('assignment'));
+})();
+</script>
+</body>
+</html>

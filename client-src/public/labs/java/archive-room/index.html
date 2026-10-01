@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Archive Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F8F4EC; --surface:#FFFFFF; --ink:#2E2718; --muted:#7A6E57; --line:#E8DFC8;
+  --brand:#2E3F6E; --folder:#D9A441; --match:#1E9E74; --key:#EFE7D2;
+  --font:"Bricolage Grotesque", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17140D; --surface:#241F14; --ink:#F4EEDD; --muted:#B2A488; --line:#352D1D;
+    --brand:#8FA3FF; --folder:#E8BE63; --match:#5FE3B5; --key:#2B2516;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17140D; --surface:#241F14; --ink:#F4EEDD; --muted:#B2A488; --line:#352D1D;
+  --brand:#8FA3FF; --folder:#E8BE63; --match:#5FE3B5; --key:#2B2516;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%}
+body{margin:0; min-height:100%; background:var(--bg); color:var(--ink); font-family:var(--font);
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--folder); outline-offset:3px}
+
+.app{max-width:40rem; margin:0 auto; padding:1rem 1.25rem 3rem}
+header{display:flex; align-items:center; justify-content:space-between; padding:.5rem 0 1.5rem}
+.logo{display:flex; align-items:center; gap:.5rem; font-weight:800; font-size:1.05rem}
+.logo span{width:1.8rem; height:1.8rem; border-radius:7px; background:var(--brand); color:#fff; display:grid; place-items:center; font-size:1.05rem}
+.subtitle{color:var(--muted); font-size:.85rem}
+
+/* ---------- Tabs (shared) ---------- */
+.tabs{display:flex; gap:.25rem; padding:.25rem; background:var(--key); border-radius:.9rem; margin:0 0 1.75rem}
+.tabs button{flex:1; border:0; background:none; border-radius:.7rem; padding:.6rem .5rem; font-weight:600; color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 0 var(--line)}
+.app.wide{max-width:50rem}
+
+/* ---------- Assignment (shared) ---------- */
+#assignment{line-height:1.6}
+#assignment.offstage{position:absolute; left:-10000px; top:0; width:50rem; visibility:hidden}
+#assignment h1{font-size:clamp(1.9rem,6vw,2.4rem); line-height:1.1; margin:0 0 .75rem; font-weight:800; letter-spacing:-.02em}
+#assignment h2{font-size:1.35rem; margin:2.5rem 0 .6rem; font-weight:800; letter-spacing:-.01em}
+#assignment p, #assignment li{max-width:68ch}
+#assignment .lede{color:var(--muted); font-size:1.08rem}
+#assignment code{font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size:.88em; background:var(--key); padding:.1em .35em; border-radius:.35em}
+#assignment ol, #assignment ul{padding-left:1.25rem}
+#assignment li{margin:.35rem 0}
+.diagram{overflow-x:auto; border:2px solid var(--line); border-radius:1rem; padding:1rem; background:var(--surface); margin:1rem 0}
+.diagram pre.mermaid{margin:0; display:flex; justify-content:center; background:none}
+.checks{list-style:none; padding:0!important}
+.checks li{position:relative; padding-left:2rem}
+.checks li::before{content:""; position:absolute; left:0; top:.3rem; width:1.1rem; height:1.1rem; border:2px solid var(--muted); border-radius:.3rem}
+.console{overflow-x:auto; white-space:pre-wrap; background:#1B1440; color:#E6E1FF; border-radius:1rem; padding:1rem 1.25rem; font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size:.88rem; line-height:1.55; margin:1rem 0}
+.console .in{color:#FFC93C}
+.rule{border-left:4px solid var(--folder); padding:.25rem 0 .25rem 1rem; margin:1rem 0}
+
+/* ---------- Play: Archive Room ---------- */
+.hero p{margin:0 0 1.25rem; color:var(--muted); line-height:1.5}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:1.4rem; padding:1.1rem 1.1rem 1.25rem;
+  box-shadow:0 18px 40px -24px rgba(40,30,10,.3)}
+.controls{display:flex; gap:.6rem; margin-bottom:1.1rem}
+.controls input{flex:1; min-width:0; border:2px solid var(--line); border-radius:.8rem; padding:.65rem .9rem;
+  background:var(--bg); color:var(--ink); font:inherit; font-size:1rem}
+.controls button{border:0; border-radius:.8rem; padding:.65rem 1.1rem; font-weight:700; background:var(--brand); color:#fff; flex:none}
+.controls button:active{transform:scale(.97)}
+.hint{color:var(--muted); font-size:.82rem; margin:-.6rem 0 1.1rem}
+.cabinets{display:grid; grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr)); gap:.8rem; margin-bottom:1.25rem}
+.drawer{background:var(--bg); border:2px solid var(--line); border-radius:.9rem; padding:.9rem .6rem; text-align:center;
+  position:relative; transition:transform .25s ease, border-color .25s ease, background .25s ease}
+.drawer .front{display:flex; flex-direction:column; align-items:center; gap:.45rem}
+.drawer .handle{width:2.2rem; height:.4rem; border-radius:.3rem; background:var(--folder); transition:transform .3s ease}
+.drawer .label{font-weight:700; font-size:.82rem}
+.drawer .count{font-size:.72rem; color:var(--muted); margin-top:.45rem; min-height:1em}
+.drawer.open .handle{transform:translateY(5px)}
+.drawer.searching{border-color:var(--folder)}
+.drawer.searching .count{color:var(--folder)}
+.drawer.hit{border-color:var(--match); background:var(--key)}
+.drawer.hit .count{color:var(--match); font-weight:700}
+.results{border-top:1px solid var(--line); padding-top:.9rem}
+.results ul{list-style:none; margin:0; padding:0}
+.result-row{display:flex; flex-direction:column; padding:.55rem 0; border-top:1px solid var(--line);
+  opacity:0; transform:translateX(-10px); animation:slidein .35s ease forwards}
+.result-row:first-child{border-top:0}
+.result-row .path{color:var(--muted); font-size:.78rem}
+.result-row .file{font-weight:700; font-size:.92rem}
+@keyframes slidein{to{opacity:1; transform:none}}
+.summary{color:var(--muted); font-size:.88rem; margin-top:.4rem}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important; transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<main class="app">
+  <header>
+    <div class="logo"><span>&#128193;</span> Archive Room</div>
+    <div class="subtitle">Northside Records Office</div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="tabPlay" aria-selected="true">Play</button>
+    <button role="tab" id="tabAssignment" aria-selected="false">Assignment</button>
+  </nav>
+
+  <section id="play">
+    <div class="hero"><p>Somewhere in these eight drawers is every document that mentions
+      your word. Open them all at once instead of one by one.</p></div>
+    <div class="panel">
+      <div class="controls">
+        <input id="keyword" placeholder="Search all drawers&hellip;" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button id="searchBtn">Search</button>
+      </div>
+      <p class="hint">Try &ldquo;refund&rdquo; or &ldquo;warranty&rdquo;.</p>
+      <div class="cabinets" id="cabinets"></div>
+      <div class="results">
+        <ul id="resultsList"></ul>
+        <p class="summary" id="resultsSummary"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="assignment" class="offstage" role="tabpanel" aria-labelledby="tabAssignment">
+    <h1>Behind Archive Room</h1>
+    <p class="lede">"Search all drawers" never looks inside a document &mdash; it hands the
+      word to a tool built for exactly this, and only reads back the names of the files that
+      tool found.</p>
+
+    <h2>The classes</h2>
+    <div class="diagram">
+<pre class="mermaid">
+classDiagram
+  class Main {
+    +main(String[] args)
+  }
+  class ArchiveSearcher {
+    +searchKeyword(String keyword, String path) List~String~
+  }
+  class CommandRunner {
+    +run(String command) Process
+  }
+  class Process
+  class BufferedReader
+  Main --> ArchiveSearcher
+  ArchiveSearcher --> CommandRunner
+  CommandRunner --> Process : Runtime.exec("grep -rl ...")
+  ArchiveSearcher --> BufferedReader : reads getInputStream() line by line
+</pre>
+    </div>
+
+    <h2>What the terminal sees</h2>
+    <div class="console">
+Search all drawers for: <span class="in">refund</span>
+Running: grep -rl "refund" /archive
+/archive/invoices_2021/INV-1042.txt
+/archive/receipts/RCPT-884.txt
+/archive/contracts_2022/addendum_7.txt
+3 matching files found.
+    </div>
+
+    <h2>The task</h2>
+    <p>Write a Java program that searches every file under a directory for a keyword, using a
+      tool the OS already has &mdash; the same shortcut "Search all drawers" is taking.</p>
+    <ul class="checks">
+      <li>On Mac/Linux, run
+        <code>Runtime.getRuntime().exec(new String[]{"grep","-rl",keyword,path})</code>.</li>
+      <li>On Windows, run <code>exec("findstr /s /m \"" + keyword + "\" *.txt")</code> from
+        inside the archive directory instead.</li>
+      <li>Wrap <code>process.getInputStream()</code> in a <code>BufferedReader</code> and call
+        <code>readLine()</code> in a loop until it returns <code>null</code> &mdash; each line
+        is one matching file's path.</li>
+      <li>Collect every path into a <code>List&lt;String&gt;</code>; print a numbered list when
+        the loop ends, or <code>"No matches found."</code> if the list is empty.</li>
+    </ul>
+    <div class="rule"><code>-l</code> and <code>/m</code> tell the tool to print file names
+      only, never the matching line itself &mdash; exactly what the Play tab shows: a file name
+      sliding out, never a text preview.</div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+if (window.mermaid){
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default', securityLevel: 'strict' });
+}
+</script>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  const DRAWERS = [
+    { id: '1-1', cabinet: 1, drawer: 1, label: 'Invoices 2021', docs: ['INV-1042.txt', 'INV-1077-refund.txt', 'INV-1090.txt'] },
+    { id: '1-2', cabinet: 1, drawer: 2, label: 'HR Records', docs: ['Onboarding-Checklist.txt', 'Leave-Policy.txt', 'Appraisal-2021.txt'] },
+    { id: '2-1', cabinet: 2, drawer: 1, label: 'Contracts 2022', docs: ['Vendor-Agreement.txt', 'Contract-Addendum-7.txt', 'NDA-Template.txt'] },
+    { id: '2-2', cabinet: 2, drawer: 2, label: 'Receipts', docs: ['RCPT-884-refund.txt', 'RCPT-901.txt', 'RCPT-915.txt'] },
+    { id: '3-1', cabinet: 3, drawer: 1, label: 'Warranties', docs: ['Printer-Warranty.txt', 'AC-Warranty-Extended.txt'] },
+    { id: '3-2', cabinet: 3, drawer: 2, label: 'Old Payroll', docs: ['Payroll-Jan.txt', 'Payroll-Feb-refund-adjustment.txt', 'Payroll-Mar.txt'] },
+    { id: '4-1', cabinet: 4, drawer: 1, label: 'Vendor Mail', docs: ['Vendor-RefundNotice.txt', 'Vendor-OrderConfirm.txt'] },
+    { id: '4-2', cabinet: 4, drawer: 2, label: 'Service Logs', docs: ['ServiceLog-Warranty-Claim.txt', 'ServiceLog-0002.txt', 'ServiceLog-0003.txt'] },
+  ];
+
+  function buildCabinets(){
+    $('cabinets').innerHTML = DRAWERS.map(d => `
+      <div class="drawer" data-id="${d.id}">
+        <div class="front"><span class="handle"></span><span class="label">${esc(d.label)}</span></div>
+        <div class="count"></div>
+      </div>`).join('');
+  }
+  const drawerEl = id => $('cabinets').querySelector(`[data-id="${id}"]`);
+
+  function ejectDoc(d, name){
+    const row = document.createElement('li');
+    row.className = 'result-row';
+    row.innerHTML = `<span class="path">Cabinet ${d.cabinet} / Drawer ${d.drawer} / ${esc(d.label)}</span><span class="file">${esc(name)}</span>`;
+    $('resultsList').appendChild(row);
+  }
+
+  function openDrawer(d, keyword, onDone){
+    const el = drawerEl(d.id);
+    el.classList.add('open', 'searching');
+    el.querySelector('.count').textContent = 'Searching…';
+    setTimeout(() => {
+      const hits = d.docs.filter(name => name.toLowerCase().includes(keyword));
+      el.classList.remove('searching');
+      el.classList.toggle('hit', hits.length > 0);
+      el.querySelector('.count').textContent = hits.length
+        ? `${hits.length} match${hits.length === 1 ? '' : 'es'}`
+        : 'no match';
+      hits.forEach((name, j) => setTimeout(() => ejectDoc(d, name), j * 150));
+      if (!hits.length) setTimeout(() => el.classList.remove('open'), 600);
+      onDone(hits.length);
+    }, 480);
+  }
+
+  function searchAll(){
+    const keyword = $('keyword').value.trim().toLowerCase();
+    if (!keyword) return;
+    $('resultsList').innerHTML = '';
+    $('resultsSummary').textContent = '';
+    DRAWERS.forEach(d => drawerEl(d.id).classList.remove('open', 'hit', 'searching'));
+    let total = 0, done = 0;
+    DRAWERS.forEach((d, i) => {
+      setTimeout(() => {
+        openDrawer(d, keyword, hits => {
+          total += hits; done++;
+          if (done === DRAWERS.length){
+            $('resultsSummary').textContent = `${total} match${total === 1 ? '' : 'es'} found across ${DRAWERS.length} drawers.`;
+          }
+        });
+      }, i * 220);
+    });
+  }
+
+  buildCabinets();
+  $('searchBtn').addEventListener('click', searchAll);
+  $('keyword').addEventListener('keydown', e => { if (e.key === 'Enter') searchAll(); });
+
+  /* ---------- Tabs ---------- */
+  function selectTab(which){
+    const toAssignment = which === 'assignment';
+    $('tabPlay').setAttribute('aria-selected', String(!toAssignment));
+    $('tabAssignment').setAttribute('aria-selected', String(toAssignment));
+    document.querySelector('main.app').classList.toggle('wide', toAssignment);
+    $('assignment').classList.toggle('offstage', !toAssignment);
+    $('play').style.display = toAssignment ? 'none' : 'block';
+  }
+  $('tabPlay').addEventListener('click', () => selectTab('play'));
+  $('tabAssignment').addEventListener('click', () => selectTab('assignment'));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>App Curfew</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F6FB; --surface:#FFFFFF; --ink:#152238; --muted:#5B6B85; --line:#DCE4F0;
+  --brand:#2B5FD9; --alert:#E8503F; --safe:#1E9E74; --warn:#FFB23C; --key:#E8EEFC;
+  --font:"Bricolage Grotesque", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1626; --surface:#17213A; --ink:#EAF0FF; --muted:#8FA0C2; --line:#263355;
+    --brand:#6E9BFF; --alert:#FF7A6B; --safe:#5FE3B5; --warn:#FFC93C; --key:#1E2A4C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1626; --surface:#17213A; --ink:#EAF0FF; --muted:#8FA0C2; --line:#263355;
+  --brand:#6E9BFF; --alert:#FF7A6B; --safe:#5FE3B5; --warn:#FFC93C; --key:#1E2A4C;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%}
+body{margin:0; min-height:100%; background:var(--bg); color:var(--ink); font-family:var(--font);
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--warn); outline-offset:3px}
+
+.app{max-width:34rem; margin:0 auto; padding:1rem 1.25rem 3rem}
+header{display:flex; align-items:center; justify-content:space-between; padding:.5rem 0 1.5rem}
+.logo{display:flex; align-items:center; gap:.5rem; font-weight:800; font-size:1.05rem}
+.logo span{width:1.8rem; height:1.8rem; border-radius:7px; background:var(--brand); color:#fff; display:grid; place-items:center; font-size:1.05rem}
+.subtitle{color:var(--muted); font-size:.85rem}
+
+/* ---------- Tabs (shared) ---------- */
+.tabs{display:flex; gap:.25rem; padding:.25rem; background:var(--key); border-radius:.9rem; margin:0 0 1.75rem}
+.tabs button{flex:1; border:0; background:none; border-radius:.7rem; padding:.6rem .5rem; font-weight:600; color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 0 var(--line)}
+.app.wide{max-width:46rem}
+
+/* ---------- Assignment (shared) ---------- */
+#assignment{line-height:1.6}
+#assignment.offstage{position:absolute; left:-10000px; top:0; width:46rem; visibility:hidden}
+#assignment h1{font-size:clamp(1.9rem,6vw,2.4rem); line-height:1.1; margin:0 0 .75rem; font-weight:800; letter-spacing:-.02em}
+#assignment h2{font-size:1.35rem; margin:2.5rem 0 .6rem; font-weight:800; letter-spacing:-.01em}
+#assignment h3{font-size:1.05rem; margin:0 0 .25rem}
+#assignment p, #assignment li{max-width:68ch}
+#assignment .lede{color:var(--muted); font-size:1.08rem}
+#assignment code{font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size:.88em; background:var(--key); padding:.1em .35em; border-radius:.35em}
+#assignment ol, #assignment ul{padding-left:1.25rem}
+#assignment li{margin:.35rem 0}
+.diagram{overflow-x:auto; border:2px solid var(--line); border-radius:1rem; padding:1rem; background:var(--surface); margin:1rem 0}
+.diagram pre.mermaid{margin:0; display:flex; justify-content:center; background:none}
+.checks{list-style:none; padding:0!important}
+.checks li{position:relative; padding-left:2rem}
+.checks li::before{content:""; position:absolute; left:0; top:.3rem; width:1.1rem; height:1.1rem; border:2px solid var(--muted); border-radius:.3rem}
+.console{overflow-x:auto; white-space:pre-wrap; background:#1B1440; color:#E6E1FF; border-radius:1rem; padding:1rem 1.25rem; font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size:.88rem; line-height:1.55; margin:1rem 0}
+.console .in{color:#FFC93C}
+.rule{border-left:4px solid var(--warn); padding:.25rem 0 .25rem 1rem; margin:1rem 0}
+
+/* ---------- Play: App Curfew ---------- */
+#play{display:block}
+.hero p{margin:0 0 1.5rem; color:var(--muted); line-height:1.5}
+.phone{max-width:22rem; margin:0 auto; background:var(--surface); border:1px solid var(--line); border-radius:1.6rem;
+  padding:1.1rem; box-shadow:0 18px 40px -24px rgba(20,30,60,.35)}
+.phone__top{display:flex; align-items:center; justify-content:space-between; margin-bottom:.9rem}
+.phone__top strong{font-size:1.05rem}
+.phone__top span{color:var(--muted); font-size:.85rem}
+.search{width:100%; border:2px solid var(--line); border-radius:.9rem; padding:.7rem .9rem; background:var(--bg);
+  color:var(--ink); font:inherit; font-size:1rem; margin-bottom:.9rem}
+.search:focus-visible{outline-offset:0}
+.app-list{list-style:none; margin:0; padding:0}
+.app-row{display:flex; align-items:center; gap:.8rem; padding:.7rem 0; border-top:1px solid var(--line);
+  transition:opacity .32s ease, transform .32s ease}
+.app-row:last-child{padding-bottom:0}
+.app-row.leaving{opacity:0; transform:translateX(26px) scale(.97); pointer-events:none}
+.tile{width:2.6rem; height:2.6rem; border-radius:.8rem; background:var(--key); display:grid; place-items:center;
+  font-size:1.3rem; flex:none}
+.info{flex:1; min-width:0}
+.info strong{display:block; font-size:1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.openfor{color:var(--muted); font-size:.85rem}
+.sendhome{border:2px solid var(--alert); color:var(--alert); background:none; border-radius:.7rem; padding:.45rem .8rem;
+  font-weight:700; font-size:.85rem; flex:none}
+.sendhome:active{transform:scale(.96)}
+.locating-label{color:var(--muted); font-size:.85rem; font-weight:600; flex:none; display:none}
+.app-row.locating .sendhome{display:none}
+.app-row.locating .locating-label{display:inline-flex; gap:1px}
+.locating-label .dot{animation:blink 1.1s infinite}
+.locating-label .dot:nth-child(2){animation-delay:.18s}
+.locating-label .dot:nth-child(3){animation-delay:.36s}
+@keyframes blink{0%,80%,100%{opacity:.25} 40%{opacity:1}}
+.empty{color:var(--muted); text-align:center; padding:1.5rem 0; font-size:.95rem}
+details.history{margin-top:1.25rem; color:var(--muted); font-size:.9rem}
+details.history summary{cursor:pointer; font-weight:600; color:var(--ink)}
+details.history ul{list-style:none; padding:0; margin:.6rem 0 0}
+details.history li{display:flex; justify-content:space-between; padding:.3rem 0; border-top:1px solid var(--line)}
+.toast{position:fixed; left:50%; bottom:1.5rem; transform:translate(-50%,10px); background:var(--ink); color:var(--bg);
+  padding:.65rem 1.1rem; border-radius:.8rem; font-size:.9rem; font-weight:600; opacity:0; transition:.25s ease; pointer-events:none}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important; transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<main class="app">
+  <header>
+    <div class="logo"><span>&#9201;</span> App Curfew</div>
+    <div class="subtitle">Family phone</div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="tabPlay" aria-selected="true">Play</button>
+    <button role="tab" id="tabAssignment" aria-selected="false">Assignment</button>
+  </nav>
+
+  <section id="play">
+    <div class="hero">
+      <p>Find what's still open on the kid's tablet and send it home before dinner.</p>
+    </div>
+    <div class="phone">
+      <div class="phone__top"><strong>Open apps</strong><span id="countLabel">0 open</span></div>
+      <input class="search" id="search" placeholder="Search an app by name&hellip;" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <ul class="app-list" id="appList"></ul>
+      <p class="empty" id="empty" hidden></p>
+    </div>
+    <details class="history" id="history" hidden>
+      <summary>Sent home today</summary>
+      <ul id="historyList"></ul>
+    </details>
+  </section>
+
+  <section id="assignment" class="offstage" role="tabpanel" aria-labelledby="tabAssignment">
+    <h1>Behind App Curfew</h1>
+    <p class="lede">Searching the list and tapping "Send home" is the whole trick: ask the
+      operating system what's running, find the one you mean, and tell the operating system
+      to end it. No app can tell you that from the inside &mdash; you have to go through the OS.</p>
+
+    <h2>The classes</h2>
+    <div class="diagram">
+<pre class="mermaid">
+classDiagram
+  class Main {
+    +main(String[] args)
+  }
+  class CurfewManager {
+    +findAndClose(String appName)
+  }
+  class ProcessLister {
+    +listRunningApps() List~String~
+    +findPid(String appName, List~String~ lines) String
+  }
+  class ProcessKiller {
+    +terminate(String pid)
+  }
+  class Process
+  Main --> CurfewManager
+  CurfewManager --> ProcessLister
+  CurfewManager --> ProcessKiller
+  ProcessLister --> Process : Runtime.exec("tasklist")
+  ProcessKiller --> Process : Runtime.exec("taskkill /PID ... /F")
+</pre>
+    </div>
+
+    <h2>What the terminal sees</h2>
+    <div class="console">
+Which app should be sent home? <span class="in">notepad</span>
+Running: tasklist
+Image Name                     PID   Session   Mem Usage
+notepad.exe                    5172  Console   14,320 K
+Found notepad.exe, PID 5172
+Running: taskkill /PID 5172 /F
+SUCCESS: The process with PID 5172 has been terminated.
+
+Which app should be sent home? <span class="in">safari</span>
+No process named safari is currently running.
+    </div>
+
+    <h2>The task</h2>
+    <p>Write a Java program that lists every running process, finds the one you name, and
+      shuts it down &mdash; the same two steps "Send home" hides behind a button.</p>
+    <ul class="checks">
+      <li>Run <code>Runtime.getRuntime().exec("tasklist")</code> on Windows (or
+        <code>exec("ps -A")</code> on Mac/Linux) and wrap <code>process.getInputStream()</code>
+        in a <code>BufferedReader</code>.</li>
+      <li>Call <code>readLine()</code> in a loop until it returns <code>null</code>, checking
+        each line for the app name you were given.</li>
+      <li>When a line matches, split it on whitespace to pull out the PID &mdash; the second
+        column in both <code>tasklist</code> and <code>ps -A</code> output.</li>
+      <li>Run a second <code>Runtime.exec()</code> &mdash; <code>"taskkill /PID " + pid + " /F"</code>
+        on Windows, or <code>"kill -9 " + pid</code> on Mac/Linux &mdash; to end it.</li>
+      <li>If no line matches the name, print that nothing by that name is running instead of
+        guessing a PID.</li>
+    </ul>
+    <div class="rule">A process never announces when it ends &mdash; your program only knows
+      because it asked the OS, the same way "Send home" only knows once it has searched the list.</div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+if (window.mermaid){
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default', securityLevel: 'strict' });
+}
+</script>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  const SEED = [
+    { name: 'Block Blaster',  icon: '\u{1F3AE}' },
+    { name: 'Clip Maker',     icon: '\u{1F3AC}' },
+    { name: 'Chat Circle',    icon: '\u{1F4AC}' },
+    { name: 'Math Mentor',    icon: '\u{1F4D0}' },
+  ];
+  const POOL = [
+    { name: 'Sticker Studio', icon: '\u{1F31F}' },
+    { name: 'Puzzle Dash',    icon: '\u{1F9E9}' },
+    { name: 'Tune Spinner',   icon: '\u{1F3B5}' },
+    { name: 'Trivia Town',    icon: '\u{2753}' },
+    { name: 'Bug Squash',     icon: '\u{1F41E}' },
+  ];
+  let nextId = 1;
+  let apps = SEED.map((a, i) => ({ id: nextId++, ...a, openedAt: Date.now() - [4,2,9,1][i] * 60000 }));
+  let sentHome = [];
+  let filter = '';
+
+  function since(ms){
+    const mins = Math.floor(ms / 60000);
+    if (mins < 1) return 'just opened';
+    if (mins < 60) return `open ${mins}m`;
+    return `open ${Math.floor(mins/60)}h ${mins%60}m`;
+  }
+
+  function renderList(){
+    const list = $('appList');
+    const q = filter.trim().toLowerCase();
+    const shown = apps.filter(a => a.name.toLowerCase().includes(q));
+    $('countLabel').textContent = `${apps.length} open`;
+    list.innerHTML = shown.map(a => `
+      <li class="app-row" data-id="${a.id}">
+        <span class="tile">${a.icon}</span>
+        <span class="info"><strong>${esc(a.name)}</strong><span class="openfor" data-opened="${a.openedAt}">${since(Date.now()-a.openedAt)}</span></span>
+        <button class="sendhome" data-send="${a.id}">Send home</button>
+        <span class="locating-label">Locating<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>
+      </li>`).join('');
+    const empty = $('empty');
+    if (shown.length === 0){
+      empty.hidden = false;
+      empty.textContent = apps.length === 0 ? 'Nothing open right now.' : `No app open with that name.`;
+    } else {
+      empty.hidden = true;
+    }
+  }
+
+  function repaintTimes(){
+    document.querySelectorAll('.openfor').forEach(el => {
+      el.textContent = since(Date.now() - Number(el.dataset.opened));
+    });
+  }
+
+  function renderHistory(){
+    const box = $('history');
+    box.hidden = sentHome.length === 0;
+    $('historyList').innerHTML = sentHome.map(a =>
+      `<li><span>${a.icon} ${esc(a.name)}</span><span>sent home</span></li>`).join('');
+  }
+
+  function toast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  function sendHome(id){
+    const row = $('appList').querySelector(`.app-row[data-id="${id}"]`);
+    if (!row || row.dataset.busy) return;
+    row.dataset.busy = '1';
+    row.classList.add('locating');
+    setTimeout(() => {
+      row.classList.remove('locating');
+      row.classList.add('leaving');
+      setTimeout(() => {
+        const idx = apps.findIndex(a => a.id === id);
+        if (idx > -1){
+          const [app] = apps.splice(idx, 1);
+          sentHome.unshift(app);
+          renderHistory();
+          toast(`${app.name} sent home`);
+        }
+        renderList();
+      }, 320);
+    }, 550);
+  }
+
+  $('appList').addEventListener('click', e => {
+    const id = e.target.closest('[data-send]');
+    if (id) sendHome(Number(id.dataset.send));
+  });
+  $('search').addEventListener('input', e => { filter = e.target.value; renderList(); });
+
+  renderList();
+  renderHistory();
+  setInterval(repaintTimes, 15000);
+  setInterval(() => {
+    if (apps.length >= 6) return;
+    const open = new Set(apps.map(a => a.name));
+    const choices = POOL.filter(a => !open.has(a.name));
+    if (!choices.length) return;
+    const pick = choices[Math.floor(Math.random() * choices.length)];
+    apps.push({ id: nextId++, ...pick, openedAt: Date.now() });
+    renderList();
+  }, 20000);
+
+  /* ---------- Tabs ---------- */
+  let paused = false;
+  function selectTab(which){
+    const toAssignment = which === 'assignment';
+    $('tabPlay').setAttribute('aria-selected', String(!toAssignment));
+    $('tabAssignment').setAttribute('aria-selected', String(toAssignment));
+    document.querySelector('main.app').classList.toggle('wide', toAssignment);
+    $('assignment').classList.toggle('offstage', !toAssignment);
+    $('play').style.display = toAssignment ? 'none' : 'block';
+    paused = toAssignment;
+  }
+  $('tabPlay').addEventListener('click', () => selectTab('play'));
+  $('tabAssignment').addEventListener('click', () => selectTab('assignment'));
+})();
+</script>
+</body>
+</html>
