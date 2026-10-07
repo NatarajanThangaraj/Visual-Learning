@@ -1,8 +1,9 @@
 # Visual Learning
 
 A **React single-page course platform**. Three courses — **Java**, **Python** and
-**Problem Solving** — each split into numbered modules, each module a vertical path of
-pages. Every page is one of the self-contained interactive projects under `public/`, shown
+**Problem Solving** — each split into numbered topics, each topic a set of pages.
+Courses are tabs across the top; the sidebar lists the topics of the course in view, and
+picking one shows its pages as cards. Every page is one of the self-contained interactive projects under `public/`, shown
 inside the course chrome. Every page is open — there is no progress tracking, **no
 authentication and no backend**.
 
@@ -32,9 +33,9 @@ Visual-Learning/
 │       ├── styles/      # base.css, shell.css, course.css, lesson.css, catalog.css
 │       ├── components/
 │       │   ├── shell/   # AppShell, Sidebar
-│       │   ├── course/  # CourseHero, ModuleSection, LessonNode, LessonThumb, CourseIcon
+│       │   ├── course/  # CourseTabs, CourseHero, LessonThumb, CourseIcon
 │       │   └── lesson/  # LessonShell, EmbeddedLab
-│       └── pages/       # HomePage, CoursePage, LessonPage, BrowsePage, NotFoundPage
+│       └── pages/       # CoursePage, LessonPage, LabPage, NotFoundPage
 └── client/              # ← BUILD OUTPUT (committed; Catalyst hosts this)
 ```
 
@@ -46,10 +47,10 @@ so the compiled output ships in the repo.
 
 | Route | Page |
 |---|---|
-| `/` | Course cards + resume-where-you-left-off |
-| `/browse` | The flat catalog — every page, searchable |
-| `/:courseId` | Course page — hero, modules, lesson path |
-| `/:courseId/:lessonId` | One page, embedded in the course chrome |
+| `/` | Redirects to the first course (`/java`) |
+| `/browse` | Old flat catalog — now redirects to `/` |
+| `/:courseId` | Course page — course tabs, header, and the cards of the topic in `?topic=` (first topic by default) |
+| `/:courseId/:lessonId` | One page, embedded in the course chrome (sidebar, no tabs) |
 | `/:courseId/:lessonId/full` | That page on its own — no sidebar, no chrome |
 
 So a page is `/java/my-expense-tracker`, and the module is not in the URL: lesson ids are
@@ -124,7 +125,7 @@ Everything is registered in **one file**: `client-src/src/data/courses.js`.
    it. If there is no `thumb.png` yet, add `thumb: false` and the card falls back to the
    course's art.
 
-The card, the route and the sidebar counts all follow automatically.
+The card, the route and the sidebar topic list all follow automatically.
 A new module is just another `{ id, title, summary, lessons: [] }` object in the course's
 `modules` array. See the `add-visual-learning-project` skill in `.claude/skills/` for the
 full checklist.

@@ -80,17 +80,30 @@
   font-weight: 700;
   box-shadow: inset 0 0 0 1px var(--rail);
 }
-.sb-ico { width: 18px; text-align: center; font-size: 15px; }
-.sb-dot { width: 9px; height: 9px; border-radius: 50%; margin: 0 4px 0 5px; flex-shrink: 0; }
-.sb-label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sb-count {
-  font-size: 11px;
-  font-weight: 700;
+.sb-label { flex: 1; min-width: 0; line-height: 1.3; }
+
+/* A topic: its number, then its name. Long names wrap rather than truncate —
+   the rail is the only place the full topic list is shown. */
+.sb-topic { height: auto; min-height: 40px; padding: 7px 11px; }
+.sb-num {
+  display: grid;
+  place-items: center;
+  width: 26px; height: 26px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  background: var(--surface-subtle);
   color: var(--text-faint);
+  font-size: 11px; font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
+.sb-topic.active {
+  background: var(--course-accent-bg);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--course-accent);
+}
+.sb-topic.active .sb-num { background: var(--course-accent); color: #fff; }
 
-.sb-section { padding: 20px 12px 7px; }
+.sb-section { padding: 6px 12px 8px; }
 .sb-section-title {
   font-size: 11px;
   font-weight: 700;
@@ -102,14 +115,14 @@
 /* ── Collapsed rail ─────────────────────────────────────────────────────── */
 .shell-collapsed .sb-brand-text,
 .shell-collapsed .sb-label,
-.shell-collapsed .sb-count,
 .shell-collapsed .sb-section-title { display: none; }
 .shell-collapsed .sidebar { padding-left: 10px; padding-right: 10px; align-items: stretch; }
-.shell-collapsed .sb-head { justify-content: center; padding-bottom: 14px; }
-.shell-collapsed .sb-collapse { display: none; }
+/* The expand button stays: without it a collapsed rail can never be widened
+   again. Logo and button stack, since the rail is too narrow for both. */
+.shell-collapsed .sb-head { flex-direction: column; justify-content: center; gap: 10px; padding: 2px 0 12px; }
 .shell-collapsed .sb-brand { justify-content: center; }
-.shell-collapsed .sb-link { justify-content: center; padding: 0; }
-.shell-collapsed .sb-section { padding: 14px 0 6px; }
+.shell-collapsed .sb-link { justify-content: center; padding: 6px 0; }
+.shell-collapsed .sb-section { padding: 0; }
 
 /* ── Mobile: rail becomes a drawer ──────────────────────────────────────── */
 .mobile-bar-btn { display: none; }
@@ -152,9 +165,11 @@
     background: rgba(11, 18, 32, 0.4);
   }
   /* The drawer is always full-width — never the icon rail. */
+  .sb-collapse { display: none; }
   .shell-collapsed .sb-brand-text,
   .shell-collapsed .sb-label,
-  .shell-collapsed .sb-count,
   .shell-collapsed .sb-section-title { display: revert; }
-  .shell-collapsed .sb-link { justify-content: flex-start; padding: 0 11px; }
+  .shell-collapsed .sb-head { flex-direction: row; justify-content: space-between; padding: 2px 6px 18px; }
+  .shell-collapsed .sb-section { padding: 6px 12px 8px; }
+  .shell-collapsed .sb-link { justify-content: flex-start; padding: 7px 11px; }
 }
