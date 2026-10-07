@@ -3,8 +3,8 @@
 A **React single-page course platform**. Three courses — **Java**, **Python** and
 **Problem Solving** — each split into numbered modules, each module a vertical path of
 pages. Every page is one of the self-contained interactive projects under `public/`, shown
-inside the course chrome. Progress is kept in the browser; there is **no authentication and
-no backend**.
+inside the course chrome. Every page is open — there is no progress tracking, **no
+authentication and no backend**.
 
 Built with **React 18 + Vite + React Router**, hosted on **Zoho Catalyst** (Web Client
 Hosting / "Slate") — Catalyst serves the compiled static build the same way Netlify or
@@ -28,7 +28,7 @@ Visual-Learning/
 │       ├── App.jsx      # routes — all wrapped in AppShell
 │       ├── data/
 │       │   └── courses.js       # ← single source of truth: courses → modules → lessons
-│       ├── hooks/       # useProgress (localStorage), useMediaQuery
+│       ├── hooks/       # useMediaQuery
 │       ├── styles/      # base.css, shell.css, course.css, lesson.css, catalog.css
 │       ├── components/
 │       │   ├── shell/   # AppShell, Sidebar
@@ -91,16 +91,6 @@ The previous `/learn/…` scheme redirects, so nothing that was shared before br
 (The last one is the `others/` folder, which predates the Problem Solving course name and
 still holds its files.)
 
-## Progress and unlocking
-
-`src/hooks/useProgress.js` keeps `{ completed, last, explore }` in `localStorage` under
-`vl:progress:v1`. The first page of a course is always open; every later one unlocks when
-the page before it is marked complete. The **Explore mode** switch at the bottom of the
-sidebar unlocks everything — use it when demonstrating one specific page. Every storage read
-is guarded, so a private window simply starts from zero.
-
----
-
 ## Local development
 
 ```bash
@@ -134,7 +124,7 @@ Everything is registered in **one file**: `client-src/src/data/courses.js`.
    it. If there is no `thumb.png` yet, add `thumb: false` and the card falls back to the
    course's art.
 
-The card, the route, the sidebar counts, next/prev and unlocking all follow automatically.
+The card, the route and the sidebar counts all follow automatically.
 A new module is just another `{ id, title, summary, lessons: [] }` object in the course's
 `modules` array. See the `add-visual-learning-project` skill in `.claude/skills/` for the
 full checklist.
@@ -164,7 +154,7 @@ full checklist.
 
 ## Deferred
 
-No authentication and no backend function in this pass — progress is per-browser.
+No authentication and no backend function in this pass.
 `catalyst.json` leaves room to add Catalyst functions later without touching the course
 code. Written lesson pages (theory between the projects) were tried and removed — the
 course shows only the interactive pages.

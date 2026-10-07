@@ -19,8 +19,7 @@
  * name that predates the course and that live URLs still point at.
  *
  * To add a lesson: drop its folder under public/ and add an entry below.
- * Routes, the sidebar, progress, unlocking and next/prev all follow from this
- * file — there is nothing else to register.
+ * Routes, the sidebar and the page counts all follow from this file — there is nothing else to register.
  */
 
 export const courses = [
@@ -336,8 +335,8 @@ export function allLessons() {
   return out;
 }
 
-/** The lessons of one course as a flat ordered list — the spine that drives
- *  unlocking, next/prev and progress counts. */
+/** The lessons of one course as a flat ordered list — what the page counts
+ *  are taken from. */
 export function flatOrder(courseId) {
   return allLessons().filter(l => l.courseId === courseId);
 }
@@ -346,13 +345,6 @@ export function flatOrder(courseId) {
  *  unique within a course — so it is not part of the lookup either. */
 export function findLesson(courseId, lessonId) {
   return allLessons().find(l => l.courseId === courseId && l.id === lessonId) || null;
-}
-
-/** Previous / next across module boundaries, so a course reads as one path. */
-export function neighbours(courseId, key) {
-  const order = flatOrder(courseId);
-  const i = order.findIndex(l => l.key === key);
-  return { prev: i > 0 ? order[i - 1] : null, next: i >= 0 && i < order.length - 1 ? order[i + 1] : null };
 }
 
 export const courseLessonCount = courseId => flatOrder(courseId).length;

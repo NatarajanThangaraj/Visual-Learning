@@ -14,27 +14,6 @@
 }
 .home-lead { margin: 0; font-size: 15.5px; line-height: 1.65; color: var(--text-muted); }
 
-.resume {
-  display: grid;
-  gap: 5px;
-  padding: 20px 22px;
-  margin-bottom: 26px;
-  border: 1px solid var(--rail);
-  border-left: 4px solid var(--course-accent, var(--navy-900));
-  border-radius: var(--radius-card);
-  background: var(--surface-raised);
-  box-shadow: var(--shadow-card);
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-.resume:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover); }
-.resume-eyebrow {
-  font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em;
-  text-transform: uppercase; color: var(--course-accent, var(--text-muted));
-}
-.resume-title { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; }
-.resume-blurb { font-size: 13.5px; color: var(--text-muted); }
-.resume-go { margin-top: 6px; font-size: 13px; font-weight: 700; color: var(--navy-900); }
-
 .course-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -59,12 +38,6 @@
 .ccard-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px; }
 .ccard-tagline { font-size: 13.5px; line-height: 1.6; color: var(--text-muted); }
 .ccard-meta { font-size: 12px; font-weight: 600; color: var(--text-faint); }
-.ccard-progress { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-.ccard-progress .bar { flex: 1; height: 8px; }
-.ccard-pct {
-  font-size: 12px; font-weight: 700; color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
 /* The primary action on a course card, stated rather than implied. */
 .ccard-cta {
   margin-top: 12px;
@@ -121,12 +94,6 @@
   font-size: 27px; font-weight: 800; letter-spacing: -0.025em;
 }
 .hero-tagline { margin: 0; font-size: 14px; color: var(--text-muted); }
-.hero-progress { display: flex; align-items: center; gap: 12px; margin-top: 14px; max-width: 460px; }
-.hero-progress .bar { flex: 1; }
-.hero-progress-text {
-  font-size: 12px; font-weight: 700; color: var(--text-muted);
-  white-space: nowrap; font-variant-numeric: tabular-nums;
-}
 /* ── Topics ───────────────────────────────────────────────────────────────
    Every module of the course as a tile. The grid is the course's table of
    contents: one screen instead of the several the old stacked module sections
@@ -176,7 +143,6 @@
   display: flex; align-items: center; gap: 9px;
   margin-top: auto; padding-top: 4px;
 }
-.topic-foot .bar { flex: 1; height: 5px; }
 .topic-count {
   font-size: 11px; font-weight: 700; color: var(--text-faint);
   font-variant-numeric: tabular-nums;
@@ -192,14 +158,6 @@
 .topic-tile.is-active:hover { transform: none; box-shadow: inset 0 0 0 1px var(--course-accent, var(--navy-900)); }
 .topic-tile.is-active .topic-num,
 .topic-tile.is-active .topic-count { color: var(--course-accent, var(--navy-700)); }
-.topic-tile.is-active .topic-foot .bar { background: rgb(255 255 255 / 60%); }
-.topic-tile.is-active .topic-foot .bar > span { background: var(--course-accent, var(--navy-900)); }
-
-.topic-tile.is-done .topic-num::after {
-  content: ' \2713';
-  color: var(--status-done);
-  font-weight: 800;
-}
 
 /* ── The topic's lessons ─────────────────────────────────────────────────── */
 .topic-panel-head { margin: 0 2px 16px; }

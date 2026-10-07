@@ -23,8 +23,8 @@ description: >-
   complete / Next) in an iframe on desktop, and handed over full screen on mobile. There is
   no second kind of page — no in-app React lesson, no authored theory pages.
 - **The catalog is one file:** `client-src/src/data/courses.js`. Adding an entry there is
-  the *whole* registration: the card on the course path, the route, the sidebar counts,
-  next/prev, unlocking and the Browse page all derive from it.
+  the *whole* registration: the card on the course page, the route, the sidebar counts
+  and the Browse page all derive from it.
 - **URLs carry no file names.** A page is `/java/my-expense-tracker`; the same lab on its
   own is `/java/my-expense-tracker/full`. The file still lives at
   `/labs/java/my-expense-tracker/index.html` and is *fetched* into the frame, never linked to.
@@ -57,8 +57,8 @@ field on the course in `courses.js`) and a slug.
 
 ### Placing it
 
-Order inside a module is the order learners walk it, and **unlocking is sequential** — the
-page before it must be completed first. Put it in the module whose topic it teaches; a new
+Order inside a module is the order the cards appear in; every page is open, nothing is
+locked. Put it in the module whose topic it teaches; a new
 module is just another `{ id, title, summary, lessons: [] }` object in the course's
 `modules` array. `summary` is one line, shown only behind the module's notes button.
 
@@ -122,10 +122,8 @@ click "Sync now"**. This is **required** — Slate does not auto-deploy on push.
 1. **The lesson `id` must match the folder name under `public/`.** Every path is derived
    from it, so a typo produces a blank frame and a missing thumbnail rather than an error.
 2. **Lesson `id` must be unique within its course** — not just its module. It is the last
-   segment of the route now that the module has dropped out of the URL. It is also part of
-   the key progress is stored under (`<courseId>/<moduleId>/<lessonId>`), so changing an
-   `id` later silently resets everyone's completion for that page — and moving a lesson to
-   a different module does the same.
+   segment of the route now that the module has dropped out of the URL. Changing an `id` later
+   breaks any link people have saved to that page.
 3. **Keep the page self-contained.** It runs in an iframe: no dependency on the parent
    page's styles, and nothing that tries to break out of the frame.
 4. **Always run `deploy:build` before committing.** `client/` is what's hosted; skipping the

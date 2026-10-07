@@ -99,59 +99,17 @@
   color: var(--text-faint);
 }
 
-.sb-foot { margin-top: auto; padding-top: 18px; display: grid; gap: 10px; }
-.sb-progress {
-  background: var(--surface-raised);
-  border: 1px solid var(--rail);
-  border-radius: 12px;
-  padding: 12px 13px;
-}
-.sb-progress-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-.sb-progress-top strong { color: var(--text); font-size: 14px; }
-.sb-progress-sub { display: block; margin-top: 7px; font-size: 11px; color: var(--text-faint); }
-
-.bar {
-  display: block;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--rail);
-  overflow: hidden;
-}
-.bar > span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--status-done);
-  transition: width 0.3s ease;
-}
-
 /* ── Collapsed rail ─────────────────────────────────────────────────────── */
 .shell-collapsed .sb-brand-text,
 .shell-collapsed .sb-label,
 .shell-collapsed .sb-count,
-.shell-collapsed .sb-section-title,
-.shell-collapsed .sb-progress-top span,
-.shell-collapsed .sb-progress-sub { display: none; }
+.shell-collapsed .sb-section-title { display: none; }
 .shell-collapsed .sidebar { padding-left: 10px; padding-right: 10px; align-items: stretch; }
 .shell-collapsed .sb-head { justify-content: center; padding-bottom: 14px; }
 .shell-collapsed .sb-collapse { display: none; }
 .shell-collapsed .sb-brand { justify-content: center; }
 .shell-collapsed .sb-link { justify-content: center; padding: 0; }
 .shell-collapsed .sb-section { padding: 14px 0 6px; }
-/* The number and the bar both survive the collapse: this is the one mode
-   least able to afford losing the thing that shows how far you've got. */
-.shell-collapsed .sb-progress { padding: 10px 6px; text-align: center; }
-.shell-collapsed .sb-progress-top { justify-content: center; margin-bottom: 6px; }
-.shell-collapsed .sb-progress-top strong { font-size: 13px; }
-.shell-collapsed .sb-progress .bar { height: 5px; }
 
 /* ── Mobile: rail becomes a drawer ──────────────────────────────────────── */
 .mobile-bar-btn { display: none; }
@@ -197,7 +155,6 @@
   .shell-collapsed .sb-brand-text,
   .shell-collapsed .sb-label,
   .shell-collapsed .sb-count,
-  .shell-collapsed .sb-section-title,
-  .shell-collapsed .sb-progress-sub { display: revert; }
+  .shell-collapsed .sb-section-title { display: revert; }
   .shell-collapsed .sb-link { justify-content: flex-start; padding: 0 11px; }
 }
