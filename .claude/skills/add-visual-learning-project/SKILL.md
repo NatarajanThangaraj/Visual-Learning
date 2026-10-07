@@ -23,8 +23,8 @@ description: >-
   complete / Next) in an iframe on desktop, and handed over full screen on mobile. There is
   no second kind of page — no in-app React lesson, no authored theory pages.
 - **The catalog is one file:** `client-src/src/data/courses.js`. Adding an entry there is
-  the *whole* registration: the card on the course page, the route, the sidebar counts
-  and the Browse page all derive from it.
+  the *whole* registration: the card on the course page, the route and the sidebar topic
+  list all derive from it.
 - **URLs carry no file names.** A page is `/java/my-expense-tracker`; the same lab on its
   own is `/java/my-expense-tracker/full`. The file still lives at
   `/labs/java/my-expense-tracker/index.html` and is *fetched* into the frame, never linked to.
@@ -103,8 +103,7 @@ click "Sync now"**. This is **required** — Slate does not auto-deploy on push.
 ## Step 4 — Verify
 
 - **Locally:** `cd client && python3 -m http.server 4599`, open `http://localhost:4599/`.
-  Turn on **Explore mode** in the sidebar to reach the new page without completing the
-  course before it, then open it — it should render inside the frame at
+  Pick the page's topic in the sidebar, then open its card — it should render inside the frame at
   `/<courseId>/<slug>`, and standalone at `/<courseId>/<slug>/full`.
   ⚠️ `http.server` serves directory indexes and has no SPA fallback, so it does *not*
   behave like Slate. To check the real routing, serve `client/` with a server that returns

@@ -349,4 +349,8 @@ export function findLesson(courseId, lessonId) {
 
 export const courseLessonCount = courseId => flatOrder(courseId).length;
 
-export const totalLessonCount = () => allLessons().length;
+/** The topic a course page shows: the one asked for in ?topic=, or the first
+ *  when that is missing or names no topic of this course. */
+export function activeTopicId(course, requested) {
+  return course.modules.find(m => m.id === requested)?.id ?? course.modules[0]?.id ?? null;
+}

@@ -1,18 +1,15 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import AppShell from './components/shell/AppShell';
-import HomePage from './pages/HomePage';
-import BrowsePage from './pages/BrowsePage';
 import CoursePage from './pages/CoursePage';
 import LessonPage from './pages/LessonPage';
 import LabPage from './pages/LabPage';
 import NotFoundPage from './pages/NotFoundPage';
-import { findLesson } from './data/courses';
+import { courses, findLesson } from './data/courses';
 
 /* The URL scheme, in full:
  *
- *   /                                home
- *   /browse                          the flat catalog
- *   /java                            a course
+ *   /                                → the first course (Java)
+ *   /java                            a course; ?topic=… picks the topic
  *   /java/my-expense-tracker         a lab inside the course chrome
  *   /java/my-expense-tracker/full    that lab on its own, no chrome
  *
@@ -27,16 +24,17 @@ import { findLesson } from './data/courses';
  *
  * Ordering below doesn't decide matching: React Router ranks a static segment
  * above a dynamic one, so /browse and /learn/* win over /:courseId even though
- * they could both match. */
+ * they could both match. /browse was the old flat catalog; it now redirects. */
 export default function App() {
   return (
     <Routes>
       {/* A lab on its own is the whole viewport — no sidebar, no chrome. */}
       <Route path="/:courseId/:lessonId/full" element={<LabPage />} />
 
+      <Route path="/" element={<Navigate to={`/${courses[0].id}`} replace />} />
+      <Route path="/browse" element={<Navigate to="/" replace />} />
+
       <Route element={<AppShell />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/browse" element={<BrowsePage />} />
         <Route path="/:courseId" element={<CoursePage />} />
         <Route path="/:courseId/:lessonId" element={<LessonPage />} />
         <Route path="*" element={<NotFoundPage />} />
@@ -44,7 +42,7 @@ export default function App() {
 
       {/* The old /learn/… scheme. Kept as redirects so bookmarks, shared links
           and anything already printed keep landing on the right page. */}
-      <Route path="/learn" element={<Navigate to="/browse" replace />} />
+      <Route path="/learn" element={<Navigate to="/" replace />} />
       <Route path="/learn/:courseId" element={<LegacyCourse />} />
       <Route path="/learn/:courseId/:moduleId/:lessonId" element={<LegacyLesson />} />
     </Routes>
