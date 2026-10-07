@@ -4,8 +4,8 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import LessonThumb from '../course/LessonThumb';
 
 /* A lab is one of the self-contained pages under public/. On a desktop it runs
-   inside the lesson chrome so the course frame (breadcrumb, next, mark
-   complete) stays put; on a phone that nested scroll is unusable, so the lab
+   inside the lesson chrome so the course frame (breadcrumb, title) stays
+   put; on a phone that nested scroll is unusable, so the lab
    is handed over full-screen instead.
 
    Two paths, and they are not interchangeable: `lesson.src` is the file, only
@@ -231,7 +231,7 @@ export default function EmbeddedLab({ lesson, standalone = false }) {
       <div className="lab-handoff">
         <LessonThumb lesson={lesson} />
         <p className="lab-handoff-text">
-          This lab runs best full screen. It opens in a new tab — come back here to mark it complete.
+          This lab runs best full screen. It opens in a new tab.
         </p>
         <Link className="lab-open-btn" to={lesson.labRoute}>
           Start the lab →

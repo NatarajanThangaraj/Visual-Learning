@@ -17,10 +17,10 @@
   --python: #2B6CB0;
   --python-bg: #E6F0FA;
   /* Problem Solving is a course, not a leftover: it gets its own identity
-     instead of borrowing the neutral used for locked/undefined states. */
+     instead of borrowing the neutral used for undefined states. */
   --problem-solving: #6D4AFF;
   --problem-solving-bg: #EFEAFF;
-  /* Kept for genuinely category-less things (and the locked state). */
+  /* Kept for genuinely category-less things. */
   --others: #6B7280;
   --others-bg: #EEF0F3;
 
@@ -32,13 +32,6 @@
   --surface-subtle: #F7F8FA;
   --rail: #E5E7EB;
   --rail-strong: #D3D7DE;
-
-  /* Lesson status — "done" is green so it never collides with a course
-     accent. Blue stays Python's; green means finished, everywhere. */
-  --status-done: #16A34A;
-  --status-done-bg: #DCFCE7;
-  --status-current: #0F2A5C;
-  --status-locked: #A8A296;
 
   --radius-card: 16px;
   --radius-input: 12px;

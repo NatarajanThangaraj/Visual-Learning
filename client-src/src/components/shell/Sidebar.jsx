@@ -1,15 +1,11 @@
 import { NavLink, Link } from 'react-router-dom';
-import { courses } from '../../data/courses';
-import { useProgress } from '../../hooks/useProgress';
+import { courses, courseLessonCount } from '../../data/courses';
 import logo from '../../assets/logo.svg';
 
-/* The permanent left rail: brand, top-level nav, one entry per course with its
-   own progress, and the study controls at the bottom. Below 900px it slides in
-   over the content — AppShell owns the open/closed state. */
+/* The permanent left rail: brand, top-level nav and one entry per course.
+   Below 900px it slides in over the content — AppShell owns the open/closed
+   state. */
 export default function Sidebar({ collapsed, onToggle, onNavigate }) {
-  const { courseProgress, overall } = useProgress();
-  const total = overall();
-
   return (
     <aside className={'sidebar' + (collapsed ? ' is-collapsed' : '')}>
       <div className="sb-head">
@@ -48,41 +44,22 @@ export default function Sidebar({ collapsed, onToggle, onNavigate }) {
 
       <nav className="sb-nav" aria-label="Courses">
         {courses.map(c => {
-          const p = courseProgress(c.id);
+          const total = courseLessonCount(c.id);
           return (
             <NavLink
               key={c.id}
               className="sb-link sb-course"
               to={`/${c.id}`}
               onClick={onNavigate}
-              title={`${c.title} — ${p.done} of ${p.total} pages`}
+              title={`${c.title} — ${total} pages`}
             >
               <span className="sb-dot" style={{ background: c.accent }} aria-hidden="true" />
               <span className="sb-label">{c.title}</span>
-              <span className="sb-count">{p.done}/{p.total}</span>
+              <span className="sb-count">{total}</span>
             </NavLink>
           );
         })}
       </nav>
-
-      <div className="sb-foot">
-        {/* Progress is the motivational device, so the collapsed rail keeps the
-            number and the bar — only the prose sub-label folds away. */}
-        <div
-          className="sb-progress"
-          title={`${total.done} of ${total.total} pages complete`}
-        >
-          <div className="sb-progress-top">
-            <span>Your progress</span>
-            <strong>{total.pct}%</strong>
-          </div>
-          <div className="bar" role="img" aria-label={`${total.done} of ${total.total} pages complete`}>
-            <span style={{ width: `${total.pct}%` }} />
-          </div>
-          <span className="sb-progress-sub">{total.done} of {total.total} pages</span>
-        </div>
-
-      </div>
     </aside>
   );
 }
