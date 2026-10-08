@@ -202,6 +202,25 @@ class CDP {
   }
 }
 
+/**
+ * Kill Chrome and delete its throwaway profile. Chrome keeps writing to the
+ * profile for a moment after the signal, so wait for it to exit first, and
+ * let rmSync retry. A leftover temp dir is only worth a warning: this runs in
+ * a `finally`, and throwing here would hide the error that got us there.
+ */
+async function stopChrome(chrome, profile) {
+  if (chrome.exitCode === null && chrome.signalCode === null) {
+    const exited = new Promise(r => chrome.once('exit', r));
+    chrome.kill();
+    await Promise.race([exited, sleep(3000)]);
+  }
+  try {
+    fs.rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  } catch (e) {
+    console.warn(`  ! could not remove ${profile}: ${e.code || e.message}`);
+  }
+}
+
 /** Width and height straight out of the PNG header, to prove what we wrote. */
 function pngSize(file) {
   const buf = fs.readFileSync(file);
@@ -272,12 +291,6 @@ async function main() {
     'about:blank',
   ], { stdio: 'ignore' });
 
-  const done = () => {
-    chrome.kill();
-    if (!opts.keepOpen) server.close();
-    fs.rmSync(profile, { recursive: true, force: true });
-  };
-
   try {
     let target;
     for (let i = 0; i < 80 && !target; i++) {
@@ -321,12 +334,10 @@ async function main() {
     }
     if (opts.keepOpen) {
       console.log(`\n  still serving ${origin} — Ctrl+C when you are done looking.`);
-      chrome.kill();
-      fs.rmSync(profile, { recursive: true, force: true });
-      return;
     }
   } finally {
-    if (!opts.keepOpen) done();
+    await stopChrome(chrome, profile);
+    if (!opts.keepOpen) server.close();
   }
 }
 
