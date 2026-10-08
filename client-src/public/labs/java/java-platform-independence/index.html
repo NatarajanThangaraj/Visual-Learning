@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Java Platform Independence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#10151F; --panel:#161E2C; --panel2:#1C2638; --line:#2A3750; --line2:#38486A;
+  --text:#E6ECF5; --muted:#8C9AB0; --dim:#5D6A80;
+  --gold:#F4B740; --gold-d:#2A1A00;
+  --linux:#3FC7A0; --win:#5EA3FF; --mac:#C49BFF; --ok:#8BE28B;
+  --sans:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono:'IBM Plex Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --tw:176px; --th:104px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;min-height:100%;overflow-x:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+button{font:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+.app{max-width:1200px;margin:0 auto;padding:20px 24px 0}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 28px;margin-bottom:22px}
+.top h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.015em}
+.top h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted);letter-spacing:0;margin-bottom:2px}
+
+/* write once, run anywhere tracker */
+.wora{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin:-6px 0 22px;padding:10px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);font-size:14px}
+.wora .wl{color:var(--muted)}
+.wora .wl b{color:var(--text);font-weight:600}
+.wora .once{display:flex;align-items:center;gap:8px}
+.wora .once .ok{color:var(--gold);font-weight:700}
+.wora .runs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wora .runs i{font-style:normal;font-size:13px;font-weight:600;padding:2px 10px;border-radius:20px;border:1.5px dashed var(--line2);color:var(--dim);transition:all .4s}
+.wora .runs i.done{border-style:solid;border-color:var(--c);color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent)}
+.wora .runs i.done::before{content:"✓ "}
+.wora .runs i[data-os="win"]{--c:var(--win)}.wora .runs i[data-os="linux"]{--c:var(--linux)}.wora .runs i[data-os="mac"]{--c:var(--mac)}
+#woraDone{margin-left:auto;font-weight:700;color:var(--ok);opacity:0;transition:opacity .5s}
+#woraDone.on{opacity:1}
+
+/* progress */
+.rail{display:flex;gap:6px;list-style:none;margin:0;padding:0}
+.rail li{display:flex;align-items:center;gap:7px;padding:5px 11px 5px 6px;border-radius:20px;border:1.5px solid var(--line);color:var(--dim);font-size:13px;transition:all .3s}
+.rail li b{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--panel2);font-size:11px;font-weight:600;font-family:var(--mono)}
+.rail li.done{color:var(--muted);border-color:var(--line)}
+.rail li.done b{background:var(--line2);color:var(--text)}
+.rail li.cur{color:var(--text);border-color:var(--text)}
+.rail li.cur b{background:var(--text);color:var(--bg)}
+
+/* stage */
+#stage{position:relative;padding-bottom:28px}
+#trail{position:absolute;left:0;top:0;pointer-events:none;z-index:5;overflow:visible}
+.bench{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:28px;align-items:start}
+
+.machine{position:relative;background:var(--panel);border:1.5px solid var(--line);border-radius:14px;transition:opacity .4s,border-color .3s,transform .3s}
+.bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1.5px solid var(--line)}
+.screen-ico{width:16px;height:12px;border:2px solid currentColor;border-radius:3px;position:relative;flex:none}
+.screen-ico::after{content:"";position:absolute;left:3px;right:3px;bottom:-6px;height:2px;background:currentColor;border-radius:1px}
+.bar .os{font-weight:600;font-size:15px}
+.bar .role{margin-left:auto;font-size:12.5px;color:var(--muted)}
+
+/* source linux */
+#src{--c:var(--linux)}
+#src .bar{color:var(--c)}
+#src .bar .os{color:var(--text);font-weight:700;font-size:16px}
+#src .bar .role{color:var(--text);font-weight:700;font-size:14px}
+.src-body{padding:16px}
+.editor{background:#0C1119;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.tabrow{display:flex;border-bottom:1.5px solid var(--line);background:#121926}
+.tab{font-family:var(--mono);font-size:12.5px;padding:7px 14px;color:var(--text);background:#0C1119;border-right:1.5px solid var(--line);border-radius:0;white-space:nowrap}
+.tab.fly{position:absolute;left:0;top:0;z-index:30;border:1.5px solid var(--linux);border-radius:6px;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+pre.code{margin:0;padding:14px 16px;font-family:var(--mono);font-size:13px;line-height:1.65;color:#C9D4E5;overflow-x:auto}
+.k{color:#93C5FD}.t{color:#C4B5FD}.s{color:#6EE7B7}
+.down{display:flex;justify-content:flex-start;padding-left:46px;height:30px}
+.down i{width:2px;background:var(--line2);position:relative}
+.down i::after{content:"";position:absolute;bottom:-1px;left:-5px;border:6px solid transparent;border-top:7px solid var(--line2);border-bottom:0}
+.compile-row{display:flex;align-items:center;gap:12px}
+#javac{width:110px;height:var(--th);flex:none;border:1.5px solid var(--line2);border-radius:10px;display:grid;place-items:center;align-content:center;gap:4px;background:var(--panel2);transition:border-color .3s,box-shadow .3s}
+#javac b{font-family:var(--mono);font-size:18px;font-weight:600}
+#javac span{font-size:11.5px;color:var(--muted)}
+.gear{width:22px;height:22px;border-radius:50%;border:3px dotted var(--muted)}
+#javac.working{border-color:var(--gold);box-shadow:0 0 0 4px rgba(244,183,64,.12)}
+#javac.working .gear{border-color:var(--gold);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.harrow{flex:none;width:30px;height:2px;background:var(--line2);position:relative}
+.harrow::after{content:"";position:absolute;right:-1px;top:-5px;border:6px solid transparent;border-left:7px solid var(--line2);border-right:0}
+
+.slot{width:var(--tw);height:var(--th);flex:none;border:1.5px dashed var(--line2);border-radius:10px;position:relative;display:grid;place-items:center;color:var(--dim);font-size:12px;transition:border-color .3s}
+.slot.filled{border-color:transparent}
+.slot .ghost{opacity:0;transition:opacity .5s;font-family:var(--mono);font-size:12px}
+.slot.moved .ghost{opacity:1}
+
+/* popup inside the Linux machine */
+#pop{position:relative;margin-top:18px;border:2px solid var(--gold);border-radius:12px;padding:14px 16px 16px;background:var(--panel2);box-shadow:0 10px 30px rgba(0,0,0,.35),0 0 0 6px rgba(244,183,64,.08)}
+#pop::before{content:"";position:absolute;top:-10px;left:var(--ax,60%);width:16px;height:16px;margin-left:-8px;background:var(--panel2);border-left:2px solid var(--gold);border-top:2px solid var(--gold);transform:rotate(45deg)}
+#pop.in{animation:popIn .45s var(--ease)}
+@keyframes popIn{from{opacity:0;transform:translateY(-8px) scale(.96)}}
+.pop-t{font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
+.pop-s{font-size:14px;color:var(--muted);margin-top:4px}
+.pop-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+
+/* destinations */
+.dests{display:flex;flex-direction:column;gap:14px;transition:opacity .4s}
+.dests-q{font-size:13px;color:var(--muted);margin:0 0 -4px 2px}
+#stage[data-phase="write"] .dests,#stage[data-phase="compiling"] .dests,#stage[data-phase="compiled"] .dests{visibility:hidden;opacity:0}
+.dest{--c:var(--muted);opacity:0;transform:translateX(16px)}
+.dest.in{opacity:1;transform:none;transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.dest[data-os="win"]{--c:var(--win)}.dest[data-os="linux"]{--c:var(--linux)}.dest[data-os="mac"]{--c:var(--mac)}
+.dest .bar{color:var(--c)}
+.dest .bar .os{color:var(--text)}
+.dest .check{font-size:12px;color:var(--c);display:none}
+.dest.visited .check{display:inline}
+.dest-body{display:flex;align-items:center;gap:12px;padding:14px}
+.jvmchip{flex:1;min-width:0;align-self:stretch;border:2px solid var(--c);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;background:color-mix(in srgb,var(--c) 8%,transparent);transition:box-shadow .3s}
+.jvmchip b{font-size:15px;font-weight:600;color:var(--c)}
+.jvmchip span{font-size:12px;color:var(--muted)}
+.choosing .dest{cursor:pointer}
+.choosing .dest:hover,.choosing .dest:focus-visible{border-color:var(--c);transform:translateX(-4px)}
+.dests.has-sel .dest:not(.sel){opacity:.3}
+.dest.sel{border-color:var(--c)}
+.dest.sel.live .jvmchip{box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent)}
+#stage.away #src{opacity:.55}
+
+/* token: the one and only Hello.class */
+#token{position:absolute;left:0;top:0;width:var(--tw);height:var(--th);z-index:20;opacity:0;pointer-events:none;will-change:transform;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
+#token.show{opacity:1}
+.tk-file{position:relative;height:100%;padding:10px 12px;display:flex;flex-direction:column;gap:5px;color:var(--gold-d);background:linear-gradient(155deg,#FFD782,#F4B740 55%,#E39C22);border-radius:9px;clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,0 100%);overflow:hidden}
+.tk-fold{position:absolute;right:0;top:0;width:22px;height:22px;background:linear-gradient(225deg,transparent 50%,#C9851A 50%);border-bottom-left-radius:4px}
+.tk-name{font-weight:700;font-size:15.5px;letter-spacing:-.01em}
+.tk-bytes{font-family:var(--mono);font-size:10px;font-weight:500;opacity:.72;letter-spacing:.02em;white-space:nowrap}
+.tk-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto}
+.tk-tags span{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:20px;background:rgba(42,26,0,.13)}
+.tk-scan{position:absolute;inset:0;pointer-events:none;opacity:0}
+.tk-scan::before{content:"";position:absolute;left:0;right:0;height:26px;top:-30px;background:linear-gradient(transparent,var(--sc,rgba(255,255,255,.75)),transparent);mix-blend-mode:overlay}
+#token.scanning .tk-scan{opacity:1}
+#token.scanning .tk-scan::before{animation:scan .7s linear 2}
+@keyframes scan{to{top:calc(100% + 4px)}}
+.tk-badge{position:absolute;left:50%;top:-15px;transform:translateX(-50%) scale(.6);opacity:0;background:var(--bg);color:var(--gold);border:1.5px solid var(--gold);border-radius:20px;padding:1px 10px;font-size:11px;font-weight:700;letter-spacing:.08em;white-space:nowrap;transition:all .35s var(--ease)}
+#token.badge-on .tk-badge{opacity:1;transform:translateX(-50%) scale(1)}
+#token.spot::after{content:"";position:absolute;inset:-7px;border:2px solid var(--gold);border-radius:14px;animation:ring 1.6s ease-out infinite}
+@keyframes ring{0%{opacity:.9;transform:scale(.97)}100%{opacity:0;transform:scale(1.12)}}
+
+.particle{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;z-index:25;pointer-events:none;background:var(--gold);box-shadow:0 0 12px var(--gold)}
+.particle.p-os{background:var(--c);box-shadow:0 0 12px var(--c)}
+.particle.p-out{background:var(--ok);box-shadow:0 0 12px var(--ok)}
+
+/* engine: inside the chosen computer */
+#engine{--c:var(--win);position:relative;margin-top:28px;border:1.5px solid var(--c);border-radius:16px;background:var(--panel);animation:rise .5s var(--ease)}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+#engine .bar{color:var(--c);border-color:color-mix(in srgb,var(--c) 40%,var(--line))}
+#engine .bar .os{color:var(--text)}
+.track{display:grid;grid-template-columns:minmax(250px,1.5fr) 30px minmax(180px,1.1fr) 30px 116px 30px minmax(150px,.9fr);align-items:center;gap:0 8px;padding:20px}
+.track .harrow{width:100%}
+.part{opacity:.2;transition:opacity .5s,border-color .5s,box-shadow .5s;filter:saturate(.3)}
+.part.on{opacity:1;filter:none}
+#jvmBox{border:2px solid var(--c);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--c) 6%,transparent)}
+.jvm-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.jvm-h b{font-size:16px;color:var(--c)}
+.jvm-h span{font-size:12px;color:var(--muted)}
+.jvm-in{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#understands{font-size:13.5px;line-height:1.4;opacity:0;transform:translateY(4px);transition:all .5s var(--ease);flex:1;min-width:120px}
+#understands.on{opacity:1;transform:none}
+#understands em{font-style:normal;display:block;font-size:12px;color:var(--muted);margin-top:4px}
+#understands .g{color:var(--gold)}
+#understands .o{color:var(--c)}
+#ee{border:1.5px solid var(--line2);border-radius:10px;padding:10px}
+#ee>.lbl{font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:8px}
+#interp{border:1.5px solid var(--c);border-radius:8px;padding:9px 10px;background:#0C1119}
+#interp>.lbl{font-size:13px;font-weight:600;margin-bottom:6px}
+.blist{list-style:none;margin:0;padding:0;font-family:var(--mono);font-size:12px}
+.blist li{padding:2px 6px;border-radius:4px;color:#E8C77A;transition:background .25s,color .25s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blist li.act{background:rgba(244,183,64,.2);color:#FFE2A3}
+.blist li.done{color:#8A7A55}
+.jit-note{font-size:11.5px;color:var(--muted);margin-top:6px}
+
+#native{border:1.5px solid var(--c);border-radius:12px;padding:12px;min-height:180px;background:#0C1119}
+#native .lbl{font-size:13.5px;font-weight:600}
+#native .sub{font-size:12px;color:var(--muted);margin-bottom:8px}
+#nativeList{list-style:none;margin:0;padding:0;font-family:var(--mono);font-size:12px;color:var(--c);min-height:88px}
+#nativeList li{white-space:nowrap;animation:fadeIn .35s var(--ease)}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-6px)}}
+#native .fine{font-size:11px;color:var(--dim);margin-top:6px}
+
+#cpu{display:flex;flex-direction:column;align-items:center;gap:8px}
+.chip{width:84px;height:84px;border-radius:10px;border:2px solid var(--c);background:var(--panel2);display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:14px;position:relative;transition:box-shadow .3s}
+.chip::before,.chip::after{content:"";position:absolute;left:12px;right:12px;height:7px;background:repeating-linear-gradient(90deg,var(--line2) 0 5px,transparent 5px 11px)}
+.chip::before{top:-9px}.chip::after{bottom:-9px}
+#cpu.busy .chip{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 25%,transparent),0 0 30px color-mix(in srgb,var(--c) 50%,transparent);animation:buzz .25s linear infinite}
+@keyframes buzz{50%{transform:translateY(-1px)}}
+#cpu .cl{font-size:12.5px;color:var(--muted);text-align:center}
+
+#console{background:#07090D;border:1.5px solid var(--line2);border-radius:10px;padding:12px 14px;font-family:var(--mono);min-height:110px}
+#console .pr{font-size:12.5px;color:var(--muted)}
+#out{font-size:28px;font-weight:600;color:var(--ok);min-height:42px;margin-top:4px}
+#out.cursor::after{content:"▌";animation:blink .8s steps(1) infinite;color:var(--muted);font-size:22px}
+@keyframes blink{50%{opacity:0}}
+
+/* highlight callouts in the engine */
+.hi{margin:18px 20px 0;padding:14px 18px;border-radius:12px;border:2px solid var(--gold);background:rgba(244,183,64,.08);display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+.hi b{font-size:clamp(17px,2.2vw,21px);font-weight:700;color:var(--gold)}
+.hi span{font-size:15px;color:var(--text)}
+.hi.in{animation:hiIn .9s var(--ease)}
+@keyframes hiIn{0%{opacity:0;transform:scale(.97)}40%{opacity:1;box-shadow:0 0 0 10px rgba(244,183,64,.18)}100%{box-shadow:0 0 0 0 rgba(244,183,64,0)}}
+.hi.ok{border-color:var(--ok);background:rgba(139,226,139,.07);margin:0 20px 20px}
+.hi.ok b{color:var(--ok)}
+.hi.ok.in{animation:popIn .5s var(--ease)}
+
+/* compare */
+#compare{margin-top:24px;animation:rise .5s var(--ease)}
+#compare h2{font-size:17px;font-weight:600;margin:0 0 12px}
+.tw{overflow-x:auto;border:1.5px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1.5px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+thead th{font-size:13px;color:var(--muted);font-weight:500;background:var(--panel)}
+thead th.osh{color:var(--c);font-weight:600}
+td.tag{width:118px}
+.pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;padding:2px 9px;border-radius:20px}
+.pill.same{color:var(--gold);border:1.5px solid var(--gold)}
+.pill.diff{color:var(--text);border:1.5px solid var(--line2)}
+td.rowk{font-weight:500;width:220px}
+td.v{font-family:var(--mono);font-size:12.5px}
+td.v.same{color:var(--gold)}
+td.v.ok{color:var(--ok);font-size:15px;font-family:var(--sans);font-weight:600}
+td.v.os{color:var(--c)}
+.cnote{font-size:13px;color:var(--muted);margin:10px 2px 0;max-width:70ch}
+
+/* final */
+#final{padding:24px 0 40px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.eq{display:flex;flex-direction:column;align-items:center;gap:6px}
+.eq>*{opacity:0;transform:translateY(10px);animation:show .6s var(--ease) forwards}
+@keyframes show{to{opacity:1;transform:none}}
+.eq-l{font-size:clamp(20px,4vw,32px);font-weight:700;letter-spacing:.01em;padding:8px 22px;border-radius:12px;border:2px solid var(--line2)}
+.eq-l.gold{color:var(--gold);border-color:var(--gold)}
+.eq-l.jvm{border-color:var(--line2)}
+.eq-l.ok{color:var(--ok);border-color:var(--ok)}
+.eq-jvms{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-size:13px;font-weight:600}
+.eq-jvms span{padding:2px 10px;border-radius:20px;border:1.5px solid currentColor}
+.eq-op{font-size:24px;color:var(--muted);line-height:1}
+.wora-big{font-size:clamp(28px,6vw,52px);font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--text);opacity:0;animation:show .7s var(--ease) forwards}
+.wora-big .g{color:var(--gold)}
+.pi{margin:16px 0 34px;opacity:0;animation:show .7s var(--ease) forwards}
+.pi b{display:block;font-size:clamp(19px,3vw,26px);font-weight:700;color:var(--ok)}
+.pi span{display:block;font-size:clamp(16px,2.2vw,19px);margin-top:4px}
+.pi .g{color:var(--gold);font-weight:600}
+.fin1{font-size:clamp(17px,2.4vw,21px);line-height:1.5;margin:30px 0 10px;opacity:0;animation:show .6s var(--ease) forwards}
+.fin1 .g{color:var(--gold)}
+.fin2{font-size:15px;color:var(--muted);max-width:56ch;margin:0;opacity:0;animation:show .6s var(--ease) forwards}
+
+/* control bar */
+.ctrl{position:sticky;bottom:0;z-index:40;margin:0 -24px;padding:14px 24px calc(14px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1.5px solid var(--line);display:flex;align-items:center;gap:16px 24px;flex-wrap:wrap}
+.say{flex:1;min-width:240px}
+#cap{font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.35}
+#cap.pop{animation:capIn .45s var(--ease)}
+@keyframes capIn{from{opacity:0;transform:translateY(5px)}}
+#think{font-size:14px;color:var(--muted);margin-top:3px}
+#think::before{content:"Think: ";color:var(--mac);font-weight:600}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1.5px solid var(--line2);background:transparent;color:var(--text);padding:10px 18px;border-radius:10px;font-weight:600;font-size:15px;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.btn:hover{border-color:var(--text)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn.primary:hover{background:#fff}
+.btn.osb{border-color:var(--c);color:var(--c)}
+.btn.osb:hover{background:color-mix(in srgb,var(--c) 14%,transparent)}
+.btn[data-os="win"]{--c:var(--win)}.btn[data-os="linux"]{--c:var(--linux)}.btn[data-os="mac"]{--c:var(--mac)}
+.wait{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.wait i{width:8px;height:8px;border-radius:50%;background:var(--gold);animation:blink 1s steps(1) infinite}
+
+@media (max-width:980px){
+  .track{grid-template-columns:minmax(0,1fr);gap:8px;justify-items:stretch}
+  .track .harrow{width:2px;height:24px;justify-self:center}
+  .track .harrow::after{right:-5px;top:auto;bottom:-1px;border:6px solid transparent;border-top:7px solid var(--line2);border-bottom:0}
+  #cpu{flex-direction:row;justify-content:center}
+}
+@media (max-width:760px){
+  .bench{grid-template-columns:minmax(0,1fr)}
+  .rail li{padding:4px 6px}
+  .rail li span{display:none}
+  .rail li.cur span{display:inline}
+  #woraDone{margin-left:0}
+}
+@media (max-width:480px){
+  :root{--tw:150px;--th:100px}
+  .app{padding:14px 14px 0}
+  .ctrl{margin:0 -14px;padding-left:14px;padding-right:14px}
+  .tk-bytes{font-size:8.6px}
+  .tk-name{font-size:14px}
+  #javac{width:88px}
+  .src-body,.dest-body{padding:12px}
+  .dest-body{gap:8px}
+  .jvmchip{padding:8px}
+  .jvmchip b{font-size:13.5px}
+  #cap{font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1><small>Write once, run anywhere</small>Java Platform Independence</h1>
+    <ol class="rail" id="rail" aria-label="Progress"></ol>
+  </header>
+  <div class="wora" aria-label="Write once, run anywhere tracker">
+    <span class="once"><span class="wl">Write once:</span> <b id="onceTxt" style="font-weight:600">Hello.java on Linux</b></span>
+    <span class="runs"><span class="wl">Run anywhere:</span><i data-os="win">Windows</i><i data-os="linux">Linux</i><i data-os="mac">macOS</i></span>
+    <span id="woraDone">Write once, run anywhere ✓</span>
+  </div>
+
+  <main id="stage" data-phase="write">
+    <svg id="trail" aria-hidden="true"></svg>
+
+    <div class="bench" id="bench">
+      <!-- source computer -->
+      <section class="machine" id="src" aria-label="Linux computer where the code is written">
+        <div class="bar"><span class="screen-ico"></span><span class="os">Linux</span><span class="role">your computer</span></div>
+        <div class="src-body">
+          <div class="editor">
+            <div class="tabrow"><div class="tab" id="javaTab">Hello.java</div></div>
+<pre class="code"><span class="k">public class</span> <span class="t">Hello</span> {
+    <span class="k">public static void</span> main(<span class="t">String</span>[] args) {
+        System.out.println(<span class="s">"Hello"</span>);
+    }
+}</pre>
+          </div>
+          <div class="down"><i></i></div>
+          <div class="compile-row">
+            <div id="javac"><div class="gear"></div><b>javac</b><span>compiler</span></div>
+            <div class="harrow"></div>
+            <div class="slot" id="slotSrc"><span class="ghost">moved away</span></div>
+          </div>
+          <div id="pop" hidden role="dialog" aria-live="polite"><div class="pop-t" id="popT"></div><div class="pop-s" id="popS"></div><div class="pop-acts" id="popActs"></div></div>
+        </div>
+      </section>
+
+      <!-- destination computers -->
+      <section class="dests" id="dests" aria-label="Destination computers">
+        <p class="dests-q">Three other computers. Each one has its own JVM.</p>
+        <div class="machine dest" data-os="win" tabindex="-1" role="button" aria-label="Run on Windows">
+          <div class="bar"><span class="screen-ico"></span><span class="os">Windows</span><span class="check">✓ ran here</span><span class="role">another computer</span></div>
+          <div class="dest-body"><div class="slot" id="slot-win"></div><div class="harrow"></div><div class="jvmchip"><b>Windows JVM</b><span>built for Windows</span></div></div>
+        </div>
+        <div class="machine dest" data-os="linux" tabindex="-1" role="button" aria-label="Run on Linux">
+          <div class="bar"><span class="screen-ico"></span><span class="os">Linux</span><span class="check">✓ ran here</span><span class="role">another computer</span></div>
+          <div class="dest-body"><div class="slot" id="slot-linux"></div><div class="harrow"></div><div class="jvmchip"><b>Linux JVM</b><span>built for Linux</span></div></div>
+        </div>
+        <div class="machine dest" data-os="mac" tabindex="-1" role="button" aria-label="Run on macOS">
+          <div class="bar"><span class="screen-ico"></span><span class="os">macOS</span><span class="check">✓ ran here</span><span class="role">another computer</span></div>
+          <div class="dest-body"><div class="slot" id="slot-mac"></div><div class="harrow"></div><div class="jvmchip"><b>macOS JVM</b><span>built for macOS</span></div></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- inside the chosen computer -->
+    <section id="engine" hidden aria-live="polite">
+      <div class="bar"><span class="screen-ico"></span><span class="os" id="engTitle">Inside the Windows computer</span></div>
+      <div class="hi" id="jvmHi" hidden><b>JVM understands the bytecode.</b><span>No need to write a separate file for every OS.</span></div>
+      <div class="track">
+        <div id="jvmBox" class="part">
+          <div class="jvm-h"><b id="jvmName">Windows JVM</b><span id="jvmSub">built for Windows</span></div>
+          <div class="jvm-in">
+            <div class="slot" id="slotJvm"></div>
+            <div id="understands">JVM understands Java bytecode
+              <em><span class="g">Same bytecode</span> + <span class="o" id="undJvm">Windows JVM</span></em></div>
+          </div>
+          <div id="ee" class="part">
+            <div class="lbl">Execution engine</div>
+            <div id="interp" class="part">
+              <div class="lbl">Interpreter / JIT</div>
+              <ul class="blist" id="bcList"></ul>
+              <div class="jit-note">Code that runs often can be JIT-compiled.</div>
+            </div>
+          </div>
+        </div>
+        <div class="harrow"></div>
+        <div id="native" class="part">
+          <div class="lbl">Native machine instructions</div>
+          <div class="sub" id="nativeSub">for x86-64 on Windows</div>
+          <ul id="nativeList"></ul>
+          <div class="fine">Simplified example</div>
+        </div>
+        <div class="harrow"></div>
+        <div id="cpu" class="part"><div class="chip">CPU</div><div class="cl" id="cpuName">x86-64</div></div>
+        <div class="harrow"></div>
+        <div id="console" class="part"><div class="pr" id="prompt">$ java Hello</div><div id="out"></div></div>
+      </div>
+      <div class="hi ok" id="woraHit" hidden><b>Write once, run anywhere.</b><span id="woraHitTxt"></span></div>
+    </section>
+
+    <section id="compare" hidden>
+      <h2>What changed, and what stayed the same?</h2>
+      <div class="tw"><table id="cmpTable"></table></div>
+      <p class="cnote" id="cnote" hidden></p>
+    </section>
+
+    <section id="final" hidden>
+      <div class="wora-big" style="animation-delay:.1s">Write once, <span class="g">run anywhere</span></div>
+      <div class="pi" style="animation-delay:.7s"><b>Java is platform independent</b><span>because the <span class="g">.class file</span> is platform independent.</span></div>
+      <div class="eq">
+        <div class="eq-l gold" style="animation-delay:1.4s">SAME BYTECODE</div>
+        <div class="eq-op" style="animation-delay:1.7s">+</div>
+        <div class="eq-l jvm" style="animation-delay:1.9s">DIFFERENT JVM</div>
+        <div class="eq-jvms" style="animation-delay:2.1s"><span style="color:var(--win)">Windows JVM</span><span style="color:var(--linux)">Linux JVM</span><span style="color:var(--mac)">macOS JVM</span></div>
+        <div class="eq-op" style="animation-delay:2.4s">↓</div>
+        <div class="eq-l" style="animation-delay:2.6s">PLATFORM-SPECIFIC EXECUTION</div>
+        <div class="eq-op" style="animation-delay:2.9s">↓</div>
+        <div class="eq-l ok" style="animation-delay:3.1s">SAME JAVA PROGRAM RUNS</div>
+      </div>
+      <p class="fin1" style="animation-delay:3.6s">The <span class="g">.class file</span> is platform-independent.<br>The JVM implementation is platform-specific.</p>
+      <p class="fin2" style="animation-delay:4.1s">Java achieves platform-independent execution because the same bytecode can be executed by a JVM available for the target platform.</p>
+    </section>
+
+    <!-- the one and only Hello.class -->
+    <div id="token" aria-hidden="true">
+      <div class="tk-file">
+        <div class="tk-fold"></div>
+        <div class="tk-name">📦 Hello.class</div>
+        <div class="tk-bytes">CA FE BA BE 00 00 00 41</div>
+        <div class="tk-tags"><span>Java bytecode</span><span>Platform neutral</span></div>
+        <div class="tk-scan"></div>
+      </div>
+      <div class="tk-badge">SAME FILE</div>
+    </div>
+  </main>
+
+  <footer class="ctrl">
+    <div class="say" aria-live="polite"><div id="cap"></div><div id="think" hidden></div></div>
+    <div class="acts" id="acts"></div>
+  </footer>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const M = RM ? 0.15 : 1;
+const wait = ms => new Promise(r => setTimeout(r, ms * M));
+const stage = $('#stage'), token = $('#token'), trail = $('#trail');
+
+const OS = {
+  win:   { name:'Windows', jvm:'Windows JVM', cpu:'x86-64', color:'var(--win)',   prompt:'C:\\> java Hello',
+           native:['mov  rcx, hStdOut','lea  rdx, [msg]','mov  r8d, 6','call WriteFile'] },
+  linux: { name:'Linux',   jvm:'Linux JVM',   cpu:'x86-64', color:'var(--linux)', prompt:'$ java Hello',
+           native:['mov  edi, 1','lea  rsi, [msg]','mov  edx, 6','call write'] },
+  mac:   { name:'macOS',   jvm:'macOS JVM',   cpu:'ARM64',  color:'var(--mac)',   prompt:'% java Hello',
+           native:['mov  x0, #1','adrp x1, msg@PAGE','mov  x2, #6','bl   _write'] }
+};
+const BYTECODE = ['getstatic  System.out','ldc  "Hello"','invokevirtual  println','return'];
+const STEPS = ['Write','Compile','Move','JVM','Execute','Result'];
+const PROG = {write:1,compiling:2,compiled:2,choose:3,moving:3,arrived:3,returning:3,entering:4,jvm:4,exec:5,executed:5,result:6,final:7};
+
+let S;
+
+/* ---------- geometry ---------- */
+function center(el){
+  const r = el.getBoundingClientRect(), s = stage.getBoundingClientRect();
+  return { x: r.left - s.left + r.width/2, y: r.top - s.top + r.height/2 };
+}
+function tokenXY(el){ const c = center(el); return { x: c.x - token.offsetWidth/2, y: c.y - token.offsetHeight/2 }; }
+const tf = (p, sc=1) => `translate(${p.x}px,${p.y}px) scale(${sc})`;
+function snap(){
+  if (!S || !S.slot || S.anim) return;
+  S.pos = tokenXY(S.slot); token.style.transform = tf(S.pos);
+}
+new ResizeObserver(snap).observe(stage);
+
+function bez(p0, c, p1, t){
+  const u = 1 - t;
+  return { x: u*u*p0.x + 2*u*t*c.x + t*t*p1.x, y: u*u*p0.y + 2*u*t*c.y + t*t*p1.y };
+}
+async function moveToken(slot, { dur=1500, showTrail=false } = {}){
+  S.anim = true;
+  const p0 = S.pos, p1 = tokenXY(slot);
+  const dx = p1.x - p0.x, dy = p1.y - p0.y, dist = Math.hypot(dx, dy);
+  const lift = Math.min(150, dist * .32);
+  const mid = { x: p0.x + dx/2, y: Math.min(p0.y, p1.y) - lift };
+  const c = { x: 2*mid.x - (p0.x+p1.x)/2, y: 2*mid.y - (p0.y+p1.y)/2 };
+  if (showTrail) drawTrail(p0, c, p1, dur);
+  const frames = [];
+  for (let i = 0; i <= 30; i++){
+    const t = i/30, p = bez(p0, c, p1, t);
+    frames.push({ transform: tf(p, 1 + Math.sin(Math.PI*t)*0.1) });
+  }
+  const a = token.animate(frames, { duration: dur*M, easing:'cubic-bezier(.6,0,.35,1)' });
+  token.style.transform = tf(p1);
+  await a.finished;
+  S.pos = p1; S.slot = slot; S.anim = false;
+}
+function drawTrail(p0, c, p1, dur){
+  const hw = token.offsetWidth/2, hh = token.offsetHeight/2;
+  trail.setAttribute('width', stage.scrollWidth); trail.setAttribute('height', stage.scrollHeight);
+  trail.innerHTML = `<path d="M${p0.x+hw},${p0.y+hh} Q${c.x+hw},${c.y+hh} ${p1.x+hw},${p1.y+hh}" fill="none" stroke="#F4B740" stroke-width="2" stroke-linecap="round" opacity=".55"/>`;
+  const path = trail.firstChild, L = path.getTotalLength();
+  path.style.strokeDasharray = L; path.style.strokeDashoffset = L;
+  path.animate([{strokeDashoffset:L},{strokeDashoffset:0}], { duration: dur*M, easing:'cubic-bezier(.6,0,.35,1)', fill:'forwards' });
+}
+function clearTrail(){ trail.innerHTML = ''; }
+
+function particle(a, b, cls='', dur=600){
+  const p = document.createElement('div'); p.className = 'particle ' + cls;
+  (cls === 'p-os' ? $('#engine') : stage).appendChild(p);
+  const host = p.parentElement === stage ? stage : $('#engine');
+  const hr = host.getBoundingClientRect();
+  const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+  const A = { x: ra.left - hr.left + ra.width/2, y: ra.top - hr.top + ra.height/2 };
+  const B = { x: rb.left - hr.left + rb.width/2, y: rb.top - hr.top + rb.height/2 };
+  const an = p.animate([
+    { transform:`translate(${A.x}px,${A.y}px) scale(.5)`, opacity:0 },
+    { opacity:1, offset:.15 },
+    { transform:`translate(${B.x}px,${B.y}px) scale(1)`, opacity:1 }
+  ], { duration: dur*M, easing:'cubic-bezier(.5,0,.3,1)' });
+  return an.finished.then(() => p.remove());
+}
+
+/* ---------- UI ---------- */
+function renderRail(){
+  const cur = PROG[S.phase];
+  $('#rail').innerHTML = STEPS.map((s,i) => {
+    const n = i+1, cls = n < cur ? 'done' : n === cur ? 'cur' : '';
+    return `<li class="${cls}" ${n===cur?'aria-current="step"':''}><b>${n}</b><span>${s}</span></li>`;
+  }).join('');
+}
+function setCap(text){
+  const c = $('#cap'); c.textContent = text;
+  c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
+}
+function makeBtns(box, actions){
+  box.innerHTML = '';
+  actions.forEach(a => {
+    const b = document.createElement('button');
+    b.className = 'btn ' + (a.kind || ''); b.textContent = a.label;
+    if (a.os) b.dataset.os = a.os;
+    b.onclick = () => { if (!S.busy) a.fn(); };
+    box.appendChild(b);
+  });
+  box.querySelector('button')?.focus({ preventScroll:true });
+}
+function showPop(p){
+  const pop = $('#pop');
+  $('#popT').textContent = p.title; $('#popS').textContent = p.text || ''; $('#popS').hidden = !p.text;
+  pop.hidden = false; pop.classList.remove('in'); void pop.offsetWidth; pop.classList.add('in');
+  const pr = pop.getBoundingClientRect(), sr = $('#slotSrc').getBoundingClientRect();
+  pop.style.setProperty('--ax', Math.max(24, Math.min(pr.width-24, sr.left + sr.width/2 - pr.left)) + 'px');
+  makeBtns($('#popActs'), p.actions);
+  if (innerWidth <= 760) pop.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block:'center' });
+}
+function ui(phase, cap, think, actions, pop){
+  S.phase = phase; stage.dataset.phase = phase; renderRail(); setCap(cap);
+  const t = $('#think'); t.hidden = !think; t.textContent = think || '';
+  const box = $('#acts'); box.innerHTML = '';
+  if (pop){ showPop(pop); box.innerHTML = '<span class="wait">Choose in the pop-up</span>'; return; }
+  $('#pop').hidden = true;
+  if (!actions || !actions.length){ box.innerHTML = '<span class="wait"><i></i>watch</span>'; return; }
+  actions.forEach(a => {
+    const b = document.createElement('button');
+    b.className = 'btn ' + (a.kind || ''); b.textContent = a.label;
+    if (a.os) b.dataset.os = a.os;
+    b.onclick = () => { if (!S.busy) a.fn(); };
+    box.appendChild(b);
+  });
+  box.querySelector('button')?.focus({ preventScroll:true });
+}
+function scrollTo(el, block='center'){ el.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block }); }
+
+/* ---------- lesson ---------- */
+function reset(){
+  S = { phase:'write', os:null, runs:[], slot:null, pos:{x:0,y:0}, anim:false, busy:false };
+  token.className = ''; token.style.transform = ''; token.style.opacity = '';
+  clearTrail();
+  $('#bench').hidden = false; $('#engine').hidden = true; $('#compare').hidden = true; $('#final').hidden = true;
+  stage.classList.remove('away');
+  $$('.slot').forEach(s => s.classList.remove('filled','moved'));
+  $$('.dest').forEach(d => d.classList.remove('in','sel','visited','live'));
+  $('#dests').classList.remove('has-sel','choosing');
+  $$('.wora .runs i').forEach(i => i.classList.remove('done')); $('#woraDone').classList.remove('on');
+  ui('write', 'Write the program once: Hello.java on Linux.', 'Can this one program run on Windows and macOS too, without rewriting it?',
+     [{ label:'Compile', fn:compile, kind:'primary' }]);
+}
+
+async function compile(){
+  S.busy = true;
+  ui('compiling', 'javac is compiling Hello.java…', '', []);
+  const tab = $('#javaTab'), javac = $('#javac');
+  const chip = tab.cloneNode(true); chip.removeAttribute('id'); chip.classList.add('fly');
+  stage.appendChild(chip);
+  const A = center(tab), B = center(javac), w = tab.offsetWidth, h = tab.offsetHeight;
+  await chip.animate([
+    { transform:`translate(${A.x-w/2}px,${A.y-h/2}px)` },
+    { transform:`translate(${A.x-w/2}px,${A.y-h/2-14}px) scale(1.08)`, offset:.25 },
+    { transform:`translate(${B.x-w/2}px,${B.y-h/2}px) scale(.45)`, opacity:.1 }
+  ], { duration:1000*M, easing:'cubic-bezier(.6,0,.3,1)', fill:'forwards' }).finished;
+  chip.remove();
+  javac.classList.add('working'); await wait(1200); javac.classList.remove('working');
+
+  const slot = $('#slotSrc'), jp = tokenXY(javac), sp = tokenXY(slot);
+  token.classList.add('show');
+  token.style.transform = tf(sp);
+  await token.animate([{ transform: tf(jp,.25), opacity:0 }, { transform: tf(sp), opacity:1 }],
+    { duration:800*M, easing:'cubic-bezier(.22,1,.36,1)' }).finished;
+  S.pos = sp; S.slot = slot; slot.classList.add('filled');
+  token.classList.add('spot');
+  S.busy = false;
+  ui('compiled', 'Compiled once. Hello.class is ready.', 'What is inside it: Linux instructions, or something else?', [],
+     { title:'We can move this file to another computer.', text:'Hello.class holds Java bytecode, not Linux machine code.',
+       actions:[{ label:'Move .class', fn:showChoices, kind:'primary' }] });
+}
+
+function osActions(){
+  return Object.entries(OS).map(([k,o]) => ({ label: (S.runs.includes(k)?'✓ ':'') + o.name, fn:() => choose(k), kind:'osb', os:k }));
+}
+async function showChoices(){
+  token.classList.remove('spot');
+  ui('choose', 'Each computer has its own JVM.', 'Will the file need to change for a different OS?', [],
+     { title:'Where should Hello.class run?', text:'Pick an OS here, or click a computer.', actions: osActions() });
+  const dests = $('#dests'); dests.classList.add('choosing');
+  const items = $$('.dest');
+  for (const d of items){ if (!d.classList.contains('in')){ d.classList.add('in'); await wait(160); } }
+  items.forEach(d => d.tabIndex = 0);
+  if (innerWidth <= 760) scrollTo(dests, 'start');
+}
+
+async function choose(k){
+  if (S.phase !== 'choose' || S.busy) return;
+  S.busy = true; S.os = k; const o = OS[k];
+  const dests = $('#dests'); dests.classList.remove('choosing'); dests.classList.add('has-sel');
+  $$('.dest').forEach(d => { d.tabIndex = -1; d.classList.toggle('sel', d.dataset.os === k); });
+  token.classList.remove('badge-on');
+  ui('moving', k === 'linux' ? 'Moving Hello.class to another Linux computer…' : `Moving Hello.class from Linux to ${o.name}…`, '', []);
+  const src = $('#slotSrc'), dst = $('#slot-' + k);
+  src.classList.remove('filled');
+  await moveToken(dst, { dur:1700, showTrail:true });
+  src.classList.add('moved'); dst.classList.add('filled');
+  stage.classList.add('away');
+  token.classList.add('badge-on');
+  S.busy = false;
+  ui('arrived', `Same file, same bytes. Hello.class is now on ${o.name}.`,
+     'Look at the bytes: CA FE BA BE… Did anything change on the trip?',
+     [{ label:`Give it to the ${o.jvm}`, fn:toJvm, kind:'primary' }]);
+}
+
+function setupEngine(k){
+  const o = OS[k], eng = $('#engine');
+  eng.style.setProperty('--c', o.color);
+  $('#engTitle').textContent = `Inside the ${o.name} computer`;
+  $('#jvmName').textContent = o.jvm; $('#undJvm').textContent = o.jvm;
+  $('#jvmSub').textContent = `built for ${o.name}`;
+  $('#nativeSub').textContent = `for ${o.cpu} on ${o.name}`;
+  $('#cpuName').textContent = `${o.cpu} CPU`;
+  $('#prompt').textContent = o.prompt;
+  $('#out').textContent = ''; $('#out').classList.remove('cursor');
+  $('#nativeList').innerHTML = '';
+  $('#bcList').innerHTML = BYTECODE.map(b => `<li>${b.replace(/</g,'&lt;')}</li>`).join('');
+  $$('#engine .part').forEach(p => p.classList.remove('on'));
+  $('#jvmHi').hidden = true; $('#woraHit').hidden = true;
+  $('#understands').classList.remove('on');
+}
+
+async function toJvm(){
+  S.busy = true; const k = S.os, o = OS[k];
+  setupEngine(k);
+  clearTrail();
+  $('#engine').hidden = false;
+  ui('entering', `Hello.class goes into the ${o.jvm}.`, '', []);
+  await wait(80);
+  scrollTo($('#engine'), innerWidth <= 980 ? 'start' : 'center');
+  await wait(700);
+  token.classList.remove('badge-on');
+  $('#jvmBox').classList.add('on');
+  document.querySelector(`.dest[data-os="${k}"]`).classList.add('live');
+  $('#slot-' + k).classList.remove('filled');
+  await moveToken($('#slotJvm'), { dur:1300 });
+  $('#slotJvm').classList.add('filled');
+  token.style.setProperty('--sc', 'rgba(255,255,255,.85)');
+  token.classList.add('scanning'); await wait(1450); token.classList.remove('scanning');
+  $('#understands').classList.add('on');
+  const hi = $('#jvmHi'); hi.hidden = false; hi.classList.remove('in'); void hi.offsetWidth; hi.classList.add('in');
+  S.busy = false;
+  ui('jvm', 'The JVM understands the bytecode. No separate file for every OS.',
+     `The bytecode is the same on every computer. Which part here was built for ${o.name}?`,
+     [{ label:'Run', fn:run, kind:'primary' }]);
+}
+
+async function typeOut(text){
+  const out = $('#out'); out.classList.add('cursor');
+  for (const ch of text){ out.textContent += ch; await wait(110); }
+  await wait(500); out.classList.remove('cursor');
+}
+
+async function run(){
+  S.busy = true; const o = OS[S.os];
+  ui('exec', 'The execution engine starts up inside the JVM.', '', []);
+  $('#ee').classList.add('on'); await wait(800);
+  $('#interp').classList.add('on');
+  setCap('Interpreter / JIT reads each bytecode instruction…'); await wait(900);
+  $('#native').classList.add('on');
+  setCap(`…and produces native machine instructions for ${o.cpu} on ${o.name}.`);
+  const lines = $$('#bcList li'), nl = $('#nativeList');
+  for (let i = 0; i < lines.length; i++){
+    lines[i].classList.add('act');
+    await particle(lines[i], nl, 'p-os', 650);
+    const li = document.createElement('li'); li.textContent = o.native[i]; nl.appendChild(li);
+    lines[i].classList.remove('act'); lines[i].classList.add('done');
+    await wait(180);
+  }
+  await wait(300);
+  $('#cpu').classList.add('on');
+  setCap(`The ${o.cpu} CPU executes the native instructions.`);
+  await particle(nl, $('#cpu .chip'), 'p-os', 650);
+  $('#cpu').classList.add('busy'); await wait(1100); $('#cpu').classList.remove('busy');
+  $('#console').classList.add('on');
+  await particle($('#cpu .chip'), $('#out'), 'p-os', 600);
+  await typeOut('Hello!');
+  if (!S.runs.includes(S.os)) S.runs.push(S.os);
+  document.querySelector(`.dest[data-os="${S.os}"]`).classList.add('visited');
+  document.querySelector(`.wora .runs i[data-os="${S.os}"]`).classList.add('done');
+  if (S.runs.length === 3) $('#woraDone').classList.add('on');
+  $('#woraHitTxt').textContent = `Written once on Linux. The same Hello.class ran on ${o.name} without any change.`;
+  const wh = $('#woraHit'); wh.hidden = false; wh.classList.remove('in'); void wh.offsetWidth; wh.classList.add('in');
+  wh.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block:'nearest' });
+  S.busy = false;
+  ui('executed', `Hello! printed on ${o.name}. Write once, run anywhere.`,
+     `Which parts of this run were made just for ${o.name}?`,
+     [{ label:'Compare what changed', fn:result, kind:'primary' }]);
+}
+
+function result(){
+  const runs = S.runs;
+  const rows = [
+    { k:'Hello.class bytecode', same:true,  v:() => 'CA FE BA BE 00 00 00 41', cls:'same' },
+    { k:'JVM',                  same:false, v:o => o.jvm, cls:'os' },
+    { k:'Native machine instructions', same:false, v:o => `${o.cpu}: ${o.native[3].replace(/\s+/,' ')}`, cls:'os' },
+    { k:'Program result',       same:true,  v:() => 'Hello!', cls:'ok' }
+  ];
+  const head = `<thead><tr><th></th><th>Thing</th>${runs.map(k => `<th class="osh" style="--c:${OS[k].color}">${OS[k].name}</th>`).join('')}</tr></thead>`;
+  const body = rows.map(r => `<tr><td class="tag"><span class="pill ${r.same?'same':'diff'}">${r.same?'SAME':'DIFFERENT'}</span></td><td class="rowk">${r.k}</td>${
+    runs.map(k => `<td class="v ${r.cls}" style="--c:${OS[k].color}">${r.v(OS[k])}</td>`).join('')}</tr>`).join('');
+  $('#cmpTable').innerHTML = head + '<tbody>' + body + '</tbody>';
+  const note = $('#cnote');
+  if (runs.includes('win') && runs.includes('linux')){
+    note.hidden = false;
+    note.textContent = 'Windows and Linux can use the same kind of CPU (x86-64), yet the native instructions still differ: each operating system has its own way to print text. Their JVMs handle that.';
+  } else if (runs.length === 1){
+    note.hidden = false;
+    note.textContent = 'Only one computer so far. Send the same file somewhere else and watch which column changes.';
+  } else note.hidden = true;
+  $('#compare').hidden = false;
+  scrollTo($('#compare'), 'center');
+  const acts = [];
+  if (runs.length < 3) acts.push({ label:'Try another OS', fn:another, kind:'primary' });
+  acts.push({ label:'Show the big idea', fn:finale, kind: runs.length < 3 ? '' : 'primary' });
+  if (runs.length >= 3) acts.unshift({ label:'Run it again somewhere', fn:another });
+  ui('result', runs.length === 1 ? 'One file, one JVM, one result.' : `The same Hello.class ran on ${runs.length} computers.`,
+     runs.length === 1 ? 'Will the bytecode column change on the next computer?' : 'Only the JVM and the native instructions changed. Why?', acts);
+}
+
+async function another(){
+  S.busy = true;
+  $('#compare').hidden = true;
+  ui('returning', 'Bringing the same Hello.class back to the Linux computer…', '', []);
+  scrollTo($('#bench'), 'start');
+  await wait(650);
+  $('#slotJvm').classList.remove('filled');
+  clearTrail();
+  await moveToken($('#slotSrc'), { dur:1400 });
+  $('#slotSrc').classList.remove('moved'); $('#slotSrc').classList.add('filled');
+  $('#engine').hidden = true;
+  stage.classList.remove('away');
+  $('#dests').classList.remove('has-sel'); $('#dests').classList.add('choosing');
+  $$('.dest').forEach(d => { d.classList.remove('sel','live'); d.tabIndex = 0; });
+  S.busy = false;
+  ui('choose', 'Same Hello.class, back home. No recompiling needed.',
+     'It ran before. Do we need to compile it again for a different computer?', [],
+     { title:'Where should Hello.class run next?', text:'The same file goes. Nothing is rewritten or recompiled.', actions: osActions() });
+}
+
+function finale(){
+  $('#bench').hidden = true; $('#engine').hidden = true; $('#compare').hidden = true;
+  token.classList.remove('show'); S.slot = null; clearTrail();
+  const f = $('#final'); f.hidden = true; void f.offsetWidth; f.hidden = false;
+  scrollTo(stage, 'start');
+  ui('final', 'Java is platform independent: the same .class file runs on every OS that has a JVM.', '',
+     [{ label:'Start over', fn:() => { reset(); scrollTo(stage,'start'); }, kind:'primary' }]);
+}
+
+/* machine clicks */
+$$('.dest').forEach(d => {
+  d.addEventListener('click', () => choose(d.dataset.os));
+  d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); choose(d.dataset.os); } });
+});
+
+reset();
+</script>
+</body>
+</html>

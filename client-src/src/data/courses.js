@@ -34,6 +34,15 @@ export const courses = [
     accentBg: 'var(--java-bg)',
     modules: [
       {
+        id: 'how-java-runs',
+        title: 'How Java Runs',
+        summary: 'Source, bytecode and the JVM — why one compiled file runs on every OS.',
+        lessons: [
+          { id: 'java-platform-independence', title: 'Java Platform Independence', minutes: 15,
+            blurb: 'Compile Hello.java once on Linux, carry the same Hello.class to Windows and macOS, and watch each JVM turn it into native instructions.' },
+        ],
+      },
+      {
         id: 'types-and-casting',
         title: 'Data types',
         summary: 'What a value is, how much room it takes, and what is lost when it moves.',

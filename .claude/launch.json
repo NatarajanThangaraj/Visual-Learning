@@ -7,6 +7,12 @@
       "runtimeArgs": ["--prefix", "client-src", "run", "dev"],
       "autoPort": true,
       "port": 5178
+    },
+    {
+      "name": "client-build",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "client-src", "exec", "--", "vite", "preview", "client-src", "--outDir", "../client", "--port", "4599", "--strictPort"],
+      "port": 4599
     }
   ]
 }
