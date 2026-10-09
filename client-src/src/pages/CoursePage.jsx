@@ -1,12 +1,11 @@
 import { useParams, Navigate, useSearchParams } from 'react-router-dom';
 import { getCourse, resolveCourseId, findLesson, activeTopicId } from '../data/courses';
 import CourseTabs from '../components/course/CourseTabs';
-import CourseHero from '../components/course/CourseHero';
 import TopicCard from '../components/TopicCard';
 import NotFoundPage from './NotFoundPage';
 
-/* A course page: the course tabs, the course header, and the lessons of the
-   topic picked in the sidebar. The topic rides in the URL (?topic=…) so it can
+/* A course page: the course tabs and the lessons of the topic picked in the
+   sidebar. The tabs already name the course, so there is no banner repeating it. The topic rides in the URL (?topic=…) so it can
    be linked and survives a refresh, and it is the only state this page keeps. */
 export default function CoursePage() {
   const { courseId: param } = useParams();
@@ -22,15 +21,16 @@ export default function CoursePage() {
   const module = course.modules.find(m => m.id === active) || null;
 
   return (
-    /* The accent is set once here so the hero and the cards below read as one
+    /* The accent is set once here so the tabs and the cards below read as one
        course rather than each re-declaring it. */
     <div
       className="course-page"
       style={{ '--course-accent': course.accent, '--course-accent-bg': course.accentBg }}
     >
-      <CourseTabs />
+      {/* The page's heading for screen readers; sighted users read it off the active tab. */}
+      <h1 className="visually-hidden">{course.title}</h1>
 
-      <CourseHero course={course} />
+      <CourseTabs />
 
       {module && (
         <section className="topic-panel" aria-labelledby="topic-panel-title">

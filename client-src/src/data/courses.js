@@ -365,7 +365,6 @@ export function findLesson(courseId, lessonId) {
   return allLessons().find(l => l.courseId === courseId && l.id === lessonId) || null;
 }
 
-export const courseLessonCount = courseId => flatOrder(courseId).length;
 
 /** The topic a course page shows: the one asked for in ?topic=, or the first
  *  when that is missing or names no topic of this course. */
