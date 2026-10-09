@@ -185,6 +185,15 @@ export const courses = [
             blurb: 'Search every drawer in the archive room at once and watch the matches slide out — then build the Java searcher that runs grep or findstr for you and reads back every file it found.' },
         ],
       },
+      {
+        id: 'new-updates',
+        title: 'New Updates',
+        summary: 'How the language itself has changed — features added across Java versions, and what each one fixed.',
+        lessons: [
+          { id: 'switch-evolution', title: 'Switch Evolution', minutes: 25,
+            blurb: 'Ride one value from Java 1.0 to Java 21 and watch switch grow up at every stop — enums, Strings, switch expressions, type patterns, record patterns, guards, case null, sealed types and exhaustiveness.' },
+        ],
+      },
     ],
   },
 

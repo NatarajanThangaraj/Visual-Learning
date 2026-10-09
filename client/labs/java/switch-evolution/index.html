@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Switch Evolution — a journey through Java's decision-making</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --pink:#E879A6;--pink-l:#3A1A2B;--pink-d:#FFB3CE;
+  --blue:#5B8DEF;--blue-l:#16294A;--blue-d:#A9CCFF;
+  --teal:#3CC7A9;--teal-l:#0F3A33;--teal-d:#7FE6CF;
+  --amber:#E8A33D;--amber-l:#3A2A0E;--amber-d:#FFD48A;
+  --purple:#9B7BF7;--purple-l:#2A2150;--purple-d:#D3C6FF;
+  --coral:#F2696B;--coral-l:#3E1A1A;--coral-d:#FFB4B4;
+  --green:#34C77B;--green-l:#123A22;--green-d:#94EDB2;
+  --ink:#EEF2FF;--ink2:#CBD5E1;--ink3:#8D9AB0;
+  --border:#26334D;--bg:#0A1222;--surface:#121C30;--soft:#18233A;
+  --sans:'Segoe UI',system-ui,-apple-system,sans-serif;
+  --mono:'Fira Code','Cascadia Code',Consolas,monospace;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;height:100%;background:#0A1222}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,.check input:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+.app{position:relative;height:100%;overflow:hidden;--top-h:56px;--rail-h:68px}
+
+.top{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px clamp(12px,2.4vw,24px);background:linear-gradient(to bottom,rgba(10,18,34,.55),rgba(10,18,34,0));pointer-events:none}
+.top>*{pointer-events:auto}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand h1{font-size:18px;margin:0;font-weight:800;letter-spacing:-.025em;line-height:1.1}
+.brand p{margin:0;font-size:12px;color:var(--ink3)}
+.btn{border:1.5px solid var(--border);background:rgba(18,28,48,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:10px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--ink2)}
+.btn:hover{border-color:var(--ink3)}
+
+.stage{position:absolute;inset:0}
+.scene{position:relative;height:100%;overflow:hidden;background:#101C33;isolation:isolate}
+.scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.flash{position:absolute;left:clamp(14px,3vw,30px);bottom:calc(var(--rail-h) + clamp(8px,1.6vw,16px));pointer-events:none;opacity:0;color:#E2E8F0}
+.flash .fv{font-size:clamp(34px,6vw,76px);font-weight:900;letter-spacing:-.05em;line-height:.9}
+.flash .ff{font-family:var(--mono);font-size:clamp(12px,1.4vw,15px);margin-top:8px;color:#94A3B8}
+.flash.play{animation:flash 2.6s var(--ease) forwards}
+@keyframes flash{0%{opacity:0;transform:translateY(14px)}16%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0}}
+.intro{position:absolute;right:clamp(14px,4vw,48px);top:50%;transform:translateY(-55%);max-width:430px;background:rgba(8,13,26,.86);border:1.5px solid #2A3D5F;border-radius:16px;padding:22px 24px;color:#E2E8F0;transition:opacity .5s,transform .6s var(--ease)}
+.intro h2{font-size:clamp(26px,3.6vw,38px);font-weight:900;letter-spacing:-.04em;line-height:1;margin:0 0 12px;color:#fff}
+.intro p{margin:0 0 10px;color:#A8B3C7;font-size:14px}
+.intro code{font-family:var(--mono);color:#6EE7B7;font-size:13px}
+.intro.gone{opacity:0;transform:translateY(-50%) translateX(30px);pointer-events:none}
+.start{margin-top:6px;border:0;background:#F8FAFF;color:#0F172A;border-radius:11px;padding:11px 18px;font-weight:700;font-size:14.5px}
+.start:hover{background:#fff}
+
+.card{background:var(--surface);border:1.5px solid var(--border);border-top:5px solid var(--c,var(--purple));border-radius:16px;padding:16px 18px 14px;display:none}
+.card.show{display:block;animation:cardIn .55s var(--ease)}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (min-width:900px){
+  .card{position:absolute;top:calc(var(--top-h) + 4px);right:14px;bottom:calc(var(--rail-h) + 4px);width:min(410px,40%);overflow-y:auto;box-shadow:0 18px 50px -18px rgba(0,0,0,.5)}
+  .card.show{animation:cardInSide .6s var(--ease)}
+  @keyframes cardInSide{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+}
+@media (max-width:620px){.top{flex-wrap:nowrap;gap:10px}.brand h1{font-size:16px}.btn{padding:6px 10px}.btn-ic .bt{display:none}.btn-ic{padding:7px 9px}}
+@media (max-width:899px){.card{position:absolute;left:10px;right:10px;bottom:calc(var(--rail-h) + 4px);max-height:50%;overflow-y:auto;box-shadow:0 -10px 40px -10px rgba(0,0,0,.6)}}
+.c-top{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.c-ver{font-size:28px;font-weight:900;letter-spacing:-.04em;line-height:1}
+.c-name{font-size:14px;font-weight:600;color:var(--ink2);margin-top:3px}
+.c-tag{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:20px;background:var(--cl);color:var(--cd);white-space:nowrap}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--ink3);margin:12px 0 6px}
+.think{border:2px dashed #5B4A9A;border-radius:12px;padding:10px 14px;background:var(--soft);display:flex;gap:10px}
+.think .dots{display:flex;flex-direction:column;gap:3px;padding-top:6px}
+.think .dots i{display:block;border-radius:50%;background:var(--purple)}
+.think .dots i:nth-child(1){width:8px;height:8px}
+.think .dots i:nth-child(2){width:5px;height:5px;opacity:.55}
+.think .dots i:nth-child(3){width:3px;height:3px;opacity:.3}
+.think .lbl{margin:0 0 2px;color:var(--purple-d)}
+.think p{margin:0;font-style:italic;color:var(--ink2);font-size:13.5px}
+.try{border:1.5px solid var(--border);border-radius:12px;padding:11px 12px;background:var(--bg)}
+.try .hint{font-size:12px;color:var(--ink3);margin:0 0 8px}
+.mrow{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--border);background:var(--surface);border-radius:8px;padding:5px 10px;font-family:var(--mono);font-size:12px;font-weight:500;transition:all .15s}
+.chip:hover{border-color:var(--ink3)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip.rm{font-family:var(--sans);font-size:12px}
+.chip.rm[aria-pressed="true"]{background:var(--coral-l);border-color:var(--coral);color:var(--coral-d);text-decoration:line-through}
+.check{display:flex;gap:8px;align-items:center;margin-top:9px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer}
+.check input{width:16px;height:16px;accent-color:var(--teal)}
+.check code{font-family:var(--mono);font-weight:500}
+.status{margin-top:10px;padding:7px 10px;border-radius:8px;font-size:12.5px;font-family:var(--mono);border:1.5px solid var(--border);background:var(--surface);color:var(--ink2)}
+.status.ok{border-color:var(--teal);background:var(--teal-l);color:var(--teal-d)}
+.status.err{border-color:var(--coral);background:var(--coral-l);color:var(--coral-d);animation:shake .4s}
+.status.info{border-color:var(--amber);background:var(--amber-l);color:var(--amber-d)}
+@keyframes shake{20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.reveal{margin-top:10px;background:var(--teal-l);border:2px solid var(--teal);border-radius:10px;padding:9px 13px;color:var(--teal-d);font-size:13.5px;animation:popIn .4s var(--ease)}
+.reveal .rl{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:1px}
+.reveal.wait{background:transparent;border:1.5px dashed var(--border);color:var(--ink3);animation:none;font-size:12.5px}
+.reveal.named{background:var(--purple-l);border-color:var(--purple);color:var(--purple-d)}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+pre.code{margin:0;background:#070D1A;border:1px solid var(--border);color:#E2E8F0;border-radius:10px;padding:10px 0;font-family:var(--mono);font-size:12.3px;line-height:1.6;overflow-x:auto}
+pre.code .ln{display:block;padding:0 13px;border-left:3px solid transparent;white-space:pre;transition:background .3s}
+pre.code .ln.on{background:rgba(110,231,183,.13);border-left-color:#6EE7B7}
+pre.code .ln.bad{background:rgba(252,165,165,.13);border-left-color:#FCA5A5}
+.ck{color:#93C5FD}.ct{color:#C4B5FD}.cs{color:#6EE7B7}.cb{color:#FCD34D}.cm{color:#7C8BA3}
+.memo{margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--cl);color:var(--cd);font-weight:800;letter-spacing:.03em;font-size:13px;text-align:center}
+.note{font-size:12px;color:var(--ink3);margin:8px 0 0}
+.c-actions{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:14px}
+.links{display:flex;gap:12px;flex-wrap:wrap}
+.links a{color:var(--blue-d);font-weight:600;font-size:13px;text-decoration:none;border-bottom:1.5px solid currentColor}
+.go{border:0;background:var(--ink);color:var(--bg);border-radius:11px;padding:10px 15px;font-weight:700;font-size:13.5px}
+.go:hover{opacity:.9}
+.nav{display:flex;gap:8px}
+.prev{border:1.5px solid var(--border);background:transparent;color:var(--ink2);border-radius:11px;padding:9px 12px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.prev:hover{border-color:var(--ink3);color:var(--ink)}
+.prev svg{flex:none}
+
+.chain{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.chain span{font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--soft);border:1.5px solid var(--border);color:var(--ink2);opacity:0;animation:popIn .4s var(--ease) forwards}
+.chain em{font-style:normal;color:var(--ink3);opacity:0;animation:popIn .3s forwards}
+.remember{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:5px}
+.remember li{padding:7px 11px;border-radius:9px;background:var(--teal-l);color:var(--teal-d);font-weight:700;font-size:13px}
+.quote{margin:10px 0 0;padding:12px 14px;border-radius:12px;background:#070D1A;border:1px solid var(--border);color:#CBD5E1;font-size:13.5px}
+.quote b{color:#6EE7B7}
+.qa{margin-top:6px;border:1.5px solid var(--border);border-radius:10px;padding:8px 11px;background:var(--surface);font-size:13px}
+.qa button{border:0;background:none;color:var(--purple-d);font-weight:700;font-size:12px;padding:0;margin-left:4px}
+.qa .ans{color:var(--teal-d);font-weight:700;font-family:var(--mono);font-size:12.5px}
+.explore{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.explore a{display:block;padding:8px 10px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg);color:var(--ink);text-decoration:none;font-size:12px;font-weight:600;line-height:1.35}
+.explore a small{display:block;color:var(--ink3);font-weight:500}
+.explore a:hover{border-color:var(--purple)}
+
+.rail{position:absolute;left:0;right:0;bottom:0;z-index:5;overflow-x:auto;padding:14px clamp(10px,2vw,20px) 8px;background:linear-gradient(to top,rgba(10,18,34,.85) 40%,rgba(10,18,34,0));transition:transform .35s var(--ease),opacity .25s,visibility 0s}
+.app.no-rail .rail{transform:translateY(100%);opacity:0;visibility:hidden;transition:transform .35s var(--ease),opacity .25s,visibility 0s .35s}
+.btn-ic{display:inline-flex;align-items:center;gap:7px}
+.btn-ic svg{flex:none}
+.btn[aria-pressed="true"]{border-color:var(--ink3);color:var(--ink)}
+.rail-in{position:relative;min-width:760px;padding:10px 8px 0}
+.rail-line{position:absolute;left:4.2%;right:4.2%;top:17px;height:3px;border-radius:3px;background:var(--border)}
+.rail-fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:3px;background:var(--ink2)}
+.rail-veh{position:absolute;top:-5px;width:13px;height:13px;border-radius:50%;background:var(--bg);border:3px solid var(--ink);transform:translateX(-50%)}
+.rail-stops{display:grid;grid-template-columns:repeat(12,1fr);position:relative}
+.rs{text-align:center}
+.rs i{display:block;width:12px;height:12px;margin:0 auto;border-radius:50%;background:var(--surface);border:2.5px solid var(--border);transition:all .3s}
+.rs.done i{border-color:var(--ink2);background:var(--ink2)}
+.rs.cur i{border-color:var(--purple);box-shadow:0 0 0 4px var(--purple-l)}
+.rs b{display:block;font-size:12px;margin-top:6px}
+.rs small{display:block;font-size:10.5px;color:var(--ink3);line-height:1.2;font-family:var(--mono)}
+/* ===== Light theme for the side card ===== */
+.card{
+  color-scheme:light;
+  --ink:#0F172A;--ink2:#334155;--ink3:#64748B;
+  --border:#DCE3EE;--bg:#F6F8FC;--surface:#FFFFFF;--soft:#F2F5FB;
+  --pink-l:#FCE7F0;--pink-d:#9D174D;
+  --blue-l:#E3ECFD;--blue-d:#1D4ED8;
+  --teal-l:#DDF5EF;--teal-d:#0F6B5A;
+  --amber-l:#FDF1DC;--amber-d:#92580A;
+  --purple-l:#EEE8FE;--purple-d:#5B3CC4;
+  --coral-l:#FDE5E5;--coral-d:#B42324;
+  --green-l:#DCF5E6;--green-d:#166534;
+  background:var(--surface);color:var(--ink);
+}
+@media (min-width:900px){.card{box-shadow:0 18px 50px -18px rgba(0,0,0,.55)}}
+.card .think{border-color:#C4B5FD}
+.card pre.code{background:#F6F8FC;border-color:var(--border);color:#1E293B}
+.card pre.code .ln.on{background:rgba(16,185,129,.12);border-left-color:#10B981}
+.card pre.code .ln.bad{background:rgba(239,68,68,.1);border-left-color:#EF4444}
+.card .ck{color:#1D4ED8}.card .ct{color:#7C3AED}.card .cs{color:#047857}.card .cb{color:#B45309}.card .cm{color:#94A3B8}
+.card .quote{background:var(--soft);border-color:var(--border);color:var(--ink2)}
+.card .quote b{color:#047857}
+@media (prefers-reduced-motion:reduce){.flash.play{animation-duration:1.6s}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#0F172A"/><path d="M7 17h7l5-7h8M14 17l5 7h8" stroke="#6EE7B7" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="17" r="2.4" fill="#F8FAFF"/></svg>
+      <h1>Switch Evolution</h1>
+    </div>
+    <button class="btn btn-ic" id="railToggle" aria-pressed="false" aria-controls="rail" aria-label="Show progress"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 8h13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="3" cy="8" r="2" fill="currentColor"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="13" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span class="bt">Show progress</span></button>
+    <button class="btn" id="restart">Restart</button>
+  </header>
+
+  <div class="stage">
+    <div class="scene" id="scene">
+      <canvas id="cv" role="img" aria-label="A vehicle carries a value through eleven Java milestones. At each one, a decision panel shows how switch evaluates the value."></canvas>
+      <div class="flash" id="flash" aria-hidden="true"><div class="fv" id="fv"></div><div class="ff" id="ff"></div></div>
+      <div class="intro" id="intro">
+        <h2>Every stop is a new way to decide.</h2>
+        <p>Your vehicle carries a value, like <code>int choice = 2</code>. At each Java milestone it meets a <code>switch</code>, and you watch the cases being checked.</p>
+        <p>As Java evolves, the value evolves too: numbers, names, text, types, records.</p>
+        <button class="start" id="startBtn">Start the journey</button>
+      </div>
+    </div>
+    <section class="card" id="card" aria-live="polite"></section>
+  </div>
+
+  <nav class="rail" id="rail" aria-label="Journey progress">
+    <div class="rail-in">
+      <div class="rail-line"><div class="rail-fill" id="railFill"></div><span class="rail-veh" id="railVeh"></span></div>
+      <div class="rail-stops" id="railStops"></div>
+    </div>
+  </nav>
+</div>
+
+<script>
+/* ================= HELPERS ================= */
+const $=s=>document.querySelector(s);
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
+const eio=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const rnd=(i,s=0)=>{const x=Math.sin(i*127.1+s*311.7)*43758.5453;return x-Math.floor(x)};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const HC={};
+const rgb=h=>HC[h]||(HC[h]=(n=>[n>>16&255,n>>8&255,n&255])(parseInt(h.slice(1),16)));
+function mix(a,b,t){if(a===b||t<=0)return a;if(t>=1)return b;const A=rgb(a),B=rgb(b);return '#'+((1<<24)|(Math.round(A[0]+(B[0]-A[0])*t)<<16)|(Math.round(A[1]+(B[1]-A[1])*t)<<8)|Math.round(A[2]+(B[2]-A[2])*t)).toString(16).slice(1)}
+const rgba=(h,a)=>{const c=rgb(h);return `rgba(${c[0]},${c[1]},${c[2]},${a})`};
+function hl(src){
+  return esc(src).replace(/(\/\/[^\n]*)|("[^"\n]*")|\b(switch|case|break|default|int|enum|sealed|interface|permits|when|null|var|return|new|record|final|class|implements)\b|\b([A-Z][A-Za-z0-9]*)\b|\b(\d+)\b/g,
+   (m,c,s,k,t,n)=>c?`<span class="cm">${c}</span>`:s?`<span class="cs">${s}</span>`:k?`<span class="ck">${k}</span>`:t?`<span class="ct">${t}</span>`:`<span class="cb">${n}</span>`);
+}
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MONO='"Fira Code","Cascadia Code",Consolas,monospace';
+const seq=(v,skipNote)=>Array.from({length:v+1},(_,i)=>[i,i===v?'match':'skip',i===v?null:skipNote||null]);
+
+/* ================= DATA ================= */
+const LINKS={
+  tut:{t:'Switch statements (Java tutorial)',u:'https://docs.oracle.com/javase/tutorial/java/nutsandbolts/switch.html'},
+  enm:{t:'Enum types (Java tutorial)',u:'https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html'},
+  j325:{t:'JEP 325: Switch expressions (preview)',u:'https://openjdk.org/jeps/325'},
+  j354:{t:'JEP 354: Switch expressions (2nd preview)',u:'https://openjdk.org/jeps/354'},
+  j361:{t:'JEP 361: Switch expressions',u:'https://openjdk.org/jeps/361'},
+  j441:{t:'JEP 441: Pattern matching for switch',u:'https://openjdk.org/jeps/441'},
+  j440:{t:'JEP 440: Record patterns',u:'https://openjdk.org/jeps/440'},
+  j409:{t:'JEP 409: Sealed classes',u:'https://openjdk.org/jeps/409'},
+  j455:{t:'JEP 455: Primitive types in patterns (preview)',u:'https://openjdk.org/jeps/455'}
+};
+const ROLE={pink:['#E879A6','var(--pink-l)','var(--pink-d)'],teal:['#3CC7A9','var(--teal-l)','var(--teal-d)'],blue:['#5B8DEF','var(--blue-l)','var(--blue-d)'],amber:['#E8A33D','var(--amber-l)','var(--amber-d)'],purple:['#9B7BF7','var(--purple-l)','var(--purple-d)'],coral:['#F2696B','var(--coral-l)','var(--coral-d)'],green:['#34C77B','var(--green-l)','var(--green-d)']};
+const NAMES=['PLACED','PAID','SHIPPED','DELIVERED'],NRES=['confirm()','pack()','ship()','close()'];
+const PAYS=['CardPayment','CashPayment','UpiPayment'];
+
+const STOPS=[
+ {v:'bike',ver:'Java 1.0',short:'1.0',sel:'int',name:'Basic switch',role:'pink',
+  problem:'I need to choose one path based on a value.',
+  cap:'<b>switch</b> compares one value against each <b>case</b> and runs the first one that matches.',
+  memo:'VALUE → CHOOSE A PATH',links:['tut'],
+  head:'switch (choice)',
+  code:'switch (choice) {\n    case 1: start(); break;\n    case 2: stop();  break;\n    case 3: exit();  break;\n}',
+  rows:()=>[{t:'case 1',r:'start()',l:1},{t:'case 2',r:'stop()',l:2},{t:'case 3',r:'exit()',l:3}],
+  inputs:[['1','choice = 1'],['2','choice = 2'],['3','choice = 3']],def:'2',
+  tag:s=>({ty:'int',tx:'choice = '+s.input}),
+  run:s=>{const v=+s.input-1;return{steps:seq(v),status:['ok',`case ${v+1} matched → ${['start()','stop()','exit()'][v]}`],line:v+1,reveal:true}}},
+
+ {v:'scooter',morph:[.62,.92],ver:'Java 5',short:'5',sel:'enum',name:'Enums meet switch',role:'teal',
+  problem:'Raw numbers like 0, 1, 2 don’t say what they mean.',
+  cap:'An <b>enum</b> gives a fixed set of named values, and switch can match on those names.',
+  memo:'NAMED VALUES → CLEARER CHOICES',links:['enm'],
+  head:'switch (status)',
+  code:'enum OrderStatus { PLACED, PAID, SHIPPED, DELIVERED }\n\nswitch (status) {\n    case PLACED:    confirm(); break;\n    case PAID:      pack();    break;\n    case SHIPPED:   ship();    break;\n    case DELIVERED: close();   break;\n}',
+  rows:s=>NAMES.map((n,i)=>({t:'case '+(s.flags.en?n:i),r:NRES[i],l:3+i})),
+  inputs:NAMES.map(n=>[n,n]),def:'PAID',toggles:[['en','Use an <code>enum</code> instead of int codes',false]],
+  tag:s=>s.flags.en?{ty:'OrderStatus',tx:'status = '+s.input}:{ty:'int',tx:'status = '+NAMES.indexOf(s.input)},
+  run:s=>{const v=NAMES.indexOf(s.input);return s.flags.en?{steps:seq(v),status:['ok',`case ${s.input} → ${NRES[v]}`],line:3+v,reveal:true}
+     :{steps:seq(v),status:['info',`case ${v} matched. But what does ${v} mean?`]}}},
+
+ {v:'car',morph:[.62,.92],ver:'Java 7',short:'7',sel:'String',name:'Switch on text',role:'blue',
+  problem:'What if my decision is based on meaningful text?',
+  cap:'switch can match a <b>String</b> value directly. The text has to match exactly.',
+  memo:'TEXT → CHOOSE A PATH',links:['tut'],
+  head:'switch (status)',
+  code:'switch (status) {\n    case "PAID":      charge(); break;\n    case "SHIPPED":   track();  break;\n    case "CANCELLED": refund(); break;\n    default:          reject();\n}',
+  rows:()=>[{t:'case "PAID"',r:'charge()',l:1},{t:'case "SHIPPED"',r:'track()',l:2},{t:'case "CANCELLED"',r:'refund()',l:3},{t:'default',r:'reject()',l:4}],
+  inputs:[['PAID','"PAID"'],['SHIPPED','"SHIPPED"'],['CANCELLED','"CANCELLED"'],['shipped','"shipped"']],def:'SHIPPED',
+  tag:s=>({ty:'String',tx:`status = "${s.input}"`}),
+  run:s=>{const v=['PAID','SHIPPED','CANCELLED'].indexOf(s.input);
+    if(v<0)return{steps:seq(3),status:['info','"shipped" is not "SHIPPED". No exact match, so default runs.'],line:4,reveal:true};
+    return{steps:seq(v),status:['ok',`case "${s.input}" → ${['charge()','track()','refund()'][v]}`],line:v+1,reveal:true}}},
+
+ {v:'car',ver:'Java 12/13',short:'12/13',sel:'→ value',name:'Switch expressions (preview)',role:'blue',
+  problem:'I don’t only want to run an action. I want the decision to produce a value.',
+  cap:'switch can be an <b>expression</b>: the whole decision evaluates to a value you can store.',
+  memo:'SWITCH → PRODUCES A VALUE',links:['j325','j354'],note:'Java 12 and 13 shipped this as a preview: a trial feature you had to switch on.',
+  head:'int fee = switch (type)',
+  code:'int fee = switch (type) {\n    case BASIC   -> 100;\n    case PREMIUM -> 200;\n};',
+  rows:()=>[{t:'case BASIC',r:'-> 100',l:1},{t:'case PREMIUM',r:'-> 200',l:2}],
+  inputs:[['BASIC','BASIC'],['PREMIUM','PREMIUM']],def:'PREMIUM',
+  tag:s=>({ty:'CustomerType',tx:'type = '+s.input}),
+  run:s=>{const v=s.input==='BASIC'?0:1,val=[100,200][v];return{steps:seq(v),status:['ok',`The switch produced ${val}, stored in fee`],line:v+1,reveal:true,
+    after:{ty:'CustomerType',tx:'type = '+s.input,ex:'int fee = '+val}}}},
+
+ {v:'train',morph:[.1,.36],ver:'Java 14',short:'14',sel:'standard',name:'Switch expressions become standard',role:'amber',
+  problem:'A useful experiment needs to become part of normal Java.',
+  cap:'From Java 14, switch expressions are <b>standard</b>: no flag, everyday Java.',
+  memo:'EXPERIMENT → STANDARD FEATURE',links:['j361'],
+  head:'javac Fees.java',
+  code:'// JDK 12, 13: preview, opt-in only\njavac --release 13 --enable-preview Fees.java\n\n// JDK 14 and later: standard\njavac Fees.java',
+  rows:()=>[{t:'JDK 12',r:'preview',l:1},{t:'JDK 13',r:'preview',l:1},{t:'JDK 14',r:'standard',l:4}],
+  inputs:[['12','JDK 12'],['13','JDK 13'],['14','JDK 14']],def:'13',toggles:[['pv','Pass <code>--enable-preview</code>',false]],
+  tag:s=>({ty:'JDK',tx:s.input+(s.input!=='14'&&s.flags.pv?'  --enable-preview':'')}),
+  run:s=>{const v=+s.input-12;
+    if(v===2)return{steps:[[2,'match']],status:['ok','Compiles. Standard Java, no flag needed.'],line:4,reveal:true};
+    if(!s.flags.pv)return{steps:[[v,'fail']],status:['err','error: switch expressions are a preview feature and are disabled by default.'],bad:1};
+    return{steps:[[v,'match']],status:['info','Compiles, but only as an opt-in preview.'],line:1}}},
+
+ {v:'plane',morph:[.6,.9],ver:'Java 21',short:'21',sel:'Object',name:'Pattern matching for switch',role:'purple',
+  problem:'What if the decision depends on what type of object I actually have?',
+  cap:'switch can match an object’s <b>type</b> and hand it to you as that type, ready to use.',
+  memo:'VALUE → TYPE-AWARE DECISION',links:['j441'],note:'Previewed from Java 17, standard in Java 21.',
+  head:'switch (order)',
+  code:'switch (order) {\n    case PhysicalOrder p -> ship(p);\n    case DigitalOrder d  -> sendLink(d);\n}',
+  rows:()=>[{t:'case PhysicalOrder p',r:'ship(p)',l:1},{t:'case DigitalOrder d',r:'sendLink(d)',l:2}],
+  inputs:[['PhysicalOrder','PhysicalOrder'],['DigitalOrder','DigitalOrder']],def:'PhysicalOrder',
+  tag:s=>({ty:'Order',tx:'order = ?',ex:'actual object: a '+s.input}),
+  run:s=>{const v=s.input==='PhysicalOrder'?0:1;return{steps:seq(v,'not a PhysicalOrder'),status:['ok',`order is a ${s.input} → ${v?'sendLink(d)':'ship(p)'}`],line:v+1,reveal:true,
+    after:{ty:s.input,tx:v?'d':'p',ex:'Order became '+s.input}}}},
+
+ {v:'plane',ver:'Java 21',short:'21',sel:'record',name:'Record patterns',role:'purple',
+  problem:'What if I need data inside the object while matching it?',
+  cap:'A <b>record pattern</b> checks the object’s shape and pulls out its inner data in the same step.',
+  memo:'TYPE + INTERNAL DATA → DEEPER MATCHING',links:['j440'],
+  head:'switch (order)',
+  code:'record Customer(String name) {}\nrecord Order(Customer customer) {}\n\nswitch (order) {\n    case Order(Customer(String name)) -> greet(name);\n}',
+  rows:()=>[{t:'case Order(Customer(String name))',r:'greet(name)',l:4}],
+  inputs:[['Asha','Customer "Asha"'],['Ravi','Customer "Ravi"']],def:'Asha',
+  tag:s=>({ty:'Order',tx:`Order(Customer("${s.input}"))`}),
+  run:s=>({steps:[[0,'match','shape ✓']],status:['ok',`Matched and extracted name = "${s.input}"`],line:4,reveal:true,
+    after:{ty:'Order',tx:`Order(Customer("${s.input}"))`,ex:`String name = "${s.input}"`}})},
+
+ {v:'rocket',morph:[.5,.88],ver:'Java 21',short:'21',sel:'when',name:'Guards with when',role:'coral',
+  problem:'Knowing the type is not enough. I also need to check a condition.',
+  cap:'A <b>guard</b> (<b>when</b>) adds a condition to a type match.',
+  memo:'TYPE + CONDITION → MORE PRECISE DECISION',links:['j441'],
+  head:'switch (order)',
+  code:'case PhysicalOrder p when p.isExpress()\n    -> shipFast(p);\n\ncase PhysicalOrder p\n    -> shipNormally(p);',
+  rows:()=>[{t:'case PhysicalOrder p when p.isExpress()',r:'shipFast(p)',l:0},{t:'case PhysicalOrder p',r:'shipNormally(p)',l:3}],
+  inputs:[['yes','Express order'],['no','Standard order']],def:'no',
+  tag:s=>({ty:'PhysicalOrder',tx:'p',ex:'isExpress() = '+(s.input==='yes')}),
+  run:s=>s.input==='yes'?{steps:[[0,'match','type ✓ guard ✓']],status:['ok','Type and condition both true → shipFast(p)'],line:0,reveal:true}
+     :{steps:[[0,'skip','type ✓ guard ✗'],[1,'match']],status:['ok','Guard was false, so the next case matched → shipNormally(p)'],line:3,reveal:true}},
+
+ {v:'rocket',ver:'Java 21',short:'21',sel:'null',name:'Handling null',role:'amber',
+  problem:'What if the value is null?',
+  cap:'Modern switch can handle a missing value with an explicit <b>case null</b>.',
+  memo:'DON’T FORGET THE NULL CASE',links:['j441'],
+  head:'switch (status)',
+  code:'switch (status) {\n    case null      -> askForStatus();\n    case "PAID"    -> pack();\n    case "SHIPPED" -> track();\n}',
+  rows:s=>[{t:'case null',r:'askForStatus()',l:1,off:!s.flags.cn},{t:'case "PAID"',r:'pack()',l:2},{t:'case "SHIPPED"',r:'track()',l:3}],
+  inputs:[['PAID','"PAID"'],['SHIPPED','"SHIPPED"'],['null','null']],def:'null',toggles:[['cn','Add <code>case null</code>',false]],
+  tag:s=>({ty:'String',tx:'status = '+(s.input==='null'?'null':`"${s.input}"`)}),
+  run:s=>{if(s.input==='null'){
+      if(s.flags.cn)return{steps:[[0,'match']],status:['ok','case null matched → askForStatus()'],line:1,reveal:true};
+      return{steps:[],status:['err','NullPointerException: no case handles null']}}
+    const v=s.input==='PAID'?1:2,st=[];if(s.flags.cn)st.push([0,'skip']);for(let i=1;i<=v;i++)st.push([i,i===v?'match':'skip']);
+    return{steps:st,status:['ok',`case "${s.input}" → ${v===1?'pack()':'track()'}`],line:v+1}}},
+
+ {v:'rocket',ver:'Java 21',short:'21',sel:'all cases',name:'Did you cover every case?',role:'green',
+  problem:'What happens if my decision doesn’t handle every possible case?',
+  cap:'The compiler checks that every permitted type has a case. Covering them all is called <b>exhaustiveness</b>.',
+  memo:'ALL POSSIBLE CASES → COMPLETE DECISION',links:['j441'],
+  head:'switch (payment)',
+  code:'switch (payment) {\n    case CardPayment c -> processCard(c);\n    case CashPayment c -> processCash(c);\n    case UpiPayment u  -> processUpi(u);\n}   // no default needed',
+  rows:s=>[['CardPayment c','processCard(c)'],['CashPayment c','processCash(c)'],['UpiPayment u','processUpi(u)']].map((r,i)=>({t:'case '+r[0],r:r[1],l:i+1,off:s.removed.has(i)})),
+  removable:true,
+  inputs:PAYS.map(p=>[p,p]),def:'UpiPayment',
+  tag:s=>({ty:'Payment',tx:'payment',ex:'actual object: a '+s.input}),
+  run:s=>{if(s.removed.size)return{steps:[...s.removed].map(i=>[i,'fail','missing']),status:['err','error: the switch statement does not cover all possible input values'],bad:1};
+    const v=PAYS.indexOf(s.input);return{steps:seq(v),status:['ok','All 3 permitted types covered. No default needed.'],line:v+1,reveal:s.hadRemoved}}},
+
+ {v:'rocket',ver:'Java 17',short:'17',sel:'sealed',name:'Sealed types',role:'teal',
+  problem:'How can Java know which types are possible?',
+  cap:'A <b>sealed</b> type lists exactly which types may implement it, so switch can reason about the complete set.',
+  memo:'CONTROLLED TYPES → COMPLETE DECISIONS',links:['j409'],note:'Sealed classes arrived in Java 17. Java 21’s pattern switch is what puts them to work.',
+  head:'sealed interface Payment permits',
+  code:'sealed interface Payment\n    permits CardPayment, CashPayment, UpiPayment {}\n\nclass CryptoPayment implements Payment {}  // ?',
+  rows:()=>PAYS.map(p=>({t:p,r:'permitted',l:1})),
+  inputs:[...PAYS.map(p=>[p,p]),['CryptoPayment','CryptoPayment']],def:'CardPayment',
+  tag:s=>({ty:'class',tx:s.input,ex:'implements Payment'}),
+  run:s=>{const v=PAYS.indexOf(s.input);
+    if(v<0)return{steps:seq(2).map(x=>[x[0],'skip','≠ CryptoPayment']),status:['err','error: class is not allowed to extend sealed class: Payment'],bad:3,reveal:true};
+    return{steps:seq(v),status:['ok',`${s.input} is on the permitted list`],line:1}}},
+
+ {v:'rocket',ver:'Beyond',short:'∞',sel:'next?',name:'The road keeps going',role:'purple',final:true}
+];
+const LAST=STOPS.length-1;
+
+/* per-stop scene state */
+const Q=STOPS.map((st,i)=>{if(st.final)return null;
+  const s={input:st.def,flags:Object.fromEntries((st.toggles||[]).map(t=>[t[0],t[2]])),removed:new Set(),hadRemoved:false};
+  return{s,rows:[],notes:[],status:null,tag:st.tag(s),matched:-1,queue:[],t:0,running:false,res:null,err:false,geo:null}});
+function resetQ(){Q.forEach((q,i)=>{if(!q)return;const st=STOPS[i];q.s={input:st.def,flags:Object.fromEntries((st.toggles||[]).map(t=>[t[0],t[2]])),removed:new Set(),hadRemoved:false};
+  Object.assign(q,{rows:[],notes:[],status:null,tag:st.tag(q.s),matched:-1,queue:[],t:0,running:false,res:null,err:false})})}
+function startRun(i,user){
+  const st=STOPS[i],q=Q[i],res=st.run(q.s);
+  Object.assign(q,{rows:st.rows(q.s).map(()=>'idle'),notes:[],status:null,matched:-1,queue:res.steps.slice(),t:0,running:true,res,user,err:false,tag:st.tag(q.s)});
+}
+function finishRun(i){
+  const q=Q[i],r=q.res;q.running=false;q.status=r.status;q.err=r.status[0]==='err';if(r.after)q.tag=r.after;
+  if(S.idx===i&&S.cardOpen)syncCard(i,q.user&&r.reveal);
+}
+
+/* ================= WORLD ================= */
+const D=1500,XS=i=>600+i*D;
+const railStart=XS(3)+.28*D,previewSt=XS(3)+.62*D,runwayStart=XS(4)+.5*D,runwayEnd=XS(5)+1300,countryEnd=XS(1)+.55*D;
+const AK=[[XS(5)+380,0],[XS(6),430],[XS(7),850],[XS(8),1380],[XS(9),1980],[XS(10),2620],[XS(11),3300]];
+function alt(x){
+  if(x<=AK[0][0])return 0;
+  for(let i=0;i<AK.length-1;i++){const a=AK[i],b=AK[i+1];if(x<=b[0])return lerp(a[1],b[1],smooth((x-a[0])/(b[0]-a[0])))}
+  return AK[AK.length-1][1]+(x-XS(11))*.26;
+}
+const land=x=>x<countryEnd?'country':x<railStart?'city':x<runwayStart?'rail':x<runwayEnd?'airport':'country2';
+const SURF=[[-1e9,railStart,'road'],[railStart,runwayStart,'rail'],[runwayStart,runwayEnd,'runway'],[runwayEnd,1e12,'road']];
+
+/* ================= VEHICLES ================= */
+const BASE={bx:0,by:0,bw:0,bh:0,br:0,bc:'#E2E8F0',ac:'#E2E8F0',cX:0,cY:0,cW:0,cH:0,cR:0,cC:'#1E293B',nX:0,nY:0,nRx:0,nRy:0,nC:'#E2E8F0',
+ wX:-10,wY:-40,wW:0,wH:0,wA:0,wC:'#94A3B8',fX:0,fY:0,fW:0,fH:0,fA:0,fC:'#94A3B8',
+ w1x:-36,w1r:0,w2x:36,w2r:0,w3x:-36,w3r:0,w4x:36,w4r:0,spk:0,frm:0,seat:0,win:0,winC:'#0F172A',fl:0,flL:0,lt:0,z:1};
+const V=o=>Object.assign({},BASE,o);
+const VEH={
+ bike:V({bx:-30,by:-50,bw:58,bh:3.5,br:1.7,bc:'#E879A6',ac:'#E879A6',cX:22,cY:-50,nX:28,nY:-50,fX:-30,fY:-50,w1x:-36,w1r:21,w2x:36,w2r:21,w3x:-36,w4x:36,spk:1,frm:1,z:1.35}),
+ scooter:V({bx:-50,by:-38,bw:86,bh:22,br:11,bc:'#3CC7A9',ac:'#1F8F7A',cX:24,cY:-70,cW:11,cH:50,cR:5,cC:'#1F8F7A',nX:36,nY:-26,nRx:11,nRy:11,nC:'#3CC7A9',fX:-50,fY:-38,w1x:-38,w1r:15,w2x:40,w2r:15,w3x:-38,w4x:40,spk:.4,seat:1,lt:1,z:1.28}),
+ car:V({bx:-86,by:-48,bw:172,bh:34,br:12,bc:'#5B8DEF',ac:'#A9C4F7',cX:-52,cY:-79,cW:98,cH:35,cR:15,cC:'#18233A',nX:82,nY:-34,nRx:9,nRy:12,nC:'#5B8DEF',fX:-86,fY:-48,w1x:-54,w1r:17,w2x:54,w2r:17,w3x:-54,w4x:54,spk:.3,lt:1,z:1.08}),
+ train:V({bx:-240,by:-88,bw:330,bh:70,br:14,bc:'#CBD5E1',ac:'#E8A33D',cX:-226,cY:-100,cW:70,cH:14,cR:6,cC:'#64748B',nX:88,nY:-53,nRx:30,nRy:35,nC:'#CBD5E1',fX:-240,fY:-88,w1x:-206,w1r:13,w2x:-150,w2r:13,w3x:-30,w3r:13,w4x:34,w4r:13,spk:.3,win:1,winC:'#18233A',lt:1,z:.8}),
+ plane:V({bx:-170,by:-68,bw:240,bh:38,br:19,bc:'#E2E8F0',ac:'#9B7BF7',cX:56,cY:-63,cW:28,cH:12,cR:6,cC:'#18233A',nX:70,nY:-49,nRx:46,nRy:19,nC:'#E2E8F0',wX:-74,wY:-46,wW:110,wH:30,wA:1,wC:'#94A3B8',fX:-172,fY:-122,fW:52,fH:56,fA:1,fC:'#9B7BF7',w1x:-40,w1r:8,w2x:44,w2r:8,w3x:-40,w4x:44,win:.9,winC:'#334155',z:.9}),
+ rocket:V({bx:-130,by:-68,bw:180,bh:46,br:23,bc:'#E2E8F0',ac:'#F2696B',cX:-4,cY:-58,cW:24,cH:24,cR:12,cC:'#18233A',nX:48,nY:-45,nRx:62,nRy:23,nC:'#F2696B',wX:-128,wY:-32,wW:48,wH:28,wA:1,wC:'#F2696B',fX:-130,fY:-104,fW:48,fH:38,fA:1,fC:'#F2696B',w1x:-40,w2x:44,w3x:-40,w4x:44,fl:1,flL:95,z:.95})
+};
+function mixVeh(A,B,t){if(t<=0)return A;if(t>=1)return B;const o={};for(const k in A){const a=A[k],b=B[k];o[k]=typeof a==='string'?mix(a,b,t):a+(b-a)*t}return o}
+const topOf=P=>Math.min(P.by,P.cH>1?P.cY:0,P.fH>1?P.fY:0,P.nRy>1?P.nY-P.nRy:0,P.frm>.5?P.by-14:0);
+
+/* ================= CANVAS ================= */
+const cv=$('#cv'),ctx=cv.getContext('2d');
+let W=800,H=500,DPR=1;
+let TOPH=56,RAILH=68;
+function measureChrome(){TOPH=$('.top').offsetHeight;RAILH=$('.app').classList.contains('no-rail')?0:$('.rail').offsetHeight;const a=$('.app');a.style.setProperty('--top-h',TOPH+'px');a.style.setProperty('--rail-h',RAILH+'px')}
+function resize(){measureChrome();const r=$('#scene').getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR)}
+addEventListener('resize',resize);new ResizeObserver(resize).observe($('#scene'));new ResizeObserver(measureChrome).observe($('.rail'));resize();
+function rr(x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+const STARS=Array.from({length:200},(_,i)=>({x:rnd(i,3),y:rnd(i,4),s:.5+rnd(i,5)*1.3,tw:rnd(i,6)*6}));
+
+/* ================= STATE ================= */
+const S={mode:'intro',idx:-1,vehX:0,vehAlt:0,camAlt:0,z:0,anchorX:0,tilt:0,veh:VEH.bike,glow:0,morphM:0,wheel:0,speed:0,seg:null,time:0,cruise:0,cardOpen:false,particles:[],vName:'bike',tagKey:'',tagA:1};
+
+/* ================= DRAW: VEHICLE ================= */
+let z=1,ax=0,ay=0;
+function drawVehicle(P,ang,gf,t,wire){
+  const paint=c=>{if(wire)ctx.stroke();else{ctx.fillStyle=c;ctx.fill()}};
+  if(wire){ctx.strokeStyle='#67E8F9';ctx.lineWidth=1.6/z;ctx.setLineDash([6/z,4/z])}
+  if(P.fl>.01&&!wire){
+    const f=1+.14*Math.sin(t*41)+.07*Math.sin(t*17),L=P.flL*f,y0=P.by,h=P.bh;
+    const g=ctx.createLinearGradient(P.bx,0,P.bx-L,0);
+    g.addColorStop(0,'rgba(255,248,220,.95)');g.addColorStop(.3,'rgba(253,186,116,.8)');g.addColorStop(1,'rgba(242,105,107,0)');
+    ctx.globalAlpha*=P.fl;ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(P.bx+6,y0+h*.2);ctx.quadraticCurveTo(P.bx-L*.45,y0+h*.08,P.bx-L,y0+h*.5);ctx.quadraticCurveTo(P.bx-L*.45,y0+h*.92,P.bx+6,y0+h*.8);ctx.fill();ctx.globalAlpha/=P.fl;
+  }
+  if(P.fA>.01&&P.fH>1){const a=ctx.globalAlpha;ctx.globalAlpha=a*P.fA;ctx.beginPath();ctx.moveTo(P.fX,P.fY+P.fH);ctx.lineTo(P.fX+P.fW,P.fY+P.fH);ctx.lineTo(P.fX+P.fW*.42,P.fY);ctx.lineTo(P.fX+4,P.fY);ctx.closePath();paint(P.fC);ctx.globalAlpha=a}
+  if(P.nRx>.5){ctx.beginPath();ctx.ellipse(P.nX,P.nY,P.nRx,Math.max(.5,P.nRy),0,0,7);paint(P.nC)}
+  if(P.bw>.5&&P.bh>.5){rr(P.bx,P.by,P.bw,P.bh,P.br);paint(P.bc);
+    if(!wire&&P.bh>10){ctx.fillStyle=P.ac;rr(P.bx+P.br*.6,P.by+P.bh*.64,P.bw-P.br*1.2,Math.max(2,P.bh*.09),1.5);ctx.fill()}}
+  if(P.win>.01){const n=Math.max(1,Math.floor((P.bw-70)/36)),gap=(P.bw-70)/n,ww=Math.min(22,P.bh*.36),wh=P.bh*.32,a=ctx.globalAlpha;
+    ctx.globalAlpha=a*P.win;for(let i=0;i<n;i++){rr(P.bx+30+i*gap,P.by+P.bh*.16,ww,wh,Math.min(5,wh/2));paint(P.winC)}ctx.globalAlpha=a}
+  if(P.cW>.5&&P.cH>.5){rr(P.cX,P.cY,P.cW,P.cH,P.cR);paint(P.cC)}
+  if(P.seat>.01){const a=ctx.globalAlpha;ctx.globalAlpha=a*P.seat;rr(P.bx+8,P.by-6,38,7,3);paint('#18233A');ctx.globalAlpha=a}
+  if(P.wA>.01&&P.wW>1){const a=ctx.globalAlpha;ctx.globalAlpha=a*P.wA;ctx.beginPath();ctx.moveTo(P.wX,P.wY);ctx.lineTo(P.wX+P.wW,P.wY);ctx.lineTo(P.wX+P.wW-P.wH*1.3,P.wY+P.wH);ctx.lineTo(P.wX-P.wH*1.3+10,P.wY+P.wH);ctx.closePath();paint(P.wC);ctx.globalAlpha=a}
+  for(const[wx,r0]of[[P.w1x,P.w1r],[P.w2x,P.w2r],[P.w3x,P.w3r],[P.w4x,P.w4r]]){const r=r0*gf;if(r<1.2)continue;const cy=-r;
+    if(wire){ctx.beginPath();ctx.arc(wx,cy,r,0,7);ctx.stroke();continue}
+    if(P.frm<.95){const a=ctx.globalAlpha;ctx.globalAlpha=a*(1-P.frm);ctx.fillStyle='#0B1220';ctx.beginPath();ctx.arc(wx,cy,r,0,7);ctx.fill();ctx.globalAlpha=a}
+    ctx.strokeStyle='#94A3B8';ctx.lineWidth=Math.max(1.6,r*.15);ctx.beginPath();ctx.arc(wx,cy,Math.max(.5,r-ctx.lineWidth/2),0,7);ctx.stroke();
+    if(P.spk>.01){const a=ctx.globalAlpha;ctx.globalAlpha=a*P.spk;ctx.strokeStyle='#64748B';ctx.lineWidth=1;const n=P.frm>.5?9:5;
+      for(let i=0;i<n;i++){const q=ang+i*Math.PI*2/n;ctx.beginPath();ctx.moveTo(wx,cy);ctx.lineTo(wx+Math.cos(q)*(r-2),cy+Math.sin(q)*(r-2));ctx.stroke()}ctx.globalAlpha=a}
+    ctx.fillStyle='#CBD5E1';ctx.beginPath();ctx.arc(wx,cy,Math.max(1.4,r*.16),0,7);ctx.fill()}
+  if(P.frm>.01){const a=ctx.globalAlpha;ctx.globalAlpha=a*P.frm;if(!wire)ctx.strokeStyle=P.bc;ctx.lineWidth=wire?1.6/z:3;ctx.lineCap='round';ctx.lineJoin='round';
+    const Bx=(P.w1x+P.w2x)/2-4,By=-P.w1r*.72,R=[P.w1x,-P.w1r],F=[P.w2x,-P.w2r],Sx=P.bx+6,Sy=P.by+2,Hx=P.bx+P.bw,Hy=P.by+2;
+    ctx.beginPath();ctx.moveTo(R[0],R[1]);ctx.lineTo(Bx,By);ctx.lineTo(Sx,Sy);ctx.lineTo(R[0],R[1]);ctx.moveTo(Bx,By);ctx.lineTo(Hx,Hy);ctx.lineTo(F[0],F[1]);ctx.moveTo(Sx,Sy);ctx.lineTo(Sx-2,Sy-8);ctx.stroke();
+    if(!wire)ctx.strokeStyle='#CBD5E1';ctx.lineWidth=wire?1.6/z:3.5;ctx.beginPath();ctx.moveTo(Sx-11,Sy-9);ctx.lineTo(Sx+6,Sy-9);ctx.moveTo(Hx,Hy);ctx.lineTo(Hx+2,Hy-12);ctx.lineTo(Hx-7,Hy-14);ctx.stroke();
+    ctx.beginPath();ctx.arc(Bx,By,5,0,7);ctx.stroke();ctx.globalAlpha=a}
+  if(P.lt>.01&&!wire){const fx=Math.max(P.bx+P.bw,P.nX+P.nRx)-2,fy=P.by+P.bh*.32,a=ctx.globalAlpha;
+    ctx.globalAlpha=a*P.lt;ctx.fillStyle='#FDE68A';ctx.beginPath();ctx.arc(fx,fy,3,0,7);ctx.fill();
+    const g=ctx.createLinearGradient(fx,0,fx+120,0);g.addColorStop(0,'rgba(253,230,138,.16)');g.addColorStop(1,'rgba(253,230,138,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(fx,fy-2);ctx.lineTo(fx+120,fy-16);ctx.lineTo(fx+120,fy+22);ctx.closePath();ctx.fill();ctx.globalAlpha=a}
+  if(wire)ctx.setLineDash([]);
+}
+
+/* ================= DRAW: WORLD ================= */
+const vis=p=>[S.vehX+(-ax/z)/p,S.vehX+((W-ax)/z)/p];
+const RX=(X,p)=>p*(X-S.vehX),RY=(A,p)=>p*(S.camAlt-A);
+const bottom=()=>(H-ay)/z+20;
+const sxw=X=>ax+(X-S.vehX)*z, syw=A=>ay+(S.camAlt-A)*z;
+
+function sky(){
+  const a1=smooth(S.camAlt/1300),a2=smooth((S.camAlt-900)/1700);
+  const top=mix(mix('#0E1A30','#0B1934',a1),'#03050D',a2),bot=mix(mix('#2A3757','#172C52',a1),'#090D20',a2);
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,top);g.addColorStop(1,bot);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  const gy=syw(0);if(gy<H+200){const hg=ctx.createLinearGradient(0,gy-220,0,gy);hg.addColorStop(0,'rgba(232,163,61,0)');hg.addColorStop(1,`rgba(232,163,61,${.13*(1-a1)})`);ctx.fillStyle=hg;ctx.fillRect(0,gy-220,W,220)}
+  const sa=.22+.78*a2,span=W*1.3;
+  for(const s of STARS){const x=((s.x*span-S.vehX*.02)%span+span)%span-W*.15,y=((s.y*H*.9+S.camAlt*.04)%H+H)%H;
+    ctx.globalAlpha=sa*(.55+.45*Math.sin(S.time*1.4+s.tw))*(y<gy-30?1:0);ctx.fillStyle='#E2E8F0';ctx.fillRect(x,y,s.s,s.s)}
+  ctx.globalAlpha=1;
+  const pa=smooth((S.camAlt-2000)/900);
+  if(pa>0){const px=ax+(XS(11)+900-S.vehX)*.07*z+W*.14,py=H*.3,pr=Math.min(W,H)*.12;
+    ctx.globalAlpha=pa;ctx.strokeStyle='#9B7BF7';ctx.lineWidth=1.5;ctx.fillStyle='#0B1024';
+    ctx.beginPath();ctx.ellipse(px,py,pr*1.75,pr*.36,-.22,Math.PI,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.arc(px,py,pr,0,7);ctx.fill();ctx.stroke();
+    ctx.save();ctx.clip();ctx.strokeStyle='rgba(155,123,247,.25)';for(let k=-3;k<=3;k++){ctx.beginPath();ctx.ellipse(px,py+k*pr*.25,pr,pr*.08,0,0,7);ctx.stroke()}ctx.restore();
+    ctx.beginPath();ctx.ellipse(px,py,pr*1.75,pr*.36,-.22,0,Math.PI);ctx.stroke();ctx.globalAlpha=1}
+  return a2;
+}
+function ridge(p,amp,off,fill,stroke){
+  const[L,R]=vis(p),base=RY(0,p),st=10/p;if(base*z+ay>H+200)return;
+  ctx.beginPath();ctx.moveTo(RX(L,p),bottom());
+  for(let X=L;X<=R+st;X+=st){const h=amp*(.5+.3*Math.sin(X*.0017+off)+.15*Math.sin(X*.0049+1.3)+.06*Math.sin(X*.011))*(land(X)==='city'?.5:1);ctx.lineTo(RX(X,p),base-h)}
+  ctx.lineTo(RX(R+st,p),bottom());ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1.2;ctx.stroke();
+}
+function midLayer(){
+  const p=.45,[L,R]=vis(p),base=RY(0,p),cw=230;if(base*z+ay>H+300)return;
+  ctx.fillStyle='#0F1A2D';ctx.fillRect(RX(L,p)-10,base,(R-L)*p+40,bottom()-base);
+  ctx.strokeStyle='#2B3F62';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(RX(L,p)-10,base);ctx.lineTo(RX(R,p)+20,base);ctx.stroke();
+  for(let k=Math.floor(L/cw)-1;k<=Math.ceil(R/cw)+1;k++){
+    const X=k*cw,x=RX(X,p),t=land(X+cw/2),r=rnd(k,12);
+    if(t==='city'){const w=50+r*60,h=60+rnd(k,13)*170,bx=x+rnd(k,11)*40;
+      ctx.fillStyle='#14223A';ctx.strokeStyle='#2E4468';ctx.fillRect(bx,base-h,w,h);ctx.strokeRect(bx,base-h,w,h);
+      for(let wy=base-h+10;wy<base-10;wy+=15)for(let wx=bx+7;wx<bx+w-8;wx+=12){const q=rnd(wx*3.1+wy,9);if(q>.8){ctx.fillStyle=`rgba(245,199,107,${.25+q*.35})`;ctx.fillRect(wx,wy,4,6)}}}
+    else if(t==='rail'){ctx.strokeStyle='#2E4468';ctx.beginPath();ctx.moveTo(x-16,base);ctx.lineTo(x,base-120);ctx.lineTo(x+16,base);ctx.moveTo(x-10,base-40);ctx.lineTo(x+10,base-40);ctx.moveTo(x-6,base-80);ctx.lineTo(x+6,base-80);ctx.moveTo(x-22,base-112);ctx.lineTo(x+22,base-112);ctx.stroke();
+            const nx=RX(X+cw,p);ctx.beginPath();ctx.moveTo(x+22,base-112);ctx.quadraticCurveTo((x+nx)/2,base-98,nx-22,base-112);ctx.stroke()}
+    else if(t==='airport'){if(r>.5){const w=150,h=55;ctx.strokeStyle='#2E4468';ctx.fillStyle='#14223A';ctx.beginPath();ctx.moveTo(x,base);ctx.lineTo(x,base-h*.6);ctx.quadraticCurveTo(x+w/2,base-h*1.5,x+w,base-h*.6);ctx.lineTo(x+w,base);ctx.fill();ctx.stroke()}}
+    else{ // power line poles
+      const nx=RX(X+cw,p);ctx.strokeStyle='#2E4468';ctx.beginPath();ctx.moveTo(x,base);ctx.lineTo(x,base-74);ctx.moveTo(x-12,base-68);ctx.lineTo(x+12,base-68);ctx.stroke();
+      ctx.strokeStyle='rgba(100,116,139,.5)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x-12,base-68);ctx.quadraticCurveTo((x+nx)/2-12,base-54,nx-12,base-68);ctx.moveTo(x+12,base-68);ctx.quadraticCurveTo((x+nx)/2+12,base-54,nx+12,base-68);ctx.stroke();ctx.lineWidth=1.2;
+      if(t==='country2'&&r>.6){const tx=x+cw*p*.5;ctx.strokeStyle='#64748B';ctx.beginPath();ctx.moveTo(tx,base);ctx.lineTo(tx,base-120);ctx.stroke();
+        for(let b=0;b<3;b++){const a=S.time*1.2+b*2.094+k;ctx.beginPath();ctx.moveTo(tx,base-120);ctx.lineTo(tx+Math.cos(a)*44,base-120+Math.sin(a)*44);ctx.stroke()}}}
+  }
+}
+function ground(){
+  const g=RY(0,1);if(g*z+ay>H+300)return;
+  const[L,R]=vis(1);ctx.fillStyle='#0A1222';ctx.fillRect(RX(L,1)-20,g,(R-L)+60,bottom()-g);
+  for(const[a,c,k]of SURF){if(c<L||a>R)continue;const X0=Math.max(a,L-20),X1=Math.min(c,R+20),x0=RX(X0,1),x1=RX(X1,1);
+    if(k==='road'){ctx.fillStyle='#18212F';ctx.fillRect(x0,g,x1-x0,30);ctx.fillStyle='#3B4A63';ctx.fillRect(x0,g-1.5,x1-x0,2.5);
+      ctx.fillStyle='#56657F';for(let X=Math.floor(X0/70)*70;X<X1;X+=70)ctx.fillRect(RX(X,1),g+14,30,2)}
+    else if(k==='rail'){ctx.fillStyle='#141C2A';ctx.fillRect(x0,g,x1-x0,26);ctx.fillStyle='#2C3A52';
+      for(let X=Math.floor(X0/26)*26;X<X1;X+=26)ctx.fillRect(RX(X,1),g+3,9,10);
+      ctx.fillStyle='#94A3B8';ctx.fillRect(x0,g-2,x1-x0,3);ctx.fillStyle='#64748B';ctx.fillRect(x0,g+15,x1-x0,2);
+      ctx.strokeStyle='rgba(148,163,184,.55)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x0,g-140);ctx.lineTo(x1,g-140);ctx.stroke()}
+    else{ctx.fillStyle='#121A28';ctx.fillRect(x0,g,x1-x0,32);ctx.fillStyle='#3B4A63';ctx.fillRect(x0,g-1.5,x1-x0,2.5);ctx.fillStyle='#CBD5E1';
+      for(let X=Math.floor(X0/110)*110;X<X1;X+=110)ctx.fillRect(RX(X,1),g+14,54,3);
+      for(let X=Math.floor(X0/90)*90;X<X1;X+=90){const on=(Math.floor(X/90)+Math.floor(S.time*3))%4===0;ctx.fillStyle=on?'#FDE68A':'rgba(253,230,138,.35)';ctx.beginPath();ctx.arc(RX(X,1),g-4,2.2,0,7);ctx.fill()}}
+  }
+  const cw=260;
+  for(let k=Math.floor(L/cw)-1;k<=Math.ceil(R/cw)+1;k++){const X=k*cw,x=RX(X,1),t=land(X);
+    if(t==='city'){ctx.strokeStyle='#475569';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x,g-2);ctx.lineTo(x,g-86);ctx.lineTo(x+16,g-90);ctx.stroke();
+      const lg=ctx.createRadialGradient(x+17,g-86,0,x+17,g-86,46);lg.addColorStop(0,'rgba(253,230,138,.3)');lg.addColorStop(1,'rgba(253,230,138,0)');ctx.fillStyle=lg;ctx.fillRect(x-30,g-132,94,94);
+      ctx.fillStyle='#FDE68A';ctx.fillRect(x+12,g-88,10,3)}
+    else if(t==='rail'){ctx.strokeStyle='#475569';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,g-2);ctx.lineTo(x,g-148);ctx.moveTo(x-14,g-140);ctx.lineTo(x+14,g-140);ctx.stroke()}
+    else if(t==='country'||t==='country2'){ctx.strokeStyle='#2B3A52';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,g-2);ctx.lineTo(x,g-22);ctx.moveTo(x-30,g-14);ctx.lineTo(x+30,g-14);ctx.stroke()}
+  }
+  station(previewSt,'PREVIEW','#94A3B8');station(XS(4),'STANDARD','#E8A33D');tower(XS(5)-460);
+}
+function station(X,name,col){
+  const[L,R]=vis(1);if(X+260<L||X-340>R)return;const g=RY(0,1),x=RX(X,1);
+  ctx.fillStyle='#1A2436';ctx.fillRect(x-300,g-22,430,20);ctx.strokeStyle='#3B4A63';ctx.lineWidth=1.5;ctx.strokeRect(x-300,g-22,430,20);
+  ctx.strokeStyle='#475569';ctx.lineWidth=3;ctx.beginPath();for(const px of[-280,-140,0,110]){ctx.moveTo(x+px,g-22);ctx.lineTo(x+px,g-176)}ctx.stroke();
+  ctx.fillStyle='#1A2436';ctx.fillRect(x-312,g-188,454,12);ctx.fillStyle=col;ctx.fillRect(x-312,g-178,454,2.5);
+  ctx.fillStyle='#0B1220';rr(x-196,g-220,150,26,6);ctx.fill();ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle=col;ctx.font=`600 13px ${MONO}`;ctx.textAlign='center';ctx.fillText(name+' STATION',x-121,g-202);ctx.textAlign='left';
+}
+function tower(X){const[L,R]=vis(1);if(X+60<L||X-60>R)return;const g=RY(0,1),x=RX(X,1);
+  ctx.strokeStyle='#475569';ctx.lineWidth=2;ctx.fillStyle='#141E30';ctx.fillRect(x-12,g-210,24,208);ctx.strokeRect(x-12,g-210,24,208);
+  ctx.beginPath();ctx.moveTo(x-34,g-212);ctx.lineTo(x+34,g-212);ctx.lineTo(x+26,g-248);ctx.lineTo(x-26,g-248);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(103,232,249,.35)';ctx.fillRect(x-24,g-242,48,18);
+  ctx.fillStyle=Math.sin(S.time*4)>0?'#F2696B':'#5B1D1D';ctx.beginPath();ctx.arc(x,g-256,3.5,0,7);ctx.fill()}
+function roadAhead(){
+  const a=smooth((S.camAlt-1900)/800);if(a<=0)return;
+  for(let i=1;i<70;i++){const X=S.vehX+120+i*55;ctx.globalAlpha=a*(1-i/70)*(.45+.55*Math.sin(S.time*3-i*.4));ctx.fillStyle='#67E8F9';ctx.beginPath();ctx.arc(RX(X,1),RY(alt(X)+45,1),2.6,0,7);ctx.fill()}
+  ctx.globalAlpha=1}
+
+/* ================= PARTICLES (exhaust + contrail only) ================= */
+function spawn(dt){
+  const P=S.veh,sp=Math.abs(S.speed),air=S.vehAlt>8,k=reduce?.4:1;
+  if(P.wA>.6&&air&&P.fl<.5&&Math.random()<dt*30*k&&S.particles.length<300)
+    S.particles.push({x:S.vehX+P.wX-10,a:S.vehAlt-P.wY-8,vx:-sp*.05,va:0,l:0,m:1.3,r:2,c:'#CBD5E1'});
+  if(P.fl>.5&&Math.random()<dt*45*k&&S.particles.length<300)
+    S.particles.push({x:S.vehX+P.bx-20,a:S.vehAlt-P.by-P.bh*.5+(Math.random()-.5)*12,vx:-220-Math.random()*160,va:(Math.random()-.5)*30,l:0,m:.55,r:1.6+Math.random()*2,c:Math.random()<.5?'#FDBA74':'#FDE68A'});
+}
+function stepParticles(dt){for(const p of S.particles){p.l+=dt;p.x+=p.vx*dt;p.a+=p.va*dt;p.r+=dt*2}S.particles=S.particles.filter(p=>p.l<p.m)}
+function drawParticles(){for(const p of S.particles){ctx.globalAlpha=(1-p.l/p.m)*.6;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(RX(p.x,1),RY(p.a,1),p.r,0,7);ctx.fill()}ctx.globalAlpha=1}
+
+/* ================= DECISION PANEL (screen space) ================= */
+function wrapText(text,maxW){const words=text.split(' '),out=[];let line='';
+  for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){out.push(line);line=w}else line=t}if(line)out.push(line);return out}
+function drawPanel(i){
+  const st=STOPS[i],q=Q[i];if(!q)return;
+  const sx0=sxw(XS(i));if(sx0<-520||sx0>W+420)return;
+  const rows=st.rows(q.s),col=ROLE[st.role][0];
+  const gy=syw(alt(XS(i))),vt=gy+topOf(VEH[st.v])*z;
+  const pw=Math.min(W<620?W-20:400,W-20);
+  let fs=W<620?11:12.5;ctx.font=`500 ${fs}px ${MONO}`;
+  let need=0;for(const r of rows)need=Math.max(need,ctx.measureText(r.t).width+ctx.measureText(r.r).width+46);
+  need=Math.max(need,ctx.measureText(st.head+' {').width+90);
+  if(need>pw-10){fs=Math.max(9.5,fs*(pw-10)/need);ctx.font=`500 ${fs}px ${MONO}`}
+  const rowH=Math.round(fs*2.05),headH=Math.round(fs*2.5),pad=10;
+  const sk=q.status?q.status[0]:null;
+  const stLines=q.status?wrapText((sk==='ok'?'✓ ':sk==='err'?'✗ ':'? ')+q.status[1],pw-2*pad):[];
+  const footH=stLines.length?stLines.length*fs*1.45+14:fs*1.45+14;
+  const ph=headH+rows.length*rowH+footH+6;
+  let px=sx0-pw*.3;if(W<620)px=Math.max(10,Math.min(px,W-pw-10));
+  let py=Math.max(TOPH+8,vt-62-ph);
+  const ground=alt(XS(i))<20;
+  if(ground){ctx.strokeStyle='#3B4A63';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(px+16,py+ph);ctx.lineTo(px+16,gy);ctx.moveTo(px+pw-16,py+ph);ctx.lineTo(px+pw-16,gy);ctx.stroke()}
+  const shake=q.err&&q.status?Math.sin(S.time*60)*Math.max(0,1-(S.time-(q.errT||0))*3)*3:0;
+  ctx.save();ctx.translate(shake,0);
+  rr(px,py,pw,ph,10);ctx.fillStyle='rgba(8,13,26,.94)';ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=q.err?'#F2696B':rgba(col,.9);ctx.stroke();
+  ctx.textBaseline='middle';
+  ctx.fillStyle=col;ctx.font=`600 ${fs}px ${MONO}`;ctx.fillText(st.head+' {',px+pad,py+headH/2);
+  ctx.fillStyle='#64748B';ctx.font=`500 ${fs*.85}px ${MONO}`;ctx.textAlign='right';ctx.fillText(st.ver,px+pw-pad,py+headH/2);ctx.textAlign='left';
+  ctx.fillStyle='#1E293B';ctx.fillRect(px+1,py+headH,pw-2,1);
+  const scanRow=q.running&&q.queue.length?q.queue[0][0]:-1;
+  q.geo={px,py,pw,rowH,headH,rows:rows.length};
+  rows.forEach((r,j)=>{
+    let state=r.off?'off':(q.rows[j]||'idle');if(j===scanRow&&q.t<.3)state='scan';
+    const y=py+headH+j*rowH+3,cy=y+rowH/2-1.5;
+    if(state==='scan'){ctx.fillStyle=rgba(col,.16);ctx.fillRect(px+2,y,pw-4,rowH-3)}
+    if(state==='match'){ctx.fillStyle=rgba(col,.3);ctx.fillRect(px+2,y,pw-4,rowH-3);ctx.fillStyle=col;ctx.fillRect(px+2,y,3,rowH-3)}
+    if(state==='fail'){ctx.fillStyle='rgba(242,105,107,.22)';ctx.fillRect(px+2,y,pw-4,rowH-3);ctx.fillStyle='#F2696B';ctx.fillRect(px+2,y,3,rowH-3)}
+    const tc={idle:'#CBD5E1',scan:'#FFFFFF',match:'#FFFFFF',skip:'#5B6B85',fail:'#FCA5A5',off:'#3E4C66'}[state];
+    ctx.font=`500 ${fs}px ${MONO}`;ctx.fillStyle=tc;ctx.fillText(r.t,px+pad+8,cy);
+    if(state==='off'){const w=ctx.measureText(r.t).width;ctx.fillStyle='#3E4C66';ctx.fillRect(px+pad+8,cy,w,1.2)}
+    ctx.textAlign='right';
+    const note=q.notes[j];
+    if(state==='skip'&&note){ctx.fillStyle='#E8A33D';ctx.font=`500 ${fs*.86}px ${MONO}`;ctx.fillText(note,px+pw-pad,cy)}
+    else if(state==='fail'){ctx.fillStyle='#FCA5A5';ctx.font=`500 ${fs*.86}px ${MONO}`;ctx.fillText(note||'✗',px+pw-pad,cy)}
+    else if(state==='off'){ctx.fillStyle='#3E4C66';ctx.font=`500 ${fs*.86}px ${MONO}`;ctx.fillText('not written',px+pw-pad,cy)}
+    else{ctx.fillStyle=state==='match'?mix(col,'#FFFFFF',.55):'#64748B';ctx.font=`500 ${fs}px ${MONO}`;ctx.fillText((state==='match'?'→ ':'')+r.r,px+pw-pad,cy)}
+    ctx.textAlign='left';
+    if(state==='match'&&note){ctx.fillStyle=mix(col,'#FFFFFF',.4);ctx.font=`500 ${fs*.78}px ${MONO}`;ctx.fillText(note,px+pad+8+ctx.measureText(r.t).width*fs/(fs*.78)+10,cy)}
+  });
+  const fy=py+headH+rows.length*rowH+6;
+  ctx.fillStyle='#1E293B';ctx.fillRect(px+1,fy-2,pw-2,1);
+  ctx.font=`500 ${fs}px ${MONO}`;
+  if(stLines.length){ctx.fillStyle=sk==='ok'?'#5EEAD4':sk==='err'?'#FCA5A5':'#FCD34D';stLines.forEach((l,k)=>ctx.fillText(l,px+pad,fy+8+fs*.72+k*fs*1.45))}
+  else{ctx.fillStyle='#475569';ctx.fillText(q.running?'checking cases…':'}',px+pad,fy+8+fs*.72)}
+  ctx.textBaseline='alphabetic';ctx.restore();
+}
+function drawTag(){
+  const tag=currentTag();if(!tag)return;
+  const key=tag.ty+tag.tx+(tag.ex||'');if(key!==S.tagKey){S.tagKey=key;S.tagA=0}
+  const P=S.veh,vx=ax,vy=syw(S.vehAlt),top=vy+topOf(P)*z;
+  const cx=vx+(P.bx+P.bw/2)*z;
+  const fs=W<620?11:12.5;ctx.font=`600 ${fs}px ${MONO}`;const tw1=ctx.measureText(tag.ty+' ').width;ctx.font=`500 ${fs}px ${MONO}`;
+  const w1=tw1+ctx.measureText(tag.tx).width,w2=tag.ex?ctx.measureText(tag.ex).width:0,w=Math.max(w1,w2)+24,h=tag.ex?fs*3.2:fs*2.1;
+  let x=Math.max(8,Math.min(W-w-8,cx-w/2)),y=top-14-h;
+  const a=smooth(S.tagA);ctx.globalAlpha=a;
+  ctx.save();ctx.translate(x+w/2,y+h);ctx.scale(1,.85+.15*a);ctx.translate(-(x+w/2),-(y+h));
+  rr(x,y,w,h,7);ctx.fillStyle='#F8FAFF';ctx.fill();
+  const st=STOPS[Math.max(0,S.idx)]||STOPS[0],col=ROLE[(S.mode==='travel'?STOPS[S.seg.t>.55?S.seg.to:Math.max(0,S.seg.from)]:STOPS[Math.max(0,S.idx)]).role][0];
+  ctx.fillStyle=col;ctx.fillRect(x,y+5,3,h-10);
+  ctx.beginPath();ctx.moveTo(cx-6,y+h);ctx.lineTo(cx+6,y+h);ctx.lineTo(cx,y+h+7);ctx.closePath();ctx.fillStyle='#F8FAFF';ctx.fill();
+  ctx.textBaseline='middle';
+  ctx.font=`600 ${fs}px ${MONO}`;ctx.fillStyle=mix(col,'#0F172A',.45);ctx.fillText(tag.ty,x+12,y+fs*1.05);
+  ctx.font=`500 ${fs}px ${MONO}`;ctx.fillStyle='#0F172A';ctx.fillText(tag.tx,x+12+tw1,y+fs*1.05);
+  if(tag.ex){ctx.fillStyle='#64748B';ctx.font=`500 ${fs*.92}px ${MONO}`;ctx.fillText(tag.ex,x+12,y+fs*2.25)}
+  ctx.textBaseline='alphabetic';ctx.restore();ctx.globalAlpha=1;
+  // leader line from value to matched case
+  const i=S.idx;if(i>=0&&!STOPS[i].final&&(S.mode==='paused')){const q=Q[i];if(q&&q.geo&&q.matched>=0){const g=q.geo,ry=g.py+g.headH+q.matched*g.rowH+g.rowH/2+1;
+    ctx.strokeStyle=rgba(ROLE[STOPS[i].role][0],.85);ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x+w/2,y);ctx.bezierCurveTo(x+w/2,y-30,g.px-28,ry,g.px+2,ry);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=ROLE[STOPS[i].role][0];ctx.beginPath();ctx.arc(g.px+2,ry,3,0,7);ctx.fill()}}
+}
+const FINAL_TAG={ty:'switch',tx:'(what comes next?)'};
+function currentTag(){
+  if(S.mode==='intro')return Q[0].tag;
+  if(S.mode==='travel'){const sg=S.seg,to=sg.to,dest=STOPS[to].final?FINAL_TAG:Q[to].tag;if(sg.t>.55||sg.from<0)return dest;return STOPS[sg.from].final?FINAL_TAG:Q[sg.from].tag}
+  if(S.idx>=0)return STOPS[S.idx].final?FINAL_TAG:Q[S.idx].tag;return null;
+}
+function altHud(){
+  const a=smooth((S.camAlt-30)/220);if(a<=0)return;
+  ctx.font=`500 10.5px ${MONO}`;ctx.textBaseline='middle';
+  for(let A=Math.floor((S.camAlt-H/z)/100)*100;A<S.camAlt+H/z;A+=100){if(A<=0)continue;const y=syw(A);if(y<0||y>H)continue;
+    const big=A%500===0;ctx.globalAlpha=a*(big?.6:.3);ctx.fillStyle='#94A3B8';ctx.fillRect(W-14-(big?14:7),y,big?14:7,1);
+    if(big)ctx.fillText('ALT '+A,W-80,y)}
+  ctx.globalAlpha=1;ctx.textBaseline='alphabetic';
+}
+
+/* ================= UPDATE + RENDER ================= */
+function update(dt){
+  S.time+=dt;let dx=0;
+  if(S.mode==='travel'){const sg=S.seg;sg.t=Math.min(1,sg.t+dt/sg.dur);const nx=lerp(sg.x0,sg.x1,eio(sg.t));dx=nx-S.vehX;S.vehX=nx;
+    const m=sg.vFrom===sg.vTo?1:sg.morph?clamp((sg.t-sg.morph[0])/(sg.morph[1]-sg.morph[0])):1;
+    S.veh=mixVeh(VEH[sg.vFrom],VEH[sg.vTo],eio(m));S.glow=m>0&&m<1?Math.sin(Math.PI*m):0;S.morphM=m;S.vName=m<.5?sg.vFrom:sg.vTo;
+    if(sg.t>=1)arrive(sg.to)}
+  else if(S.mode==='cruise'){S.cruise=Math.min(170,S.cruise+dt*70);dx=S.cruise*dt;S.vehX+=dx}
+  S.speed=dt>0?dx/dt:0;S.wheel+=dx/16;
+  const a=alt(S.vehX),bob=a>40?Math.sin(S.time*2.1)*3*smooth(a/120):0;S.vehAlt=a+bob;
+  S.camAlt+=(a-S.camAlt)*Math.min(1,dt*2.6);
+  const slope=(alt(S.vehX+6)-alt(S.vehX-6))/12;S.tilt+=(-Math.atan(slope)*.85-S.tilt)*Math.min(1,dt*5);
+  const wide=W>=900,bz=clamp(Math.min(W/1050,H/580),.46,1.1);
+  const tz=bz*S.veh.z;S.z=S.z?S.z+(tz-S.z)*Math.min(1,dt*2.5):tz;
+  const tax=W*(wide&&S.cardOpen?.24:wide?.34:.38);S.anchorX=S.anchorX?S.anchorX+(tax-S.anchorX)*Math.min(1,dt*2.2):tax;
+  S.tagA=Math.min(1,S.tagA+dt*3);
+  S.ayk=(S.ayk||0)+(((W<900&&S.cardOpen)?1:0)-(S.ayk||0))*Math.min(1,dt*3);
+  for(let i=0;i<Q.length;i++){const q=Q[i];if(!q||!q.running)continue;q.t+=dt;
+    const stepT=reduce?.18:.36;
+    if(q.queue.length){if(q.t>=stepT){const[r,mk,note]=q.queue.shift();q.rows[r]=mk;if(note)q.notes[r]=note;if(mk==='match')q.matched=r;q.t=0}}
+    else if(q.t>=stepT*.6){finishRun(i);if(q.err)q.errT=S.time}}
+  spawn(dt);stepParticles(dt);
+  updateRail();
+}
+function render(){
+  z=S.z;ax=S.anchorX;const ay0=H*lerp(.8,.64,smooth(S.camAlt/500));const cEl=S.cardOpen&&W<900?$('#card'):null;if(cEl)S.cardTop=cEl.offsetTop;ay=lerp(ay0,Math.min(ay0,(S.cardTop||H*.5)-18),S.ayk||0);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  sky();
+  ctx.setTransform(DPR*z,0,0,DPR*z,DPR*ax,DPR*ay);
+  ridge(.12,150,40,'#121F36','#24365A');
+  ridge(.24,100,18,'#101B30','#2A3D60');
+  midLayer();ground();roadAhead();drawParticles();
+  const P=S.veh,vy=RY(S.vehAlt,1),gf=1-smooth((S.vehAlt-10)/50);
+  ctx.save();ctx.translate(0,vy);ctx.rotate(S.tilt);
+  if(S.glow>0){
+    ctx.globalAlpha=1-.7*S.glow;drawVehicle(P,S.wheel,gf,S.time,false);
+    ctx.globalAlpha=S.glow;drawVehicle(P,S.wheel,gf,S.time,true);
+    const tp=topOf(P),x0=Math.min(P.bx,P.fX,P.wX)-20,x1=Math.max(P.bx+P.bw,P.nX+P.nRx)+20,sx=lerp(x0,x1,S.morphM);
+    ctx.globalAlpha=S.glow;const sg=ctx.createLinearGradient(sx-30,0,sx,0);sg.addColorStop(0,'rgba(103,232,249,0)');sg.addColorStop(1,'rgba(103,232,249,.35)');
+    ctx.fillStyle=sg;ctx.fillRect(sx-30,tp-16,30,-tp+20);ctx.fillStyle='#A5F3FC';ctx.fillRect(sx-1,tp-22,2,-tp+28);
+    ctx.globalAlpha=1;
+  }else drawVehicle(P,S.wheel,gf,S.time,false);
+  ctx.restore();
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  if(!reduce&&Math.abs(S.speed)>380){const a=clamp((Math.abs(S.speed)-380)/400)*.18;ctx.strokeStyle=`rgba(226,232,240,${a})`;ctx.lineWidth=1;
+    for(let i=0;i<8;i++){const y=ay+(rnd(i+Math.floor(S.time*8),71)-.75)*H*.5,x=((rnd(i,72)*W*1.4-S.time*1700)%(W*1.4)+W*1.4)%(W*1.4)-W*.2,l=80+rnd(i,73)*160;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+l,y);ctx.stroke()}}
+  altHud();
+  if(S.mode!=='intro')for(let i=0;i<LAST;i++)drawPanel(i);
+  drawTag();
+}
+let last=performance.now();
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render();requestAnimationFrame(loop)}
+
+/* ================= JOURNEY FLOW ================= */
+function travelTo(to,rev){
+  const from=S.idx;
+  const sF=rev?STOPS[from].v:(to<=0?'bike':STOPS[to-1].v),sT=STOPS[to].v,morph=sF!==sT?(rev?[.15,.6]:(STOPS[to].morph||[.6,.9])):null;
+  let dur=rev?2.6:(to===0?3.4:4.8)+(morph?.4:0);if(reduce)dur*=.6;
+  S.seg={to,from,x0:S.vehX,x1:XS(to),t:0,dur,vFrom:sF,vTo:sT,morph,rev:!!rev};S.mode='travel';
+}
+function arrive(i){
+  S.idx=i;S.veh=VEH[STOPS[i].v];S.glow=0;S.vName=STOPS[i].v;S.speed=0;
+  const f=$('#flash');$('#fv').textContent=STOPS[i].ver;$('#ff').textContent=STOPS[i].name;f.classList.remove('play');void f.offsetWidth;f.classList.add('play');
+  if(STOPS[i].final){S.mode='cruise';S.cruise=0;setTimeout(()=>{if(S.idx===i&&S.mode==='cruise')showCard(i)},reduce?300:1200);return}
+  S.mode='paused';
+  startRun(i,false);
+  setTimeout(()=>{if(S.idx===i&&S.mode==='paused')showCard(i)},reduce?400:1500);
+}
+function back(){if(!(S.mode==='paused'||S.mode==='cruise')||S.idx<=0)return;hideCard();travelTo(S.idx-1,true)}
+function go(){if(S.mode!=='paused'||S.idx>=LAST)return;hideCard();travelTo(S.idx+1)}
+function hideCard(){$('#card').classList.remove('show');S.cardOpen=false}
+function start(){$('#intro').classList.add('gone');travelTo(0)}
+function restart(){
+  hideCard();resetQ();Object.assign(S,{mode:'intro',idx:-1,vehX:0,vehAlt:0,camAlt:0,tilt:0,veh:VEH.bike,glow:0,speed:0,seg:null,cruise:0,particles:[],vName:'bike'});
+  $('#intro').classList.remove('gone');
+}
+$('#startBtn').onclick=start;$('#restart').onclick=restart;
+function setRail(show){$('.app').classList.toggle('no-rail',!show);const b=$('#railToggle'),t=show?'Hide progress':'Show progress';b.setAttribute('aria-pressed',show);b.setAttribute('aria-label',t);b.querySelector('.bt').textContent=t;measureChrome()}
+$('#railToggle').onclick=()=>setRail($('.app').classList.contains('no-rail'));
+setRail(false);
+addEventListener('keydown',e=>{if(e.target.closest('input,button,a'))return;if(e.key==='ArrowRight'||e.key==='Enter'){if(S.mode==='intro')start();else go()}else if(e.key==='ArrowLeft')back()});
+
+/* ================= RAIL ================= */
+$('#railStops').innerHTML=STOPS.map((s,i)=>`<div class="rs" id="rs${i}" title="${s.ver}: ${s.name}"><i></i><b>${s.short}</b><small>${s.sel}</small></div>`).join('');
+function updateRail(){
+  const f=clamp((S.vehX-XS(0))/(XS(LAST)-XS(0)));
+  $('#railFill').style.width=(f*100)+'%';$('#railVeh').style.left=(f*100)+'%';
+  for(let i=0;i<=LAST;i++){const el=document.getElementById('rs'+i);el.classList.toggle('done',S.idx>i||(S.idx===i&&STOPS[i].final));el.classList.toggle('cur',S.idx===i&&!STOPS[i].final)}
+}
+
+/* ================= CARD ================= */
+function showCard(i){
+  const s=STOPS[i],c=$('#card'),r=ROLE[s.role];
+  c.style.setProperty('--c',r[0]);c.style.setProperty('--cl',r[1]);c.style.setProperty('--cd',r[2]);
+  c.innerHTML=s.final?finalHTML():cardHTML(s,i);
+  c.classList.add('show');c.scrollTop=0;S.cardOpen=true;
+  if(s.final){initFinal(c)}else{wireControls(c,i);c.querySelector('.go').onclick=go;if(!Q[i].running)syncCard(i,false)}
+  const pb=c.querySelector('[data-prev]');if(pb)pb.onclick=back;
+}
+function cardHTML(s,i){
+  const next=STOPS[i+1],q=Q[i];
+  const lines=s.code.split('\n').map((ln,j)=>`<span class="ln" data-l="${j}">${hl(ln)||' '}</span>`).join('');
+  const inputs=`<div class="mrow" role="group" aria-label="Value to switch on">${s.inputs.map(([k,l])=>`<button class="chip" data-in="${k}" aria-pressed="${q.s.input===k}">${esc(l)}</button>`).join('')}</div>`;
+  const toggles=(s.toggles||[]).map(([k,l])=>`<label class="check"><input type="checkbox" data-tg="${k}" ${q.s.flags[k]?'checked':''}> ${l}</label>`).join('');
+  const removable=s.removable?`<p class="hint" style="margin:10px 0 6px">Cases in your switch:</p><div class="mrow">${PAYS.map((p,j)=>`<button class="chip rm" data-rm="${j}" aria-pressed="${q.s.removed.has(j)}">case ${p}</button>`).join('')}</div>`:'';
+  return `<div class="c-top"><div><div class="c-ver">${s.ver}</div><div class="c-name">${s.name}</div></div><span class="c-tag">${esc(s.sel)}</span></div>
+  <div class="think"><div class="dots"><i></i><i></i><i></i></div><div><div class="lbl">The problem</div><p>${s.problem}</p></div></div>
+  <div class="lbl">Try it</div>
+  <div class="try"><p class="hint">Change the value and watch the switch panel in the scene check each case.</p>${inputs}${toggles}${removable}<div class="status" id="cstatus">checking cases…</div></div>
+  <div class="reveal wait" id="reveal">Try a value above to discover the capability.</div>
+  <div class="lbl">Feature hint</div><pre class="code" id="ccode"><code>${lines}</code></pre>
+  <div class="memo">${s.memo}</div>
+  ${s.note?`<p class="note">${s.note}</p>`:''}
+  <div class="c-actions"><div class="links">${s.links.map(k=>`<a href="${LINKS[k].u}" target="_blank" rel="noopener">${s.links.length>1?LINKS[k].t.split(':')[0]:'Learn more'} ↗</a>`).join('')}</div>
+  <div class="nav">${i>0?'<button class="prev" data-prev aria-label="Previous stop"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2 4 7l5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Prev</button>':''}<button class="go">${next.final?'Fly beyond Java 21':'Continue to '+next.ver}</button></div></div>`;
+}
+function wireControls(c,i){
+  const q=Q[i];
+  c.querySelectorAll('[data-in]').forEach(b=>b.onclick=()=>{q.s.input=b.dataset.in;c.querySelectorAll('[data-in]').forEach(x=>x.setAttribute('aria-pressed',x===b));startRun(i,true);pending(c)});
+  c.querySelectorAll('[data-tg]').forEach(t=>t.onchange=()=>{q.s.flags[t.dataset.tg]=t.checked;startRun(i,true);pending(c)});
+  c.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const j=+b.dataset.rm;if(q.s.removed.has(j))q.s.removed.delete(j);else{q.s.removed.add(j);q.s.hadRemoved=true}
+    b.setAttribute('aria-pressed',q.s.removed.has(j));startRun(i,true);pending(c)});
+}
+function pending(c){const s=c.querySelector('#cstatus');s.className='status';s.textContent='checking cases…';c.querySelectorAll('.ln').forEach(l=>l.classList.remove('on','bad'))}
+function syncCard(i,doReveal){
+  const c=$('#card'),q=Q[i],r=q.res,st=STOPS[i];if(!c.classList.contains('show')||!r)return;
+  const s=c.querySelector('#cstatus');if(s){s.className='status '+r.status[0];s.textContent=(r.status[0]==='ok'?'✓ ':r.status[0]==='err'?'✗ ':'? ')+r.status[1]}
+  c.querySelectorAll('.ln').forEach(l=>{const n=+l.dataset.l;l.classList.toggle('on',r.line===n);l.classList.toggle('bad',r.bad===n)});
+  if(doReveal){const rev=c.querySelector('#reveal');if(rev.classList.contains('wait')){rev.className='reveal'+(i===9?' named':'');rev.innerHTML=`<span class="rl">${i===9?'You just discovered a concept':'New capability'}</span>${st.cap}`}}
+}
+
+/* ================= FINAL ================= */
+function finalHTML(){
+  const chain=['int','enum','String','→ value','standard','Object type','record','type + when','null','all cases','sealed'];
+  const qs=[['Your switch must return a price for each customer type.','switch expression'],['Each payment subtype needs different handling.','pattern matching for switch'],['Same type, but express orders need special handling.','guard: when'],['You want the compiler to catch a forgotten case.','sealed types + exhaustiveness']];
+  return `<div class="c-top"><div><div class="c-ver">The road keeps going</div><div class="c-name">From <code style="font-family:var(--mono)">int choice</code> to sealed type hierarchies</div></div></div>
+  <div class="lbl">What your switch learned to decide on</div>
+  <div class="chain">${chain.map((c,i)=>`<span style="animation-delay:${i*.15}s">${esc(c)}</span>${i<chain.length-1?`<em style="animation-delay:${i*.15+.07}s">→</em>`:''}`).join('')}</div>
+  <div class="lbl">Which feature fits?</div>
+  ${qs.map(q=>`<div class="qa">${q[0]} <button>Reveal</button><div class="ans" hidden>${q[1]}</div></div>`).join('')}
+  <div class="lbl">What should you remember?</div>
+  <p style="margin:0;font-weight:700">Not every syntax. Instead:</p>
+  <ul class="remember"><li>Know that the feature exists.</li><li>Know the problem it solves.</li><li>Recognize the situation where it may help.</li><li>Know where to learn more.</li></ul>
+  <div class="quote">AI can help you discover and write the syntax.<br><b>Your job is to know what is possible and ask the right question.</b></div>
+  <div class="quote"><b>Technology keeps evolving.</b><br>You don't have to memorize every stop. You need to know that the road exists.</div>
+  <div class="lbl">Explore the features</div>
+  <div class="explore">${['tut','enm','j361','j441','j440','j409','j455'].map(k=>{const[a,b]=LINKS[k].t.split(': ');return `<a href="${LINKS[k].u}" target="_blank" rel="noopener">${b||a} ↗<small>${b?a:'Oracle tutorial'}</small></a>`}).join('')}</div>
+  <p class="note">Up ahead: primitive types in patterns are being previewed in recent JDKs.</p>
+  <div class="c-actions"><span></span><div class="nav"><button class="prev" data-prev aria-label="Previous stop"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2 4 7l5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Prev</button><button class="go" id="again">Ride again from Java 1.0</button></div></div>`;
+}
+function initFinal(c){c.querySelectorAll('.qa button').forEach(b=>b.onclick=()=>{b.hidden=true;b.nextElementSibling.hidden=false});c.querySelector('#again').onclick=restart}
+
+/* ================= INIT ================= */
+S.anchorX=W*.42;S.z=clamp(Math.min(W/1050,H/580),.46,1.1)*VEH.bike.z;
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
