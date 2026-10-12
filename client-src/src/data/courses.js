@@ -175,6 +175,8 @@ export const courses = [
             blurb: 'Order a biryani and watch it walk six stages on its own clock. Order four more while the first is still cooking and you get five cards sitting at five different stages at once — nothing queues behind anything. Then build the same restaurant as a Java console app: Main opens the Hall, the Hall takes the order and comes straight back for the next one, and the Kitchen gives every order a thread of its own. Make the Hall wait for the food instead and the whole restaurant stops.' },
           { id: 'tally', title: 'Tally', minutes: 30,
             blurb: 'A sixty-second mental-maths sprint and a head-to-head duel against an online player — then open the Assignment tab and see the client socket, the game server and the one thread per player that make it work.' },
+          { id: 'podium', title: 'Podium', minutes: 35,
+            blurb: 'Take a seat in a room for three and race the others through ten sums, with every join and every prize announced to the room — then build it in Java: one server, three clients, a thread per player, and the finish order saved to a file.' },
           { id: 'app-curfew', title: 'App Curfew', minutes: 25,
             blurb: "Search a phone's open apps and send the runaway ones home — then build the real screen-time tool: list every running process, find the one by name, pull its PID, and shut it down for good." },
           { id: 'dockcheck', title: 'DockCheck', minutes: 25,

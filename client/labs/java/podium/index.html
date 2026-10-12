@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Podium</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+/* Layout: one narrow phone-first column (wider on the Assignment tab); Tally's type; teal and periwinkle palette */
+:root{
+  --bg:#F1F7F6; --surface:#FFFFFF; --ink:#0D2A2E; --muted:#4D6A6D; --line:#D3E4E1;
+  --brand:#0E3B43; --sun:#8FA2FF; --coral:#D9443A; --mint:#148F6B; --key:#E2EFEC;
+  --font:"Bricolage Grotesque", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1F22; --surface:#11292C; --ink:#EAF5F3; --muted:#93B3B0; --line:#23454A;
+    --brand:#8FA2FF; --coral:#FF7A6B; --mint:#5FE3B5; --key:#183A3E; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1F22; --surface:#11292C; --ink:#EAF5F3; --muted:#93B3B0; --line:#23454A;
+  --brand:#8FA2FF; --coral:#FF7A6B; --mint:#5FE3B5; --key:#183A3E; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{height:100%; scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0; min-height:100%; background:var(--bg); color:var(--ink); font-family:var(--font);
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--sun); outline-offset:3px}
+.sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+
+/* ---------- Splash ---------- */
+#splash{position:fixed; inset:0; z-index:50; background:#0E3B43; display:grid; place-items:center;
+  padding:env(safe-area-inset-top,0px) 1rem env(safe-area-inset-bottom,0px);
+  transition:clip-path .7s cubic-bezier(.7,0,.2,1); clip-path:inset(0 0 0 0)}
+#splash.leaving{clip-path:inset(0 0 100% 0)}
+#splash.gone{display:none}
+.splash-inner{display:flex; flex-direction:column; align-items:center; gap:1.6rem}
+.tiles{display:flex; gap:clamp(.3rem,1.4vw,.55rem)}
+.tile{width:clamp(2.6rem,12.5vw,4.6rem); aspect-ratio:1; border-radius:18%; background:#17505A; color:#7FAEB0;
+  display:grid; place-items:center; font-size:clamp(1.5rem,7vw,2.6rem); font-weight:800;
+  transform:translateY(40px) scale(.6); opacity:0; transition:transform .45s cubic-bezier(.3,1.6,.5,1), opacity .3s}
+.tile.in{transform:none; opacity:1}
+.tile.locked{background:#8FA2FF; color:#0D2A2E; animation:pop .28s ease-out}
+@keyframes pop{50%{transform:scale(1.12) rotate(-4deg)}}
+.tagline{color:#DDF0EC; font-size:1.05rem; letter-spacing:.01em; opacity:0; transform:translateY(8px); transition:.4s ease}
+.bar{width:9rem; height:4px; border-radius:4px; background:#1E5C66; overflow:hidden; opacity:0; transition:opacity .3s}
+.bar i{display:block; height:100%; width:0; background:#8FA2FF; transition:width .8s ease-in-out}
+#splash.ready .tagline{opacity:1; transform:none}
+#splash.ready .bar{opacity:1}
+#splash.ready .bar i{width:100%}
+.skip{position:absolute; right:1rem; bottom:calc(1rem + env(safe-area-inset-bottom,0px)); background:none; border:0;
+  color:#93B3B0; font-size:.9rem; padding:.5rem .75rem}
+
+/* ---------- App shell ---------- */
+.app{max-width:34rem; margin:0 auto; padding:1rem 1.25rem 3rem}
+.app.wide{max-width:46rem}
+header{display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.5rem 0 1.5rem}
+.logo{display:flex; align-items:flex-end; gap:3px; height:1.6rem}
+.logo span{width:1.1rem; border-radius:4px 4px 2px 2px; background:var(--sun); color:#0D2A2E; display:grid; place-items:start center;
+  font-weight:800; font-size:.7rem; padding-top:1px}
+.logo span:nth-child(1){height:70%}
+.logo span:nth-child(2){height:100%}
+.logo span:nth-child(3){height:50%}
+.best-chip{font-size:.9rem; color:var(--muted); display:flex; flex-wrap:wrap; justify-content:flex-end; column-gap:.4rem; min-width:0}
+.best-chip > span{white-space:nowrap}
+.best-chip > span + span::before{content:"·"; margin-right:.4rem}
+.best-chip b{color:var(--ink)}
+.hello{font-weight:600; color:var(--ink)}
+
+.hero h1{font-size:clamp(2rem,7vw,2.6rem); line-height:1.05; margin:0 0 .6rem; font-weight:800; letter-spacing:-.02em; text-wrap:balance}
+.hero p{margin:0 0 1.5rem; color:var(--muted); line-height:1.5; max-width:34ch}
+.start{width:100%; border:0; border-radius:1.1rem; background:var(--sun); color:#0D2A2E; padding:1.1rem 1.25rem;
+  display:flex; justify-content:space-between; align-items:center; font-size:1.2rem; font-weight:800;
+  box-shadow:0 5px 0 #6275D9; transition:transform .08s}
+.start:active{transform:translateY(3px); box-shadow:0 2px 0 #6275D9}
+.start small{font-weight:600; font-size:.9rem}
+.ghost{border:2px solid var(--line); background:none; border-radius:1.1rem; padding:1rem; font-weight:600}
+.row{display:flex; gap:.75rem}
+.row button{flex:1}
+.link{background:none; border:0; color:var(--muted); text-decoration:underline; padding:0; font-size:.9rem}
+.links{display:flex; gap:1.5rem; margin-top:2.5rem}
+
+.last{margin-top:2.25rem; display:flex; align-items:center; gap:1rem; padding:.95rem 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.last .glyph{width:2.6rem; height:2.6rem; border-radius:.8rem; background:var(--key); display:grid; place-items:center; font-weight:800; font-size:1.2rem; flex:none}
+.last div{flex:1; min-width:0}
+.last strong{display:block}
+.last span{color:var(--muted); font-size:.92rem}
+
+.avatar{width:3rem; height:3rem; border-radius:50%; display:grid; place-items:center; font-weight:800; color:#0D2A2E; flex:none; background:var(--key)}
+.me-avatar{background:var(--sun)}
+
+/* ---------- Welcome ---------- */
+#welcome{padding-top:2rem}
+#welcome h1{font-size:clamp(2rem,7vw,2.6rem); line-height:1.05; margin:0 0 .6rem; font-weight:800; letter-spacing:-.02em}
+#welcome p{margin:0 0 2rem; color:var(--muted); line-height:1.5; max-width:32ch}
+#welcome label{display:block; font-weight:600; margin-bottom:.5rem}
+.name-field{display:flex; align-items:center; gap:.75rem; border:2px solid var(--line); border-radius:1.1rem; padding:.5rem .75rem; background:var(--surface); margin-bottom:.5rem; transition:border-color .15s}
+.name-field:focus-within{border-color:var(--sun)}
+.name-field .avatar{width:2.6rem; height:2.6rem; font-size:.95rem}
+.name-field input{flex:1; min-width:0; border:0; outline:0; background:none; color:var(--ink); font:inherit; font-size:1.3rem; font-weight:600; padding:.4rem 0}
+.name-hint{font-size:.9rem; color:var(--muted); min-height:1.4em; margin-bottom:1.5rem}
+.name-hint.err{color:var(--coral)}
+
+/* ---------- Shared top line ---------- */
+.topline{display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; min-height:2.2rem}
+.quit{background:none; border:0; color:var(--muted); padding:.4rem 0}
+.score{font-weight:800; font-size:1.2rem}
+
+/* ---------- Lobby ---------- */
+.lobby-title{font-size:1.05rem; font-weight:600; color:var(--muted); margin:0}
+.seats{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.6rem; margin:.5rem 0 1.5rem}
+.seat{display:flex; flex-direction:column; align-items:center; gap:.45rem; padding:1.1rem .35rem 1rem; border:2px dashed var(--line); border-radius:1.1rem; min-width:0}
+.seat.filled{border-style:solid; background:var(--surface)}
+.seat.pop{animation:pop .32s ease-out}
+.seat .avatar{width:3.4rem; height:3.4rem; font-size:1.15rem}
+.seat .avatar.empty{background:none; border:2px dashed var(--line); color:var(--muted); font-weight:400}
+.seat strong{font-size:.95rem; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.seat small{color:var(--muted); font-size:.8rem; min-height:1.2em}
+.lobby-status{text-align:center; font-weight:800; font-size:1.3rem; margin:0; min-height:1.6em}
+.lobby-count{text-align:center; font-size:4.5rem; font-weight:800; line-height:1; min-height:1.1em; margin:.5rem 0 0}
+.lobby-count span{display:inline-block; animation:pop .5s ease-out}
+
+/* ---------- Race ---------- */
+.chips{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.4rem; margin-bottom:1.75rem}
+.chip{display:flex; align-items:center; gap:.4rem; padding:.3rem .5rem .3rem .3rem; border-radius:2rem; background:var(--key); min-width:0}
+.chip .avatar{width:1.9rem; height:1.9rem; font-size:.72rem}
+.chip span{font-size:.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0}
+.chip .medal{font-size:1.05rem; flex:none}
+.chip.you{box-shadow:inset 0 0 0 2px var(--sun)}
+.chip.gone{opacity:.45}
+.chip.gone span{text-decoration:line-through}
+.qcount{text-align:center; color:var(--muted); margin:0 0 .4rem; font-size:.95rem}
+.question{text-align:center; font-size:clamp(2.6rem,12vw,4rem); font-weight:800; letter-spacing:-.02em; min-height:1.2em}
+.answer{margin:1rem auto .75rem; width:min(14rem,80%); min-height:4.2rem; border-radius:1rem; border:2px solid var(--line);
+  display:grid; place-items:center; font-size:2.2rem; font-weight:800; background:var(--surface); transition:border-color .15s, background .15s}
+.answer.ok{border-color:var(--mint)}
+.answer.bad{border-color:var(--coral); animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.banner-slot{height:2.6rem; margin-bottom:.75rem; display:grid; place-items:center}
+.toast{max-width:100%; padding:.5rem 1rem; border-radius:2rem; background:var(--brand); color:var(--bg); font-weight:600; font-size:.95rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; animation:drop .3s ease-out; transition:opacity .4s}
+.toast.out{opacity:0}
+@keyframes drop{from{transform:translateY(-10px); opacity:0}}
+.pad{display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem}
+.pad button{border:0; border-radius:1rem; background:var(--key); padding:1rem 0; font-size:1.5rem; font-weight:600}
+.pad button:active{transform:scale(.96)}
+
+/* ---------- Feed ---------- */
+.feed{margin-top:2rem}
+.feed h2{font-size:.78rem; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin:0 0 .4rem; font-weight:600}
+.feed ol{list-style:none; margin:0; padding:0}
+.feed li{display:flex; gap:.75rem; align-items:baseline; padding:.5rem 0; border-top:1px solid var(--line); line-height:1.35}
+.feed li:first-child{animation:drop .3s ease-out}
+.feed time{font-family:var(--mono); font-size:.75rem; color:var(--muted); flex:none}
+.feed li span{min-width:0; overflow-wrap:anywhere}
+.feed li.prize span{font-weight:600}
+.feed li.mine span{color:var(--muted)}
+.feed .empty{color:var(--muted); font-size:.92rem; padding:.5rem 0; border-top:1px solid var(--line)}
+
+/* ---------- Finished, waiting ---------- */
+#waiting{text-align:center; padding-top:2rem}
+.place-big{font-size:clamp(2.2rem,9vw,2.8rem); font-weight:800; letter-spacing:-.02em; margin:.4rem 0 .25rem; line-height:1.05}
+.medal-big{font-size:3.5rem; line-height:1}
+#waiting p{color:var(--muted); margin:.25rem 0}
+.still{margin-top:1.25rem!important; color:var(--ink)!important; font-weight:600}
+
+/* ---------- Podium ---------- */
+#podium{text-align:center; padding-top:1.5rem}
+#podium h2{font-size:clamp(2rem,8vw,2.4rem); margin:.25rem 0 .25rem; font-weight:800; letter-spacing:-.02em; text-wrap:balance}
+#podium > p{color:var(--muted); margin:.25rem 0}
+.stand{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:end; gap:.5rem; margin:2rem 0 2rem}
+.step{display:flex; flex-direction:column; align-items:center; gap:.35rem; min-width:0}
+.step .avatar{width:3rem; height:3rem; font-size:1rem}
+.step strong{font-size:.95rem; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.step small{color:var(--muted); font-size:.85rem}
+.block{width:100%; border-radius:.9rem .9rem 0 0; background:var(--key); display:grid; place-items:start center; padding-top:.55rem;
+  font-weight:800; font-size:1.5rem; transform-origin:bottom; animation:rise .6s cubic-bezier(.3,1.3,.5,1) both}
+.step.p1 .block{height:8.5rem; background:var(--sun); color:#0D2A2E; animation-delay:.25s}
+.step.p2 .block{height:6rem; animation-delay:.1s}
+.step.p3 .block{height:4.25rem}
+.step.me strong{color:var(--ink); text-decoration:underline; text-decoration-color:var(--sun); text-decoration-thickness:3px; text-underline-offset:4px}
+.step.gone .avatar{opacity:.4}
+.step.gone .block{background:none; border:2px dashed var(--line); border-bottom:0; color:var(--muted); font-size:.85rem; font-weight:600}
+@keyframes rise{from{transform:scaleY(0)}}
+.stack{display:grid; gap:.75rem}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex; gap:.25rem; padding:.25rem; background:var(--key); border-radius:.9rem; margin:0 0 1.75rem}
+.tabs button{flex:1; border:0; background:none; border-radius:.7rem; padding:.6rem .5rem; font-weight:600; color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 0 var(--line)}
+
+/* ---------- Assignment ---------- */
+#assignment{line-height:1.6}
+#assignment.offstage{position:absolute; left:-10000px; top:0; width:46rem; visibility:hidden}
+#assignment h1{font-size:clamp(1.9rem,6vw,2.4rem); line-height:1.1; margin:0 0 .75rem; font-weight:800; letter-spacing:-.02em; text-wrap:balance}
+#assignment h2{font-size:1.35rem; margin:2.5rem 0 .6rem; font-weight:800; letter-spacing:-.01em; text-wrap:balance}
+#assignment h3{font-size:1.05rem; margin:0 0 .25rem}
+#assignment h4{font-size:.78rem; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin:1.75rem 0 .25rem; font-weight:600}
+#assignment p, #assignment li{max-width:68ch}
+#assignment .lede{color:var(--muted); font-size:1.08rem}
+#assignment code{font-family:var(--mono); font-size:.88em; background:var(--key); padding:.1em .35em; border-radius:.35em}
+#assignment ol, #assignment ul{padding-left:1.25rem}
+#assignment li{margin:.35rem 0}
+.diagram{overflow-x:auto; border:2px solid var(--line); border-radius:1rem; padding:1rem; background:var(--surface); margin:1rem 0}
+.diagram pre.mermaid{margin:0; display:flex; justify-content:center; background:none}
+.console{overflow-x:auto; background:#0D2A2E; color:#DDF0EC; border-radius:1rem; padding:1rem 1.25rem; font-family:var(--mono); font-size:.88rem; line-height:1.55; margin:.5rem 0 1rem; white-space:pre}
+.console .in{color:#8FA2FF}
+.console .dim{color:#7FAEB0}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important; transition-duration:.01ms!important}
+}
+</style>
+
+<div id="splash" role="img" aria-label="Podium is loading">
+  <div class="splash-inner">
+    <div class="tiles" id="tiles"></div>
+    <div class="tagline">Three players. One podium.</div>
+    <div class="bar"><i></i></div>
+  </div>
+  <button class="skip" id="skip">Skip</button>
+</div>
+
+<main class="app">
+  <header>
+    <div class="logo" aria-label="Podium"><span>2</span><span>1</span><span>3</span></div>
+    <div class="best-chip"><span class="hello" id="helloName"></span><span>Wins <b id="winsTop">0</b></span><span>Rooms <b id="roomsTop">0</b></span></div>
+  </header>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="tabPlay" aria-selected="true">Play</button>
+    <button role="tab" id="tabAssignment" aria-selected="false">Assignment</button>
+  </nav>
+
+  <section id="welcome" hidden>
+    <h1>Pick a name to play.</h1>
+    <p>The other two players in your room see it when you take a seat.</p>
+    <label for="nameInput">Username</label>
+    <div class="name-field">
+      <div class="avatar me-avatar" id="nameAvatar">?</div>
+      <input id="nameInput" maxlength="16" autocomplete="nickname" autocapitalize="off" spellcheck="false" placeholder="e.g. quickmaths">
+    </div>
+    <div class="name-hint" id="nameHint">3 to 16 letters, numbers, dots or underscores</div>
+    <button class="start" id="saveName" style="justify-content:center">Let's play</button>
+  </section>
+
+  <section id="home" hidden>
+    <div class="hero">
+      <h1>Three players. Ten sums. Who finishes first?</h1>
+      <p>Everyone in the room gets the same sums. Get each one right to move on. First to finish all ten takes 1st prize.</p>
+      <button class="start" id="joinBtn">Join a room <small>3 seats</small></button>
+    </div>
+    <div class="last" id="lastRoom" hidden></div>
+    <div class="links"><button class="link" id="changeName">Change username</button><button class="link" id="replaySplash">Replay intro</button></div>
+  </section>
+
+  <section id="lobby" hidden>
+    <div class="topline">
+      <button class="quit" id="cancelLobby">Cancel</button>
+      <p class="lobby-title">Your room</p>
+    </div>
+    <div class="seats" id="seats"></div>
+    <p class="lobby-status" id="lobbyStatus">Joining…</p>
+    <div class="lobby-count" id="lobbyCount" aria-live="assertive"></div>
+  </section>
+
+  <section id="race" hidden>
+    <div class="topline">
+      <button class="quit" id="leaveRace">Leave</button>
+      <div class="score" id="raceClock">0.0s</div>
+    </div>
+    <div class="chips" id="chips"></div>
+    <p class="qcount" id="qCount"></p>
+    <div class="question" id="raceQ"></div>
+    <div class="answer" id="raceAnswer" aria-label="Your answer"></div>
+    <div class="banner-slot" id="bannerSlot" aria-hidden="true"></div>
+    <div class="pad" id="racePad"></div>
+  </section>
+
+  <section id="waiting" hidden>
+    <div class="medal-big" id="waitMedal" aria-hidden="true"></div>
+    <div class="place-big" id="waitTitle"></div>
+    <p id="waitTime"></p>
+    <p class="still" id="stillSolving"></p>
+  </section>
+
+  <section id="podium" hidden>
+    <div id="podLabel">Room over</div>
+    <h2 id="podTitle"></h2>
+    <p id="podSub"></p>
+    <div class="stand" id="stand"></div>
+    <div class="row">
+      <button class="ghost" id="podHome">Home</button>
+      <button class="start" id="againBtn" style="justify-content:center">Play again</button>
+    </div>
+  </section>
+
+  <div class="feed" id="feed" hidden>
+    <h2 id="feedHead">Room</h2>
+    <ol id="feedList" aria-live="polite" aria-relevant="additions" aria-labelledby="feedHead"></ol>
+  </div>
+
+  <section id="assignment" class="offstage" role="tabpanel" aria-labelledby="tabAssignment">
+    <h1>Build Podium in the console.</h1>
+    <p class="lede">You have just played a room for three. Now rebuild it in Java: one server program and three copies of a client program, each in its own terminal window. When your programs run, they should behave exactly like the game you just played.</p>
+
+    <h2>The flow</h2>
+    <div class="diagram">
+<pre class="mermaid">
+flowchart TD
+  SM[ServerMain] --> QS["QuizServer&lt;br/&gt;opens a ServerSocket, waits for players"]
+  QS -->|load questions| QB["QuestionBank&lt;br/&gt;reads questions.txt"]
+  CM["ClientMain x3"] --> QC["QuizClient&lt;br/&gt;asks the name, connects"]
+  QC -->|connects| QS
+  QS -->|one thread per player| CH[ClientHandler]
+  CH -->|"tell everyone: Raj connected"| QS
+  QS -->|"3 players: start the quiz"| CH
+  CH -->|"send a question, check the answer"| QC
+  CH -->|"all 10 correct: record the finish"| QS
+  QS -->|"tell everyone: Ram won 1st prize"| QC
+  QS -->|quiz over| RS["ResultStore&lt;br/&gt;writes results.txt"]
+</pre>
+    </div>
+
+    <h2>One room, start to finish</h2>
+    <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  participant Raj as Raj (client)
+  participant S as Server
+  participant Ram as Ram (client)
+  participant Priya as Priya (client)
+  Raj->>S: NAME Raj
+  S-->>Raj: WAITING 1/3
+  Ram->>S: NAME Ram
+  S-->>Raj: Ram connected
+  S-->>Ram: Raj is already here
+  Priya->>S: NAME Priya
+  S-->>Raj: Priya connected
+  S-->>Ram: Priya connected
+  Note over S: 3 players, start
+  S-->>Raj: START + Q1
+  S-->>Ram: START + Q1
+  S-->>Priya: START + Q1
+  Ram->>S: ANSWER 12
+  S-->>Ram: CORRECT + Q2
+  Note over Ram,S: ... Ram answers Q10 correctly
+  S-->>Raj: Ram won 1st prize
+  S-->>Priya: Ram won 1st prize
+  S-->>Ram: You won 1st prize
+</pre>
+    </div>
+
+    <h2>The classes</h2>
+    <div class="diagram">
+<pre class="mermaid">
+classDiagram
+  class ServerMain {
+    +main(String[] args)
+  }
+  class QuizServer {
+    -ServerSocket serverSocket
+    -List~ClientHandler~ players
+    -List~Question~ questions
+    -List~String~ finishOrder
+    -CountDownLatch roomFull
+    +start()
+    +addPlayer(ClientHandler p) boolean
+    +waitForRoom()
+    +broadcast(String msg, ClientHandler except)
+    +recordFinish(ClientHandler p) int
+    +removePlayer(ClientHandler p)
+  }
+  class Thread
+  class ClientHandler {
+    -Socket socket
+    -BufferedReader in
+    -PrintWriter out
+    -String playerName
+    -int current
+    +run()
+    +send(String msg)
+  }
+  class Question {
+    -String text
+    -int answer
+    +isCorrect(int value) boolean
+  }
+  class QuestionBank {
+    +load(String file) List~Question~
+  }
+  class ResultStore {
+    +save(List~String~ finishOrder)
+  }
+  class ClientMain {
+    +main(String[] args)
+  }
+  class QuizClient {
+    -Socket socket
+    -PrintWriter out
+    -Scanner keyboard
+    +connect()
+    +play()
+  }
+  class ServerListener {
+    -BufferedReader in
+    +run()
+  }
+  ServerMain --> QuizServer
+  QuizServer o-- ClientHandler : manages all players
+  Thread &lt;|-- ClientHandler
+  QuizServer --> QuestionBank
+  QuizServer --> ResultStore
+  QuizServer o-- Question
+  ClientMain --> QuizClient
+  QuizClient --> ServerListener : starts
+  Thread &lt;|-- ServerListener
+  QuizClient ..> QuizServer : connects over a socket
+</pre>
+    </div>
+
+    <h2>A sample run</h2>
+    <h4>Server window</h4>
+<div class="console"><span class="in">$ java server.ServerMain</span>
+Podium server on port 5000. Waiting for 3 players...
+Raj connected (1/3)
+Ram connected (2/3)
+Priya connected (3/3)
+Quiz starting: 10 questions
+Ram won 1st prize (18.4s)
+Raj won 2nd prize (21.0s)
+Priya won 3rd prize (25.7s)
+Results saved to results.txt</div>
+    <h4>Raj's window</h4>
+<div class="console"><span class="in">$ java client.ClientMain</span>
+Your name: <span class="in">Raj</span>
+Seated. Waiting for players (1/3)
+Ram connected
+Priya connected
+Room full. Starting!
+Q1: 7 + 5
+&gt; <span class="in">12</span>
+Correct
+Q2: 14 - 6
+&gt; <span class="in">9</span>
+Wrong, try again
+&gt; <span class="in">8</span>
+Correct
+<span class="dim">...</span>
+Ram won 1st prize
+Q10: 72 ÷ 8
+&gt; <span class="in">9</span>
+Correct
+You won 2nd prize
+Priya won 3rd prize
+FINAL 1. Ram 2. Raj 3. Priya</div>
+
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+if (window.mermaid){
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default', securityLevel: 'strict' });
+}
+</script>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  /* ---------- Splash ---------- */
+  const splash = $('splash'), tilesEl = $('tiles');
+  const WORD = ['P','O','D','I','U','M'];
+  let timers = [], spins = [];
+  function clearAll(){ timers.forEach(clearTimeout); spins.forEach(clearInterval); timers = []; spins = []; }
+
+  function runSplash(){
+    clearAll();
+    splash.className = '';
+    tilesEl.innerHTML = '';
+    const tiles = WORD.map(() => {
+      const t = document.createElement('div'); t.className = 'tile'; t.textContent = '0';
+      tilesEl.appendChild(t); return t;
+    });
+    const symbols = '0123456789+−×÷';
+    tiles.forEach((t,i) => {
+      timers.push(setTimeout(() => t.classList.add('in'), 80 * i));
+      const spin = setInterval(() => { t.textContent = symbols[Math.random()*symbols.length|0]; }, 55);
+      spins.push(spin);
+      timers.push(setTimeout(() => {
+        clearInterval(spin); t.textContent = WORD[i]; t.classList.add('locked');
+      }, 750 + i * 190));
+    });
+    timers.push(setTimeout(() => splash.classList.add('ready'), 750 + WORD.length * 190));
+    timers.push(setTimeout(closeSplash, 3000));
+  }
+  function closeSplash(){
+    clearAll();
+    splash.classList.add('leaving');
+    setTimeout(() => { splash.classList.add('gone'); afterSplash(); }, 700);
+  }
+  $('skip').addEventListener('click', closeSplash);
+  $('replaySplash').addEventListener('click', runSplash);
+  runSplash();
+
+  /* ---------- Saved stats ---------- */
+  const load = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e){ return d; } };
+  const store = (k, v) => { try { localStorage.setItem(k, v); } catch(e){} };
+  let wins = parseInt(load('podium-wins', '0'), 10) || 0;
+  let rooms = parseInt(load('podium-rooms', '0'), 10) || 0;
+  let pace = parseFloat(load('podium-pace', '1')) || 1;   // >1 makes the other players slower
+  let last = null;
+  try { last = JSON.parse(load('podium-last', 'null')); } catch(e){}
+  const saveStats = () => {
+    store('podium-wins', String(wins)); store('podium-rooms', String(rooms));
+    store('podium-pace', String(pace)); store('podium-last', JSON.stringify(last));
+  };
+  const ORD = ['', '1st', '2nd', '3rd'];
+  const MEDAL = ['', '🥇', '🥈', '🥉'];
+  function paintStats(){
+    $('winsTop').textContent = wins; $('roomsTop').textContent = rooms;
+    const el = $('lastRoom');
+    if (!last){ el.hidden = true; return; }
+    el.hidden = false;
+    el.innerHTML = last.left
+      ? `<div class="glyph">↩</div><div><strong>Last room</strong><span>You left before the finish</span></div>`
+      : `<div class="glyph">${MEDAL[last.place]}</div><div><strong>Last room: ${ORD[last.place]} prize</strong><span>Finished in ${last.time.toFixed(1)}s, ${last.of} players</span></div>`;
+  }
+  paintStats();
+
+  /* ---------- Screens ---------- */
+  const SCREENS = ['assignment','welcome','home','lobby','race','waiting','podium'];
+  const WITH_FEED = ['lobby','race','waiting'];
+  let mode = 'home';
+  function showScreen(name){
+    mode = name;
+    SCREENS.forEach(s => {
+      if (s === 'assignment') $(s).classList.toggle('offstage', name !== 'assignment');
+      else $(s).hidden = s !== name;
+    });
+    $('feed').hidden = !WITH_FEED.includes(name);
+    window.scrollTo(0,0);
+  }
+
+  /* ---------- Username ---------- */
+  let username = load('podium-name', '');
+  const NAME_OK = /^[A-Za-z0-9_.]{3,16}$/;
+  const initialsOf = n => (n.replace(/[^a-zA-Z0-9]/g,'').slice(0,2) || '?').toUpperCase();
+  function paintName(){ $('helloName').textContent = username; }
+  function openWelcome(){
+    $('nameInput').value = username;
+    $('nameAvatar').textContent = initialsOf(username);
+    $('nameHint').textContent = '3 to 16 letters, numbers, dots or underscores';
+    $('nameHint').classList.remove('err');
+    showScreen('welcome');
+  }
+  $('nameInput').addEventListener('input', e => {
+    $('nameAvatar').textContent = initialsOf(e.target.value);
+    $('nameHint').classList.remove('err');
+  });
+  function saveName(){
+    const v = $('nameInput').value.trim();
+    if (!NAME_OK.test(v)){
+      const hint = $('nameHint'); hint.classList.add('err');
+      hint.textContent = v.length < 3 ? 'Use at least 3 characters' : 'Use only letters, numbers, dots or underscores';
+      $('nameInput').focus(); return;
+    }
+    username = v;
+    store('podium-name', username);
+    paintName(); showScreen('home'); $('joinBtn').focus({preventScroll:true});
+  }
+  $('saveName').addEventListener('click', saveName);
+  $('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
+  $('changeName').addEventListener('click', openWelcome);
+  function afterSplash(){
+    if (mode === 'welcome') $('nameInput').focus({preventScroll:true});
+    else if (mode === 'home') $('joinBtn').focus({preventScroll:true});
+  }
+  paintName();
+  if (username) showScreen('home'); else openWelcome();
+
+  /* ---------- Questions ---------- */
+  const rand = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+  const shuffle = arr => { const a = arr.slice(); for (let i = a.length-1; i > 0; i--){ const j = rand(0,i); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+  function makeQuestion(level){
+    const ops = ['+','−','×','÷'].slice(0, Math.min(4, 2 + Math.floor(level/1.5)));
+    const op = ops[rand(0, ops.length-1)];
+    const hi = [9, 20, 40, 75, 99][level];
+    let a, b, ans;
+    if (op === '+'){ a = rand(2,hi); b = rand(2,hi); ans = a+b; }
+    else if (op === '−'){ a = rand(5,hi+10); b = rand(1,a-1); ans = a-b; }
+    else if (op === '×'){ a = rand(2, 5+level*2); b = rand(2, 9+level); ans = a*b; }
+    else { b = rand(2, 5+level*2); ans = rand(2, 9+level); a = ans*b; }
+    return { text: `${a} ${op} ${b}`, answer: ans, op, level };
+  }
+
+  /* ---------- Answer box and keypad ---------- */
+  /* The box never knows the answer: every keystroke asks `judge`, which returns 'correct', 'wrong' or 'more' */
+  let uiTimers = [];
+  const uiLater = (fn, ms) => { const t = setTimeout(fn, ms); uiTimers.push(t); return t; };
+  function makeInput(boxId, judge, onCorrect){
+    const box = $(boxId);
+    const st = { typed: '', locked: true };
+    st.render = () => { box.textContent = st.typed || ' '; };
+    st.reset = () => { st.typed = ''; st.locked = false; box.classList.remove('bad','ok'); st.render(); };
+    st.press = d => {
+      if (st.locked) return;
+      box.classList.remove('bad','ok');
+      if (d === 'del'){ st.typed = st.typed.slice(0,-1); st.render(); return; }
+      if (d === 'clr'){ st.typed = ''; st.render(); return; }
+      if (st.typed.length >= 6) return;
+      st.typed += d; st.render();
+      const verdict = judge(st.typed);
+      if (verdict === 'correct'){
+        st.locked = true; box.classList.add('ok');
+        uiLater(() => { box.classList.remove('ok'); onCorrect(); }, 140);
+      } else if (verdict === 'wrong'){
+        void box.offsetWidth; box.classList.add('bad');
+        uiLater(() => { st.typed = ''; st.render(); }, 260);
+      }
+    };
+    return st;
+  }
+  function buildPad(padId, input){
+    ['1','2','3','4','5','6','7','8','9','clr','0','del'].forEach(k => {
+      const b = document.createElement('button');
+      b.textContent = k === 'del' ? '⌫' : k === 'clr' ? 'C' : k;
+      b.setAttribute('aria-label', k === 'del' ? 'Delete' : k === 'clr' ? 'Clear' : k);
+      b.addEventListener('click', () => input.press(k));
+      $(padId).appendChild(b);
+    });
+  }
+
+  /* ---------- Room ---------- */
+  /* One place holds the seats, the sums and the answers, judges every answer and hands out places.
+     Players never talk to each other: everything they hear arrives through send(). */
+  const SEATS = 3, QUESTIONS = 10;
+  class Room {
+    constructor(){
+      this.seats = []; this.questions = []; this.places = [];
+      this.started = false; this.over = false; this.closed = false;
+      this.startAt = 0; this.timers = []; this.listener = null;
+    }
+    later(fn, ms){ this.timers.push(setTimeout(() => { if (!this.closed) fn(); }, ms)); }
+    emit(evt){ if (this.listener && !this.closed) this.listener(evt); }
+
+    join(player){
+      if (this.seats.length >= SEATS || this.started){ player.send('Room is full'); return false; }
+      this.announce(`${player.name} connected`);          // reaches only those already seated
+      this.seats.push(player);
+      player.send(`You took a seat (${this.seats.length}/${SEATS})`);
+      this.seats.forEach(p => { if (p !== player) player.send(`${p.name} is already here`); });
+      this.emit({ type: 'seat', player });
+      if (this.seats.length === SEATS) this.emit({ type: 'full' });
+      return true;
+    }
+
+    announce(text, except){
+      this.seats.forEach(p => { if (p !== except && !p.left) p.send(text); });
+    }
+
+    start(){
+      if (this.started || this.seats.length !== SEATS) return false;
+      this.started = true;
+      this.questions = Array.from({length: QUESTIONS}, (_, i) => makeQuestion(Math.min(4, Math.floor(i / 2.2))));
+      this.startAt = performance.now();
+      this.announce('Room full. Starting!');
+      this.emit({ type: 'start' });
+      this.seats.forEach(p => p.begin(this));
+      return true;
+    }
+
+    questionFor(player){
+      if (!this.started || player.done || player.left) return null;
+      const q = this.questions[player.current];
+      return { text: q.text, op: q.op, level: q.level, number: player.current + 1, of: this.questions.length };
+    }
+
+    submit(player, typed){
+      if (!this.started || this.over || player.done || player.left) return 'wrong';
+      const q = this.questions[player.current];
+      const value = String(typed);
+      if (Number(value) === q.answer){
+        player.current++;
+        if (player.current === this.questions.length) this.finish(player);
+        return 'correct';
+      }
+      return value.length >= String(q.answer).length ? 'wrong' : 'more';
+    }
+
+    finish(player){
+      player.done = true;
+      player.time = (performance.now() - this.startAt) / 1000;
+      this.places.push(player);
+      player.place = this.places.length;
+      this.announce(`${player.name} won ${ORD[player.place]} prize`);
+      this.emit({ type: 'place', player });
+      this.checkOver();
+    }
+
+    leave(player){
+      if (player.left || player.done) return;
+      player.left = true;
+      if (!this.started) this.seats = this.seats.filter(p => p !== player);
+      this.announce(`${player.name} left`, player);
+      this.emit({ type: 'left', player });
+      this.checkOver();
+    }
+
+    checkOver(){
+      if (this.over || !this.started) return;
+      if (!this.seats.every(p => p.done || p.left)) return;
+      this.over = true;
+      this.announce('Final order: ' + this.places.map((p, i) => `${i+1}. ${p.name}`).join(', '));
+      this.emit({ type: 'over' });
+    }
+
+    close(){ this.closed = true; this.timers.forEach(clearTimeout); this.timers = []; }
+  }
+
+  /* ---------- Players ---------- */
+  class Player {
+    constructor(name){ this.name = name; this.current = 0; this.done = false; this.left = false; this.place = 0; this.time = 0; }
+    send(){}
+    begin(){}
+  }
+  class You extends Player {
+    constructor(name){ super(name); this.isYou = true; }
+    send(text){ feedLine(text, this); }
+    begin(){ raceBegin(); }
+  }
+
+  /* ---------- BotPlayer ---------- */
+  const NAMES = ['Raj','Ram','Priya','Kavya','Arjun','Meena','Vikram','Divya','Karthik','Anitha'];
+  const COLORS = ['#7FD8FF','#7CE3B0','#F7A8D8','#F7E07A','#9EE6E0','#E3C8FF'];
+  const STYLES = [1600, 2100, 2600];   // quick, steady, careful
+  const OP_COST = { '+': .85, '−': .95, '×': 1.2, '÷': 1.35 };
+  function solve(text){
+    const [a, op, b] = text.split(' ');
+    const x = +a, y = +b;
+    return op === '+' ? x + y : op === '−' ? x - y : op === '×' ? x * y : x / y;
+  }
+  class BotPlayer extends Player {
+    constructor(name, color, base){ super(name); this.color = color; this.base = base; this.quitAt = 0; }
+    begin(room){
+      this.room = room;
+      this.next();
+      if (this.quitAt) room.later(() => room.leave(this), this.quitAt);
+    }
+    next(){
+      const room = this.room, q = room.questionFor(this);
+      if (!q) return;
+      let ms = this.base * pace * OP_COST[q.op] * (1 + q.level * 0.08) * (0.7 + Math.random() * 0.6);
+      if (Math.random() < 0.1){
+        ms += rand(700, 1300);
+        room.later(() => room.submit(this, String(solve(q.text) + 1)), ms * 0.6);
+      }
+      room.later(() => { room.submit(this, String(solve(q.text))); this.next(); }, ms);
+    }
+  }
+
+  /* ---------- Lobby UI ---------- */
+  let room = null, me = null, clockRaf = 0;
+  function paintAvatar(el, p){
+    el.textContent = initialsOf(p.name);
+    el.classList.remove('empty');
+    el.classList.toggle('me-avatar', !!p.isYou);
+    el.style.background = p.isYou ? '' : p.color;
+  }
+  function teardown(){
+    if (room) room.close();
+    room = null;
+    uiTimers.forEach(clearTimeout); uiTimers = [];
+    cancelAnimationFrame(clockRaf);
+    raceInput.locked = true;
+    $('lobbyCount').textContent = '';
+    $('bannerSlot').innerHTML = '';
+  }
+
+  function joinRoom(){
+    teardown();
+    $('feedList').innerHTML = '<li class="empty">Nobody here yet</li>';
+    $('cancelLobby').hidden = false;
+    $('lobbyStatus').textContent = 'Joining…';
+    showScreen('lobby');
+    const r = room = new Room();
+    paintSeats(null);
+
+    const others = shuffle(NAMES.filter(n => n.toLowerCase() !== username.toLowerCase())).slice(0, 2);
+    const styles = shuffle(STYLES), colors = shuffle(COLORS);
+    const bots = others.map((n, i) => new BotPlayer(n, colors[i], styles[i]));
+    if (Math.random() < 0.1){
+      const b = bots[rand(0,1)];
+      b.quitAt = b.base * pace * QUESTIONS * (0.3 + Math.random() * 0.4);
+    }
+    const already = rand(0, 1);
+    bots.slice(0, already).forEach(b => r.join(b));
+
+    uiLater(() => {
+      r.listener = onRoomEvent;
+      me = new You(username);
+      r.join(me);
+      let t = 0;
+      bots.slice(already).forEach(b => { t += rand(1500, 4000); r.later(() => r.join(b), t); });
+    }, 600);
+  }
+
+  function paintSeats(popped){
+    const wrap = $('seats'); wrap.innerHTML = '';
+    for (let i = 0; i < SEATS; i++){
+      const p = room && room.listener ? room.seats[i] : null;
+      const seat = document.createElement('div');
+      seat.className = 'seat' + (p ? ' filled' : '') + (p && p === popped ? ' pop' : '');
+      const av = document.createElement('div'); av.className = 'avatar empty';
+      const name = document.createElement('strong');
+      const sub = document.createElement('small');
+      if (p){ paintAvatar(av, p); name.textContent = p.name; sub.textContent = p.isYou ? 'You' : ''; }
+      else { av.textContent = '?'; name.textContent = 'Empty'; name.style.color = 'var(--muted)'; name.style.fontWeight = '400'; }
+      seat.append(av, name, sub);
+      wrap.appendChild(seat);
+    }
+    if (room && room.listener){
+      const left = SEATS - room.seats.length;
+      $('lobbyStatus').textContent = left === 0 ? 'Room full' : `Waiting for ${left} more player${left === 1 ? '' : 's'}`;
+    }
+  }
+
+  function countdown(){
+    $('cancelLobby').hidden = true;
+    const cd = $('lobbyCount');
+    ['3','2','1','Go'].forEach((t, i) => uiLater(() => { cd.innerHTML = `<span>${t}</span>`; }, 900 + i * 700));
+    uiLater(() => { cd.textContent = ''; if (room) room.start(); }, 900 + 4 * 700);
+  }
+
+  function onRoomEvent(evt){
+    if (evt.type === 'seat') paintSeats(evt.player);
+    else if (evt.type === 'full') countdown();
+    else if (evt.type === 'place'){
+      paintChips();
+      if (evt.player === me) myFinish();
+      else paintStill();
+    }
+    else if (evt.type === 'left'){ paintChips(); paintStill(); }
+    else if (evt.type === 'over') uiLater(showPodium, 1300);
+  }
+
+  /* ---------- Feed ---------- */
+  function feedLine(text, owner){
+    const list = $('feedList');
+    const empty = list.querySelector('.empty'); if (empty) empty.remove();
+    const li = document.createElement('li');
+    const m = text.match(/ won (\d)(?:st|nd|rd) prize$/);
+    if (m) li.className = 'prize';
+    else if (/^You /.test(text)) li.className = 'mine';
+    const time = document.createElement('time');
+    time.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+    const span = document.createElement('span');
+    span.textContent = (m ? MEDAL[+m[1]] + ' ' : '') + text;
+    li.append(time, span);
+    list.prepend(li);
+    if (mode === 'race' && !owner.done && (m || / left$/.test(text))) banner(span.textContent);
+  }
+  function banner(text){
+    const slot = $('bannerSlot');
+    slot.innerHTML = '';
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = text;
+    slot.appendChild(t);
+    uiLater(() => t.classList.add('out'), 2500);
+    uiLater(() => t.remove(), 2950);
+  }
+
+  /* ---------- Race UI ---------- */
+  const raceInput = makeInput('raceAnswer',
+    typed => room && me ? room.submit(me, typed) : 'wrong',
+    () => { if (room && me && !me.done) showMyQuestion(); });
+  buildPad('racePad', raceInput);
+
+  function paintChips(){
+    if (!room) return;
+    const wrap = $('chips'); wrap.innerHTML = '';
+    room.seats.forEach(p => {
+      const c = document.createElement('div');
+      c.className = 'chip' + (p.isYou ? ' you' : '') + (p.left ? ' gone' : '');
+      const av = document.createElement('div'); av.className = 'avatar'; paintAvatar(av, p);
+      const n = document.createElement('span'); n.textContent = p.isYou ? `${p.name} (you)` : p.name;
+      c.append(av, n);
+      if (p.place){ const md = document.createElement('b'); md.className = 'medal'; md.textContent = MEDAL[p.place]; md.setAttribute('aria-label', ORD[p.place] + ' prize'); c.appendChild(md); }
+      wrap.appendChild(c);
+    });
+  }
+  function raceBegin(){
+    showScreen('race');
+    paintChips();
+    $('raceClock').textContent = '0.0s';
+    showMyQuestion();
+    runClock();
+  }
+  function showMyQuestion(){
+    const q = room.questionFor(me);
+    if (!q) return;
+    $('raceQ').textContent = q.text;
+    $('qCount').textContent = `Question ${q.number} of ${q.of}`;
+    raceInput.reset();
+  }
+  function runClock(){
+    if (!room || me.done) return;
+    $('raceClock').textContent = ((performance.now() - room.startAt) / 1000).toFixed(1) + 's';
+    clockRaf = requestAnimationFrame(runClock);
+  }
+
+  function myFinish(){
+    cancelAnimationFrame(clockRaf);
+    $('raceClock').textContent = me.time.toFixed(1) + 's';
+    raceInput.locked = true;
+    rooms++;
+    if (me.place === 1){ wins++; pace = Math.max(0.75, pace * 0.92); }
+    if (me.place === 3) pace = Math.min(1.4, pace * 1.08);
+    last = { place: me.place, time: me.time, of: room.seats.filter(p => !p.left).length };
+    saveStats(); paintStats();
+    uiLater(() => { if (room && !room.over) showWaiting(); }, 500);
+  }
+  function forfeit(){
+    if (room && room.started && me && !me.done && !room.over){
+      rooms++; last = { left: true }; saveStats(); paintStats();
+    }
+    teardown();
+  }
+
+  /* ---------- Finished, waiting ---------- */
+  function showWaiting(){
+    $('waitMedal').textContent = MEDAL[me.place];
+    $('waitTitle').textContent = `You won ${ORD[me.place]} prize`;
+    $('waitTime').textContent = `Finished in ${me.time.toFixed(1)}s`;
+    paintStill();
+    showScreen('waiting');
+  }
+  function paintStill(){
+    if (!room || !me) return;
+    const still = room.seats.filter(p => !p.isYou && !p.done && !p.left).map(p => `${p.name} is still solving…`);
+    $('stillSolving').textContent = still.join(' ');
+  }
+
+  /* ---------- Podium UI ---------- */
+  function showPodium(){
+    const r = room;
+    if (!r) return;
+    const stand = $('stand'); stand.innerHTML = '';
+    const gone = r.seats.filter(p => p.left);
+    [2, 1, 3].forEach(place => {
+      const p = r.places[place - 1] || (place > r.places.length ? gone[place - r.places.length - 1] : null);
+      const step = document.createElement('div');
+      step.className = `step p${place}` + (p && p.isYou ? ' me' : '') + (p && p.left ? ' gone' : '');
+      if (p){
+        const av = document.createElement('div'); av.className = 'avatar'; paintAvatar(av, p);
+        const n = document.createElement('strong'); n.textContent = p.name;
+        const s = document.createElement('small'); s.textContent = p.left ? 'left early' : p.time.toFixed(1) + 's';
+        step.append(av, n, s);
+      }
+      const block = document.createElement('div'); block.className = 'block';
+      block.textContent = p && p.left ? 'Left' : place;
+      step.appendChild(block);
+      stand.appendChild(step);
+    });
+    $('podTitle').textContent = `You won ${ORD[me.place]} prize`;
+    $('podSub').textContent = me.place === 1 ? `First to finish, in ${me.time.toFixed(1)}s.`
+      : `${r.places[0].name} finished first, in ${r.places[0].time.toFixed(1)}s. You took ${me.time.toFixed(1)}s.`;
+    teardown();
+    showScreen('podium');
+    $('againBtn').focus({preventScroll:true});
+  }
+
+  $('joinBtn').addEventListener('click', joinRoom);
+  $('againBtn').addEventListener('click', joinRoom);
+  $('podHome').addEventListener('click', () => showScreen('home'));
+  $('cancelLobby').addEventListener('click', () => { teardown(); showScreen('home'); });
+  $('leaveRace').addEventListener('click', () => { forfeit(); showScreen('home'); });
+
+  /* ---------- Tabs ---------- */
+  function selectTab(which){
+    const toAssignment = which === 'assignment';
+    $('tabPlay').setAttribute('aria-selected', String(!toAssignment));
+    $('tabAssignment').setAttribute('aria-selected', String(toAssignment));
+    document.querySelector('main.app').classList.toggle('wide', toAssignment);
+    if (toAssignment){
+      forfeit();
+      showScreen('assignment');
+    } else if (mode === 'assignment'){
+      if (username) showScreen('home'); else openWelcome();
+    }
+  }
+  $('tabPlay').addEventListener('click', () => selectTab('play'));
+  $('tabAssignment').addEventListener('click', () => selectTab('assignment'));
+
+  /* ---------- Keyboard ---------- */
+  document.addEventListener('keydown', e => {
+    if (mode !== 'race' || !room || !me || me.done || raceInput.locked) return;
+    if (/^[0-9]$/.test(e.key)) raceInput.press(e.key);
+    else if (e.key === 'Backspace') raceInput.press('del');
+  });
+})();
+</script>
