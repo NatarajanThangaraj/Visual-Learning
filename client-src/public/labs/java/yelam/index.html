@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>IPL Player Auction</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: an auction stage. A purple-lit stage holds the player card, the price and the bid ladder; below it a green
+   baize table where every franchise has a paddle on a stick, and yours is the one you tap. A lower-third carries the
+   auctioneer's latest call. The Auction Book slides in from the right for players, squads and every call. */
+:root{
+  --stage:#160A2E; --stage2:#2C1557; --glow:#7A3CFF; --chalk:#FFFFFF; --muted:#B9A8D6; --rule:rgba(255,255,255,.14);
+  --baize:#0F6B47; --baize2:#0A4D33; --wood:#5A3A1E; --amber:#FFB300; --amber-ink:#2A1A00; --red:#FF3B3B; --green:#3DF29A;
+  --paper:#F7F3EA; --paper-ink:#1B1530; --paper-muted:#5F5876; --paper-rule:#DDD5C4;
+  --num:"Teko", "Arial Narrow", Impact, sans-serif;
+  --text:"Rubik", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{height:100%}
+body{margin:0; min-height:100%; color:var(--chalk); font-family:var(--text); font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
+  background:var(--stage);
+  background-image:radial-gradient(ellipse 70% 55% at 50% 0%, rgba(122,60,255,.45), transparent 65%), linear-gradient(180deg, var(--stage2), var(--stage) 60%)}
+button{font:inherit; color:inherit; cursor:pointer; background:none; border:0; padding:0}
+button:disabled{cursor:default}
+:focus-visible{outline:3px solid var(--amber); outline-offset:3px}
+.sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+.num{font-family:var(--num); font-weight:600; line-height:.9; letter-spacing:.01em}
+.label{font-size:.68rem; text-transform:uppercase; letter-spacing:.22em; color:var(--muted); font-weight:500}
+
+/* ---------- Gate ---------- */
+#gate{position:fixed; inset:0; z-index:60; display:grid; place-items:center; overflow:hidden; background:var(--stage);
+  background-image:radial-gradient(ellipse 60% 50% at 50% 10%, rgba(122,60,255,.55), transparent 65%); padding:1rem; transition:opacity .5s}
+#gate.gone{opacity:0; pointer-events:none}
+.spot{position:absolute; left:50%; top:-20%; width:140vmax; height:140vmax; transform:translateX(-50%); pointer-events:none;
+  background:conic-gradient(from 180deg at 50% 0%, transparent 0 44%, rgba(255,179,0,.14) 48%, transparent 52%, transparent 100%); animation:spin 14s linear infinite}
+@keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
+.gate-inner{position:relative; display:grid; justify-items:center; gap:1.1rem; text-align:center; max-width:34rem}
+.gate-inner .emblem{width:clamp(7rem,30vw,10rem); height:auto; aspect-ratio:1; filter:drop-shadow(0 12px 30px rgba(0,0,0,.5))}
+.gate-title{font-family:var(--num); font-weight:700; text-transform:uppercase; font-size:clamp(3.4rem,15vw,6.5rem); line-height:.82; letter-spacing:.02em}
+.gate-title b{display:block; color:var(--amber); font-weight:700}
+.gate-copy{color:var(--muted); line-height:1.55; margin:0; max-width:30rem}
+.enter{background:var(--amber); color:var(--amber-ink); font-family:var(--num); font-weight:700; text-transform:uppercase; font-size:1.9rem; letter-spacing:.05em; line-height:1;
+  padding:.9rem 2.4rem .7rem; clip-path:polygon(6% 0, 100% 0, 94% 100%, 0 100%); transition:transform .1s}
+.enter:hover{transform:scale(1.03)}
+.gate-last{color:var(--muted); font-size:.85rem; margin:0}
+
+/* ---------- The arena ---------- */
+.arena{min-height:100%; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto 1fr auto auto}
+.arena > *{min-width:0}
+.top{display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.6rem 1.25rem; position:relative}
+.top::after{content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background:var(--rule)}
+.topline-fill{position:absolute; left:0; bottom:0; height:2px; width:100%; background:var(--amber); transform-origin:left; transform:scaleX(1); z-index:1}
+.topline-fill.hot{background:var(--red)}
+.brand{display:flex; align-items:center; gap:.6rem}
+.brand .emblem{width:2.4rem; height:2.4rem}
+.brand span{font-family:var(--num); font-weight:600; text-transform:uppercase; font-size:1.5rem; line-height:.9; letter-spacing:.03em; white-space:nowrap}
+.lot{text-align:center}
+.lot .num{font-size:2.2rem}
+.lot .num i{font-style:normal; color:var(--muted); font-size:.55em}
+.clock{text-align:center; min-width:6rem}
+.clock .num{font-size:2.6rem; color:var(--amber)}
+.clock.hot .num{color:var(--red)}
+.topbtns{display:flex; gap:.4rem}
+.tb{border:1px solid var(--rule); border-radius:.3rem; padding:.45rem .7rem; font-size:.85rem; color:var(--muted); white-space:nowrap}
+.tb[aria-pressed="true"]{color:var(--amber); border-color:var(--amber)}
+
+/* ---------- Stage ---------- */
+.stage{position:relative; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,.8fr); gap:1.5rem; align-items:center; padding:1.5rem 1.5rem 1rem; max-width:76rem; margin:0 auto; width:100%}
+.player{display:grid; grid-template-columns:auto minmax(0,1fr); gap:1rem; align-items:center; min-width:0}
+.player > div{min-width:0}
+.avatar{width:5.6rem; height:5.6rem; border-radius:50%; display:grid; place-items:center; font-family:var(--num); font-size:2.4rem; font-weight:600; line-height:1; background:rgba(255,255,255,.1); border:3px solid var(--rule); color:var(--chalk); flex:none; transition:border-color .3s}
+.player h1{margin:0 0 .35rem; font-family:var(--num); font-weight:600; text-transform:uppercase; font-size:clamp(2.2rem,5vw,3.2rem); line-height:.85; letter-spacing:.01em; text-wrap:balance}
+.player .meta{display:flex; flex-wrap:wrap; gap:.3rem .6rem; color:var(--muted); font-size:.85rem}
+.player .meta .ovs{color:var(--amber); font-weight:500}
+.player .meta .base{color:var(--chalk)}
+.centre{text-align:center; min-width:0}
+.centre .price{font-size:clamp(4.2rem,11vw,7.5rem); color:var(--amber)}
+.centre .price.bump{animation:bump .3s ease-out}
+@keyframes bump{40%{transform:scale(1.08)}}
+.holder{display:inline-flex; align-items:center; gap:.5rem; margin-top:.3rem; font-size:.95rem; color:var(--muted)}
+.code{font-family:var(--num); font-size:1.2rem; line-height:1; padding:.25rem .5rem .1rem; border-radius:.25rem; color:#fff; flex:none}
+.ladder{list-style:none; margin:0; padding:0; border-left:2px solid var(--rule); min-width:0}
+.ladder li{display:flex; justify-content:space-between; gap:.6rem; padding:.3rem .8rem; font-family:var(--num); font-size:1.5rem; line-height:1; color:var(--muted); position:relative}
+.ladder li::before{content:""; position:absolute; left:-6px; top:50%; width:10px; height:10px; border-radius:50%; background:var(--rule); transform:translateY(-50%)}
+.ladder li:first-child{color:var(--chalk); font-size:1.9rem}
+.ladder li:first-child::before{background:var(--amber)}
+.ladder li.base{color:var(--muted); font-size:1.1rem; font-family:var(--text); letter-spacing:.1em; text-transform:uppercase}
+.ladder li.base::before{background:var(--rule)}
+.ladder li b{font-weight:600}
+.ladder li.in{animation:drop .3s ease-out}
+@keyframes drop{from{transform:translateY(-8px); opacity:0}}
+.ladder-label{margin:0 0 .4rem .8rem}
+.ladderwrap{min-width:0}
+.banner{position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); pointer-events:none; text-align:center; font-family:var(--num); font-weight:700; text-transform:uppercase; font-size:clamp(3rem,10vw,6rem); line-height:1; letter-spacing:.04em; color:var(--chalk); opacity:0; background:linear-gradient(90deg, transparent, rgba(255,59,59,.85) 20%, rgba(255,59,59,.85) 80%, transparent); padding:.3rem 0 .1rem}
+.banner.show{animation:sweep 1.4s ease-out}
+@keyframes sweep{0%{opacity:0; transform:translateY(-50%) scaleX(.2)} 15%{opacity:1; transform:translateY(-50%) scaleX(1)} 75%{opacity:1} 100%{opacity:0}}
+.verdict{position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); pointer-events:none; text-align:center; padding:1rem; background:rgba(22,10,46,.9); border-top:3px solid var(--amber); border-bottom:3px solid var(--amber); animation:slam .35s cubic-bezier(.3,1.5,.5,1)}
+.verdict.unsold{border-color:var(--muted)}
+@keyframes slam{from{transform:translateY(-50%) scale(1.6); opacity:0}}
+.verdict .big{font-family:var(--num); font-weight:700; text-transform:uppercase; font-size:clamp(3rem,12vw,6rem); line-height:.85; color:var(--amber)}
+.verdict.unsold .big{color:var(--muted)}
+.verdict .to{font-size:1.1rem; color:var(--chalk); margin-top:.3rem}
+
+/* ---------- The table ---------- */
+.table{position:relative; background:radial-gradient(ellipse 120% 100% at 50% 100%, var(--baize), var(--baize2) 80%); border-top:10px solid var(--wood); box-shadow:inset 0 10px 30px rgba(0,0,0,.35); padding:1.6rem 1rem .9rem}
+.table::before{content:""; position:absolute; left:0; right:0; top:-14px; height:4px; background:#8A5A2E}
+.paddles{display:flex; justify-content:center; align-items:flex-end; gap:clamp(.5rem,3vw,2rem); min-height:11rem; max-width:76rem; margin:0 auto; overflow-x:auto; padding:1.5rem .5rem 0}
+.paddle{display:grid; justify-items:center; gap:.25rem; position:relative; flex:none; width:7rem; transition:transform .25s cubic-bezier(.3,1.4,.5,1); color:var(--chalk)}
+.paddle svg{width:5.2rem; height:7.4rem; display:block; filter:drop-shadow(0 6px 8px rgba(0,0,0,.4))}
+.paddle .disc{stroke:rgba(255,255,255,.7); stroke-width:3}
+.paddle .pcode{font-family:var(--num); font-size:26px; font-weight:600; text-anchor:middle; dominant-baseline:central}
+.paddle .name{font-size:.72rem; text-align:center; line-height:1.15; max-width:7rem; color:rgba(255,255,255,.9)}
+.paddle .purse{font-family:var(--num); font-size:1.1rem; line-height:1; color:rgba(255,255,255,.75)}
+.paddle.up{transform:translateY(-18px)}
+.paddle .tag{position:absolute; top:-1.4rem; left:50%; transform:translateX(-50%); background:var(--amber); color:var(--amber-ink); font-family:var(--num); font-size:1.15rem; line-height:1; padding:.3rem .5rem .15rem; border-radius:.25rem; white-space:nowrap}
+.paddle .tag::after{content:""; position:absolute; left:50%; bottom:-6px; transform:translateX(-50%); border:6px solid transparent; border-top-color:var(--amber); border-bottom:0}
+.paddle.bought .tag{background:var(--green); color:#03301B}
+.paddle.bought .tag::after{border-top-color:var(--green)}
+.paddle.in{animation:walk .5s ease-out}
+@keyframes walk{from{transform:translateX(40px); opacity:0}}
+.paddle.mine{width:8.5rem}
+.paddle.mine svg{width:6.4rem; height:9rem}
+.paddle.mine .disc{stroke:var(--amber); stroke-width:4}
+.paddle.mine button{position:absolute; inset:0; width:100%; height:100%; border-radius:1rem}
+.paddle.mine:not(.off):hover{transform:translateY(-10px)}
+.paddle.mine.up:hover{transform:translateY(-18px)}
+.paddle.mine:not(.off):active{transform:translateY(-26px)}
+.paddle.mine .name{font-weight:700; color:var(--amber)}
+.paddle.off{opacity:.55}
+.paddle.off svg{filter:grayscale(.4)}
+.paddle .tag.why{background:rgba(0,0,0,.6); color:var(--chalk); font-family:var(--text); font-size:.72rem; padding:.3rem .5rem}
+.paddle .tag.why::after{border-top-color:rgba(0,0,0,.6)}
+.paddle.mine .tag.go{background:var(--amber); animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{transform:translateX(-50%) scale(1.06)}}
+.table-note{text-align:center; color:rgba(255,255,255,.7); font-size:.8rem; margin:.6rem 0 0}
+.table-note kbd{font-family:var(--mono); border:1px solid rgba(255,255,255,.4); border-radius:.25rem; padding:0 .3rem; font-size:.7rem}
+
+/* ---------- Lower third ---------- */
+.third{display:grid; grid-template-columns:auto 1fr; align-items:stretch; background:#0B0618; border-top:1px solid var(--rule); min-height:3.4rem}
+.third .who{background:var(--amber); color:var(--amber-ink); font-family:var(--num); font-weight:600; text-transform:uppercase; font-size:1.3rem; line-height:1; display:grid; place-items:center; padding:0 1.6rem 0 1rem; clip-path:polygon(0 0, 100% 0, 92% 100%, 0 100%)}
+.third .say{display:flex; flex-direction:column; justify-content:center; padding:.4rem 1.2rem; min-width:0}
+.third .now{font-family:var(--num); font-size:1.6rem; line-height:1; text-transform:uppercase; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; animation:drop .3s ease-out}
+.third .now.mine{font-family:var(--text); font-size:.95rem; text-transform:none; color:var(--muted); font-style:italic}
+.third .now.warn{color:var(--red)}
+.third .now.sold{color:var(--amber)}
+.third .prev{font-size:.78rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:.15rem}
+
+/* ---------- The Auction Book (drawer) ---------- */
+.book{position:fixed; top:0; right:0; bottom:0; width:min(26rem,100%); background:var(--paper); color:var(--paper-ink); z-index:50; transform:translateX(100%); transition:transform .3s cubic-bezier(.3,1,.4,1); display:grid; grid-template-rows:auto auto 1fr; box-shadow:-10px 0 40px rgba(0,0,0,.5); color-scheme:light;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px)}
+.book.open{transform:none}
+.book-head{display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem .5rem}
+.book-head h2{margin:0; font-family:var(--num); font-weight:600; text-transform:uppercase; font-size:1.9rem; line-height:1}
+.book-head button{color:var(--paper-muted); font-size:.9rem; border:1px solid var(--paper-rule); border-radius:.3rem; padding:.3rem .6rem}
+.book-tabs{display:flex; gap:1rem; padding:0 1.25rem; border-bottom:1px solid var(--paper-rule)}
+.book-tabs button{padding:.5rem 0; font-size:.85rem; text-transform:uppercase; letter-spacing:.12em; color:var(--paper-muted); border-bottom:3px solid transparent; margin-bottom:-1px}
+.book-tabs button[aria-selected="true"]{color:var(--paper-ink); border-bottom-color:var(--amber)}
+.book-body{overflow-y:auto; padding:.75rem 1.25rem 1.5rem}
+.book h3{font-size:.68rem; text-transform:uppercase; letter-spacing:.22em; color:var(--paper-muted); margin:1rem 0 .25rem; font-weight:500}
+.book h3:first-child{margin-top:0}
+.rows{list-style:none; margin:0; padding:0}
+.rows li{display:flex; align-items:center; gap:.6rem; padding:.4rem 0; border-bottom:1px dotted var(--paper-rule); min-width:0}
+.rows li > div{flex:1; min-width:0}
+.rows strong{display:block; font-weight:500; font-size:.95rem}
+.rows small{color:var(--paper-muted); font-size:.78rem}
+.rows .amt{font-family:var(--num); font-size:1.3rem; line-height:1; flex:none}
+.rows .code{font-size:1rem; padding:.2rem .4rem .05rem; border-radius:.2rem}
+.rows .none{color:var(--paper-muted); font-size:.85rem; padding:.4rem 0}
+.sq{border-top:4px solid; padding:.6rem 0 .8rem; margin-bottom:.4rem}
+.sq .h{display:flex; align-items:baseline; justify-content:space-between; gap:.6rem}
+.sq .h strong{font-family:var(--num); font-size:1.5rem; line-height:1; font-weight:600; text-transform:uppercase}
+.sq .h span{font-size:.78rem; color:var(--paper-muted)}
+.sq .m{font-size:.78rem; color:var(--paper-muted); margin:.15rem 0 .35rem}
+.sq ul{list-style:none; margin:0; padding:0}
+.sq li{display:flex; justify-content:space-between; gap:.6rem; font-size:.88rem; padding:.2rem 0; border-bottom:1px dotted var(--paper-rule)}
+.sq li span:last-child{font-family:var(--num); font-size:1.15rem; line-height:1}
+.sq .none{font-size:.85rem; color:var(--paper-muted)}
+.calls{list-style:none; margin:0; padding:0; font-size:.88rem}
+.calls li{padding:.3rem 0; border-bottom:1px dotted var(--paper-rule)}
+.calls li.mine{color:var(--paper-muted); font-style:italic}
+.calls li.sold{font-weight:700}
+.calls li.warn{color:#B3261E}
+.calls li.join{color:#0B6B47}
+
+/* ---------- Final board ---------- */
+#final{position:fixed; inset:0; z-index:55; overflow:auto; background:var(--stage); background-image:radial-gradient(ellipse 70% 50% at 50% 0%, rgba(122,60,255,.5), transparent 65%); padding:calc(1.5rem + env(safe-area-inset-top,0px)) 1.25rem calc(2rem + env(safe-area-inset-bottom,0px))}
+.final-inner{max-width:64rem; margin:0 auto}
+.final-inner h2{font-family:var(--num); font-weight:700; text-transform:uppercase; font-size:clamp(3rem,10vw,5.5rem); line-height:.85; margin:0 0 .3rem}
+.final-inner h2 b{color:var(--amber); font-weight:700; display:block}
+.final-inner > p{color:var(--muted); margin:.4rem 0 1.5rem}
+.cols{display:grid; grid-template-columns:repeat(auto-fit, minmax(14rem,1fr)); gap:1rem}
+.col{border-top:6px solid; padding:.7rem .2rem; background:rgba(0,0,0,.25)}
+.col .h{padding:0 .6rem}
+.col .h strong{display:block; font-family:var(--num); font-size:1.7rem; line-height:1; font-weight:600; text-transform:uppercase}
+.col .h span{font-size:.78rem; color:var(--muted)}
+.col ul{list-style:none; margin:.5rem 0 0; padding:0}
+.col li{display:flex; justify-content:space-between; gap:.5rem; padding:.3rem .6rem; font-size:.85rem; border-top:1px solid var(--rule)}
+.col li span:last-child{font-family:var(--num); font-size:1.15rem; line-height:1; color:var(--amber)}
+.col .none{padding:.3rem .6rem; color:var(--muted); font-size:.85rem}
+.final-btns{display:flex; gap:1rem; flex-wrap:wrap; margin-top:1.5rem; align-items:center}
+.final-btns .enter{font-size:1.5rem}
+.final-btns .tb{font-size:1rem; padding:.7rem 1.2rem}
+
+
+/* ---------- Phone ---------- */
+@media (max-width:820px){
+  .stage{grid-template-columns:minmax(0,1fr); grid-template-areas:"centre" "player" "ladder"; gap:1rem; padding:1rem 1rem .5rem}
+  .centre{grid-area:centre}
+  .player{grid-area:player}
+  .ladderwrap{grid-area:ladder}
+  .ladder li:nth-child(n+4):not(.base){display:none}
+  .brand span{display:none}
+  .top{padding:.5rem .9rem; flex-wrap:wrap}
+  .paddles{justify-content:flex-start}
+  .third .who{font-size:1rem; padding:0 1.2rem 0 .7rem}
+  .third .now{font-size:1.25rem; white-space:normal}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important; transition-duration:.01ms!important}
+  .banner.show, .verdict{opacity:1}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="emblem" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="57" fill="#2C1557" stroke="#FFB300" stroke-width="4"/>
+    <circle cx="60" cy="60" r="49" fill="none" stroke="#FFB300" stroke-width="1" opacity=".5"/>
+    <circle cx="60" cy="44" r="19" fill="#C8102E"/>
+    <path d="M47 31 Q60 44 47 57 M73 31 Q60 44 73 57" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+    <path d="M49 34 l2 1 M49 54 l2 -1 M71 34 l-2 1 M71 54 l-2 -1" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+    <g transform="translate(60 72) rotate(-30)">
+      <rect x="-5" y="-2" width="30" height="4" rx="2" fill="#FFB300"/>
+      <rect x="-14" y="-8" width="14" height="16" rx="2.5" fill="#FFB300"/>
+    </g>
+    <text x="60" y="104" text-anchor="middle" font-family="Teko, Arial Narrow, Impact, sans-serif" font-weight="700" font-size="24" letter-spacing="2" fill="#FFB300">IPL</text>
+    <text x="60" y="113" text-anchor="middle" font-family="Rubik, Arial, sans-serif" font-weight="500" font-size="6.5" letter-spacing="2.2" fill="#FFFFFF">PLAYER AUCTION</text>
+  </symbol>
+  <symbol id="stick" viewBox="0 0 80 115">
+    <rect x="36" y="60" width="8" height="55" rx="3" fill="#C9A77A"/>
+    <rect x="36" y="60" width="3" height="55" rx="2" fill="#E8CBA0"/>
+  </symbol>
+</svg>
+
+<div id="gate" role="dialog" aria-label="IPL Player Auction">
+  <div class="spot"></div>
+  <div class="gate-inner">
+    <svg class="emblem"><use href="#emblem"/></svg>
+    <div class="gate-title">IPL<b>Player Auction</b></div>
+    <p class="gate-copy">Walk in and take a paddle. The auctioneer seats you as a franchise with ₹30 Cr and six slots. Players come up one by one. Tap your paddle to bid. Ten quiet seconds and the hammer falls.</p>
+    <button class="enter" id="enterBtn">Enter the hall</button>
+    <p class="gate-last" id="gateLast"></p>
+  </div>
+</div>
+
+<div class="sr-only" aria-live="polite" id="livePolite"></div>
+<div class="sr-only" aria-live="assertive" id="liveNow"></div>
+
+<div class="arena" id="arena" hidden>
+  <header class="top">
+    <div class="brand"><svg class="emblem" aria-hidden="true"><use href="#emblem"/></svg><span>IPL Auction</span></div>
+    <div class="lot"><div class="label">Lot</div><div class="num" id="lotNum">—</div></div>
+    <div class="clock" id="clock" role="timer" aria-label="Seconds left"><div class="label">Clock</div><div class="num" id="clockNum">00:10</div></div>
+    <div class="topbtns">
+      <button class="tb" id="bookBtn" aria-pressed="false">Auction book</button>
+      <button class="tb" id="leaveBtn">Leave</button>
+    </div>
+    <div class="topline-fill" id="clockLine"></div>
+  </header>
+
+  <section class="stage" aria-label="On the block">
+    <div class="player">
+      <div class="avatar" id="avatar">—</div>
+      <div>
+        <div class="label">On the block</div>
+        <h1 id="pName">Waiting for the auctioneer</h1>
+        <div class="meta" id="pMeta"></div>
+      </div>
+    </div>
+    <div class="centre">
+      <div class="label" id="priceLabel">Base price</div>
+      <div class="num price" id="price">—</div>
+      <div class="holder" id="holder"></div>
+    </div>
+    <div class="ladderwrap">
+      <div class="label ladder-label">Bids this lot</div>
+      <ol class="ladder" id="ladder"></ol>
+    </div>
+    <div class="banner" id="banner" aria-hidden="true"></div>
+    <div class="verdict" id="verdict" hidden><div class="big" id="verdictBig"></div><div class="to" id="verdictTo"></div></div>
+  </section>
+
+  <section class="table" aria-label="The table">
+    <div class="paddles" id="paddles"></div>
+    <p class="table-note">Tap your paddle, or press <kbd>Space</kbd>, to bid. Franchises keep walking in while the bidding is on.</p>
+  </section>
+
+  <footer class="third" aria-label="Auctioneer">
+    <div class="who">Auctioneer</div>
+    <div class="say"><div class="now" id="sayNow">The doors are open</div><div class="prev" id="sayPrev"></div></div>
+  </footer>
+</div>
+
+<aside class="book" id="book" aria-label="Auction book" aria-hidden="true">
+  <div class="book-head"><h2>Auction book</h2><button id="bookClose">Close · Esc</button></div>
+  <div class="book-tabs" role="tablist">
+    <button role="tab" id="tabPlayers" aria-selected="true">Players</button>
+    <button role="tab" id="tabSquads" aria-selected="false">Squads</button>
+    <button role="tab" id="tabCalls" aria-selected="false">Calls</button>
+  </div>
+  <div class="book-body">
+    <div id="bookPlayers">
+      <h3>Up next</h3><ul class="rows" id="listNext"></ul>
+      <h3>Sold</h3><ul class="rows" id="listSold"></ul>
+      <h3>Unsold</h3><ul class="rows" id="listUnsold"></ul>
+    </div>
+    <div id="bookSquads" hidden></div>
+    <div id="bookCalls" hidden><ol class="calls" id="calls"></ol></div>
+  </div>
+</aside>
+
+<div id="final" hidden>
+  <div class="final-inner">
+    <div class="label">Auction over</div>
+    <h2 id="finalTitle"></h2>
+    <p id="finalSub"></p>
+    <div class="cols" id="finalCols"></div>
+    <div class="final-btns">
+      <button class="enter" id="againBtn">Hold another auction</button>
+      <button class="tb" id="finalLeave">Leave the hall</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const rand = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+  const shuffle = arr => { const a = arr.slice(); for (let i = a.length-1; i > 0; i--){ const j = rand(0,i); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+  const fmt = lakh => '₹' + (lakh/100).toFixed(2) + ' Cr';   // amounts are kept in lakh, shown in crore
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const svgEl = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); return e; };
+
+  /* ---------- teams.txt and players.txt, exactly as shipped ---------- */
+  const TEAMS_TXT = `CSK,Chennai Super Kings,#F9CD05
+MI,Mumbai Indians,#004BA0
+RCB,Royal Challengers Bengaluru,#EC1C24
+KKR,Kolkata Knight Riders,#3A225D
+SRH,Sunrisers Hyderabad,#F26522
+DC,Delhi Capitals,#17479E
+PBKS,Punjab Kings,#ED1B24
+RR,Rajasthan Royals,#EA1A85
+LSG,Lucknow Super Giants,#0057E2
+GT,Gujarat Titans,#1B2133`;
+  const PLAYERS_TXT = `Virat Kohli,Batter,India,200
+Rohit Sharma,Batter,India,200
+Shubman Gill,Batter,India,200
+Yashasvi Jaiswal,Batter,India,200
+Suryakumar Yadav,Batter,India,200
+Rinku Singh,Batter,India,100
+Travis Head,Batter,Australia,200
+Rishabh Pant,Wicket-keeper,India,200
+KL Rahul,Wicket-keeper,India,200
+Jos Buttler,Wicket-keeper,England,200
+Heinrich Klaasen,Wicket-keeper,South Africa,200
+Hardik Pandya,All-rounder,India,200
+Ravindra Jadeja,All-rounder,India,200
+Axar Patel,All-rounder,India,150
+Sam Curran,All-rounder,England,150
+Rachin Ravindra,All-rounder,New Zealand,150
+Jasprit Bumrah,Bowler,India,200
+Arshdeep Singh,Bowler,India,200
+Kuldeep Yadav,Bowler,India,150
+Varun Chakaravarthy,Bowler,India,100
+Pat Cummins,Bowler,Australia,200
+Mitchell Starc,Bowler,Australia,200
+Rashid Khan,Bowler,Afghanistan,200
+Kagiso Rabada,Bowler,South Africa,200`;
+
+  /* A broken line is skipped, never fatal */
+  function loadTeams(text){
+    return text.split('\n').map(l => l.split(',').map(s => s.trim()))
+      .filter(p => p.length === 3 && p[0] && p[1] && /^#[0-9A-Fa-f]{6}$/.test(p[2]))
+      .map(([code, name, color]) => ({ code, name, color }));
+  }
+  function loadPlayers(text){
+    return text.split('\n').map(l => l.split(',').map(s => s.trim()))
+      .filter(p => p.length === 4 && p[0] && p[1] && p[2] && /^\d+$/.test(p[3]))
+      .map(([name, role, country, base], i) => ({ name, role, country, base: +base, overseas: country !== 'India', index: i }));
+  }
+  const TEAMS = loadTeams(TEAMS_TXT), POOL = loadPlayers(PLAYERS_TXT);
+  const inkOn = hex => { const n = parseInt(hex.slice(1), 16); const r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255; return (r*299 + g*587 + b*114) / 1000 > 150 ? '#1B1530' : '#FFFFFF'; };
+  const codeTag = f => { const s = el('span', 'code', f.code); s.style.background = f.color; s.style.color = inkOn(f.color); return s; };
+  const initials = name => name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  /* ---------- The rules of the hall ---------- */
+  const HALL = 6, PURSE = 3000, SQUAD = 6, STEP = 20;
+  const CLOCK = 10000, ONCE = 4000, TWICE = 2000, PAUSE = 3000, OPENING = 5000;
+
+  /* ---------- The auctioneer ---------- */
+  /* One place owns the hall, the shuffled pool, the player on the block, the bid and the clock.
+     Franchises walk in whenever they like, even mid-lot, and only ever hear it through send() and tell(). */
+  class Auction {
+    constructor(teams, pool){
+      this.free = shuffle(teams);        // franchises still to be handed out
+      this.pool = shuffle(pool);         // random order, each player exactly once
+      this.franchises = [];              // in the hall, in order of arrival
+      this.results = [];                 // what sold.txt would hold
+      this.lotNo = 0; this.lot = null;
+      this.open = false; this.over = false; this.closed = false;
+      this.timers = []; this.ticker = 0; this.listener = null;
+    }
+    later(fn, ms){ this.timers.push(setTimeout(() => { if (!this.closed) fn(); }, ms)); }
+    emit(evt){
+      if (this.closed) return;
+      this.franchises.forEach(f => { if (f.onEvent && !f.left) f.onEvent(evt, this); });
+      if (this.listener) this.listener(evt);
+    }
+    announce(text, except){ this.franchises.forEach(f => { if (f !== except && !f.left) f.send(text); }); }
+
+    /* The doors open; the first player goes up a few seconds later, whoever is in */
+    openHall(){
+      this.open = true;
+      this.announce('The hall is open. First player coming up');
+      this.emit({ type: 'open' });
+      this.later(() => this.nextLot(), OPENING);
+    }
+
+    /* A newcomer is seated as a free franchise, picked at random, at any time before the end */
+    seat(f){
+      if (this.over){ f.tell('The auction is over'); return null; }
+      if (!this.free.length || this.franchises.filter(x => !x.left).length >= HALL){ f.tell('The hall is full'); return null; }
+      const team = this.free.pop();
+      f.code = team.code; f.name = team.name; f.color = team.color;
+      this.announce(`${f.name} (${f.code}) walked in`);       // reaches only those already in the hall
+      this.franchises.push(f);
+      f.tell(`You are ${f.name} (${f.code}). Purse ${fmt(f.purse)}`);
+      this.franchises.forEach(o => { if (o !== f) f.tell(`${o.name} (${o.code}) is already here`); });
+      if (this.lot && !this.lot.closed){
+        const l = this.lot;
+        f.tell(`Lot ${this.lotNo} of ${this.pool.length}: ${l.player.name}, ${l.leader ? l.leader.code + ' leads at ' + fmt(l.bid) : 'no bids yet, base ' + fmt(l.player.base)}`);
+      }
+      this.emit({ type: 'join', franchise: f });
+      return team;
+    }
+
+    nextLot(){
+      if (this.over) return;
+      const anyone = this.franchises.some(f => !f.left && f.squad.length < SQUAD && f.purse >= 100);
+      if (this.lotNo >= this.pool.length || !anyone) return this.end();
+      const player = this.pool[this.lotNo++];
+      this.lot = { player, bid: 0, leader: null, closed: false, deadline: performance.now() + CLOCK, once: false, twice: false, bids: [] };
+      this.announce(`Lot ${this.lotNo} of ${this.pool.length}: ${player.name}, ${player.role}, ${player.country}${player.overseas ? ' (overseas)' : ''}. Base ${fmt(player.base)}`);
+      this.emit({ type: 'lot', lot: this.lot });
+      this.startClock();
+    }
+
+    minBid(){ return this.lot.bid ? this.lot.bid + STEP : this.lot.player.base; }
+    remaining(){ return this.lot ? Math.max(0, this.lot.deadline - performance.now()) : 0; }
+
+    /* Why a franchise can't bid right now, or null */
+    canBid(f){
+      const lot = this.lot;
+      if (!lot || lot.closed) return 'Too late, already sold';
+      if (lot.leader === f) return 'Your paddle is already up';
+      if (f.squad.length >= SQUAD) return 'Squad full';
+      if (this.minBid() > f.purse) return 'Not enough purse';
+      return null;
+    }
+
+    bid(f, amount){
+      const lot = this.lot;
+      if (f.left) return false;
+      if (!lot || lot.closed){ f.tell(lot ? 'Too late, already sold' : 'No player is up yet'); return false; }
+      if (lot.leader === f){ f.tell('Your paddle is already up'); return false; }
+      if (f.squad.length >= SQUAD){ f.tell('Squad full'); return false; }
+      const min = this.minBid();
+      if (amount < min){ f.tell(lot.bid ? `Bid too low. Current bid is ${fmt(lot.bid)}` : `Bid too low. Base price is ${fmt(min)}`); return false; }
+      if (amount > f.purse){ f.tell('Not enough purse'); return false; }
+      lot.bid = amount; lot.leader = f; lot.bids.push({ f, amount });
+      lot.deadline = performance.now() + CLOCK; lot.once = lot.twice = false;   // every accepted bid restarts the clock
+      this.announce(`${f.code} bids ${fmt(amount)}`);
+      this.emit({ type: 'bid', franchise: f, amount });
+      return true;
+    }
+
+    startClock(){
+      this.stopClock();
+      this.ticker = setInterval(() => {
+        const lot = this.lot;
+        if (!lot || lot.closed) return;
+        const left = lot.deadline - performance.now();
+        if (!lot.once && left <= ONCE){ lot.once = true; this.announce('Going once'); this.emit({ type: 'once' }); }
+        if (!lot.twice && left <= TWICE){ lot.twice = true; this.announce('Going twice'); this.emit({ type: 'twice' }); }
+        if (left <= 0) this.hammer();
+      }, 50);
+    }
+    stopClock(){ clearInterval(this.ticker); this.ticker = 0; }
+
+    hammer(){
+      const lot = this.lot; lot.closed = true; this.stopClock();
+      const p = lot.player;
+      if (lot.leader){
+        const w = lot.leader;
+        w.purse -= lot.bid; w.squad.push({ player: p, price: lot.bid });
+        p.soldTo = w; p.price = lot.bid;
+        this.results.push(`${p.name},${w.code},${lot.bid}`);
+        this.announce(`SOLD! ${p.name} to ${w.name} for ${fmt(lot.bid)}`);
+      } else {
+        p.unsold = true;
+        this.results.push(`${p.name},UNSOLD,0`);
+        this.announce(`${p.name} goes UNSOLD`);
+      }
+      this.emit({ type: 'hammer', lot });
+      this.later(() => this.nextLot(), PAUSE);
+    }
+
+    end(){
+      this.over = true; this.lot = null; this.stopClock();
+      this.announce('Auction over');
+      this.emit({ type: 'over' });
+    }
+
+    leave(f){
+      if (f.left) return;
+      f.left = true;
+      this.announce(`${f.code} left the hall`, f);     // its purchases stay, a leading bid still stands
+      this.emit({ type: 'left', franchise: f });
+    }
+
+    close(){ this.closed = true; this.stopClock(); this.timers.forEach(clearTimeout); this.timers = []; }
+  }
+
+  /* ---------- Franchises ---------- */
+  class Franchise {
+    constructor(){ this.code = ''; this.name = ''; this.color = '#888888'; this.purse = PURSE; this.squad = []; this.left = false; }
+    send(){}      // what everyone hears
+    tell(){}      // what only this franchise hears
+    spent(){ return this.squad.reduce((s, b) => s + b.price, 0); }
+    overseas(){ return this.squad.filter(b => b.player.overseas).length; }
+    priciest(){ return this.squad.reduce((m, b) => !m || b.price > m.price ? b : m, null); }
+  }
+  class You extends Franchise {
+    constructor(){ super(); this.isYou = true; }
+    send(text){ say(text); }
+    tell(text){ say(text, true); }
+  }
+
+  /* ---------- Rival franchises ---------- */
+  /* A rival values each player at base × 1.2–3.5 (sometimes not at all), wants roles it lacks,
+     tightens as its purse shrinks, and keeps ₹1 Cr for every slot still to fill. */
+  class Rival extends Franchise {
+    constructor(){ super(); this.mult = new Map(); }
+    valuation(player){
+      if (!this.mult.has(player)) this.mult.set(player, Math.random() < 0.4 ? 0 : 1.2 + Math.random() * 2.3);
+      let v = player.base * this.mult.get(player);
+      if (!this.squad.some(b => b.player.role === player.role)) v *= 1.25;
+      v *= 0.55 + 0.45 * this.purse / PURSE;
+      const slotsLeft = SQUAD - this.squad.length;
+      return Math.min(v, this.purse - (slotsLeft - 1) * 100);
+    }
+    onEvent(evt, auction){
+      if (evt.type === 'lot' || (evt.type === 'bid' && evt.franchise !== this) || (evt.type === 'join' && evt.franchise === this)) this.think(auction);
+    }
+    think(auction){
+      const lot = auction.lot;
+      if (!lot || lot.closed || auction.canBid(this)) return;
+      const amount = auction.minBid();
+      if (amount > this.valuation(lot.player)) return;
+      const left = auction.remaining();
+      const delay = Math.random() < 0.2
+        ? Math.max(600, left - rand(-400, 1700))      // a last-second paddle, now and then a shade too late
+        : rand(600, 3500);
+      auction.later(() => {
+        if (auction.lot === lot && amount <= this.valuation(lot.player)) auction.bid(this, amount);
+      }, delay);
+    }
+  }
+
+  /* ---------- Saved: only the last auction ---------- */
+  const load = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e){ return d; } };
+  const store = (k, v) => { try { localStorage.setItem(k, v); } catch(e){} };
+  let last = null;
+  try { last = JSON.parse(load('ipl-last', 'null')); } catch(e){}
+  function paintLast(){
+    const g = $('gateLast');
+    if (!last){ g.textContent = ''; return; }
+    g.textContent = last.left ? `Last time you left the hall early as ${last.code}.`
+      : `Last time, as ${last.code}, you bought ${last.bought} player${last.bought === 1 ? '' : 's'} for ${fmt(last.spent)}.`;
+  }
+  paintLast();
+
+  /* ---------- View state ---------- */
+  let auction = null, me = null, clockRaf = 0, uiTimers = [], view = 'gate', bookTab = 'players', prevSay = '';
+  const uiLater = (fn, ms) => { const t = setTimeout(fn, ms); uiTimers.push(t); return t; };
+  function live(text, now){ const n = $(now ? 'liveNow' : 'livePolite'); n.textContent = ''; setTimeout(() => { n.textContent = text; }, 30); }
+  function teardown(){
+    if (auction) auction.close();
+    auction = null;
+    uiTimers.forEach(clearTimeout); uiTimers = [];
+    cancelAnimationFrame(clockRaf); clockRaf = 0;
+    $('final').hidden = true; closeBook();
+  }
+  function showGate(){
+    teardown(); view = 'gate';
+    $('arena').hidden = true;
+    $('gate').classList.remove('gone');
+    paintLast(); $('enterBtn').focus({preventScroll:true});
+  }
+
+  /* ---------- Walking in ---------- */
+  function enterHall(){
+    teardown(); view = 'hall';
+    $('gate').classList.add('gone'); $('arena').hidden = false;
+    $('calls').innerHTML = ''; $('sayNow').textContent = 'The doors are open'; $('sayPrev').textContent = ''; prevSay = '';
+    $('lotNum').textContent = '—'; $('clockNum').textContent = '00:10'; $('clockLine').style.transform = 'scaleX(1)'; $('clockLine').classList.remove('hot'); $('clock').classList.remove('hot');
+    $('avatar').textContent = '—'; $('avatar').style.borderColor = ''; $('pName').textContent = 'Waiting for the auctioneer'; $('pMeta').innerHTML = '';
+    $('priceLabel').textContent = 'Base price'; $('price').textContent = '—'; $('holder').innerHTML = ''; $('ladder').innerHTML = '';
+    $('verdict').hidden = true; $('banner').className = 'banner';
+
+    const a = auction = new Auction(TEAMS, POOL.map(p => ({ ...p })));
+    a.listener = onEvent;
+    me = new You();
+    a.seat(me);
+    paintTable(me);
+    a.openHall();
+    /* Three rival franchises walk in whenever they like: two soon, one while the bidding is on */
+    [rand(1200, 3500), rand(4000, 9000), rand(20000, 90000)].forEach(t => a.later(() => a.seat(new Rival()), t));
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Events from the auctioneer ---------- */
+  function onEvent(evt){
+    switch (evt.type){
+      case 'join': paintTable(evt.franchise); live(`${evt.franchise.name} walked in`); break;
+      case 'lot': paintLot(); runClock(); paintTable(); break;
+      case 'bid': paintPrice(true); paintLadder(true); paintTable(); $('clock').classList.remove('hot'); $('clockLine').classList.remove('hot'); live(`${evt.franchise.code} bids ${fmt(evt.amount)}`); break;
+      case 'once': showBanner('Going once'); break;
+      case 'twice': showBanner('Going twice'); $('clock').classList.add('hot'); $('clockLine').classList.add('hot'); live('Going twice', true); break;
+      case 'hammer': paintHammer(evt.lot); paintTable(); break;
+      case 'over': finishAuction(); break;
+    }
+    if ($('book').classList.contains('open')) paintBook();
+  }
+
+  /* ---------- What the auctioneer says ---------- */
+  function say(text, mine){
+    const now = $('sayNow');
+    const cls = mine ? 'mine' : /^SOLD!|UNSOLD$/.test(text) ? 'sold' : /^Going /.test(text) ? 'warn' : '';
+    now.className = 'now ' + cls; now.textContent = text;
+    now.style.animation = 'none'; void now.offsetWidth; now.style.animation = '';
+    $('sayPrev').textContent = prevSay; prevSay = text;
+    const list = $('calls');
+    list.prepend(el('li', mine ? 'mine' : cls || (/ walked in$/.test(text) ? 'join' : ''), text));
+    while (list.children.length > 120) list.lastChild.remove();
+    if (mine && view === 'hall') flashWhy(text);
+  }
+
+  /* ---------- Stage ---------- */
+  function paintLot(){
+    const lot = auction.lot, p = lot.player;
+    $('lotNum').innerHTML = `${auction.lotNo}<i> / ${auction.pool.length}</i>`;
+    $('avatar').textContent = initials(p.name); $('avatar').style.borderColor = '';
+    $('pName').textContent = p.name;
+    const m = $('pMeta'); m.innerHTML = '';
+    m.append(el('span', '', p.role), el('span', '', '·'), el('span', '', p.country));
+    if (p.overseas) m.append(el('span', '', '·'), el('span', 'ovs', '✈ Overseas'));
+    m.append(el('span', '', '·'), el('span', 'base', 'Base ' + fmt(p.base)));
+    $('verdict').hidden = true; $('banner').className = 'banner';
+    $('clock').classList.remove('hot'); $('clockLine').classList.remove('hot');
+    paintPrice(false); paintLadder(false);
+    live(`Lot ${auction.lotNo} of ${auction.pool.length}: ${p.name}, ${p.role}, ${p.country}${p.overseas ? ', overseas' : ''}, base ${fmt(p.base)}`);
+  }
+  function paintPrice(bump){
+    const lot = auction && auction.lot; if (!lot) return;
+    const price = $('price'), holder = $('holder'); holder.innerHTML = '';
+    if (lot.leader){
+      $('priceLabel').textContent = lot.closed ? 'Sold for' : 'Current bid';
+      price.textContent = fmt(lot.bid);
+      holder.append(codeTag(lot.leader), el('span', '', lot.closed ? (lot.leader.isYou ? 'yours' : lot.leader.name) : (lot.leader.isYou ? 'your paddle is up' : 'holds the bid')));
+      $('avatar').style.borderColor = lot.leader.color;
+    } else {
+      $('priceLabel').textContent = lot.closed ? 'Unsold' : 'Base price';
+      price.textContent = fmt(lot.player.base);
+      holder.append(el('span', '', lot.closed ? 'no paddle went up' : 'no paddle up yet'));
+    }
+    if (bump){ price.classList.remove('bump'); void price.offsetWidth; price.classList.add('bump'); }
+  }
+  function paintLadder(animateTop){
+    const lot = auction && auction.lot; if (!lot) return;
+    const ol = $('ladder'); ol.innerHTML = '';
+    lot.bids.slice().reverse().forEach((b, i) => {
+      const li = el('li', i === 0 && animateTop ? 'in' : '');
+      li.append(el('b', '', fmt(b.amount)), el('span', '', b.f.code));
+      ol.appendChild(li);
+    });
+    const base = el('li', 'base'); base.append(el('span', '', 'Base'), el('span', '', fmt(lot.player.base)));
+    ol.appendChild(base);
+  }
+  function showBanner(text){
+    const b = $('banner'); b.textContent = text;
+    b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
+  }
+  function runClock(){
+    cancelAnimationFrame(clockRaf);
+    const step = () => {
+      if (!auction) return;
+      const lot = auction.lot;
+      if (lot && !lot.closed){
+        const left = auction.remaining();
+        $('clockLine').style.transform = `scaleX(${(left / CLOCK).toFixed(3)})`;
+        $('clockNum').textContent = '00:' + String(Math.ceil(left / 1000)).padStart(2, '0');
+      }
+      clockRaf = requestAnimationFrame(step);
+    };
+    clockRaf = requestAnimationFrame(step);
+  }
+  function paintHammer(lot){
+    $('clockLine').style.transform = 'scaleX(0)'; $('clockNum').textContent = '00:00';
+    $('clock').classList.remove('hot'); $('clockLine').classList.remove('hot');
+    const v = $('verdict'); v.hidden = false;
+    if (lot.leader){
+      v.className = 'verdict'; $('verdictBig').textContent = 'SOLD';
+      $('verdictTo').textContent = `${lot.player.name} to ${lot.leader.name} for ${fmt(lot.bid)}`;
+      v.style.borderColor = lot.leader.color;
+      live(`Sold! ${lot.player.name} to ${lot.leader.name} for ${fmt(lot.bid)}`, true);
+    } else {
+      v.className = 'verdict unsold'; $('verdictBig').textContent = 'UNSOLD'; $('verdictTo').textContent = `${lot.player.name} goes back in the pool`; v.style.borderColor = '';
+      live(`${lot.player.name} goes unsold`, true);
+    }
+    paintPrice(false);
+  }
+
+  /* ---------- The table: one paddle per franchise ---------- */
+  function paintTable(popped){
+    if (!auction) return;
+    const wrap = $('paddles'); wrap.innerHTML = '';
+    const lot = auction.lot;
+    auction.franchises.forEach(f => {
+      const p = el('div', 'paddle' + (f.isYou ? ' mine' : '') + (f === popped ? ' in' : ''));
+      const leading = !!(lot && lot.leader === f);
+      if (leading) p.classList.add('up');
+      if (leading && lot.closed) p.classList.add('bought');
+      const svg = svgEl('svg', { viewBox: '0 0 80 115', 'aria-hidden': 'true' });
+      const use = svgEl('use', {}); use.setAttribute('href', '#stick');
+      const disc = svgEl('circle', { class: 'disc', cx: 40, cy: 38, r: 34, fill: f.color });
+      const txt = svgEl('text', { class: 'pcode', x: 40, y: 38, fill: inkOn(f.color) }); txt.textContent = f.code;
+      svg.append(use, disc, txt);
+      p.appendChild(svg);
+      p.appendChild(el('div', 'name', f.name + (f.isYou ? ' (you)' : '')));
+      p.appendChild(el('div', 'purse', `${fmt(f.purse)} · ${f.squad.length}/${SQUAD}`));
+      if (leading) p.appendChild(el('div', 'tag', (lot.closed ? 'Bought ' : '') + fmt(lot.bid)));
+      else if (f.squad.length >= SQUAD) p.appendChild(el('div', 'tag why', 'Squad full'));
+      if (f.isYou){
+        const canNow = lot && !lot.closed;
+        const reason = canNow ? auction.canBid(me) : null;
+        if (canNow && !reason) p.appendChild(el('div', 'tag go', 'Bid ' + fmt(auction.minBid())));
+        else if (reason && !leading){ p.classList.add('off'); if (f.squad.length < SQUAD) p.appendChild(el('div', 'tag why', reason)); }
+        else if (!canNow) p.classList.add('off');
+        const b = el('button', '', ''); b.id = 'myPaddle';
+        b.setAttribute('aria-label', canNow && !reason ? `Raise your paddle, bid ${fmt(auction.minBid())}` : 'Your paddle');
+        b.disabled = !(canNow && !reason);
+        b.addEventListener('click', raisePaddle);
+        p.appendChild(b);
+      }
+      wrap.appendChild(p);
+    });
+  }
+  function flashWhy(text){
+    const mine = $('paddles').querySelector('.paddle.mine'); if (!mine) return;
+    let tag = mine.querySelector('.tag'); if (!tag){ tag = el('div', 'tag why'); mine.appendChild(tag); }
+    tag.className = 'tag why'; tag.textContent = text;
+    uiLater(() => paintTable(), 1500);
+  }
+  function raisePaddle(){
+    if (!auction || !me || !auction.lot) return;
+    auction.bid(me, auction.lot.closed ? 0 : auction.minBid());
+  }
+
+  /* ---------- The Auction Book ---------- */
+  function row(p, right){
+    const li = el('li'); const d = el('div');
+    d.append(el('strong', '', p.name), el('small', '', `${p.role} · ${p.country}${p.overseas ? ' ✈' : ''}`));
+    li.appendChild(d); (right || []).forEach(x => li.appendChild(x)); return li;
+  }
+  const amt = lakh => el('span', 'amt', fmt(lakh));
+  function fill(id, items, none){ const ul = $(id); ul.innerHTML = ''; if (!items.length) ul.appendChild(el('li', 'none', none)); items.forEach(li => ul.appendChild(li)); }
+  function paintBook(){
+    if (!auction) return;
+    if (bookTab === 'players'){
+      const next = auction.pool.slice(auction.lotNo).slice().sort((a, b) => a.index - b.index);   // file order, never the auction order
+      fill('listNext', next.map(p => row(p, [amt(p.base)])), 'Nobody left');
+      fill('listSold', auction.pool.filter(p => p.soldTo).map(p => row(p, [codeTag(p.soldTo), amt(p.price)])), 'Nobody sold yet');
+      fill('listUnsold', auction.pool.filter(p => p.unsold).map(p => row(p, [])), 'Nobody yet');
+    } else if (bookTab === 'squads'){
+      const w = $('bookSquads'); w.innerHTML = '';
+      auction.franchises.forEach(f => {
+        const s = el('div', 'sq'); s.style.borderTopColor = f.color;
+        const h = el('div', 'h'); h.append(el('strong', '', f.name + (f.isYou ? ' (you)' : '')), el('span', '', `Purse ${fmt(f.purse)}`)); s.appendChild(h);
+        const top = f.priciest();
+        s.appendChild(el('div', 'm', `Spent ${fmt(f.spent())} · ${f.squad.length}/${SQUAD} slots · Overseas ${f.overseas()}` + (top ? ` · Priciest ${top.player.name}` : '')));
+        const ul = el('ul');
+        if (!f.squad.length) ul.appendChild(el('li', 'none', 'No players yet'));
+        f.squad.forEach(b => { const li = el('li'); li.append(el('span', '', `${b.player.name} · ${b.player.role}${b.player.overseas ? ' ✈' : ''}`), el('span', '', fmt(b.price))); ul.appendChild(li); });
+        s.appendChild(ul); w.appendChild(s);
+      });
+    }
+  }
+  function selectBookTab(which){
+    bookTab = which;
+    ['players','squads','calls'].forEach(t => {
+      $('tab' + t[0].toUpperCase() + t.slice(1)).setAttribute('aria-selected', String(t === which));
+      $('book' + t[0].toUpperCase() + t.slice(1)).hidden = t !== which;
+    });
+    paintBook();
+  }
+  function openBook(tab){
+    if (!auction) return;
+    if (tab) selectBookTab(tab); else paintBook();
+    $('book').classList.add('open'); $('book').setAttribute('aria-hidden', 'false'); $('bookBtn').setAttribute('aria-pressed', 'true');
+  }
+  function closeBook(){ $('book').classList.remove('open'); $('book').setAttribute('aria-hidden', 'true'); $('bookBtn').setAttribute('aria-pressed', 'false'); }
+  $('bookBtn').addEventListener('click', () => $('book').classList.contains('open') ? closeBook() : openBook());
+  $('bookClose').addEventListener('click', closeBook);
+  $('tabPlayers').addEventListener('click', () => selectBookTab('players'));
+  $('tabSquads').addEventListener('click', () => selectBookTab('squads'));
+  $('tabCalls').addEventListener('click', () => selectBookTab('calls'));
+
+  /* ---------- Final board ---------- */
+  function finishAuction(){
+    const top = me.priciest();
+    last = { code: me.code, bought: me.squad.length, spent: me.spent(), top: top ? { name: top.player.name, price: top.price } : null };
+    store('ipl-last', JSON.stringify(last));
+    $('lotNum').textContent = 'Over';
+    live('Auction over', true);
+    uiLater(showFinal, 1500);
+  }
+  function showFinal(){
+    const a = auction; if (!a) return;
+    const sold = a.pool.filter(p => p.soldTo).length, unsold = a.pool.filter(p => p.unsold).length;
+    $('finalTitle').innerHTML = me.squad.length ? `${esc(me.name)}<b>${me.squad.length} player${me.squad.length === 1 ? '' : 's'} for ${fmt(me.spent())}</b>` : `${esc(me.name)}<b>an empty squad</b>`;
+    const biggest = a.franchises.reduce((m, f) => !m || f.spent() > m.spent() ? f : m, null);
+    $('finalSub').textContent = `${sold} sold, ${unsold} unsold. ${biggest.isYou ? 'You' : biggest.name} spent the most.`;
+    const cols = $('finalCols'); cols.innerHTML = '';
+    a.franchises.slice().sort((x, y) => (x.isYou ? -1 : y.isYou ? 1 : 0)).forEach(f => {
+      const c = el('div', 'col'); c.style.borderTopColor = f.color;
+      const h = el('div', 'h'); h.append(el('strong', '', f.name + (f.isYou ? ' (you)' : '')), el('span', '', `Spent ${fmt(f.spent())} · Purse left ${fmt(f.purse)} · Overseas ${f.overseas()}`)); c.appendChild(h);
+      const ul = el('ul');
+      if (!f.squad.length) ul.appendChild(el('li', 'none', 'No players'));
+      f.squad.forEach(b => { const li = el('li'); li.append(el('span', '', b.player.name), el('span', '', fmt(b.price))); ul.appendChild(li); });
+      c.appendChild(ul); cols.appendChild(c);
+    });
+    a.close(); closeBook();
+    $('final').hidden = false; $('againBtn').focus({preventScroll:true});
+  }
+  function forfeit(){
+    if (auction && !auction.over && auction.lotNo > 0){ last = { left: true, code: me ? me.code : '' }; store('ipl-last', JSON.stringify(last)); }
+    teardown();
+  }
+
+  /* ---------- Buttons ---------- */
+  $('enterBtn').addEventListener('click', enterHall);
+  $('againBtn').addEventListener('click', enterHall);
+  $('finalLeave').addEventListener('click', showGate);
+  $('leaveBtn').addEventListener('click', () => { forfeit(); showGate(); });
+
+  /* ---------- Keyboard: Space or B raises your paddle, P / S / C open the book, Esc closes it ---------- */
+  document.addEventListener('keydown', e => {
+    if (view !== 'hall' || e.metaKey || e.ctrlKey || e.altKey) return;
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+    const k = e.key.toLowerCase();
+    if (k === ' ' || k === 'b'){ if (k === ' ' && tag === 'button') return; e.preventDefault(); raisePaddle(); }
+    else if (k === 'p'){ e.preventDefault(); openBook('players'); }
+    else if (k === 's'){ e.preventDefault(); openBook('squads'); }
+    else if (k === 'c'){ e.preventDefault(); openBook('calls'); }
+    else if (k === 'escape'){ closeBook(); }
+  });
+})();
+</script>

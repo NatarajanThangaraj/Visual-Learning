@@ -177,6 +177,8 @@ export const courses = [
             blurb: 'A sixty-second mental-maths sprint and a head-to-head duel against an online player — then open the Assignment tab and see the client socket, the game server and the one thread per player that make it work.' },
           { id: 'podium', title: 'Podium', minutes: 35,
             blurb: 'Take a seat in a room for three and race the others through ten sums, with every join and every prize announced to the room — then build it in Java: one server, three clients, a thread per player, and the finish order saved to a file.' },
+          { id: 'yelam', title: 'IPL Player Auction', minutes: 30,
+            blurb: 'Take a paddle as an IPL franchise with ₹30 Cr and six slots. One auctioneer owns the clock and the bid, rivals walk in mid-lot, every call reaches the whole hall, and ten quiet seconds bring the hammer down.' },
           { id: 'app-curfew', title: 'App Curfew', minutes: 25,
             blurb: "Search a phone's open apps and send the runaway ones home — then build the real screen-time tool: list every running process, find the one by name, pull its PID, and shut it down for good." },
           { id: 'dockcheck', title: 'DockCheck', minutes: 25,
