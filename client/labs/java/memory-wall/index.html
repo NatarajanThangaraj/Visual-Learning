@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Memory Wall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wall: #D9E3E8;
+    --dot: #BFCED6;
+    --ink: #1B2A33;
+    --ink-soft: #46596A;
+    --paper: #FFFFFF;
+    --field: #F7FAFB;
+    --line: #B3C3CC;
+    --accent: #2B5BE8;
+    --accent-ink: #FFFFFF;
+    --danger: #B3261E;
+    --note-ink: #23303A;
+    --n0: #FFF1A6;
+    --n1: #CDEEDA;
+    --n2: #FFD8C0;
+    --n3: #E0D6FA;
+    --n4: #C9E5F8;
+    --toast-bg: #1B2A33;
+    --toast-ink: #F2F7FA;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --wall: #14212A;
+      --dot: #213440;
+      --ink: #E7EEF2;
+      --ink-soft: #A3B5BF;
+      --paper: #1D2E39;
+      --field: #172630;
+      --line: #35505F;
+      --accent: #8AA9FF;
+      --accent-ink: #0E1A2B;
+      --danger: #FF8A80;
+      --n0: #E9D983;
+      --n1: #A9D6BD;
+      --n2: #EBB999;
+      --n3: #C4B8EA;
+      --n4: #A6CBE6;
+      --toast-bg: #E7EEF2;
+      --toast-ink: #14212A;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --wall: #14212A;
+    --dot: #213440;
+    --ink: #E7EEF2;
+    --ink-soft: #A3B5BF;
+    --paper: #1D2E39;
+    --field: #172630;
+    --line: #35505F;
+    --accent: #8AA9FF;
+    --accent-ink: #0E1A2B;
+    --danger: #FF8A80;
+    --n0: #E9D983;
+    --n1: #A9D6BD;
+    --n2: #EBB999;
+    --n3: #C4B8EA;
+    --n4: #A6CBE6;
+    --toast-bg: #E7EEF2;
+    --toast-ink: #14212A;
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--wall);
+    background-image: radial-gradient(var(--dot) 1.2px, transparent 1.6px);
+    background-size: 24px 24px;
+    color: var(--ink);
+    font-family: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .shell { max-width: 1200px; margin: 0 auto; padding: 22px 20px 60px; }
+
+  /* Header */
+  .top { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-end; justify-content: space-between; margin-bottom: 26px; }
+  h1 { margin: 0; font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+  .tagline { margin: 8px 0 0; color: var(--ink-soft); font-size: 1.05rem; max-width: 34ch; }
+  .who-am-i { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .who-am-i label { color: var(--ink-soft); font-size: .95rem; }
+  .who-am-i select { padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--paper); min-width: 9rem; }
+  .linkish { background: none; border: none; padding: 6px 4px; color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .join { display: flex; gap: 8px; flex-basis: 100%; justify-content: flex-end; }
+  .join[hidden] { display: none; }
+  .join input { padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--field); width: 12rem; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 32px; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Composer */
+  .composer { position: sticky; top: 16px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 10px; padding: 20px; }
+  @media (max-width: 860px) { .composer { position: static; } }
+  .composer h2 { margin: 0 0 14px; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.01em; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-weight: 600; margin-bottom: 4px; }
+  .field .hint { display: flex; justify-content: space-between; gap: 8px; color: var(--ink-soft); font-size: .85rem; margin-top: 4px; }
+  .field input, .field textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--field); }
+  .field textarea { min-height: 120px; resize: vertical; font-family: "Newsreader", Georgia, serif; font-size: 1.05rem; line-height: 1.5; }
+  .preview-tags { display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px; margin-top: 8px; }
+  .chip-static { background: var(--field); border: 1.5px dashed var(--line); border-radius: 999px; padding: 2px 10px; font-size: .9rem; }
+  .error { color: var(--danger); font-weight: 600; margin: 0 0 12px; min-height: 1.2em; }
+  .primary { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 6px; padding: 11px 18px; font-weight: 800; width: 100%; }
+  .primary:hover { filter: brightness(1.07); }
+
+  /* Search + tags */
+  .finder { margin-bottom: 26px; }
+  .finder form { display: flex; gap: 8px; flex-wrap: wrap; }
+  .finder .box { position: relative; flex: 1 1 260px; }
+  .finder .box span { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--ink-soft); font-weight: 800; pointer-events: none; }
+  .finder input { width: 100%; padding: 12px 12px 12px 30px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--paper); font-size: 1.05rem; }
+  .finder .clear { padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--paper); font-weight: 600; }
+  .finder .clear[hidden] { display: none; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .tag-btn { display: inline-flex; gap: 6px; align-items: baseline; background: var(--paper); border: 1.5px solid var(--line); border-radius: 999px; padding: 4px 12px; font-weight: 600; }
+  .tag-btn small { color: var(--ink-soft); font-weight: 600; }
+  .tag-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .tag-btn[aria-pressed="true"] small { color: inherit; opacity: .85; }
+  .status { margin: 14px 0 0; color: var(--ink-soft); }
+
+  /* Wall of notes */
+  .wall { columns: 270px; column-gap: 26px; }
+  .note {
+    --note: var(--n0);
+    --tilt: 0deg;
+    --pin: #D64550;
+    position: relative;
+    break-inside: avoid;
+    display: inline-block;
+    width: 100%;
+    margin: 0 0 30px;
+    padding: 28px 18px 14px;
+    background: var(--note);
+    color: var(--note-ink);
+    border-radius: 2px 2px 8px 2px;
+    box-shadow: 0 1px 0 rgba(0,0,0,.06), 0 14px 18px -12px rgba(0,0,0,.45);
+    transform: rotate(var(--tilt));
+  }
+  .note::before {
+    content: "";
+    position: absolute; top: 8px; left: 50%;
+    width: 14px; height: 14px; margin-left: -7px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.75) 0 14%, var(--pin) 16% 100%);
+    box-shadow: 0 2px 3px rgba(0,0,0,.35);
+  }
+  .c0 { --note: var(--n0); --pin: #D64550; --tilt: -1.2deg; }
+  .c1 { --note: var(--n1); --pin: #2B5BE8; --tilt: .7deg; }
+  .c2 { --note: var(--n2); --pin: #2E9E6B; --tilt: -.5deg; }
+  .c3 { --note: var(--n3); --pin: #E8A317; --tilt: 1.1deg; }
+  .c4 { --note: var(--n4); --pin: #D64550; --tilt: -.8deg; }
+  .note h3 { margin: 0 0 8px; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.2; overflow-wrap: anywhere; }
+  .note .body { margin: 0 0 12px; font-family: "Newsreader", Georgia, serif; font-size: 1.07rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .note-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .note-tags button { background: rgba(0,0,0,.08); border: none; border-radius: 999px; padding: 2px 10px; font-weight: 600; font-size: .9rem; color: var(--note-ink); }
+  .note-tags button:hover { background: rgba(0,0,0,.16); }
+  .byline { display: flex; justify-content: space-between; gap: 8px; font-size: .88rem; opacity: .85; margin-bottom: 10px; }
+  .reactions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .react { display: inline-flex; border: 1.5px solid rgba(35,48,58,.45); border-radius: 999px; overflow: hidden; }
+  .react button { background: transparent; border: none; padding: 5px 11px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: .92rem; color: var(--note-ink); }
+  .react button:hover { background: rgba(0,0,0,.08); }
+  .react svg { width: 16px; height: 16px; flex: none; }
+  .react.on { background: var(--note-ink); }
+  .react.on button { color: var(--note); }
+  .react.on button:hover { background: rgba(255,255,255,.14); }
+  .react .undo { padding: 5px 9px 5px 4px; font-size: 1rem; line-height: 1; }
+  .who { margin: 10px 0 0; font-size: .85rem; font-style: italic; opacity: .85; overflow-wrap: anywhere; }
+  .who + .who { margin-top: 2px; }
+  .note-foot { margin-top: 10px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; font-size: .9rem; }
+  .note-foot button { background: none; border: none; padding: 4px; text-decoration: underline; text-underline-offset: 3px; color: var(--note-ink); font-weight: 600; }
+  .note-foot .sure { font-weight: 600; }
+
+  .empty { background: var(--paper); border: 1.5px dashed var(--line); border-radius: 10px; padding: 28px; text-align: center; color: var(--ink-soft); }
+  .empty strong { display: block; color: var(--ink); font-size: 1.15rem; margin-bottom: 4px; }
+
+  footer { margin-top: 30px; color: var(--ink-soft); font-size: .9rem; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    background: var(--toast-bg); color: var(--toast-ink);
+    padding: 11px 18px; border-radius: 8px; font-weight: 600;
+    box-shadow: 0 10px 24px -8px rgba(0,0,0,.5);
+    max-width: calc(100vw - 32px);
+    z-index: 20;
+  }
+  .toast[hidden] { display: none; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div>
+      <h1>Memory Wall</h1>
+      <p class="tagline">Pin what you learned. Find what others figured out.</p>
+    </div>
+    <div class="who-am-i">
+      <label for="me">Posting as</label>
+      <select id="me"></select>
+      <button type="button" class="linkish" id="addName">Add a name</button>
+      <form class="join" id="joinForm" hidden>
+        <label class="sr" for="newName">Your name</label>
+        <input id="newName" maxlength="20" placeholder="Your name" autocomplete="off">
+        <button type="submit" class="linkish">Join</button>
+      </form>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="composer" aria-labelledby="composeTitle">
+      <h2 id="composeTitle">Write a note</h2>
+      <form id="composeForm" novalidate>
+        <div class="field">
+          <label for="topic">Topic</label>
+          <input id="topic" maxlength="60" placeholder="What is this about?" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="text">Your note</label>
+          <textarea id="text" maxlength="500" placeholder="What did you learn, try, or want others to know?"></textarea>
+          <div class="hint"><span></span><span id="count">0 / 500</span></div>
+        </div>
+        <div class="field">
+          <label for="tags">Tags</label>
+          <input id="tags" placeholder="exam, revision, tips" autocomplete="off">
+          <div class="hint"><span>Separate with commas or spaces. Up to 5.</span></div>
+          <div class="preview-tags" id="tagPreview" aria-live="polite"></div>
+        </div>
+        <p class="error" id="formError" role="alert"></p>
+        <button class="primary" type="submit">Post to the wall</button>
+      </form>
+    </section>
+
+    <section aria-label="The wall">
+      <div class="finder">
+        <form id="searchForm" role="search" autocomplete="off">
+          <div class="box">
+            <span aria-hidden="true">#</span>
+            <input id="search" type="text" aria-label="Find notes by tag" placeholder="Find notes by tag">
+          </div>
+          <button type="button" class="clear" id="clearSearch" hidden>Show everything</button>
+        </form>
+        <div class="tag-row" id="tagRow"></div>
+        <p class="status" id="status" aria-live="polite"></p>
+      </div>
+      <div class="wall" id="wall"></div>
+      <footer>
+        <span id="resetArea"><button type="button" class="linkish" id="resetBtn">Start over with the sample notes</button></span>
+      </footer>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORE = 'memorywall.v1';
+  var DEFAULT_ME = 'Guest';
+
+  var ICONS = {
+    heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.8 4.5 6.4 4.5c2.1 0 3.9 1.2 5.6 3.3 1.7-2.1 3.5-3.3 5.6-3.3 3.6 0 5.5 3.9 4 7.3C19.5 16.4 12 21 12 21z"/></svg>',
+    bulb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>'
+  };
+
+  var KINDS = [
+    { key: 'likes',   label: 'Like',    done: 'Liked',   by: 'Liked by',          again: 'You already liked this note.',        icon: ICONS.heart },
+    { key: 'helpful', label: 'Helpful', done: 'Helpful', by: 'Found helpful by',  again: 'You already marked this note helpful.', icon: ICONS.bulb },
+    { key: 'shares',  label: 'Share',   done: 'Shared',  by: 'Shared by',         again: 'You already shared this note.',       icon: ICONS.send }
+  ];
+
+  /* ---------- state ---------- */
+  var state = null;         // { posts, tagIndex, nextId, people, me }
+  var query = '';           // current tag being looked up ('' = everything)
+  var confirmingId = null;  // note being taken down
+  var focusKey = null;
+  var toastTimer = null;
+
+  function keyOf(name) { return String(name).trim().toLowerCase(); }
+
+  function normalizeTag(t) {
+    return String(t).toLowerCase().replace(/^#+/, '').replace(/[^\p{L}\p{N}-]/gu, '');
+  }
+  function parseTags(raw) {
+    var seen = [];
+    String(raw).split(/[\s,]+/).forEach(function (piece) {
+      var t = normalizeTag(piece);
+      if (t && seen.indexOf(t) === -1) seen.push(t);
+    });
+    return seen;
+  }
+
+  /* ---------- storage ---------- */
+  function serialize() {
+    return {
+      nextId: state.nextId,
+      people: state.people,
+      me: state.me,
+      posts: state.posts.map(function (p) {
+        return { id: p.id, author: p.author, topic: p.topic, text: p.text, tags: p.tags, createdAt: p.createdAt,
+                 likes: Array.from(p.likes), helpful: Array.from(p.helpful), shares: Array.from(p.shares) };
+      })
+    };
+  }
+  function save() {
+    try { localStorage.setItem(STORE, JSON.stringify(serialize())); } catch (e) { /* storage unavailable */ }
+  }
+  function indexTags(posts) {
+    var idx = new Map();
+    posts.forEach(function (p) {
+      p.tags.forEach(function (t) {
+        if (!idx.has(t)) idx.set(t, []);
+        idx.get(t).push(p.id);
+      });
+    });
+    return idx;
+  }
+  function hydrate(data) {
+    var posts = data.posts.map(function (p) {
+      return { id: p.id, author: p.author, topic: p.topic, text: p.text, tags: p.tags, createdAt: p.createdAt,
+               likes: new Set(p.likes), helpful: new Set(p.helpful), shares: new Set(p.shares) };
+    });
+    return { posts: posts, tagIndex: indexTags(posts), nextId: data.nextId, people: data.people, me: data.me || DEFAULT_ME };
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || !Array.isArray(data.posts)) return null;
+      return hydrate(data);
+    } catch (e) { return null; }
+  }
+
+  function sample() {
+    var now = Date.now(), H = 3600000, D = 86400000;
+    var raw = [
+      { id: 1, author: 'Meera', topic: 'Revising for the DBMS exam', text: 'Normalisation finally clicked when I drew the tables on paper instead of re-reading the slides. Try one table per sentence.', tags: ['dbms', 'exam', 'revision'], createdAt: now - 5 * D, likes: ['asha', 'ravi', 'kiran'], helpful: ['divya'], shares: [] },
+      { id: 2, author: 'Ravi', topic: 'Library is quiet after 8 pm', text: 'Second floor, the corner near the window. Plug points work. Nobody asks you to move.', tags: ['library', 'study-spots', 'tips'], createdAt: now - 4 * D, likes: ['meera'], helpful: ['asha', 'meera'], shares: ['kiran'] },
+      { id: 3, author: 'Asha', topic: 'Group project without the last-night rush', text: 'We split the report into four parts and set a Wednesday review. Submitted a day early for the first time.', tags: ['group-project', 'tips', 'time'], createdAt: now - 3 * D, likes: ['ravi', 'divya'], helpful: ['kiran'], shares: ['meera', 'divya'] },
+      { id: 4, author: 'Kiran', topic: 'The bug that ate my evening', text: 'Off-by-one in a loop. The fix was one character. Read your loop condition out loud before you touch anything else.', tags: ['coding', 'debugging', 'tips'], createdAt: now - 2 * D, likes: ['asha'], helpful: ['ravi', 'meera', 'divya'], shares: [] },
+      { id: 5, author: 'Divya', topic: 'Free workshop on Saturday', text: 'The robotics club is teaching soldering basics. Bring your own gloves. First come, first seated.', tags: ['events', 'robotics', 'club'], createdAt: now - 30 * H, likes: ['kiran', 'ravi'], helpful: [], shares: ['asha'] },
+      { id: 6, author: 'Ravi', topic: 'Sleep beats one more hour', text: 'Stayed up before the OS test and remembered nothing. Slept, and remembered half. Better.', tags: ['exam', 'wellbeing', 'tips'], createdAt: now - 9 * H, likes: ['meera', 'asha', 'divya', 'kiran'], helpful: ['meera'], shares: [] },
+      { id: 7, author: 'Asha', topic: 'Flashcards only for what I got wrong', text: 'I stopped making cards for things I already know. The deck is small, and it actually shrinks.', tags: ['revision', 'exam', 'flashcards'], createdAt: now - 2 * H, likes: ['divya'], helpful: [], shares: [] }
+    ];
+    return hydrate({ posts: raw, nextId: 8, people: [DEFAULT_ME, 'Asha', 'Divya', 'Kiran', 'Meera', 'Ravi'], me: DEFAULT_ME });
+  }
+
+  /* ---------- the wall's own behaviour ---------- */
+  function postById(id) {
+    for (var i = 0; i < state.posts.length; i++) if (state.posts[i].id === id) return state.posts[i];
+    return null;
+  }
+  function addPost(author, topic, text, tags) {
+    var p = { id: state.nextId++, author: author, topic: topic, text: text, tags: tags, createdAt: Date.now(),
+              likes: new Set(), helpful: new Set(), shares: new Set() };
+    state.posts.push(p);
+    tags.forEach(function (t) {
+      if (!state.tagIndex.has(t)) state.tagIndex.set(t, []);
+      state.tagIndex.get(t).push(p.id);
+    });
+    return p;
+  }
+  function removePost(id) {
+    var p = postById(id);
+    if (!p) return;
+    state.posts = state.posts.filter(function (x) { return x.id !== id; });
+    p.tags.forEach(function (t) {
+      var ids = (state.tagIndex.get(t) || []).filter(function (x) { return x !== id; });
+      if (ids.length) state.tagIndex.set(t, ids); else state.tagIndex["delete"](t);
+    });
+  }
+  function notesToShow() {
+    if (!query) return state.posts.slice().reverse();
+    var ids = state.tagIndex.get(query) || [];
+    return ids.map(postById).filter(Boolean).reverse();
+  }
+  function nameFor(key) {
+    for (var i = 0; i < state.people.length; i++) if (keyOf(state.people[i]) === key) return state.people[i];
+    return key;
+  }
+
+  /* ---------- tiny DOM helper ---------- */
+  function h(tag, props) {
+    var el = document.createElement(tag);
+    if (props) Object.keys(props).forEach(function (k) {
+      var v = props[k];
+      if (v == null || v === false) return;
+      if (k === 'class') el.className = v;
+      else if (k === 'text') el.textContent = v;
+      else if (k.indexOf('on') === 0) el.addEventListener(k.slice(2), v);
+      else if (v === true) el.setAttribute(k, '');
+      else el.setAttribute(k, v);
+    });
+    for (var i = 2; i < arguments.length; i++) {
+      var kids = [].concat(arguments[i]);
+      for (var j = 0; j < kids.length; j++) {
+        var kid = kids[j];
+        if (kid == null || kid === false) continue;
+        el.append(kid.nodeType ? kid : document.createTextNode(kid));
+      }
+    }
+    return el;
+  }
+  function icon(svg) { var s = document.createElement('span'); s.innerHTML = svg; s.style.display = 'inline-flex'; return s; }
+
+  function ago(ts) {
+    var s = Math.max(0, (Date.now() - ts) / 1000);
+    if (s < 60) return 'just now';
+    var m = Math.floor(s / 60); if (m < 60) return m + (m === 1 ? ' minute ago' : ' minutes ago');
+    var hr = Math.floor(m / 60); if (hr < 24) return hr + (hr === 1 ? ' hour ago' : ' hours ago');
+    var d = Math.floor(hr / 24); if (d < 7) return d + (d === 1 ? ' day ago' : ' days ago');
+    return new Date(ts).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  }
+
+  function toast(msg) {
+    var el = document.getElementById('toast');
+    el.textContent = msg; el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, 2800);
+  }
+
+  /* ---------- rendering ---------- */
+  function renderPeople() {
+    var sel = document.getElementById('me');
+    sel.textContent = '';
+    state.people.forEach(function (n) {
+      var o = h('option', { value: keyOf(n), text: n });
+      if (keyOf(n) === keyOf(state.me)) o.selected = true;
+      sel.append(o);
+    });
+  }
+
+  function renderTags() {
+    var row = document.getElementById('tagRow');
+    row.textContent = '';
+    var entries = Array.from(state.tagIndex.entries()).map(function (e) { return { tag: e[0], n: e[1].length }; });
+    entries.sort(function (a, b) { return b.n - a.n || a.tag.localeCompare(b.tag); });
+    entries.forEach(function (e) {
+      row.append(h('button', { type: 'button', class: 'tag-btn', 'aria-pressed': String(query === e.tag),
+        onclick: function () { setQuery(query === e.tag ? '' : e.tag, true); } },
+        '#' + e.tag, h('small', { text: String(e.n) })));
+    });
+  }
+
+  function reactionEl(p, kind) {
+    var me = keyOf(state.me);
+    var set = p[kind.key];
+    var on = set.has(me);
+    var main = h('button', { type: 'button', 'data-focus': 'r' + p.id + kind.key, 'aria-pressed': String(on),
+      onclick: function () {
+        if (set.has(me)) { toast(kind.again); return; }
+        set.add(me); save(); focusKey = 'r' + p.id + kind.key; render();
+      } },
+      icon(kind.icon), (on ? kind.done : kind.label) + (set.size ? ' ' + set.size : ''));
+    var wrap = h('span', { class: 'react' + (on ? ' on' : '') }, main);
+    if (on) {
+      wrap.append(h('button', { type: 'button', class: 'undo', 'aria-label': 'Take back: ' + kind.done.toLowerCase(), title: 'Take back',
+        'data-focus': 'u' + p.id + kind.key,
+        onclick: function () { set["delete"](me); save(); focusKey = 'r' + p.id + kind.key; render(); } }, '\u00D7'));
+    }
+    return wrap;
+  }
+
+  function noteEl(p) {
+    var mine = keyOf(p.author) === keyOf(state.me);
+    var el = h('article', { class: 'note c' + (p.id % 5) },
+      h('h3', { text: p.topic }),
+      h('p', { class: 'body', text: p.text }),
+      h('div', { class: 'note-tags' }, p.tags.map(function (t) {
+        return h('button', { type: 'button', onclick: function () { setQuery(t, true); } }, '#' + t);
+      })),
+      h('div', { class: 'byline' }, h('span', { text: p.author }), h('span', { text: ago(p.createdAt) })),
+      h('div', { class: 'reactions' }, KINDS.map(function (k) { return reactionEl(p, k); })),
+      KINDS.map(function (k) {
+        var set = p[k.key];
+        if (!set.size) return null;
+        var names = Array.from(set).map(nameFor).join(', ');
+        return h('p', { class: 'who', text: k.by + ' ' + names });
+      })
+    );
+    if (mine) {
+      var foot = h('div', { class: 'note-foot' });
+      if (confirmingId === p.id) {
+        foot.append(
+          h('span', { class: 'sure', text: 'Take this note down?' }),
+          h('button', { type: 'button', 'data-focus': 'del' + p.id, onclick: function () {
+            removePost(p.id); confirmingId = null;
+            if (query && !state.tagIndex.has(query)) query = '';
+            save(); toast('Note taken down.'); render(); syncSearchBox();
+          } }, 'Take it down'),
+          h('button', { type: 'button', onclick: function () { confirmingId = null; focusKey = 'ask' + p.id; render(); } }, 'Keep it')
+        );
+      } else {
+        foot.append(h('button', { type: 'button', 'data-focus': 'ask' + p.id, onclick: function () { confirmingId = p.id; focusKey = 'del' + p.id; render(); } }, 'Take down'));
+      }
+      el.append(foot);
+    }
+    return el;
+  }
+
+  function renderWall() {
+    var wall = document.getElementById('wall');
+    var status = document.getElementById('status');
+    wall.textContent = '';
+    var notes = notesToShow();
+    if (!notes.length) {
+      wall.style.columns = 'auto';
+      if (query) {
+        wall.append(h('div', { class: 'empty' }, h('strong', { text: 'Nothing is tagged #' + query + ' yet.' }),
+          'Try one of the tags above, or pin the first note with this tag.'));
+        status.textContent = 'No notes tagged #' + query;
+      } else {
+        wall.append(h('div', { class: 'empty' }, h('strong', { text: 'The wall is empty.' }), 'Write a note on the left to pin the first one.'));
+        status.textContent = 'No notes yet';
+      }
+      return;
+    }
+    wall.style.columns = '';
+    notes.forEach(function (p) { wall.append(noteEl(p)); });
+    status.textContent = query
+      ? 'Showing ' + notes.length + (notes.length === 1 ? ' note' : ' notes') + ' tagged #' + query
+      : 'All ' + notes.length + (notes.length === 1 ? ' note' : ' notes') + ', newest first';
+  }
+
+  function render() {
+    renderTags();
+    renderWall();
+    document.getElementById('clearSearch').hidden = !query;
+    if (focusKey) {
+      var t = document.querySelector('[data-focus="' + focusKey + '"]');
+      if (t) t.focus();
+      focusKey = null;
+    }
+  }
+
+  function syncSearchBox() { document.getElementById('search').value = query ? query : ''; document.getElementById('clearSearch').hidden = !query; }
+
+  function setQuery(q, scroll) {
+    query = q;
+    syncSearchBox();
+    render();
+    if (scroll) document.getElementById('status').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  /* ---------- events ---------- */
+  var searchEl = document.getElementById('search');
+  searchEl.addEventListener('input', function () {
+    var first = searchEl.value.trim().split(/[\s,]+/)[0] || '';
+    query = normalizeTag(first);
+    render();
+  });
+  searchEl.addEventListener('keydown', function (e) { if (e.key === 'Escape') setQuery('', false); });
+  document.getElementById('searchForm').addEventListener('submit', function (e) { e.preventDefault(); });
+  document.getElementById('clearSearch').addEventListener('click', function () { setQuery('', false); searchEl.focus(); });
+
+  var textEl = document.getElementById('text');
+  var tagsEl = document.getElementById('tags');
+  textEl.addEventListener('input', function () { document.getElementById('count').textContent = textEl.value.length + ' / 500'; });
+  tagsEl.addEventListener('input', function () {
+    var box = document.getElementById('tagPreview');
+    box.textContent = '';
+    parseTags(tagsEl.value).forEach(function (t) { box.append(h('span', { class: 'chip-static', text: '#' + t })); });
+  });
+
+  document.getElementById('composeForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var topic = document.getElementById('topic').value.trim();
+    var text = textEl.value.trim();
+    var tags = parseTags(tagsEl.value);
+    var err = document.getElementById('formError');
+    if (!topic) { err.textContent = 'Add a topic so others know what this is about.'; document.getElementById('topic').focus(); return; }
+    if (!text) { err.textContent = 'Write your note before posting.'; textEl.focus(); return; }
+    if (!tags.length) { err.textContent = 'Add at least one tag so others can find your note.'; tagsEl.focus(); return; }
+    if (tags.length > 5) { err.textContent = 'Use up to 5 tags. You have ' + tags.length + '.'; tagsEl.focus(); return; }
+    err.textContent = '';
+    addPost(state.me, topic, text, tags);
+    save();
+    document.getElementById('topic').value = '';
+    textEl.value = ''; tagsEl.value = '';
+    document.getElementById('count').textContent = '0 / 500';
+    document.getElementById('tagPreview').textContent = '';
+    query = ''; syncSearchBox();
+    render();
+    toast('Posted to the wall.');
+  });
+
+  var meEl = document.getElementById('me');
+  meEl.addEventListener('change', function () {
+    var picked = state.people.filter(function (n) { return keyOf(n) === meEl.value; })[0];
+    if (picked) { state.me = picked; confirmingId = null; save(); render(); toast('Now posting as ' + picked + '.'); }
+  });
+  var joinForm = document.getElementById('joinForm');
+  document.getElementById('addName').addEventListener('click', function () {
+    joinForm.hidden = !joinForm.hidden;
+    if (!joinForm.hidden) document.getElementById('newName').focus();
+  });
+  joinForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var input = document.getElementById('newName');
+    var name = input.value.trim().replace(/\s+/g, ' ');
+    if (!name) { toast('Type a name first.'); return; }
+    var existing = state.people.filter(function (n) { return keyOf(n) === keyOf(name); })[0];
+    if (existing) { state.me = existing; }
+    else { state.people.push(name); state.me = name; }
+    confirmingId = null;
+    input.value = ''; joinForm.hidden = true;
+    save(); renderPeople(); render();
+    toast('Now posting as ' + state.me + '.');
+  });
+
+  var resetArea = document.getElementById('resetArea');
+  function showReset() {
+    resetArea.textContent = '';
+    resetArea.append(h('button', { type: 'button', class: 'linkish', id: 'resetBtn', onclick: askReset }, 'Start over with the sample notes'));
+  }
+  function askReset() {
+    resetArea.textContent = '';
+    resetArea.append('This removes every note you have added. ',
+      h('button', { type: 'button', class: 'linkish', onclick: function () {
+        state = sample(); query = ''; confirmingId = null; save(); syncSearchBox(); renderPeople(); render(); showReset(); toast('The wall is back to its sample notes.');
+      } }, 'Yes, start over'),
+      h('button', { type: 'button', class: 'linkish', onclick: showReset }, 'Keep my notes'));
+  }
+  document.getElementById('resetBtn').addEventListener('click', askReset);
+
+  /* ---------- start ---------- */
+  state = load() || sample();
+  renderPeople();
+  render();
+})();
+</script>
+</body>
+</html>

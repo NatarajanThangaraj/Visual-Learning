@@ -143,6 +143,8 @@ export const courses = [
             blurb: 'Plan an AI study app sprint by sprint — hand every stage to a teammate, then run the day and watch where everyone stands.' },
           { id: 'quotesogram', title: 'QuotesOGram', minutes: 45,
             blurb: 'A social network for short quotes, running whole: sign in, post, follow, knock on a private account and wait to be let in, read a feed built only from the people you follow, and chat. Then open Demo and watch the classes behind it — Main, Authentication, QuotesOgram, FileHandling — hand one operation down the line, arrow by arrow.' },
+          { id: 'memory-wall', title: 'Memory Wall', minutes: 20,
+            blurb: 'Pin notes with tags, find them by tag, and like, mark helpful or share each one just once — a Map from every tag to its notes, and a Set of names behind every reaction.' },
         ],
       },
       {
