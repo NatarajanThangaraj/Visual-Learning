@@ -285,6 +285,8 @@ export const courses = [
             blurb: 'Explore how to design a calculator from a systems-thinking perspective.' },
           { id: 'division-remainder', title: 'The Remainder', minutes: 15,
             blurb: 'A thinking journey through division and the remainder (modulo) operation.' },
+          { id: 'make-it-remember', title: 'Make It Remember', minutes: 40,
+            blurb: 'What must an app never forget? Read four client stories and draw what each business has to remember, then fix four messy spreadsheets: one fact, one place; one cell, one value; every real thing its own sheet.' },
         ],
       },
       {
