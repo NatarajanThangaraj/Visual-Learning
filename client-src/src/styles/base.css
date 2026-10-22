@@ -20,6 +20,8 @@
      instead of borrowing the neutral used for undefined states. */
   --problem-solving: #6D4AFF;
   --problem-solving-bg: #EFEAFF;
+  --dbms: #0B7A63;
+  --dbms-bg: #E2F4EE;
   /* Kept for genuinely category-less things. */
   --others: #6B7280;
   --others-bg: #EEF0F3;

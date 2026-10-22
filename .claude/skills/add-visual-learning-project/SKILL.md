@@ -16,7 +16,7 @@ description: >-
 
 ## How the site works (read this first)
 
-- **Three courses** — Java, Python, Problem Solving — each split into numbered **modules**,
+- **Four courses** — Java, Python, Problem Solving, DBMS — each split into numbered **modules**,
   each module a vertical path of pages the learner walks in order.
 - **Every page is a self-contained static HTML project** with its own styles and JS, living
   under `public/`. It is shown inside the course chrome (breadcrumb, Previous / Mark
@@ -36,7 +36,7 @@ description: >-
 
 ## Step 1 — Add the files
 
-Pick the course's folder (`java` / `python` / `others`, lowercase — it is the `folder`
+Pick the course's folder (`java` / `python` / `others` / `dbms`, lowercase — it is the `folder`
 field on the course in `courses.js`) and a slug.
 
 1. Put the page at `client-src/public/labs/<folder>/<slug>/index.html`. Anything under `public/`
@@ -130,8 +130,8 @@ click "Sync now"**. This is **required** — Slate does not auto-deploy on push.
 5. **`deploy:build` runs `rm -rf ../client/*`** — never hand-edit files in `client/`; all
    content must originate in `client-src/` (`src/` or `public/`).
 6. **Slate Sync is manual** after every push; pushing alone doesn't deploy.
-7. **Folder names under `public/` stay lowercase** (`java`/`python`/`others`) even though the
-   course ids are `java` / `python` / `problem-solving`. The `others/` folder predates the
+7. **Folder names under `public/` stay lowercase** (`java`/`python`/`others`/`dbms`) even though the
+   course ids are `java` / `python` / `problem-solving` / `dbms`. The `others/` folder predates the
    Problem Solving course name; leave it as is so existing URLs keep working.
 8. **Don't add explanation/theory pages.** The course deliberately shows only the
    interactive projects — that was an explicit product decision.

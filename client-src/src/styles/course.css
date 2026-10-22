@@ -2,7 +2,7 @@
 .course-page, .lesson-page { max-width: 1080px; margin: 0 auto; }
 
 /* ── Course tabs ────────────────────────────────────────────────────────────
-   The three courses across the top. The active one is named twice — its own
+   The courses across the top. The active one is named twice — its own
    accent on the border and a bar underneath — so it reads at a glance. */
 .course-tabs {
   display: flex;

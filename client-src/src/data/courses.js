@@ -285,8 +285,6 @@ export const courses = [
             blurb: 'Explore how to design a calculator from a systems-thinking perspective.' },
           { id: 'division-remainder', title: 'The Remainder', minutes: 15,
             blurb: 'A thinking journey through division and the remainder (modulo) operation.' },
-          { id: 'make-it-remember', title: 'Make It Remember', minutes: 40,
-            blurb: 'What must an app never forget? Read four client stories and draw what each business has to remember, then fix four messy spreadsheets: one fact, one place; one cell, one value; every real thing its own sheet.' },
         ],
       },
       {
@@ -300,6 +298,28 @@ export const courses = [
             blurb: 'A cinematic 3D visualization of finding the maximum value in a list (part 2).' },
           { id: 'luhn-algorithm', title: 'Luhn Algorithm: 3D Explorer', minutes: 20,
             blurb: 'A cinematic 3D walkthrough of the Luhn checksum used to validate card numbers.' },
+        ],
+      },
+    ],
+  },
+
+  // ─────────────────────────────────────────────── DBMS
+  {
+    id: 'dbms',
+    folder: 'dbms',
+    title: 'DBMS',
+    label: 'DBMS',
+    tagline: 'What an app must remember, and how to store each fact exactly once.',
+    accent: 'var(--dbms)',
+    accentBg: 'var(--dbms-bg)',
+    modules: [
+      {
+        id: 'data-modelling',
+        title: 'Data Modelling',
+        summary: 'Turn what a client says into the things an app must remember, and keep every fact in one place.',
+        lessons: [
+          { id: 'make-it-remember', title: 'Make It Remember', minutes: 40,
+            blurb: 'What must an app never forget? Read four client stories and draw what each business has to remember, then fix four messy spreadsheets: one fact, one place; one cell, one value; every real thing its own sheet.' },
         ],
       },
     ],
