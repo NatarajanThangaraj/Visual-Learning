@@ -192,6 +192,15 @@ export const courses = [
         ],
       },
       {
+        id: 'java-with-database',
+        title: 'Java with Database',
+        summary: 'Java programs that keep their data in a database, so it is still there tomorrow.',
+        lessons: [
+          { id: 'assignment-hub', title: 'AssignmentHub', minutes: 45,
+            blurb: 'Two apps to build: Jeeves, the dining-hall menu for six work locations with meal feedback, and a 3D Tamil Nadu fuel map that finds petrol, diesel, CNG and EV stations and plans a route between cities.' },
+        ],
+      },
+      {
         id: 'new-updates',
         title: 'New Updates',
         summary: 'How the language itself has changed — features added across Java versions, and what each one fixed.',
