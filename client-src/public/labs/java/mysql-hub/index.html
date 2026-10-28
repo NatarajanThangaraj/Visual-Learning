@@ -6,26 +6,25 @@
 <title>MySQL Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   color-scheme: light;
-  --bg: #f6f5fb;
-  --glow: rgba(178, 139, 220, .18);
+  --bg: #f4f6f8;
+  --dots: #d9dfe6;
   --card: #ffffff;
-  --card-line: #e3e1ef;
-  --rule: #e8e6f2;
-  --text: #15132a;
-  --body: #4a4766;
-  --muted: #7a7794;
-  --chip: #f1ecff;
-  --focus: #6d4fd8;
-  --bar: rgba(246, 245, 251, .9);
-  --g1: #d9921c; --g2: #e2552a; --g3: #d24c6a; --g4: #8c5fd0;
-  --amber: #b9740a; --amber-bg: #fdf1dc; --amber-line: #f0d7a8;
-  --blue: #1f6fd1; --blue-bg: #e2eefc; --blue-line: #bcd5f4;
-  --rose: #c2334d; --rose-bg: #fde7eb; --rose-line: #f3c2cb;
-  --display: "Inter Tight", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --card-line: #dfe4ea;
+  --rule: #edf0f3;
+  --text: #111827;
+  --body: #4b5563;
+  --muted: #6b7280;
+  --chip: #f1f4f7;
+  --focus: #0e7490;
+  --bar: rgba(244, 246, 248, .9);
+  --brand: #0e7490; --brand-2: #0891b2;
+  --amber: #c2410c; --amber-bg: #fff1e8;
+  --blue: #0369a1; --blue-bg: #e6f3fb;
+  --rose: #be123c; --rose-bg: #fdecef;
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   box-sizing: border-box;
@@ -35,168 +34,178 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #07070e;
-    --glow: rgba(70, 90, 150, .16);
-    --card: #100f1f;
-    --card-line: #22203a;
-    --rule: #2a2843;
-    --text: #f1eefc;
-    --body: #c9c3e6;
-    --muted: #8e89ad;
-    --chip: #1c1830;
-    --focus: #b9a4ff;
-    --bar: rgba(9, 9, 18, .88);
-    --g1: #f4b740; --g2: #f0703c; --g3: #e46a7a; --g4: #b28bdc;
-    --amber: #f2b13c; --amber-bg: #2b2213; --amber-line: #5a4520;
-    --blue: #4fa8f2; --blue-bg: #13233b; --blue-line: #284a73;
-    --rose: #ff7a8c; --rose-bg: #2c121a; --rose-line: #5e2432;
+    --bg: #0b0f14;
+    --dots: #1a2129;
+    --card: #121820;
+    --card-line: #232c37;
+    --rule: #1c242e;
+    --text: #e8edf2;
+    --body: #b4bec9;
+    --muted: #8593a2;
+    --chip: #1a222c;
+    --focus: #5fd0e4;
+    --bar: rgba(11, 15, 20, .88);
+    --brand: #38bdd6; --brand-2: #7dd3e8;
+    --amber: #fb923c; --amber-bg: #2a1a10;
+    --blue: #4cb3ec; --blue-bg: #0f2231;
+    --rose: #fb7189; --rose-bg: #2a1118;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #07070e;
-  --glow: rgba(70, 90, 150, .16);
-  --card: #100f1f;
-  --card-line: #22203a;
-  --rule: #2a2843;
-  --text: #f1eefc;
-  --body: #c9c3e6;
-  --muted: #8e89ad;
-  --chip: #1c1830;
-  --focus: #b9a4ff;
-  --bar: rgba(9, 9, 18, .88);
-  --g1: #f4b740; --g2: #f0703c; --g3: #e46a7a; --g4: #b28bdc;
-  --amber: #f2b13c; --amber-bg: #2b2213; --amber-line: #5a4520;
-  --blue: #4fa8f2; --blue-bg: #13233b; --blue-line: #284a73;
-  --rose: #ff7a8c; --rose-bg: #2c121a; --rose-line: #5e2432;
+  --bg: #0b0f14;
+  --dots: #1a2129;
+  --card: #121820;
+  --card-line: #232c37;
+  --rule: #1c242e;
+  --text: #e8edf2;
+  --body: #b4bec9;
+  --muted: #8593a2;
+  --chip: #1a222c;
+  --focus: #5fd0e4;
+  --bar: rgba(11, 15, 20, .88);
+  --brand: #38bdd6; --brand-2: #7dd3e8;
+  --amber: #fb923c; --amber-bg: #2a1a10;
+  --blue: #4cb3ec; --blue-bg: #0f2231;
+  --rose: #fb7189; --rose-bg: #2a1118;
 }
 html { scroll-padding-top: env(safe-area-inset-top, 0px); background: var(--bg); }
 *, *::before, *::after { box-sizing: border-box; }
 body {
   margin: 0; min-height: 100%;
-  background: radial-gradient(1200px 600px at 85% -10%, var(--glow), transparent 70%), var(--bg);
-  color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.5;
+  background: radial-gradient(var(--dots) 1px, transparent 1.4px) 0 0 / 22px 22px, var(--bg);
+  color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.5;
   -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%;
 }
 button { font: inherit; color: inherit; }
-:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
 [hidden] { display: none !important; }
 
-/* ---------- hero ---------- */
-.hero { max-width: 1040px; margin: 0 auto; padding: clamp(28px, 6vw, 56px) 20px 0; text-align: center; }
-.wordmark {
-  margin: 0; font-family: var(--display); font-weight: 800;
-  font-size: clamp(2.6rem, 9.5vw, 7rem); line-height: 1; letter-spacing: -.045em;
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: center; gap: 14px; padding: clamp(22px, 4vw, 36px) 0 0; }
+.logo {
+  width: 44px; height: 44px; border-radius: 12px; flex: none; display: grid; place-items: center;
+  color: #fff; background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  box-shadow: 0 6px 16px -8px var(--brand);
 }
-.wordmark .grad {
-  background: linear-gradient(90deg, var(--g1) 0%, var(--g2) 40%, var(--g3) 72%, var(--g4) 100%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
+.top > div { min-width: 0; }
+.top h1 { margin: 0; font-weight: 800; font-size: 1.6rem; line-height: 1.1; letter-spacing: -.03em; }
+.top h1 span { color: var(--brand); }
+.top p { margin: 3px 0 0; color: var(--muted); font-size: .88rem; }
+.count {
+  margin-left: auto; flex: none; font-family: var(--mono); font-size: .76rem; color: var(--muted);
+  padding: 5px 10px; border: 1px solid var(--card-line); border-radius: 999px; background: var(--card);
 }
-.tip {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  margin: 26px auto 0; max-width: 70ch; color: var(--muted); font-size: clamp(.92rem, 1.5vw, 1.02rem);
-}
-.tip svg { flex: none; }
-.tip b { color: var(--text); font-weight: 600; }
 
 /* ---------- cards ---------- */
 .grid {
-  max-width: 1360px; margin: clamp(36px, 6vw, 64px) auto 0; padding: 0 20px 64px;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 340px)); justify-content: center; gap: 24px;
+  margin: 24px auto 0; padding-bottom: 48px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 14px;
 }
 .card {
-  --accent: var(--amber); --accent-bg: var(--amber-bg); --accent-line: var(--amber-line);
-  display: flex; flex-direction: column; padding: 26px 26px 22px;
-  background: var(--card); border: 1px solid var(--card-line); border-radius: 24px;
+  --accent: var(--amber); --accent-bg: var(--amber-bg);
+  position: relative; display: flex; flex-direction: column; padding: 16px 16px 14px;
+  background: var(--card); border: 1px solid var(--card-line); border-radius: 14px;
+  box-shadow: inset 0 3px 0 var(--accent);
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
-.card.blue { --accent: var(--blue); --accent-bg: var(--blue-bg); --accent-line: var(--blue-line); }
-.card.rose { --accent: var(--rose); --accent-bg: var(--rose-bg); --accent-line: var(--rose-line); }
-.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.card.blue { --accent: var(--blue); --accent-bg: var(--blue-bg); }
+.card.rose { --accent: var(--rose); --accent-bg: var(--rose-bg); }
+.card:not(.slot):hover {
+  transform: translateY(-2px); border-color: var(--accent);
+  box-shadow: inset 0 3px 0 var(--accent), 0 10px 24px -16px var(--accent);
+}
+.card-top { display: flex; align-items: center; gap: 10px; }
 .icon {
-  width: 60px; height: 60px; border-radius: 14px; display: grid; place-items: center; flex: none;
-  color: var(--accent); background: var(--accent-bg); border: 1px solid var(--accent-line);
+  width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: none;
+  color: var(--accent); background: var(--accent-bg);
 }
-.meta { margin: 18px 0 0; font-family: var(--mono); font-size: .86rem; color: var(--muted); text-align: right; }
-.card h2 {
-  margin: 22px 0 0; font-family: var(--display); font-weight: 700;
-  font-size: 1.85rem; line-height: 1.15; letter-spacing: -.02em;
+.num { margin-left: auto; font-family: var(--mono); font-size: .72rem; color: var(--muted); }
+.card h2 { margin: 12px 0 0; font-weight: 700; font-size: 1.05rem; line-height: 1.25; letter-spacing: -.01em; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 7px 0 0; padding: 0; list-style: none; }
+.tags li {
+  font-family: var(--mono); font-size: .68rem; color: var(--accent);
+  background: var(--accent-bg); padding: 2px 7px; border-radius: 5px;
 }
-.card p.desc { margin: 14px 0 0; color: var(--body); font-size: 1.04rem; line-height: 1.6; flex: 1; }
+.card p.desc { margin: 10px 0 0; color: var(--body); font-size: .86rem; line-height: 1.55; flex: 1; }
 .card-foot {
-  display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--rule);
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule);
 }
-.stat { white-space: nowrap; font-family: var(--mono); font-size: .9rem; color: var(--muted); }
+.stat { white-space: nowrap; font-family: var(--mono); font-size: .74rem; color: var(--muted); }
 .enter {
-  display: inline-flex; align-items: center; gap: 6px; flex: none;
-  border: 0; background: none; padding: 6px 2px; cursor: pointer;
-  color: var(--accent); font-weight: 600; font-size: 1.12rem;
+  display: inline-flex; align-items: center; gap: 5px; flex: none;
+  border: 0; border-radius: 8px; padding: 6px 10px 6px 12px; cursor: pointer;
+  background: var(--accent-bg); color: var(--accent); font-weight: 600; font-size: .84rem;
 }
+.enter::after { content: ""; position: absolute; inset: 0; border-radius: 14px; }
 .enter svg { transition: transform .15s ease; }
-.enter:hover svg { transform: translateX(3px); }
+.card:hover .enter svg { transform: translateX(2px); }
 
 .card.slot {
-  background: transparent; border: 1.5px dashed var(--card-line);
-  align-items: flex-start; justify-content: center; min-height: 260px; color: var(--muted);
+  background: transparent; border: 1.5px dashed var(--card-line); box-shadow: none;
+  align-items: center; justify-content: center; text-align: center; min-height: 200px; color: var(--muted);
 }
-.slot .icon { color: var(--muted); background: var(--chip); border-color: var(--card-line); }
-.slot h2 { color: var(--muted); font-size: 1.4rem; }
-.slot p { margin: 8px 0 0; font-size: .98rem; }
+.slot .icon { color: var(--muted); background: var(--chip); }
+.slot h2 { color: var(--muted); font-size: .95rem; margin-top: 10px; }
+.slot p { margin: 4px 0 0; font-size: .8rem; }
 
 /* ---------- full-screen viewer ---------- */
 .viewer { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; background: var(--bg); }
 .vbar {
-  display: flex; align-items: center; gap: 14px; flex: none;
-  padding: calc(8px + env(safe-area-inset-top, 0px)) 14px 8px;
-  background: var(--bar); border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center; gap: 12px; flex: none;
+  padding: calc(7px + env(safe-area-inset-top, 0px)) 12px 7px;
+  background: var(--bar); border-bottom: 1px solid var(--card-line);
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
 }
 .back {
-  display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px;
-  border: 1px solid var(--card-line); border-radius: 999px; background: var(--card);
-  cursor: pointer; font-weight: 500; font-size: .95rem;
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 8px;
+  border: 1px solid var(--card-line); border-radius: 8px; background: var(--card);
+  cursor: pointer; font-weight: 500; font-size: .85rem;
 }
-.vtitle { font-family: var(--display); font-weight: 700; font-size: 1.05rem; letter-spacing: -.01em;
+.vtitle { font-weight: 700; font-size: .92rem; letter-spacing: -.01em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.vtitle .grad {
-  background: linear-gradient(90deg, var(--g1), var(--g2) 40%, var(--g3) 72%, var(--g4));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
+.vtitle .grad { color: var(--muted); font-weight: 500; }
 .vframe { flex: 1; width: 100%; border: 0; display: block; background: var(--bg);
   padding-bottom: env(safe-area-inset-bottom, 0px); }
 body.viewing { overflow: hidden; }
 body.viewing .page { visibility: hidden; }
 
 @media (max-width: 520px) {
-  .card { padding: 22px 20px 18px; border-radius: 20px; }
-  .card h2 { font-size: 1.6rem; }
+  .top { align-items: flex-start; }
+  .top h1 { font-size: 1.4rem; }
+  .count { display: none; }
   .back span { display: none; }
-  .back { padding: 7px 10px; }
-  .card.slot { min-height: 0; padding-top: 26px; padding-bottom: 26px; }
-  .tip { align-items: flex-start; text-align: left; }
+  .back { padding: 5px 8px; }
+  .card.slot { min-height: 0; padding: 22px 16px; }
 }
-@media (prefers-reduced-motion: reduce) { .enter svg { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .card, .enter svg { transition: none; } .card:not(.slot):hover { transform: none; } }
 </style>
 </head>
 <body>
 
-<div class="page">
-  <header class="hero">
-    <h1 class="wordmark">MySQL<span class="grad">Hub</span></h1>
-    <p class="tip">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M8 12h8"/></svg>
-      <span>Each app opens full screen. Press <b>All assignments</b> to come back.</span>
-    </p>
+<div class="page wrap">
+  <header class="top">
+    <div class="logo" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+    </div>
+    <div>
+      <h1>MySQL <span>Hub</span></h1>
+      <p>Each app opens full screen. Press <b>All apps</b> to come back.</p>
+    </div>
+    <span class="count" id="count"></span>
   </header>
 
-  <main class="grid" id="grid" aria-label="Assignments"></main>
+  <main class="grid" id="grid" aria-label="Apps"></main>
 </div>
 
 <section class="viewer" id="viewer" hidden aria-labelledby="vtitle">
   <div class="vbar">
     <button class="back" id="back" type="button">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      <span>All assignments</span>
+      <span>All apps</span>
     </button>
     <div class="vtitle" id="vtitle"></div>
   </div>
@@ -217,12 +226,12 @@ body.viewing .page { visibility: hidden; }
   Cards and deep links (#your-id) update on their own.
 */
 const ICONS = {
-  plate: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>',
-  fuel: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 22h12"/><path d="M4 9h10"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0V9.83a2 2 0 0 0-.59-1.42L18 5"/></svg>',
-  shield: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
-  plus: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+  plate: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>',
+  fuel: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 22h12"/><path d="M4 9h10"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0V9.83a2 2 0 0 0-.59-1.42L18 5"/></svg>',
+  shield: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
+  plus: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
 };
-const ARROW = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>';
+const ARROW = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>';
 
 const ASSIGNMENTS = [
   {
@@ -235,7 +244,7 @@ const ASSIGNMENTS = [
     id: 'fuel-map', title: 'Tamil Nadu Fuel Map', color: 'blue', icon: 'fuel',
     meta: '3D · WebGL',
     desc: 'Spin a 3D map of the state, search any town for nearby stations, filter by petrol, diesel, CNG or EV and plan a route between cities.',
-    stat: '38 districts mapped'
+    stat: '38 districts'
   },
   {
     id: 'sql-injection', title: 'SQL Injection Lab', color: 'rose', icon: 'shield',
@@ -247,24 +256,26 @@ const ASSIGNMENTS = [
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const grid = document.getElementById('grid');
-grid.innerHTML = ASSIGNMENTS.map((a) => `
+grid.innerHTML = ASSIGNMENTS.map((a, i) => `
   <article class="card ${a.color}" aria-labelledby="t-${a.id}">
     <div class="card-top">
       <div class="icon">${ICONS[a.icon]}</div>
-      <p class="meta">${esc(a.meta)}</p>
+      <span class="num">${String(i + 1).padStart(2, '0')}</span>
     </div>
     <h2 id="t-${a.id}">${esc(a.title)}</h2>
+    <ul class="tags">${a.meta.split(' · ').map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
     <p class="desc">${esc(a.desc)}</p>
     <div class="card-foot">
       <span class="stat">${esc(a.stat)}</span>
-      <button class="enter" type="button" data-open="${a.id}" aria-label="Enter ${esc(a.title)}">Enter ${ARROW}</button>
+      <button class="enter" type="button" data-open="${a.id}" aria-label="Open ${esc(a.title)}">Open ${ARROW}</button>
     </div>
   </article>`).join('') + `
   <div class="card slot" aria-hidden="true">
     <div class="icon">${ICONS.plus}</div>
-    <h2>Next assignment</h2>
-    <p>This spot is saved for the next one.</p>
+    <h2>Next app</h2>
+    <p>Saved for the next one.</p>
   </div>`;
+document.getElementById('count').textContent = ASSIGNMENTS.length + ' apps';
 
 /* ---------- viewer ---------- */
 const viewer = document.getElementById('viewer');
