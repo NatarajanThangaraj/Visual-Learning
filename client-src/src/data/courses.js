@@ -331,6 +331,15 @@ export const courses = [
             blurb: 'What must an app never forget? Read four client stories and draw what each business has to remember, then fix four messy spreadsheets: one fact, one place; one cell, one value; every real thing its own sheet.' },
         ],
       },
+      {
+        id: 'querying-data',
+        title: 'Querying Data',
+        summary: 'Ask questions of stored records, from a simple SELECT to joins across tables.',
+        lessons: [
+          { id: 'office-detective', title: 'Office Detective', minutes: 45,
+            blurb: 'Watch a 3D office whose every badge tap and cafeteria purchase lands in a table, then answer questions about it: SELECT and WHERE, ORDER BY, GROUP BY, JOIN, predict tomorrow and check it against the records.' },
+        ],
+      },
     ],
   },
 ];

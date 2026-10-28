@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Office Detective · Northwind Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0F3;--surface:#FFFFFF;--surface2:#F6F7F9;--ink:#161A20;--ink2:#46505E;--ink3:#7A8494;--line:#DCE0E6;
+  --navy:#1F3A5F;--navy2:#2C5282;--navy-t:#E6ECF4;
+  --grant:#0E7C66;--grant-t:#E3F2EE;--warn:#A15C07;--warn-t:#FBF0DF;--hit:#FFF4D6;
+  --code:#141922;--glass:rgba(255,255,255,.94);--scrim:rgba(225,229,235,.6);
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.08);
+  --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;--mono:'IBM Plex Mono',Consolas,monospace;
+  --ease:cubic-bezier(.22,1,.36,1);color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1216;--surface:#171B21;--surface2:#1D222A;--ink:#E7EAEE;--ink2:#AEB6C2;--ink3:#7D8796;--line:#2A303A;
+  --navy:#8DB0E0;--navy2:#A9C4EA;--navy-t:#1C2838;--grant:#4CC3A6;--grant-t:#12302A;--warn:#E7A54A;--warn-t:#33260F;--hit:#3A3115;
+  --code:#0B0E12;--glass:rgba(23,27,33,.94);--scrim:rgba(10,12,16,.6);--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1216;--surface:#171B21;--surface2:#1D222A;--ink:#E7EAEE;--ink2:#AEB6C2;--ink3:#7D8796;--line:#2A303A;
+  --navy:#8DB0E0;--navy2:#A9C4EA;--navy-t:#1C2838;--grant:#4CC3A6;--grant-t:#12302A;--warn:#E7A54A;--warn-t:#33260F;--hit:#3A3115;
+  --code:#0B0E12;--glass:rgba(23,27,33,.94);--scrim:rgba(10,12,16,.6);--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);color-scheme:dark}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font:14px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;color:inherit}
+button:focus-visible,input:focus-visible{outline:2px solid var(--navy2);outline-offset:2px}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.panelish{background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);box-shadow:var(--shadow)}
+.hud{position:fixed;z-index:6;transition:opacity .4s var(--ease)}
+.off{opacity:0;pointer-events:none}
+
+/* clock reads like a lobby display */
+.clock{top:calc(14px + env(safe-area-inset-top,0px));left:14px;border-radius:10px;padding:10px 16px 11px;display:flex;gap:14px;align-items:center}
+.clock .t{font:600 30px/1 var(--sans);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.clock .t small{font-size:13px;font-weight:500;color:var(--ink2);margin-left:4px;letter-spacing:0}
+.clock .d{font-size:12.5px;color:var(--ink2);line-height:1.35;border-left:1px solid var(--line);padding-left:14px}
+.clock .d b{display:block;color:var(--ink);font-weight:600;font-size:13.5px}
+.live{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--grant)}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--grant)}
+.ctrl{left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:4px;padding:5px 12px 5px 5px;border-radius:10px}
+.ic{height:36px;min-width:36px;border-radius:7px;border:0;background:transparent;font-size:14px;padding:0 10px}
+.ic:hover{background:var(--surface2)}
+.ic.play{background:var(--navy);color:#fff}
+:root:not([data-theme="light"]) .ic.play{color:var(--bg)}
+@media (prefers-color-scheme: light){.ic.play{color:#fff}}
+.spd{font:600 13px var(--mono);border:1px solid var(--line);background:var(--surface);height:32px;border-radius:7px;padding:0 10px;margin-right:6px}
+#tline{width:min(340px,34vw);accent-color:var(--navy)}
+.tticks{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--ink3)}
+.inv{top:calc(14px + env(safe-area-inset-top,0px));right:14px;border-radius:9px;padding:11px 18px;font-weight:600;font-size:14.5px;background:var(--navy);color:#fff;border:0;box-shadow:var(--shadow)}
+.inv:hover{background:var(--navy2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .inv{color:var(--bg)}}
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3}
+.zl{position:absolute;transform:translate(-50%,-50%);font-size:11.5px;font-weight:600;padding:3px 9px 3px 8px;border-radius:4px;background:var(--surface);color:var(--ink2);border:1px solid var(--line);white-space:nowrap;transition:opacity .4s;display:flex;gap:6px;align-items:center}
+.zl i{width:3px;height:12px;border-radius:2px}
+.pc{position:fixed;z-index:8;width:236px;border-radius:10px;padding:12px 14px;animation:pop .25s var(--ease)}
+.pc .n{font-weight:600;font-size:16px}
+.pc .r{font-size:12.5px;color:var(--ink3)}
+.pc .k{margin-top:9px;font-size:11.5px;color:var(--ink3)}
+.pc .x{position:absolute;top:6px;right:6px;border:0;background:transparent;color:var(--ink3);font-size:18px;width:28px;height:28px}
+.pc .badge{display:inline-block;font:500 11px var(--mono);padding:1px 6px;border:1px solid var(--line);border-radius:4px;color:var(--ink2);margin-top:6px}
+
+#intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:linear-gradient(180deg,transparent,var(--scrim) 50%,transparent);transition:opacity .7s}
+#intro.gone{opacity:0;pointer-events:none}
+.intro{margin:16px;width:min(420px,calc(100% - 32px));border-radius:14px;padding:26px 28px;animation:in .8s var(--ease)}
+.intro .co{font-size:12.5px;color:var(--ink3);display:flex;gap:8px;align-items:center}
+.intro .co i{width:14px;height:14px;border-radius:3px;background:var(--navy)}
+.intro h1{margin:14px 0 4px;font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1.05}
+.intro .w{color:var(--ink2);margin-bottom:22px;font-variant-numeric:tabular-nums}
+.btn{border:0;border-radius:8px;padding:11px 18px;font-size:14px;font-weight:600;background:var(--navy);color:#fff;transition:background .15s}
+.btn:hover{background:var(--navy2)}
+.btn.sec{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn.sec:hover{background:var(--surface2)}
+.btn.grant{background:var(--grant)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn:not(.sec){color:var(--bg)}}
+:root[data-theme="dark"] .btn:not(.sec){color:var(--bg)}
+.link{border:0;background:none;color:var(--navy2);font-weight:600;font-size:13.5px;padding:4px 0;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+
+.code{border-radius:8px;background:var(--code);color:#D6DCE5;font:12px/1.65 var(--mono);padding:10px 0;overflow-x:auto}
+.code pre{margin:0;padding:0 12px}
+.ck{color:#8FB8F2}.cf{color:#C9A8F5}.cs{color:#8FD6B5}.cn{color:#E7C873}.cc{color:#6B7686}
+.tw{max-height:240px;overflow:auto;border-radius:6px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font:11.5px var(--mono)}
+th{position:sticky;top:0;background:var(--surface2);color:var(--ink2);text-align:left;padding:5px 9px;font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:4px 9px;border-top:1px solid var(--line);white-space:nowrap;color:var(--ink2)}
+tbody tr{animation:rowin .3s var(--ease) both}
+tr.hit td{background:var(--hit);color:var(--ink)}
+@keyframes rowin{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+/* schema diagram */
+.schema{margin-top:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:8px}
+.schema svg{display:block;width:100%;height:auto}
+.schema .cap{font-size:11.5px;color:var(--ink3);padding:2px 6px 4px;display:flex;justify-content:space-between}
+.tb rect.box{fill:var(--surface);stroke:#8A93A0;stroke-width:1.2}
+.tb rect.hd{fill:#5B6470}
+.tb.use rect.hd{fill:#1F3A5F}
+.tb text{font:12px var(--mono);fill:var(--ink)}
+.tb text.tn{font-weight:700;fill:#FFFFFF;letter-spacing:.02em}
+.tb text.ct2{font-weight:700}
+.tb text.k{font-size:10px;font-weight:600;fill:var(--ink2)}
+.tb rect.cu{fill:#FFE59A}
+:root[data-theme="dark"] .tb rect.cu{fill:#5A4A12}
+.tb.use rect.box{stroke:#1F3A5F;stroke-width:2.4}
+.tb.dim{opacity:.62}
+.tb{cursor:pointer}
+.tb.sel rect.box{stroke:var(--grant);stroke-width:2}
+.rel{fill:none;stroke:#7A8494;stroke-width:1.6;opacity:.8}
+.rel.use{stroke:#C2410C;opacity:1;stroke-width:2.6;stroke-dasharray:5 4;animation:flow 1s linear infinite}
+.rl{font:700 11px var(--mono);fill:var(--ink)}
+@keyframes flow{to{stroke-dashoffset:-9}}
+
+#cur{position:fixed;inset:0;z-index:40;display:grid;place-items:center;text-align:center;background:#12161C;color:#E7EAEE;opacity:0;pointer-events:none;transition:opacity .6s}
+#cur.on{opacity:1;pointer-events:auto}
+#cur .a{font:500 13px var(--mono);color:#8B95A5}
+#cur .b{font-size:clamp(26px,5vw,40px);font-weight:600;letter-spacing:-.02em;margin-top:4px}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@keyframes dot{from{transform:scale(0)}to{transform:scale(1)}}
+/* ---------- investigation window: one wide window, tabs ---------- */
+.iw{position:fixed;z-index:12;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(1180px,calc(100% - 28px));height:min(560px,62vh);transform:translate(-50%,calc(100% + 40px));transition:transform .5s var(--ease);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
+.iw.open{transform:translate(-50%,0)}
+.iw-h{display:flex;align-items:center;gap:14px;padding:0 10px 0 18px;border-bottom:1px solid var(--line);min-height:50px}
+.crumb{font-size:12.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;flex:none}
+.crumb b{color:var(--ink);font-weight:600}
+.tabs{position:relative;display:flex;flex:1;overflow-x:auto;scrollbar-width:none;align-self:stretch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:none;padding:0 14px;font:500 13.5px var(--sans);color:var(--ink3);white-space:nowrap;transition:color .2s}
+.tab:hover:not(:disabled){color:var(--ink)}
+.tab.on{color:var(--ink);font-weight:600}
+.tab:disabled{opacity:.35;cursor:not-allowed}
+.ink{position:absolute;bottom:0;height:2px;background:var(--navy2);border-radius:2px;transition:left .35s var(--ease),width .35s var(--ease)}
+.tools{display:flex;gap:2px;align-items:center;flex:none}
+.tl2{border:1px solid transparent;background:none;border-radius:6px;padding:6px 10px;font:500 12.5px var(--sans);color:var(--ink2)}
+.tl2:hover{background:var(--surface2)}
+.tl2.on{border-color:var(--line);background:var(--surface2);color:var(--ink)}
+.iw .xb{position:static;flex:none;margin-left:4px}
+.xb{width:32px;height:32px;border-radius:7px;border:1px solid var(--line);background:var(--surface);font-size:17px;color:var(--ink2)}
+.iw-b{flex:1;position:relative;overflow:hidden}
+.pane{position:absolute;inset:0;padding:18px 22px;display:grid;grid-template-columns:270px minmax(0,1fr);gap:30px;transition:opacity .16s ease,transform .16s ease}
+.pane.out{opacity:0;transform:translateY(6px)}
+.pane.full{grid-template-columns:minmax(0,1fr)}
+.ans{display:flex;flex-direction:column;min-height:0;overflow:auto}
+.ans .qq{font-size:13.5px;color:var(--ink2);line-height:1.4}
+.ans .big{font:700 38px/1.08 var(--sans);letter-spacing:-.03em;margin:8px 0 4px;font-variant-numeric:tabular-nums;transition:color .3s}
+.ans .sub{font-size:13px;color:var(--ink3)}
+.ans .sub b{color:var(--ink);font-variant-numeric:tabular-nums}
+.ans .foot{margin-top:auto;padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.nxb{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 12px;font:600 13px var(--sans);color:var(--navy);text-align:left;display:flex;justify-content:space-between;align-items:center;transition:border-color .15s,background .15s}
+.nxb:hover{border-color:var(--navy2);background:var(--surface2)}
+.viz{min-width:0;min-height:0;overflow:auto;position:relative}
+.focusin{animation:focusin .5s var(--ease)}
+@keyframes focusin{from{opacity:.2;filter:blur(2px)}to{opacity:1;filter:none}}
+.lrows{display:flex;flex-direction:column;gap:2px}
+.lrow{display:grid;grid-template-columns:170px minmax(0,1fr) 44px;gap:14px;align-items:center;padding:7px 10px;border-radius:8px;border:1px solid transparent;background:none;text-align:left;width:100%;transition:background .15s,border-color .15s}
+.lrow:not(:disabled):hover{background:var(--surface2);border-color:var(--line)}
+.lrow:disabled{cursor:default;opacity:.8}
+.lrow .nm{display:flex;gap:9px;align-items:center;font-weight:500;font-size:14px}
+.sw{width:9px;height:9px;border-radius:2px;flex:none}
+.track{display:flex;gap:5px;align-items:center;min-height:24px;flex-wrap:wrap}
+.pdot{width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;font:600 10.5px var(--sans);color:#fff;flex:none;animation:pin .35s var(--ease) both}
+.lrow .n{text-align:right;font:600 16px var(--mono);font-variant-numeric:tabular-nums}
+.lrow .go{grid-column:1/-1}
+@keyframes pin{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--surface);animation:rin .4s var(--ease) both}
+.tile .k{font-size:12px;color:var(--ink3)}
+.tile .v{font:700 26px/1.2 var(--sans);font-variant-numeric:tabular-nums;margin-top:2px}
+.tile .s{font-size:11.5px;color:var(--ink3)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chip{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:2px 10px 2px 2px;font-size:12.5px;background:var(--surface);animation:pin .3s var(--ease) both}
+.chip .pdot{width:20px;height:20px;font-size:9.5px;animation:none}
+.seg{display:flex;height:10px;border-radius:3px;overflow:hidden;background:var(--surface2);margin-top:8px}
+.seg i{height:100%;width:0;transition:width .8s var(--ease)}
+.segl{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--ink2);margin-top:7px}
+.segl span{display:inline-flex;gap:5px;align-items:center}
+.move{margin-top:16px;border:1px solid var(--line);border-radius:8px;padding:12px 14px;animation:rin .4s .2s var(--ease) both}
+.move .k{font-size:12px;color:var(--ink3)}
+.move .v{font-size:14px;margin-top:2px}
+.cols{height:100%;min-height:190px;display:flex;align-items:flex-end;gap:5px;padding:2px 2px 26px}
+.col{flex:1;min-width:16px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative;border:0;background:none;padding:0;border-radius:4px}
+.col:hover .bar{filter:brightness(.92)}
+.col .bar{width:100%;max-width:48px;background:var(--navy-t);border-radius:4px 4px 0 0;height:0;transition:height .6s var(--ease),background .3s}
+.col .v{font:600 11.5px var(--mono);color:var(--ink2);margin-bottom:4px;opacity:0;transition:opacity .3s .3s}
+.cols.shown .col .v{opacity:1}
+.col .x{position:absolute;bottom:-22px;font:11px var(--mono);color:var(--ink3);white-space:nowrap}
+.col.peak .bar{background:var(--navy2)}
+.col.sel .bar{background:var(--grant)}
+.col.sel .x{color:var(--grant);font-weight:600}
+.col.pick .bar{box-shadow:inset 0 0 0 2px var(--navy)}
+.plist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 20px}
+.prow{display:grid;grid-template-columns:24px minmax(0,1fr) auto 38px;gap:10px;align-items:center;padding:6px 8px;border-radius:7px;animation:rin .35s var(--ease) both}
+.prow:hover{background:var(--surface2)}
+.prow .w{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .w small{color:var(--ink3);font-weight:400;margin-left:6px}
+.d5{display:flex;gap:3px}
+.d5 i{width:13px;height:13px;border-radius:3px;background:var(--surface2);border:1px solid var(--line);transition:background .25s,border-color .25s}
+.d5 i.on{background:var(--navy2);border-color:var(--navy2)}
+.prow.reg .d5 i.on{background:var(--grant);border-color:var(--grant)}
+.prow .c{font:600 12.5px var(--mono);text-align:right;color:var(--ink2)}
+.prow.reg .c{color:var(--grant)}
+.traits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.trait{border:1px solid var(--line);border-radius:8px;padding:12px 14px;animation:rin .4s var(--ease) both}
+.trait .k{font-size:12px;color:var(--ink3)}
+.trait .v{font:600 17px var(--sans);margin-top:2px}
+.strip{position:relative;height:36px;margin-top:10px;border-bottom:1px solid var(--line)}
+.strip i{position:absolute;bottom:0;width:2px;margin-left:-1px;height:0;background:var(--grant);transition:height .5s var(--ease)}
+.strip .band{position:absolute;bottom:0;height:100%;background:var(--grant-t);border-radius:3px;transform-origin:center;transform:scaleX(0);transition:transform .7s var(--ease)}
+.strip .lab{display:flex;justify-content:space-between;font:10.5px var(--mono);color:var(--ink3);position:absolute;left:0;right:0;bottom:-17px}
+.opts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.opt{border-radius:9px;border:1px solid var(--line);background:var(--surface);padding:14px 12px;text-align:left;transition:border-color .15s,background .15s,box-shadow .15s;animation:rin .35s var(--ease) both}
+.opt b{display:block;font:600 16px var(--mono)}
+.opt span{font-size:12px;color:var(--ink3)}
+.opt .mb{height:5px;border-radius:3px;background:var(--surface2);margin-top:9px;overflow:hidden}
+.opt .mb i{display:block;height:100%;width:0;background:var(--navy2);transition:width .7s var(--ease)}
+.opt:hover{border-color:var(--navy2)}
+.opt.on{border-color:var(--navy);background:var(--navy-t);box-shadow:inset 0 0 0 1px var(--navy)}
+.vlist{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.vb{border:1px solid var(--line);border-radius:8px;padding:10px 12px;animation:rin .4s var(--ease) both}
+.vb .k{font-size:12px;color:var(--ink3)}
+.vb .v{font:600 15px var(--mono);margin-top:2px}
+.vb.ok{border-color:var(--grant);background:var(--grant-t)}.vb.ok .v{color:var(--grant)}
+.vb.no{border-color:var(--warn);background:var(--warn-t)}.vb.no .v{color:var(--warn)}
+.livebar{display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+.livebar i{width:7px;height:7px;border-radius:50%;background:#C2410C;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+@keyframes rin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.sqlv{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;height:100%}
+.sqlv .left{display:flex;flex-direction:column;min-height:0}
+.sqlv .code{flex:1;overflow:auto}
+.sqlv .right{min-height:0;overflow:auto}
+.rowbar{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px}
+.meta{font:12px var(--mono);color:var(--ink3)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn.grant{background:var(--grant)}
+.rp{top:calc(14px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);border-radius:9px;padding:6px 6px 6px 14px;display:flex;gap:12px;align-items:center;font-size:13px}
+.rp[hidden]{display:none}
+.rp i{width:7px;height:7px;border-radius:50%;background:#C2410C;animation:blink 1s infinite}
+body.pane .ctrl{bottom:calc(min(560px,62vh) + 26px + env(safe-area-inset-bottom,0px))}
+.inv{display:flex;gap:8px;align-items:center}
+.qhead{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-size:13px;color:var(--ink2);margin-bottom:12px}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.qc{display:grid;grid-template-columns:26px 1fr;gap:3px 10px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:11px 13px;transition:border-color .15s,background .15s;animation:rin .35s var(--ease) both}
+.qc:hover{border-color:var(--navy2);background:var(--surface2)}
+.qc.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+.qc .no{font:600 12px var(--mono);color:var(--ink3);padding-top:2px}
+.qc .qt2{font-weight:600;font-size:14px;line-height:1.35}
+.qc .tg{grid-column:2;font-size:11.5px;color:var(--ink3)}
+.qc .tg em{font-style:normal;color:var(--grant);font-weight:600}
+.rk{display:flex;flex-direction:column;gap:4px}
+.rr{display:grid;grid-template-columns:170px minmax(0,1fr) 56px;gap:14px;align-items:center;padding:6px 10px;border-radius:7px;border:1px solid transparent;animation:rin .35s var(--ease) both}
+.rr .nm{display:flex;gap:9px;align-items:center;font-weight:500;font-size:13.5px;white-space:nowrap;overflow:hidden}
+.rr .rb{height:12px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.rr .rb i{display:block;height:100%;width:0;background:var(--navy-t);border-radius:3px;transition:width .7s var(--ease)}
+.rr b{text-align:right;font:600 14px var(--mono)}
+.rr.win{background:var(--grant-t);border-color:var(--grant)}
+.rr.win .rb i{background:var(--grant)}
+.rr .pdot{width:22px;height:22px;animation:none}
+.lrow.on{border-color:var(--navy2);background:var(--navy-t)}
+.tl2:disabled{opacity:.35;cursor:not-allowed}
+.qm{position:fixed;z-index:13;left:50%;top:50%;transform:translate(-50%,-47%);width:min(1060px,calc(100% - 28px));max-height:min(680px,calc(100% - 110px));display:flex;flex-direction:column;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .3s var(--ease),transform .3s var(--ease)}
+.qm.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.qm-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.qm-h h2{margin:0 0 3px;font-size:19px;letter-spacing:-.02em}
+.qm-h .meta b{color:var(--ink)}
+.qm-b{overflow:auto;padding:14px 18px 18px}
+.qm .qgrid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.qback{flex:none;font-weight:600;color:var(--navy)}
+.cols{min-height:240px}
+.lvl{margin-bottom:16px}
+.lvh{display:flex;gap:10px;align-items:baseline;margin:0 0 8px}
+.lvh b{font-size:13.5px}
+.lvh span{font-size:12.5px;color:var(--ink3)}
+.qc .tg{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.qc .tg code{font:500 10.5px var(--mono);border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--ink2);background:var(--surface2)}
+.qc .tg em{font-style:normal;font-size:11px;color:var(--grant);font-weight:600;margin-left:4px}
+.recs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 18px}
+.rec{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 10px;border-radius:7px;border:1px solid var(--line);background:var(--surface);animation:rin .35s var(--ease) both;transition:opacity .3s,background .3s}
+.rec .sw{width:12px;height:12px;border-radius:3px;justify-self:center}
+.rec .m{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec .m small{color:var(--ink3);font-weight:400;margin-left:8px;font-family:var(--mono);font-size:11.5px}
+.rec b{font:600 12.5px var(--mono);color:var(--ink2)}
+.rec.win{border-color:var(--grant);background:var(--grant-t)}
+.rec.win b{color:var(--grant)}
+.rec.dim{opacity:.45}
+.units{display:flex;flex-direction:column;gap:10px}
+.ur{display:grid;grid-template-columns:90px minmax(0,1fr) 34px;gap:12px;align-items:center}
+.ur span:first-child{font:12px var(--mono);color:var(--ink2)}
+.uq{display:flex;flex-wrap:wrap;gap:3px}
+.uq i{width:14px;height:14px;border-radius:3px;background:var(--navy2);animation:pin .3s var(--ease) both}
+.ur b{text-align:right;font:600 14px var(--mono)}
+.sqlv2{display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px;height:100%;min-height:0}
+.sbar{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;min-height:0}
+.editor{display:flex;flex-direction:column;min-height:0;border-radius:8px;overflow:hidden;background:var(--code);border:1px solid #1f2630}
+.eh{display:flex;justify-content:space-between;align-items:center;padding:6px 8px 6px 12px;border-bottom:1px solid #1f2630;font:12px var(--mono);color:#8B95A5}
+.editor .code{flex:1;overflow:auto;border-radius:0;padding:10px 0}
+.editor .ln{display:inline;animation:typein .35s var(--ease) both}
+@keyframes typein{from{opacity:0;filter:blur(1px)}to{opacity:1;filter:none}}
+.right{min-height:0;overflow:auto}
+.right .schema{margin-top:0}
+.term{background:#0B0E12;border:1px solid #1f2630;border-radius:8px;height:100%;min-height:220px;display:flex;flex-direction:column;overflow:hidden;animation:rin .3s var(--ease)}
+.tbar{display:flex;gap:6px;align-items:center;padding:7px 10px;border-bottom:1px solid #1f2630;font:12px var(--mono);color:#7D8796}
+.tbar i{width:9px;height:9px;border-radius:50%;background:#3A414C}
+.tbar span{margin-left:6px;flex:1}
+.tlink{border:0;background:none;color:#8FB8F2;font:600 12px var(--sans);text-decoration:underline;text-underline-offset:3px}
+.term pre{flex:1;margin:0;padding:10px 12px;overflow:auto;font:12px/1.5 var(--mono);color:#D6DCE5;white-space:pre}
+.term .p{color:#8FB8F2}.term .ok{color:#4CC3A6}
+.term .cur{animation:blink 1s infinite}
+.qsel{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.qsel button{border:0;background:none;padding:6px 12px;font:500 12.5px var(--sans);color:var(--ink2);border-right:1px solid var(--line)}
+.qsel button:last-child{border-right:0}
+.qsel button.on{background:var(--navy);color:#fff}
+.dbt{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end;font-size:12px;color:var(--ink2)}
+.dbt span{font-weight:600;margin-right:4px}
+.dbt code{font:600 11px var(--mono);border:1px solid var(--line);border-radius:5px;padding:2px 7px;color:var(--ink3);background:var(--surface2);transition:all .3s}
+.dbt code.on{background:#1F3A5F;border-color:#1F3A5F;color:#fff}
+.xclose{width:38px;height:38px;border-radius:9px;border:0;background:#1F2A3A;color:#fff;font-size:22px;line-height:1;display:grid;place-items:center;box-shadow:0 2px 6px rgba(16,24,40,.25);transition:background .15s,transform .15s}
+.xclose:hover{background:#B42318;transform:scale(1.05)}
+.xclose:focus-visible{outline:3px solid #F97066;outline-offset:2px}
+.tab[data-t="sql"]{font-family:var(--mono);font-weight:600}
+.tab[data-t="sql"]::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--grant);margin-right:6px;vertical-align:middle}
+.sqlv2{grid-template-rows:minmax(0,1fr)}
+.right .sch2{grid-template-columns:repeat(2,minmax(0,1fr));align-content:start}
+.sch2{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tcard{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);box-shadow:0 1px 2px rgba(16,24,40,.05);animation:rin .35s var(--ease) both;transition:opacity .3s}
+.tcard.dim{opacity:.5}
+.tcard.use{border:2px solid #2B2F36;box-shadow:0 6px 16px rgba(16,24,40,.16)}
+.th2{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 10px;background:var(--surface2);font:700 12.5px var(--mono);color:var(--ink)}
+.tcard.use .th2{background:#2B2F36;color:#fff}
+.th2 em{font:500 10.5px var(--sans);font-style:normal;opacity:.85;white-space:nowrap}
+.tr2{display:flex;align-items:center;gap:6px;padding:3px 10px;font:12px/1.5 var(--mono);color:var(--ink2);border-top:1px solid var(--line);transition:background .35s,color .35s,box-shadow .35s}
+.tr2 span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch2.lit .tr2.on{background:#E5E7EB;color:#111827;font-weight:700;box-shadow:inset 3px 0 0 #2B2F36}
+.pk,.fk{font:700 9.5px var(--sans);border-radius:4px;padding:1px 5px;white-space:nowrap;transition:all .35s}
+.pk{background:#F3F4F6;color:#374151;border:1px solid #D1D5DB}
+.pk.on{background:#2B2F36;border-color:#2B2F36;color:#fff}
+.fk{background:var(--surface2);color:var(--ink3);border:1px solid var(--line);font-family:var(--mono);font-weight:600}
+.fk.on{background:#2B2F36;border-color:#2B2F36;color:#fff}
+.eh .qsel{background:#151A22;border-color:#2A313C}
+.eh .qsel button{color:#9AA4B2;border-right-color:#2A313C;padding:5px 10px;font-size:12px}
+.eh .qsel button.on{background:#E5E7EB;color:#111827}
+.sgrid .term{min-height:0;height:100%}
+.btn.exec,:root .btn.exec{background:#E5E7EB;color:#111827}
+.btn.exec:hover{background:#FFFFFF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sch2.lit .tr2.on{background:#374151;color:#F9FAFB;box-shadow:inset 3px 0 0 #D1D5DB} :root:not([data-theme="light"]) .tcard.use{border-color:#9CA3AF} :root:not([data-theme="light"]) .tcard.use .th2{background:#4B5563}}
+:root[data-theme="dark"] .sch2.lit .tr2.on{background:#374151;color:#F9FAFB;box-shadow:inset 3px 0 0 #D1D5DB}
+:root[data-theme="dark"] .tcard.use{border-color:#9CA3AF}
+:root[data-theme="dark"] .tcard.use .th2{background:#4B5563}
+@media (max-width:760px){.sch2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.recs{grid-template-columns:1fr}.sgrid{grid-template-columns:1fr}.term{min-height:200px}}
+@media (max-width:760px){.rr{grid-template-columns:110px minmax(0,1fr) 44px}.qgrid{grid-template-columns:1fr}}
+@media (max-width:760px){
+  .iw{height:64vh;width:calc(100% - 16px);bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  .crumb{display:none}
+  .iw-h{padding-left:6px;gap:6px}
+  .tools .tl2{padding:6px 7px}
+  .pane{grid-template-columns:minmax(0,1fr);overflow:auto;gap:14px;padding:14px}
+  .ans{overflow:visible}.ans .big{font-size:30px}
+  .viz{overflow:visible}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .plist,.traits,.sqlv{grid-template-columns:minmax(0,1fr)}
+  .opts,.vlist{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lrow{grid-template-columns:120px minmax(0,1fr) 30px}
+  .cols{min-height:170px;height:190px}
+  body.pane .ctrl{opacity:0;pointer-events:none}
+  .clock .t{font-size:22px} .clock .d{display:none}
+  #tline{width:30vw} .tticks{display:none}
+}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<canvas id="scene" aria-label="Animated 3D office of Northwind Systems"></canvas>
+<div id="labels"></div>
+<div class="hud clock panelish off" id="clock"><div class="t" id="cTime">08:42<small>AM</small></div><div class="d"><b id="cDay">Tuesday</b><span id="cDate">20 Oct 2026</span><br><span class="live" id="cLive"><i></i>Live</span></div></div>
+<button class="hud inv off" id="invBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.6-4.6"/></svg>Investigate</button>
+<div class="hud ctrl panelish off" id="ctrl">
+  <button class="ic" id="bReset" title="Back to Tuesday morning" aria-label="Back to Tuesday morning">↺</button>
+  <button class="ic play" id="bPlay" aria-label="Play or pause">▶</button>
+  <button class="spd" id="bSpeed" aria-label="Playback speed">1×</button>
+  <div><input type="range" id="tline" min="450" max="1170" value="522" aria-label="Time of day"><div class="tticks"><span>08</span><span>10</span><span>12</span><span>14</span><span>16</span><span>18</span></div></div>
+</div>
+<div id="intro"><div class="intro panelish"><div class="co"><i></i>Northwind Systems · Chennai office</div><h1>Office Detective</h1><div class="w">Tuesday 20 Oct · 08:42 AM</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="bWatch">Watch the office</button><button class="btn sec" id="bExplore">Explore on my own</button></div></div></div>
+<div id="pcard"></div>
+<section class="iw panelish" id="inv" aria-label="Investigation">
+  <header class="iw-h">
+    <button class="tl2 qback" id="iwQ">‹ Questions</button><div class="crumb" id="crumb">Investigation</div>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <div class="tools"><button class="xb xclose" id="iwX" aria-label="Close investigation" title="Close">×</button></div>
+  </header>
+  <div class="iw-b"><div class="pane" id="pane"></div></div>
+</section>
+<section class="qm panelish" id="qmenu" aria-label="Questions"><header class="qm-h"><div><h2>What do you want to find out?</h2><div class="meta" id="qmMeta"></div></div><button class="xb xclose" id="qmX" aria-label="Close questions" title="Close">×</button></header><div class="qm-b" id="qmBody"></div></section>
+<div class="hud rp panelish" id="replay" hidden><i></i><span id="rpT"></span><button class="btn sm sec" id="rpX">Stop replay</button></div>
+<div id="cur"><div><div class="a" id="cu1"></div><div class="b" id="cu2"></div></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/*ENGINE-START*/
+// ======================= SIMULATION + DATABASE =======================
+// Every movement in the 3D office is generated from these records, so the animation and the tables never disagree.
+const WALK=3.6, TAP=1.6;
+const pad=n=>String(n).padStart(2,'0');
+const fmt=t=>pad(Math.floor(t/60)%24)+':'+pad(Math.floor(t%60));
+const fmt12=t=>{const h=Math.floor(t/60)%24;return pad(h%12||12)+':'+pad(Math.floor(t%60))+' '+(h<12?'AM':'PM');};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function rng(s){let a=s>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const WD=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const _di={};
+function dayInfo(i){ if(_di[i]) return _di[i]; const d=new Date(Date.UTC(2026,9,13)); let n=i;
+  while(n>0){ d.setUTCDate(d.getUTCDate()+1); const w=d.getUTCDay(); if(w&&w<6) n--; }
+  const w=d.getUTCDay(); return _di[i]={i,dow:w,wd:WD[w],iso:`2026-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`,label:`${WD[w].slice(0,3)} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}`,long:`${d.getUTCDate()} ${MON[d.getUTCMonth()]} 2026`}; }
+
+const LOCS=[{location_id:'L1',key:'ENT',location_name:'Main Entrance',location_type:'entrance'},{location_id:'L2',key:'ENG',location_name:'Engineering',location_type:'work area'},
+ {location_id:'L3',key:'DES',location_name:'Design Studio',location_type:'work area'},{location_id:'L4',key:'MEET',location_name:'Meeting Room',location_type:'meeting room'},
+ {location_id:'L5',key:'CAFE',location_name:'Cafeteria',location_type:'cafeteria'},
+ {location_id:'L6',key:'TEST',location_name:'Testing Lab',location_type:'lab'},{location_id:'L7',key:'GYM',location_name:'Gym',location_type:'gym'}];
+const LOC={}; LOCS.forEach(l=>LOC[l.key]=l);
+
+// floor plan (metres): building x -18..18, z -12..12
+const DOORS={ENT:{x:-4,z:12,s:1},ENG:{x:-10,z:0,s:1},DES:{x:10,z:0,s:1},MEET:{x:0,z:-4,s:1},CAFE:{x:13,z:4,s:-1},TEST:{x:-28,z:0,s:1},GYM:{x:-22,z:4,s:-1}};
+const NODES={OUT:[-2,16.4],LOBBY:[-4,6],HUB:[0,2],W:[-10,2],E:[10,2],E2:[13,2],W2:[-21,2],W3:[-27,2]};
+const READER={};
+for(const k in DOORS){ const d=DOORS[k]; NODES[k+'_O']=[d.x+1.3,d.z+d.s*1.5]; NODES[k+'_I']=k==='ENT'?[d.x-1.3,d.z-d.s*1.5]:[d.x,d.z-d.s*1.8];
+  READER[k]={o:[d.x+1.75,d.z+d.s*.22],i:[d.x-1.75,d.z-d.s*.22]}; }
+const ADJ={};
+[['OUT','ENT_O'],['ENT_O','ENT_I','ENT'],['ENT_I','LOBBY'],['LOBBY','HUB'],['HUB','W'],['W','W2'],['W2','GYM_O'],['GYM_O','GYM_I','GYM'],['W2','W3'],['W3','TEST_O'],['TEST_O','TEST_I','TEST'],['W','ENG_O'],['ENG_O','ENG_I','ENG'],['HUB','E'],['E','DES_O'],['DES_O','DES_I','DES'],
+ ['HUB','MEET_O'],['MEET_O','MEET_I','MEET'],['E','E2'],['E2','CAFE_O'],['CAFE_O','CAFE_I','CAFE']]
+ .forEach(([a,b,d])=>{ (ADJ[a]=ADJ[a]||[]).push({n:b,d}); (ADJ[b]=ADJ[b]||[]).push({n:a,d}); });
+const edgeDoor=(a,b)=>(ADJ[a].find(x=>x.n===b)||{}).d;
+function bfs(a,b){ if(a===b) return [a]; const prev={[a]:null},q=[a]; while(q.length){ const c=q.shift(); if(c===b) break; for(const e of ADJ[c]) if(!(e.n in prev)){prev[e.n]=c;q.push(e.n);} }
+  const p=[]; let c=b; while(c){p.unshift(c);c=prev[c];} return p; }
+
+const SEATS={ENG:[],DES:[],MEET:[],CAFE:[],TEST:[],GYM:[]};
+[-4.5,-8,-11].forEach(z=>[-15.5,-11.5,-6.5].forEach(x=>{ const ax=x===-6.5?-8.5:x+2, cz=z+.9; SEATS.ENG.push({p:[x,cz],face:Math.PI,via:[[ax,-2.6],[ax,cz]],desk:[x,z]}); }));
+[-4.5,-8,-11].forEach(z=>[6.5,14].forEach(x=>{ const ax=x+2, cz=z+.9; SEATS.DES.push({p:[x,cz],face:Math.PI,via:[[ax,-2.6],[ax,cz]],desk:[x,z]}); }));
+[-1.8,0,1.8].forEach(x=>{ SEATS.MEET.push({p:[x,-6.9],face:Math.PI,via:[[x,-6.0]]}); SEATS.MEET.push({p:[x,-9.5],face:0,via:[[3.2,-6.0],[3.2,-10.4],[x,-10.4]]}); });
+[6,7.5,9,10.5].forEach(x=>{ SEATS.CAFE.push({p:[x,6.2],face:0,lane:5.4,via:[[x,5.4]]}); SEATS.CAFE.push({p:[x,8.2],face:Math.PI,lane:8.9,via:[[12,8.9],[x,8.9]]}); SEATS.CAFE.push({p:[x,9.7],face:0,lane:8.9,via:[[12,8.9],[x,8.9]]}); });
+[12.4,13.2,14,14.8,15.6,16.4].forEach(x=>SEATS.CAFE.push({p:[x,10.9],face:0,lane:9.8,via:[[12,8.9],[x,9.8]]}));
+[-4.5,-8].forEach(z=>[-30,-25.5,-21].forEach(x=>{ const ax=x+2, cz=z+.9; SEATS.TEST.push({p:[x,cz],face:Math.PI,via:[[ax,-2.6],[ax,cz]],desk:[x,z]}); }));
+[-30.5,-28.7,-26.9,-25.1,-20.6,-19.1].forEach(x=>SEATS.GYM.push({p:[x,9.6],face:0,via:[[x,7.4]]}));
+const counter=pi=>({p:[16,6.2+(pi%4)*1.1],face:Math.PI/2,via:[]});
+
+const ROLE={QA:'QA Engineer',Backend:'Backend Engineer',Frontend:'Frontend Engineer',Design:'Product Designer',Operations:'Operations Engineer',Product:'Product Manager'};
+const TEAMC={QA:'#5E6B2A',Backend:'#2C5282',Frontend:'#2F7D74',Design:'#9B4D6B',Operations:'#A36A1F',Product:'#5B4A8B'};
+const LUNCH=[740,750,765,712,725,785];
+const FOODS=[['Veg Meals','Curd Rice','Veg Meals'],['Sandwich','Paneer Wrap','Veg Meals'],['Chicken Biryani','Chicken Biryani','Veg Meals'],['Curd Rice','Veg Meals','Sandwich']];
+const SNACKS=['Tea','Tea','Tea','Coffee','Samosa','Samosa','Biscuits'];
+// name, team, home area, arrive, leave, lunch group, coffee time, meetings, long hair
+const RAW=[['Arun','Backend','ENG',530,1050,0,0,[660]],['Priya','Design','DES',545,1065,1,0,[840],1],['Bala','Frontend','ENG',520,1015,3,0,[]],
+ ['Kiran','Frontend','ENG',566,1080,2,640,[]],['Meena','Backend','ENG',549,1062,0,0,[660],1],['Ravi','Operations','ENG',512,1005,3,0,[]],
+ ['Divya','Design','DES',568,1095,1,625,[840],1],['Suresh','Product','DES',551,1070,2,0,[630,900]],['Nisha','Design','DES',543,1066,1,0,[],1],
+ ['Vijay','Backend','ENG',546,1058,0,0,[]],['Gopal','Operations','ENG',505,1000,3,600,[]],['Farah','Design','DES',544,1068,2,630,[],1],
+ ['Lakshmi','QA','TEST',541,1040,4,0,[],1],['Sneha','QA','TEST',552,1048,4,0,[],1],['Manoj','QA','TEST',527,1035,4,0,[]],
+ ['Hari','Backend','ENG',592,1120,5,655,[]],['Pooja','Frontend','ENG',557,1078,2,0,[],1],['Deepa','Product','DES',534,1045,1,0,[660],1]];
+// testing-lab visits and gym habits
+const EXTRA={Bala:{test:[600,870,960],testP:.85},Kiran:{test:[900],testP:.5,gym:1025},Hari:{test:[930],testP:.45,gym:1030},Pooja:{test:[690],testP:.45},
+ Arun:{gym:1018},Ravi:{gym:545},Gopal:{gym:520},Farah:{gym:795},Sneha:{gym:1012},Vijay:{gym:800}};
+const SHIRT=['#E9EDF2','#B9CBE0','#2B3A55','#8A929E','#F3F1EC','#3B3F46','#C9D5C5','#6E2F3A','#E9EDF2','#4A5568','#D8D2C4','#1F2A3A'];
+const PANTS=['#2A2E35','#3A3F47','#1F2430','#4A4540'];
+const SKIN=['#8D5524','#A0662F','#C68642','#B97A4B','#7A4A24','#D19A66'], HAIR=['#1C1714','#2B1D14','#3A2A20','#121212'];
+const cnt={ENG:0,DES:0,TEST:0};
+const PEOPLE=RAW.map((r,i)=>({i,id:'P'+pad(i+1),name:r[0],team:r[1],role:ROLE[r[1]],home:r[2],desk:cnt[r[2]]++,arr:r[3],lv:r[4],lunch:r[5],coffee:r[6],meet:r[7],long:!!r[8],
+  food:FOODS[i%4],shirt:SHIRT[i%SHIRT.length],test:[],testP:0,gym:0,...(EXTRA[r[0]]||{}),pants:PANTS[i%4],skin:SKIN[(i*3)%6],hair:HAIR[i%4],accent:TEAMC[r[1]],blazer:[2,5,9,11].includes(i)}));
+PEOPLE.forEach(p=>p.desk_id=LOC[p.home].location_id+'-'+pad(p.desk+1));
+
+function makePlan(P,pi,di){
+  const r=rng(di*7919+pi*104729+17), j=s=>(r()*2-1)*s, dow=dayInfo(di).dow;
+  if(r()<.04) return null;
+  const arrive=P.arr+j(9)+(dow===5?9:0), leave=P.lv+j(12)-(dow===5?38:0), acts=[];
+  if(P.coffee&&r()<.7) acts.push({loc:'CAFE',t:P.coffee+j(12),dur:7+r()*5,item:r()<.6?'Coffee':'Tea',qty:1,kind:'coffee'});
+  P.test.forEach(tt=>{ if(r()<P.testP) acts.push({loc:'TEST',t:tt+j(10),dur:18+r()*10,kind:'testing'}); });
+  if(P.gym&&r()<.7) acts.push({loc:'GYM',t:P.gym+j(8),dur:25+r()*10,kind:'gym'});
+  P.meet.forEach(m=>{ if(r()<.8) acts.push({loc:'MEET',t:m+j(5),dur:r()<.5?30:45,kind:'meeting'}); });
+  if(!P.meet.length&&r()<.2) acts.push({loc:'MEET',t:600+Math.floor(r()*12)*30,dur:30,kind:'meeting'});
+  const g=rng(di*131+P.lunch*977+5)(); acts.push({loc:'CAFE',t:LUNCH[P.lunch]+(g*2-1)*6+j(2.5),dur:28+r()*10,item:P.food[Math.floor(r()*3)],qty:1,kind:'lunch'});
+  if(r()<.45) acts.push({loc:'CAFE',t:925+r()*50,dur:9+r()*5,item:SNACKS[Math.floor(r()*SNACKS.length)],qty:r()<.25?2:1,kind:'snack'});
+  return {arrive,leave,acts:acts.sort((a,b)=>a.t-b.t)};
+}
+const lenOf=p=>{let L=0;for(let i=1;i<p.length;i++)L+=Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]);return L;};
+function buildTrack(P,pi,plan,info,out){
+  const segs=[]; let t=0,pos,zone=null,back=[];
+  const walk=(pts,dest)=>{ const c=[]; for(const p of pts){const l=c[c.length-1]; if(!l||Math.hypot(l[0]-p[0],l[1]-p[1])>.01) c.push(p);} if(c.length<2) return;
+    const cum=[0]; for(let i=1;i<c.length;i++) cum.push(cum[i-1]+Math.hypot(c[i][0]-c[i-1][0],c[i][1]-c[i-1][1])); const L=cum[cum.length-1];
+    segs.push({k:'walk',t0:t,t1:t+L/WALK,pts:c,cum,L,dest}); t+=L/WALK; pos=c[c.length-1]; };
+  const hold=(u,pose,act,face)=>{ if(u>t+.01){ segs.push({k:'stay',t0:t,t1:u,p:pos,pose,act,zone,face}); t=u; } };
+  const tap=(door,type,side)=>{ const rp=READER[door][side]; segs.push({k:'tap',t0:t,t1:t+TAP,p:pos,door,type,face:Math.atan2(rp[0]-pos[0],rp[1]-pos[1])});
+    out.taps[door].push({t0:t,side,pi}); out.access.push({person_id:P.id,location_id:LOC[door].location_id,event_time:info.iso+' '+fmt(t+.6),event_type:type,_t:t+.6,_p:pi,_loc:door,_day:info.i}); t+=TAP; };
+  const route=(from,to,lead,tail,dest)=>{ const ns=bfs(from,to); let pts=[pos,...lead];
+    for(let i=0;i<ns.length-1;i++){ const a=ns[i],b=ns[i+1],d=edgeDoor(a,b);
+      if(d){ const ent=a.endsWith('_O'); let of=null; if(ent||d==='ENT'){ walk(pts,d); tap(d,ent?'entry':'exit',ent?'o':'i'); of=t-TAP+1; pts=[pos]; }
+        pts.push([DOORS[d].x,DOORS[d].z]); const tc=t+lenOf(pts)/WALK; out.doors[d].push(of!=null?[of,tc+.7]:[tc-.6,tc+.7]); pts.push(NODES[b]); }
+      else pts.push(NODES[b]); }
+    pts.push(...tail); walk(pts,dest); };
+  const goTo=(z,s)=>{ route(zone?zone+'_I':'ENT_O',z+'_I',zone?back:[],[...s.via,s.p],z); zone=z; back=[...s.via].reverse().concat([NODES[z+'_I']]); };
+  const home=P.home, desk=SEATS[home][P.desk], sd=pi%2?1:-1, spawn=[sd*(22+pi%6),15], exitPt=[-sd*(22+pi%5),15];
+  pos=spawn; t=plan.arrive-lenOf([spawn,NODES.OUT,NODES.ENT_O])/WALK;
+  route('OUT',home+'_I',[NODES.OUT],[...desk.via,desk.p],home); zone=home; back=[...desk.via].reverse().concat([NODES[home+'_I']]);
+  let cur={act:'work',face:desk.face}, atHome=true;
+  const acts=plan.acts.filter(a=>a.t<plan.leave-25);
+  acts.forEach((a,ai)=>{
+    hold(Math.max(a.t,t),cur.pose||'sit',cur.act,cur.face);
+    if(a.loc==='CAFE'){ const c=counter(pi); goTo('CAFE',c); hold(t+1.3,'stand','buy',c.face);
+      out.cafe.push({person_id:P.id,item:a.item,quantity:a.qty,purchase_time:info.iso+' '+fmt(t-.6),_t:t-.6,_p:pi,_day:info.i});
+      const s=SEATS.CAFE[pi]; walk([pos,[12,s.lane],[s.p[0],s.lane],s.p],'CAFE'); back=[...s.via].reverse().concat([NODES.CAFE_I]);
+      hold(t+a.dur,'sit',a.kind,s.face); cur={act:a.kind,face:s.face}; }
+    else { const s=a.loc==='MEET'?SEATS.MEET[pi%6]:a.loc==='TEST'?SEATS.TEST[3+pi%3]:SEATS.GYM[pi%6], pose=a.loc==='GYM'?'gym':'sit'; goTo(a.loc,s); hold(t+a.dur,pose,a.kind,s.face); cur={act:a.kind,face:s.face,pose}; }
+    atHome=false;
+    const nx=acts[ai+1]; if(!nx||nx.t-t>18){ goTo(home,desk); atHome=true; cur={act:'work',face:desk.face}; }
+  });
+  if(!atHome) goTo(home,desk);
+  hold(Math.max(plan.leave,t+5),'sit','work',desk.face);
+  route(zone+'_I','OUT',back,[exitPt],'OUT');
+  return segs;
+}
+function buildDay(di){ const info=dayInfo(di), out={access:[],cafe:[],doors:{},taps:{},tracks:[]};
+  for(const k in DOORS){ out.doors[k]=[]; out.taps[k]=[]; }
+  PEOPLE.forEach((P,pi)=>{ const pl=makePlan(P,pi,di); out.tracks.push(pl?buildTrack(P,pi,pl,info,out):null); });
+  out.access.sort((a,b)=>a._t-b._t); out.access.forEach((r,i)=>r.access_id=di*1000+i+1);
+  out.cafe.sort((a,b)=>a._t-b._t); out.cafe.forEach((r,i)=>r.purchase_id=di*1000+i+1);
+  for(const k in DOORS){ out.doors[k].sort((a,b)=>a[0]-b[0]); out.taps[k].sort((a,b)=>a.t0-b.t0); }
+  return out; }
+const DB={d:{},get(i){return this.d[i]||(this.d[i]=buildDay(i));}};
+function stateAt(tr,t){
+  if(!tr||t<tr[0].t0||t>=tr[tr.length-1].t1) return null;
+  let lo=0,hi=tr.length-1; while(lo<hi){const m=(lo+hi+1)>>1; if(tr[m].t0<=t) lo=m; else hi=m-1;}
+  const s=tr[lo];
+  if(s.k==='walk'){ const d=Math.min(s.L,(t-s.t0)*WALK); let i=1; while(i<s.cum.length-1&&s.cum[i]<d) i++;
+    const a=s.pts[i-1],b=s.pts[i],f=clamp((d-s.cum[i-1])/((s.cum[i]-s.cum[i-1])||1),0,1);
+    return {mode:'walk',x:a[0]+(b[0]-a[0])*f,z:a[1]+(b[1]-a[1])*f,h:Math.atan2(b[0]-a[0],b[1]-a[1]),dist:d+s.t0*3.1,seg:s}; }
+  if(s.k==='tap') return {mode:'tap',x:s.p[0],z:s.p[1],h:s.face,ph:(t-s.t0)/TAP,seg:s};
+  return {mode:s.pose,x:s.p[0],z:s.p[1],h:s.face,seg:s};
+}
+
+/*ENGINE-END*/
+
+// ======================= 3D WORLD =======================
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DARK=()=>document.documentElement.dataset.theme==='dark'||(document.documentElement.dataset.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
+const MOB=()=>innerWidth<760;
+const S={day:5,t:522,speed:1,playing:false,started:false,ctx:null,focus:null,watch:null,replay:null,sel:null,snap:true,fly:null,off:{x:0,y:0},busy:false};
+const SPEEDS=[.5,1,2,4,8];
+let renderer,scene,camera,controls,sun,hemi,BOX,CYL,SPH,TORSO,RING,spot,cars=[];
+const PM=[],pick=[],doorObj={},MATS={};
+const mat=c=>MATS[c]||(MATS[c]=new THREE.MeshLambertMaterial({color:c}));
+function box(w,h,d,c,x,y,z,par,cast=true){ const m=new THREE.Mesh(BOX,typeof c==='string'?mat(c):c); m.scale.set(w,h,d); m.position.set(x,y,z); m.castShadow=cast; m.receiveShadow=true; (par||scene).add(m); return m; }
+function cyl(r,h,c,x,y,z,par){ const m=new THREE.Mesh(CYL,mat(c)); m.scale.set(r*2,h,r*2); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; (par||scene).add(m); return m; }
+function wall(ax,c,a0,a1,h,col,gaps,th,y0){ th=th||.18; y0=y0||0; let sg=[[a0,a1]];
+  (gaps||[]).forEach(g=>{ sg=sg.flatMap(([s,e])=>g-1.5>s&&g+1.5<e?[[s,g-1.5],[g+1.5,e]]:[[s,e]]); });
+  sg.forEach(([s,e])=>{ if(e-s<.05) return; if(ax==='x'){ box(e-s,h,th,col,(s+e)/2,y0+h/2,c); if(y0===0&&h<2) box(e-s,.05,th+.04,'#3A4250',(s+e)/2,h+.02,c,null,false); }
+    else { box(th,h,e-s,col,c,y0+h/2,(s+e)/2); if(y0===0&&h<2) box(th+.04,.05,e-s,'#3A4250',c,h+.02,(s+e)/2,null,false); } }); }
+function glassWall(ax,c,a0,a1,gaps){ const gm=new THREE.MeshStandardMaterial({color:'#C8DAE8',transparent:true,opacity:.28,roughness:.1,depthWrite:false});
+  let sg=[[a0,a1]]; (gaps||[]).forEach(g=>{ sg=sg.flatMap(([s,e])=>g-1.5>s&&g+1.5<e?[[s,g-1.5],[g+1.5,e]]:[[s,e]]); });
+  sg.forEach(([s,e])=>{ const L=e-s; ax==='x'?box(L,2.3,.06,gm,(s+e)/2,1.15,c,null,false):box(.06,2.3,L,gm,c,1.15,(s+e)/2,null,false);
+    for(let k=0;k<=Math.round(L/1.5);k++){ const p=s+k*L/Math.max(1,Math.round(L/1.5)); ax==='x'?box(.06,2.3,.08,'#2B2F36',p,1.15,c,null,false):box(.08,2.3,.06,'#2B2F36',c,1.15,p,null,false); }
+    ax==='x'?box(L,.08,.1,'#2B2F36',(s+e)/2,2.32,c,null,false):box(.1,.08,L,'#2B2F36',c,2.32,(s+e)/2,null,false); }); }
+function chair(p,f){ const g=new THREE.Group(); g.position.set(p[0],0,p[1]); g.rotation.y=f; scene.add(g);
+  box(.52,.07,.5,'#23272E',0,.48,0,g); box(.5,.56,.06,'#23272E',0,.82,-.27,g); cyl(.035,.42,'#6B7280',0,.24,0,g); box(.5,.03,.06,'#6B7280',0,.04,0,g,false); box(.06,.03,.5,'#6B7280',0,.04,0,g,false); }
+function planter(x,z,h){ h=h||1; box(.55,.55,.55,'#3A3F47',x,.28,z); const m=new THREE.Mesh(SPH,new THREE.MeshLambertMaterial({color:'#3F6B4A'})); m.scale.set(.45,.6*h,.45); m.position.set(x,.95+.2*h,z); m.castShadow=true; scene.add(m); }
+function tree(x,z){ cyl(.16,1.6,'#5A4636',x,.8,z); const m=new THREE.Mesh(SPH,new THREE.MeshLambertMaterial({color:'#4F7358'})); m.scale.set(1.25,1.15,1.25); m.position.set(x,2.5,z); m.castShadow=true; scene.add(m); }
+function textPlane(txt,w,h,fg,bg,font){ const c=document.createElement('canvas'); c.width=1024; c.height=Math.round(1024*h/w); const g=c.getContext('2d');
+  g.fillStyle=bg; g.fillRect(0,0,c.width,c.height); g.fillStyle=fg; g.font=font||`600 ${Math.round(c.height*.42)}px 'IBM Plex Sans', 'Segoe UI', sans-serif`; g.textAlign='center'; g.textBaseline='middle';
+  if('letterSpacing' in g) g.letterSpacing=Math.round(c.height*.08)+'px'; g.fillText(txt,c.width/2,c.height/2+2);
+  const tx=new THREE.CanvasTexture(c); tx.anisotropy=4; return new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tx})); }
+
+function init(){
+  renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  scene=new THREE.Scene(); camera=new THREE.OrthographicCamera(-1,1,1,-1,-300,400); camera.position.set(42,40,46);
+  controls=new THREE.OrbitControls(camera,$('scene')); controls.enableDamping=true; controls.minZoom=.6; controls.maxZoom=4.5;
+  controls.minPolarAngle=.3; controls.maxPolarAngle=1.22; controls.screenSpacePanning=false; controls.rotateSpeed=.5;
+  hemi=new THREE.HemisphereLight(0xffffff,0xb8c0cc,.55); scene.add(hemi);
+  sun=new THREE.DirectionalLight(0xfffaf2,.62); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+  Object.assign(sun.shadow.camera,{left:-32,right:32,top:32,bottom:-32,near:1,far:200}); sun.shadow.bias=-.0008; scene.add(sun,sun.target);
+  BOX=new THREE.BoxGeometry(1,1,1); CYL=new THREE.CylinderGeometry(.5,.5,1,18); SPH=new THREE.SphereGeometry(1,20,14); TORSO=new THREE.CylinderGeometry(.27,.22,.74,14); RING=new THREE.RingGeometry(.5,.6,40);
+
+  // street + plaza
+  box(170,.2,150,'#C9C6C0',0,-.1,0,null,false);
+  box(170,.05,5,'#50555E',0,.03,19.4,null,false); for(let x=-80;x<=80;x+=5) box(2.2,.02,.12,'#E8E8E4',x,.06,19.4,null,false);
+  box(170,.07,2.2,'#DAD7D1',0,.035,15.6,null,false); box(170,.07,2.4,'#DAD7D1',0,.035,23,null,false);
+  box(4,.06,3.2,'#B9B5AE',-4,.04,13.6,null,false);
+  for(let x=-30;x<=30;x+=4) if(Math.abs(x+4)>3) cyl(.1,.8,'#3A3F47',x,.4,16.6);
+  for(let x=-34;x<=34;x+=8.5) tree(x,24.4); [[-38,-4],[-38,8],[24,-8],[25,6],[-30,-18],[22,-17]].forEach(([x,z])=>tree(x,z));
+  [['#D9DBDF',-30,18.2,1],['#2B2F36',14,20.6,-1],['#7B8794',48,18.2,1]].forEach(([c,x,z,dir])=>{ const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+    box(3.6,.7,1.6,c,0,.55,0,g); box(2,.55,1.45,'#2E3640',-.15,1.15,0,g); [-1.1,1.1].forEach(a=>[-.8,.8].forEach(b=>{ const w=cyl(.3,.22,'#15181C',a,.3,b,g); w.rotation.x=Math.PI/2; })); cars.push({g,dir,sp:5+Math.random()*2}); });
+
+  // building shell
+  box(50.8,.16,24.8,'#8D949E',-7,.08,0,null,false);
+  const fl=(x0,x1,z0,z1,c,y)=>box(x1-x0,.04,z1-z0,c,(x0+x1)/2,y||.17,(z0+z1)/2,null,false);
+  fl(-32,18,-12,12,'#E2E0DC',.165); fl(-32,-18,-12,0,'#C3CBC7'); fl(-32,-18,4,12,'#B9B4AC');
+  fl(-18,-4,-12,0,'#C3C8CF'); fl(4,18,-12,0,'#CCC6BE'); fl(-4,4,-12,-4,'#B7BEC8'); fl(4,18,4,12,'#BFA083');
+  for(let x=4.5;x<18;x+=1) box(.02,.01,8,'#A88A6D',x,.195,8,null,false);
+  const EXT='#C4C9D0',INT='#F1F2F4';
+  wall('x',-12,-32.1,18.1,2.8,EXT,[],.3); wall('z',-32,-12,12,2.8,EXT,[],.3); wall('z',-18,-12,12,2.8,EXT,[2],.3);
+  wall('x',12,-32,18,.5,EXT,[-4],.3); wall('z',18,-12,12,.5,EXT,[],.3);
+  const gl=new THREE.MeshStandardMaterial({color:'#B8CCDD',transparent:true,opacity:.18,roughness:.1,depthWrite:false});
+  box(14,2.2,.06,gl,-11,1.6,12,null,false); box(14,2.2,.06,gl,-25,1.6,12,null,false); box(20,2.2,.06,gl,8,1.6,12,null,false); box(.06,2.2,24,gl,18,1.6,0,null,false);
+  for(let x=-32;x<=18;x+=3) if(Math.abs(x+4)>1.6){ box(.08,2.2,.1,'#2B2F36',x,1.6,12,null,false); } for(let z=-12;z<=12;z+=3) box(.1,2.2,.08,'#2B2F36',18,1.6,z,null,false);
+  box(50,.1,.12,'#2B2F36',-7,2.72,12,null,false); box(.12,.1,24,'#2B2F36',18,2.72,0,null,false);
+  wall('x',0,-18,-4,1.15,INT,[-10]); wall('x',0,4,18,1.15,INT,[10]); wall('z',-4,-12,0,1.15,INT); wall('z',4,-12,0,1.15,INT);
+  wall('x',4,4,18,1.15,INT,[13]); wall('x',0,-32,-18,1.15,INT,[-28]); wall('x',4,-32,-18,1.15,INT,[-22]); wall('z',4,4,12,1.15,INT);
+  glassWall('x',-4,-4,4,[0]);
+
+  // workstations
+  const desk=(s)=>{ const [x,z]=s.desk; box(1.6,.05,.85,'#F4F3F0',x,.75,z); box(.04,.73,.75,'#2B2F36',x-.76,.37,z); box(.04,.73,.75,'#2B2F36',x+.76,.37,z);
+    box(.05,.28,.05,'#2B2F36',x,.92,z-.28); box(.95,.5,.04,'#16191E',x,1.12,z-.3);
+    s.scr=new THREE.MeshBasicMaterial({color:'#1B1F27'}); const m=new THREE.Mesh(BOX,s.scr); m.scale.set(.88,.43,.01); m.position.set(x,1.12,z-.277); scene.add(m);
+    box(.44,.02,.14,'#3A3F47',x,.79,z+.08,null,false); box(.08,.02,.1,'#3A3F47',x+.36,.79,z+.1,null,false); chair(s.p,s.face); };
+  SEATS.ENG.forEach(desk); SEATS.DES.forEach(desk); SEATS.TEST.forEach(desk);
+  [-10.5,-8,-5.5].forEach(z=>{ box(.9,2.2,1.6,'#2B2F36',-31.3,1.1,z); [0,1,2,3].forEach(k=>box(.03,.05,.1,k%2?'#2FBF8F':'#7FA8D6',-30.83,.6+k*.4,z-.4,null,false)); });
+  box(3,.05,.9,'#5E6B2A',-20,.2,-10.8,null,false);
+  SEATS.GYM.forEach(s=>{ const [x,z]=s.p; box(.8,.22,1.9,'#23272E',x,.11,z+.15); box(.7,.45,.08,'#3A3F47',x,1.25,z+1.05); box(.05,1,.05,'#6B7280',x-.32,.7,z+1); box(.05,1,.05,'#6B7280',x+.32,.7,z+1); });
+  box(.04,1.7,6.5,'#C9D5DE',-31.8,1.35,8,null,false); box(2.6,.04,1.8,'#4A5260',-29.5,.19,5.6,null,false); box(.4,1.2,1.6,'#2B2F36',-19,.6,5.4); [0,1,2].forEach(k=>cyl(.08,.5,'#6B7280',-19,.5+k*.3,5.4+(k-1)*.5));
+  box(.1,1.4,4.4,'#F4F3F0',-17.85,1.5,-6,null,false); [['#2C5282',-7.4],['#9B4D6B',-6.2],['#A36A1F',-5]].forEach(([c,z])=>box(.02,.9,.8,c,-17.78,1.5,z,null,false));
+  box(.1,1.2,3.6,'#F4F3F0',17.85,1.4,-6,null,false); [-7,-6,-5].forEach((z,i)=>box(.02,.6,.7,['#C9B79C','#8B9AA8','#9B4D6B'][i],17.78,1.45,z,null,false));
+  // meeting room
+  box(4.6,.06,1.3,'#5B4636',0,.76,-8.2); box(.3,.72,.3,'#2B2F36',-1.6,.37,-8.2); box(.3,.72,.3,'#2B2F36',1.6,.37,-8.2);
+  SEATS.MEET.forEach(s=>chair(s.p,s.face));
+  const tv=new THREE.MeshBasicMaterial({color:'#1B1F27'}); const tvm=new THREE.Mesh(BOX,tv); tvm.scale.set(2.4,1.35,.06); tvm.position.set(0,1.7,-11.8); scene.add(tvm); S.tv=tv;
+  // cafeteria
+  box(1.2,1,5.2,'#5B4636',17.2,.5,8); box(1.4,.06,5.4,'#E7E5E1',17.2,1.03,8); box(.55,.62,.5,'#9CA3AF',17.3,1.37,6); box(.5,.4,1.4,'#E7E5E1',17.3,1.26,9.6);
+  box(.06,1,3,'#1F242B',17.88,2.1,8,null,false);
+  const tbl=(z)=>{ box(4.8,.06,.95,'#8B6B4E',8.25,.75,z); [6,10.5].forEach(x=>box(.08,.72,.6,'#2B2F36',x,.37,z,null,false)); };
+  tbl(7.2); tbl(10.6); box(4.8,.06,.45,'#8B6B4E',14.4,1.0,11.6); [12.2,16.6].forEach(x=>box(.06,.98,.3,'#2B2F36',x,.5,11.6,null,false)); SEATS.CAFE.forEach(s=>chair(s.p,s.face));
+  [6.4,8.25,10.1].forEach(x=>[7.2,10.6].forEach(z=>{ cyl(.01,.9,'#2B2F36',x,2.35,z); const l=cyl(.2,.18,'#2B2F36',x,1.85,z); const b=new THREE.Mesh(SPH,new THREE.MeshBasicMaterial({color:'#FFE8B8'})); b.scale.setScalar(.08); b.position.set(x,1.74,z); scene.add(b); }));
+  // lobby
+  box(3.6,1.05,1,'#F4F3F0',-12,.53,7.5); box(3.6,.6,.04,'#5B4636',-12,.5,8.02,null,false); box(3.8,.05,1.15,'#2B2F36',-12,1.08,7.5);
+  box(.5,.32,.04,'#16191E',-12.6,1.28,7.3,null,false);
+  const sign=textPlane('NORTHWIND',5,.9,'#E7EAEE','#1F2A3A'); sign.position.set(-17.82,1.85,7.5); sign.rotation.y=Math.PI/2; scene.add(sign);
+  box(.05,1.3,5.6,'#1F2A3A',-17.85,1.85,7.5,null,false);
+  box(2.6,.42,.9,'#4A5260',-14.5,.25,2.6); box(2.6,.5,.2,'#4A5260',-14.5,.66,2.18); box(1,.38,1,'#8B6B4E',-14.5,.2,3.9);
+  [[-17.3,11.3],[-5.8,11.3],[3.3,11.3],[-17.3,-11.3],[17.3,-11.3],[4.7,-11.3],[-3.4,-11.3],[3.4,-11.3],[17.3,11.3]].forEach(([x,z])=>planter(x,z));
+  const fsg=textPlane('NORTHWIND SYSTEMS',6,.55,'#1F2A3A','#E7EAEE'); fsg.position.set(8,2.45,12.08); scene.add(fsg);
+
+  for(const k in DOORS) makeDoor(k);
+  spot=new THREE.Mesh(new THREE.RingGeometry(2.8,3,64),new THREE.MeshBasicMaterial({color:'#2C5282',transparent:true,opacity:.8,depthWrite:false}));
+  spot.rotation.x=-Math.PI/2; spot.position.y=.22; spot.visible=false; scene.add(spot);
+  PEOPLE.forEach(makePerson); resize();
+}
+function makeDoor(k){
+  const d=DOORS[k], g=new THREE.Group(); g.position.set(d.x,0,d.z); scene.add(g); const H=k==='ENT'?2.6:2.3;
+  box(.14,H,.32,'#2B2F36',-1.42,H/2,0,g); box(.14,H,.32,'#2B2F36',1.42,H/2,0,g); box(3,.16,.34,'#2B2F36',0,H+.06,0,g);
+  const strip=new THREE.MeshBasicMaterial({color:'#D6DCE3'}); const sm=new THREE.Mesh(BOX,strip); sm.scale.set(2.6,.03,.02); sm.position.set(0,H-.02,d.s*.18); g.add(sm);
+  const gm=new THREE.MeshStandardMaterial({color:'#BCD0E0',transparent:true,opacity:.35,roughness:.08,metalness:.2});
+  const L=new THREE.Mesh(BOX,gm), Rr=new THREE.Mesh(BOX,gm); [L,Rr].forEach((p,i)=>{ p.scale.set(1.34,H-.1,.05); p.position.set(i?.67:-.67,H/2-.03,0); g.add(p);
+    const fr=new THREE.Mesh(BOX,mat('#2B2F36')); fr.scale.set(.04,1,1.6); fr.position.set(i?-.48:.48,0,0); p.add(fr); });
+  const rd={};
+  ['o','i'].forEach(side=>{ if(side==='i'&&k!=='ENT') return; const rp=READER[k][side], sg=side==='o'?d.s:-d.s, rg=new THREE.Group(); rg.position.set(rp[0]-d.x,1.15,rp[1]-d.z); g.add(rg);
+    box(.22,.34,.08,'#16191E',0,0,0,rg); box(.16,.02,.02,'#3A3F47',0,-.12,sg*.05,rg,false);
+    const led=new THREE.Mesh(new THREE.RingGeometry(.045,.065,24),new THREE.MeshBasicMaterial({color:'#5B6470',side:THREE.DoubleSide})); led.position.set(0,.05,sg*.045); rg.add(led);
+    const rm=new THREE.MeshBasicMaterial({color:'#2FBF8F',transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}); const ring=new THREE.Mesh(new THREE.RingGeometry(.12,.15,32),rm); ring.position.set(0,.05,sg*.06); rg.add(ring);
+    if(sg<0){ led.rotation.y=ring.rotation.y=Math.PI; } rd[side]={led,ring,rm}; });
+  doorObj[k]={L,R:Rr,open:0,rd,strip};
+}
+function makePerson(P,pi){
+  const root=new THREE.Group(), up=new THREE.Group(); root.add(up); scene.add(root);
+  const mk=(geo,c,sx,sy,sz,x,y,z,par)=>{ const o=new THREE.Mesh(geo,mat(c)); o.scale.set(sx,sy,sz); o.position.set(x,y,z); o.castShadow=true; par.add(o); return o; };
+  const lL=new THREE.Group(), lR=new THREE.Group(); lL.position.set(-.11,.9,0); lR.position.set(.11,.9,0); root.add(lL,lR);
+  [lL,lR].forEach(l=>{ mk(BOX,P.pants,.18,.88,.2,0,-.44,0,l); mk(BOX,'#15181C',.19,.08,.3,0,-.88,.05,l); });
+  const top=P.blazer?'#262C36':P.shirt;
+  const torso=mk(TORSO,top,1,1,1,0,1.27,0,up);
+  if(P.blazer) mk(BOX,P.shirt,.14,.34,.02,0,1.42,.24,up);
+  mk(CYL,P.skin,.12,.1,.12,0,1.68,0,up);
+  const aL=new THREE.Group(), aR=new THREE.Group(); aL.position.set(-.34,1.6,0); aR.position.set(.34,1.6,0); up.add(aL,aR);
+  [aL,aR].forEach(a=>{ mk(BOX,top,.12,.62,.13,0,-.31,0,a); mk(SPH,P.skin,.065,.075,.065,0,-.66,0,a); });
+  // lanyard + badge on the chest; the same badge moves to the hand when tapping
+  const lan=new THREE.Group(); up.add(lan);
+  [-1,1].forEach(s=>{ const st=mk(BOX,'#1F2A3A',.02,.3,.015,s*.07,1.53,.255,lan); st.rotation.z=s*.32; });
+  mk(BOX,'#FFFFFF',.12,.16,.015,0,1.32,.27,lan); mk(BOX,P.accent,.12,.035,.018,0,1.38,.271,lan);
+  const card=new THREE.Group(); card.position.set(0,-.72,.06); aR.add(card); mk(BOX,'#FFFFFF',.26,.025,.18,0,0,0,card); mk(BOX,P.accent,.26,.03,.05,0,.003,-.065,card); card.visible=false;
+  const head=new THREE.Group(); head.position.set(0,1.86,0); up.add(head);
+  const hm=mk(SPH,P.skin,.17,.2,.18,0,0,0,head); mk(SPH,P.hair,.178,.12,.188,0,.085,-.015,head); if(P.long) mk(BOX,P.hair,.3,.34,.08,0,-.08,-.13,head);
+  const halo=new THREE.Mesh(RING,new THREE.MeshBasicMaterial({color:'#2C5282',transparent:true,opacity:.9,side:THREE.DoubleSide,depthWrite:false})); halo.rotation.x=-Math.PI/2; halo.position.y=.22; halo.visible=false; root.add(halo);
+  torso.userData.pi=hm.userData.pi=pi; pick.push(torso,hm);
+  PM[pi]={root,up,lL,lR,aL,aR,card,lan,head,halo,h:0,ph:pi*1.37,st:null};
+}
+const lerpA=(a,b,f)=>{ const d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI; return a+d*f; };
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+function pose(M,st,now){
+  let l=0,aL=0,aR=0,uy=0,ly=.9,hy=0,card=false,sit=false;
+  if(st.mode==='walk'){ const s=Math.sin(st.dist*2.1); l=s*.5; aL=-s*.32; aR=s*.32; uy=Math.abs(Math.cos(st.dist*2.1))*.03; }
+  else if(st.mode==='tap'){ const p=st.ph, u=p<.12?0:p<.32?(p-.12)/.2:p<.6?1:p<.82?1-(p-.6)/.22:0; aR=-1.35*ease(u); if(p>.36&&p<.5) aR-=.12*Math.sin((p-.36)/.14*Math.PI); card=p>.1&&p<.8; }
+  else if(st.mode==='sit'){ sit=true; uy=-.42; ly=.5; const a=st.seg.act;
+    if(a==='work'){ aL=-.95+Math.sin(now*12+M.ph)*.04; aR=-.95+Math.sin(now*12+M.ph+1.7)*.04; hy=Math.sin(now*.3+M.ph)*.1; }
+    else if(a==='meeting'){ aL=aR=-.35; hy=Math.sin(now*.6+M.ph)*.5; }
+    else { aL=-.45; aR=-.7+Math.max(0,Math.sin(now*1.3+M.ph))*.45; hy=Math.sin(now*.5+M.ph)*.25; } }
+  else if(st.mode==='gym'){ const g=Math.sin(now*9+M.ph); l=g*.55; aL=-g*.5; aR=g*.5; uy=.22+Math.abs(Math.cos(now*9+M.ph))*.05; ly=1.12; }
+  else { aR=-.3; hy=Math.sin(now*.8+M.ph)*.2; }
+  M.lL.rotation.x=sit?-1.45:l; M.lR.rotation.x=sit?-1.45:-l; M.lL.position.y=M.lR.position.y=ly;
+  M.aL.rotation.x=aL; M.aR.rotation.x=aR; M.up.position.y=uy; M.head.rotation.y=hy; M.card.visible=card; M.lan.children[2].visible=M.lan.children[3].visible=!card;
+}
+function update(dt,now){
+  const day=DB.get(S.day), t=S.t, F=S.focus;
+  SEATS.ENG.concat(SEATS.DES,SEATS.TEST).forEach(s=>s.on=false); let meet=0;
+  PEOPLE.forEach((P,pi)=>{ const M=PM[pi], tr=day.tracks[pi], st=stateAt(tr,t); M.st=st;
+    if(!st){ M.root.visible=false; return; } M.root.visible=true; M.root.position.set(st.x,0,st.z);
+    let sc=1.08; if(st.seg===tr[0]) sc*=clamp((t-st.seg.t0)/.6,0,1); if(st.seg===tr[tr.length-1]) sc*=clamp((st.seg.t1-t)/.6,0,1); M.root.scale.setScalar(Math.max(.001,sc));
+    M.h=S.snap?st.h:lerpA(M.h,st.h,1-Math.exp(-dt*12)); M.root.rotation.y=M.h; pose(M,st,now);
+    if(st.mode==='sit'){ if(st.seg.act==='work') SEATS[P.home][P.desk].on=true; if(st.seg.act==='meeting') meet++; if(st.seg.act==='testing') SEATS.TEST[3+pi%3].on=true; }
+    const s=st.seg; let hl=false;
+    if(F==='ALL') hl=s.k==='tap'&&s.door!=='ENT'; else if(F) hl=(s.k==='tap'&&s.door===F)||(s.k==='walk'&&(s.dest===F||(F==='ENT'&&s.dest==='OUT')))||(F==='CAFE'&&s.zone==='CAFE'&&s.k==='stay');
+    M.halo.visible=hl||S.sel===pi; if(M.halo.visible){ M.halo.material.color.set(S.sel===pi?'#0E7C66':'#2C5282'); } });
+  SEATS.ENG.concat(SEATS.DES,SEATS.TEST).forEach(s=>s.scr.color.set(s.on?'#C9D9EC':'#1B1F27')); S.tv.color.set(meet?'#8FA9C8':'#1B1F27');
+  for(const k in doorObj){ const D=doorObj[k]; let open=false; for(const [a,b] of day.doors[k]){ if(a>t) break; if(t<=b){open=true;break;} }
+    D.open=S.snap?+open:D.open+(+open-D.open)*(1-Math.exp(-dt*9*Math.max(1,Math.sqrt(S.speed))));
+    D.L.position.x=-.67-D.open*1.22; D.R.position.x=.67+D.open*1.22; let any=false;
+    for(const side in D.rd){ const R=D.rd[side]; let ph=-1; for(const tp of day.taps[k]){ if(tp.t0>t) break; if(tp.side===side&&t<tp.t0+TAP) ph=(t-tp.t0)/TAP; }
+      const ok=ph>=.42&&ph<.95; if(ok) any=true; R.led.material.color.set(ok?'#2FBF8F':ph>=0?'#E7C873':'#5B6470');
+      if(ph>=.38&&ph<.9){ const q=(ph-.38)/.52; R.rm.opacity=(1-q)*.9; R.ring.scale.setScalar(1+q*2.6); } else R.rm.opacity=0; }
+    D.strip.color.set(any?'#2FBF8F':'#D6DCE3'); }
+  S.snap=false;
+}
+const SKY=[[450,'#DCE2EA'],[600,'#E6EAEF'],[840,'#ECEEF0'],[1020,'#E7E1DA'],[1110,'#D7D4DC'],[1170,'#BFC4CF']], SKYD=[[450,'#12161D'],[900,'#161B23'],[1170,'#0C0F14']];
+function sky(t,a){ for(let i=0;i<a.length-1;i++) if(t<=a[i+1][0]) return new THREE.Color(a[i][1]).lerp(new THREE.Color(a[i+1][1]),clamp((t-a[i][0])/(a[i+1][0]-a[i][0]),0,1)); return new THREE.Color(a[a.length-1][1]); }
+function light(){ const d=DARK(), a=clamp((S.t-360)/780,0,1)*Math.PI, ev=clamp((S.t-1050)/120,0,1); scene.background=sky(S.t,d?SKYD:SKY);
+  sun.position.set(Math.cos(a)*50+controls.target.x,Math.sin(a)*45+16,26+controls.target.z); sun.target.position.copy(controls.target);
+  sun.intensity=(d?.38:.62-Math.sin(a)*.1)*(1-ev*.45); hemi.intensity=(d?.4:.55)*(1-ev*.25); }
+
+function flyTo(x,z,zm,d){ S.fly={fx:controls.target.x,fz:controls.target.z,fzm:camera.zoom,x,z,zm:MOB()?zm*1.6:zm,t0:performance.now(),d:d||1300}; }
+function moveT(x,z){ const dx=x-controls.target.x, dz=z-controls.target.z; controls.target.x+=dx; controls.target.z+=dz; camera.position.x+=dx; camera.position.z+=dz; }
+function cam(dt){
+  if(S.fly){ const f=S.fly, q=clamp((performance.now()-f.t0)/f.d,0,1), e=ease(q); moveT(f.fx+(f.x-f.fx)*e,f.fz+(f.z-f.fz)*e); camera.zoom=f.fzm+(f.zm-f.fzm)*e; camera.updateProjectionMatrix(); if(q>=1) S.fly=null; }
+  const p=$('inv'), o=p.classList.contains('open'), tx=0, ty=o?(p.offsetHeight+14)/2:0, k=1-Math.exp(-dt*6);
+  const nx=S.off.x+(tx-S.off.x)*k, ny=S.off.y+(ty-S.off.y)*k; if(Math.abs(nx-S.off.x)>.05||Math.abs(ny-S.off.y)>.05){ S.off.x=nx; S.off.y=ny; offset(); } }
+function resize(){ const w=innerWidth,h=innerHeight,a=w/h,vh=Math.max(34,56/a); renderer.setSize(w,h,false); Object.assign(camera,{left:-vh*a/2,right:vh*a/2,top:vh/2,bottom:-vh/2}); offset(); }
+function offset(){ if(Math.abs(S.off.x)<.5&&Math.abs(S.off.y)<.5) camera.clearViewOffset(); else camera.setViewOffset(innerWidth,innerHeight,S.off.x,S.off.y,innerWidth,innerHeight); camera.updateProjectionMatrix(); }
+const scr=(x,y,z)=>{ const v=new THREE.Vector3(x,y,z).project(camera); return {x:(v.x+1)/2*innerWidth,y:(1-v.y)/2*innerHeight}; };
+const ZL=[['TEST','Testing Lab','#5E6B2A',[-25,-12.7]],['GYM','Gym','#A36A1F',[-25,12.9]],['ENG','Engineering','#2C5282',[-11,-12.7]],['MEET','Meeting Room','#5B4A8B',[0,-12.7]],['DES','Design Studio','#9B4D6B',[11,-12.7]],['CAFE','Cafeteria','#8B6B4E',[11,12.9]],['ENT','Main Entrance','#2B2F36',[-4,14.8]]], zl={};
+
+// ======================= LOOP + HUD =======================
+let last=performance.now(), tick=0, scrub=false;
+function frame(ms){
+  const dt=Math.min(.1,(ms-last)/1000); last=ms; const now=ms/1000;
+  if(S.playing&&!S.busy){ S.t+=dt*S.speed; if(S.watch&&S.t>=S.watch.end){ S.t=S.watch.end; finishWatch(); } else if(S.replay&&S.t>=S.replay.end){ endReplay(); } else if(S.t>=1170&&!S.watch&&!S.replay) nextDay(465,'End of the working day'); }
+  cars.forEach(c=>{ if(S.playing) c.g.position.x+=c.dir*c.sp*dt*Math.min(S.speed,3); if(c.g.position.x>75) c.g.position.x=-75; if(c.g.position.x<-75) c.g.position.x=75; c.g.rotation.y=c.dir>0?0:Math.PI; });
+  update(dt,now); light(); cam(dt); controls.update();
+  if(spot.visible){ const q=(now*.7)%1; spot.scale.setScalar(1+q*.2); spot.material.opacity=.7*(1-q); }
+  const F=S.focus;
+  ZL.forEach(([k,,,p])=>{ const s=scr(p[0],2.9,p[1]), e=zl[k]; e.style.left=s.x+'px'; e.style.top=s.y+'px'; e.style.opacity=!S.started?0:F&&F!=='ALL'&&F!==k?.3:.95; });
+  const di=dayInfo(S.day), f=fmt12(S.t); $('cDay').textContent=di.wd; $('cDate').textContent=di.long; $('cTime').innerHTML=f.slice(0,5)+'<small>'+f.slice(6)+'</small>';
+  $('cLive').innerHTML=S.playing?'<i></i>Playing '+(S.speed===.5?'½':S.speed)+'×':'Paused';
+  if(!scrub) $('tline').value=Math.round(S.t); $('bPlay').textContent=S.playing?'❚❚':'▶'; $('bSpeed').textContent=(S.speed===.5?'½':S.speed)+'×';
+  if((tick-=dt)<=0){ tick=.25; try{ liveTick(); }catch(e){ console.warn(e); } cardText(); }
+  placeCard(); renderer.render(scene,camera); requestAnimationFrame(frame);
+}
+function bind(){
+  $('bPlay').onclick=()=>S.playing=!S.playing;
+  $('bSpeed').onclick=()=>S.speed=SPEEDS[(SPEEDS.indexOf(S.speed)+1)%SPEEDS.length];
+  $('bReset').onclick=()=>{ endReplay(); S.watch=null; S.ctx=null; closeInv(); S.day=5; S.t=522; S.speed=1; S.playing=true; S.snap=true; flyTo(0,0,1,1000); };
+  $('tline').oninput=e=>{ scrub=true; S.t=+e.target.value; S.snap=true; }; $('tline').onchange=()=>scrub=false;
+  $('bWatch').onclick=()=>start(true); $('bExplore').onclick=()=>start(false);
+  $('invBtn').onclick=toggleInvestigate; bindInv();
+  addEventListener('keydown',e=>{ if(e.code==='Space'&&S.started&&!/INPUT|BUTTON/.test(e.target.tagName)){ e.preventDefault(); S.playing=!S.playing; } if(e.key==='Escape'){ hideCard(); closeInv(); closeMenu(); } });
+  let down=null; const c=$('scene'), ray=new THREE.Raycaster(), v=new THREE.Vector2();
+  c.addEventListener('pointerdown',e=>down={x:e.clientX,y:e.clientY});
+  c.addEventListener('pointerup',e=>{ if(!down||!S.started) return; const mv=Math.hypot(e.clientX-down.x,e.clientY-down.y); down=null; if(mv>6) return;
+    v.set(e.clientX/innerWidth*2-1,-e.clientY/innerHeight*2+1); ray.setFromCamera(v,camera);
+    const h=ray.intersectObjects(pick,false).find(h=>{ let o=h.object; while(o){ if(!o.visible) return false; o=o.parent; } return true; });
+    if(h) selectPerson(h.object.userData.pi); else hideCard(); });
+  const L=$('labels'); ZL.forEach(([k,t,c])=>{ const e=document.createElement('div'); e.className='zl'; e.innerHTML=`<i style="background:${c}"></i>${t}`; L.appendChild(e); zl[k]=e; });
+  addEventListener('resize',resize);
+}
+function start(watch){ S.started=true; S.playing=true; $('intro').classList.add('gone'); ['clock','ctrl'].forEach(i=>$(i).classList.remove('off'));
+  flyTo(watch?-3:-7,watch?9:0,watch?1.7:1,1800); $('invBtn').classList.remove('off'); }
+
+function doing(pi){ const tr=DB.get(S.day).tracks[pi], st=PM[pi].st; if(!tr) return 'Not in the office today'; if(!st) return S.t<tr[0].t0?'Not in yet':'Gone home for the day';
+  const s=st.seg; if(s.k==='tap') return s.type==='exit'?'Badging out at the main entrance':'Badging in at '+(s.door==='ENT'?'the main entrance':LOC[s.door].location_name);
+  if(s.k==='walk') return s.dest==='OUT'?'Heading home':s.dest==='ENT'?'Arriving from the street':s.dest===PEOPLE[pi].home?'Walking back to their desk':'Walking to '+LOC[s.dest].location_name;
+  return {work:'Working at their desk in '+(LOC[s.zone]||{}).location_name,buy:'Ordering at the counter',lunch:'Having lunch',coffee:'Coffee break',snack:'Afternoon snack',meeting:'In a meeting',testing:'Testing in the lab',gym:'Working out in the gym'}[s.act]; }
+function selectPerson(pi){ S.sel=pi; $('invBtn').classList.remove('off'); const P=PEOPLE[pi];
+  $('pcard').innerHTML=`<div class="pc panelish" id="pc"><button class="x" aria-label="Close">×</button><div class="n">${esc(P.name)}</div><div class="r">${esc(P.role)} · ${esc(P.team)}</div><div class="k">Currently</div><div id="pcN">${esc(doing(pi))}</div></div>`;
+  $('pc').querySelector('.x').onclick=hideCard; placeCard(); }
+function cardText(){ const n=$('pcN'); if(n&&S.sel!=null) n.textContent=doing(S.sel); }
+function placeCard(){ const pc=$('pc'); if(!pc||S.sel==null) return; const M=PM[S.sel]; if(!M.root.visible){ pc.style.left='14px'; pc.style.top=(innerWidth<760?80:100)+'px'; return; } const s=scr(M.root.position.x,2.4,M.root.position.z);
+  pc.style.left=clamp(s.x+16,8,innerWidth-pc.offsetWidth-8)+'px'; pc.style.top=clamp(s.y-pc.offsetHeight-10,8,innerHeight-pc.offsetHeight-8)+'px'; }
+function hideCard(){ S.sel=null; $('pcard').innerHTML=''; }
+
+// ======================= SCHEMA DIAGRAM =======================
+const TBL={PERSON:{x:10,y:10,cols:['person_id','name','team','role','desk_id'],pk:'person_id'},
+  LOCATION:{x:232,y:10,cols:['location_id','location_name','location_type'],pk:'location_id'},
+  CAFETERIA_LOG:{x:10,y:172,cols:['purchase_id','person_id','item','quantity','purchase_time'],pk:'purchase_id',fk:['person_id']},
+  ACCESS_LOG:{x:232,y:172,cols:['access_id','person_id','location_id','event_time','event_type'],pk:'access_id',fk:['person_id','location_id']}};
+const TW=190, HH=26, RH=20, cy=(t,c)=>TBL[t].y+HH+TBL[t].cols.indexOf(c)*RH+RH/2;
+const RELS={pa:`M${10+TW},${cy('PERSON','person_id')} H220 V${cy('ACCESS_LOG','person_id')} H232`,
+  la:`M${232+TW},${cy('LOCATION','location_id')} H430 V${cy('ACCESS_LOG','location_id')} H${232+TW}`,
+  pc:`M10,${cy('PERSON','person_id')} H3 V${cy('CAFETERIA_LOG','person_id')} H10`};
+function schemaSVG(uses,rel,sel){
+  uses=uses||{}; rel=rel||[]; const anyUse=Object.keys(uses).length>0;
+  let s=`<svg viewBox="0 0 436 302" role="img" aria-label="Database schema: PERSON, LOCATION, ACCESS_LOG and CAFETERIA_LOG with their keys">`;
+  for(const k in RELS) s+=`<path class="rel ${rel.includes(k)?'use':''}" d="${RELS[k]}"/>`;
+  s+=`<text class="rl" x="206" y="${cy('PERSON','person_id')-4}">1</text><text class="rl" x="223" y="${cy('ACCESS_LOG','person_id')-4}">N</text>`;
+  s+=`<text class="rl" x="424" y="${cy('LOCATION','location_id')-4}">1</text><text class="rl" x="424" y="${cy('ACCESS_LOG','location_id')+12}">N</text>`;
+  s+=`<text class="rl" x="1" y="${cy('PERSON','person_id')-6}">1</text><text class="rl" x="1" y="${cy('CAFETERIA_LOG','person_id')-6}">N</text>`;
+  for(const t in TBL){ const T=TBL[t], u=uses[t]; const h=HH+T.cols.length*RH;
+    s+=`<g class="tb ${u?'use':anyUse?'dim':''} ${sel===t?'sel':''}" data-t="${t}" tabindex="0" role="button" aria-label="Show ${t} rows"><rect class="box" x="${T.x}" y="${T.y}" width="${TW}" height="${h}" rx="5"/><rect class="hd" x="${T.x+.5}" y="${T.y+.5}" width="${TW-1}" height="${HH-1}" rx="5"/>
+      <text class="tn" x="${T.x+10}" y="${T.y+17}">${t}</text>`;
+    T.cols.forEach((c,i)=>{ const y=T.y+HH+i*RH; if(u&&u.includes(c)) s+=`<rect class="cu" x="${T.x+1}" y="${y}" width="${TW-2}" height="${RH}"/>`;
+      s+=`<text class="${u&&u.includes(c)?'ct2':''}" x="${T.x+10}" y="${y+14}">${c}</text>`; const tag=c===T.pk?'PK':(T.fk||[]).includes(c)?'FK':''; if(tag) s+=`<text class="k" x="${T.x+TW-24}" y="${y+14}">${tag}</text>`; });
+    s+=`</g>`; }
+  return s+'</svg>';
+}
+
+// ======================= INVESTIGATION LAYER =======================
+// Simple questions first, then analysis of the answer. Everything is read from the records the simulation wrote.
+const AREAS=['ENG','DES','MEET','CAFE','TEST','GYM'];
+const AREA_C={TEST:'#5E6B2A',GYM:'#A36A1F',ENG:'#2C5282',DES:'#9B4D6B',MEET:'#5B4A8B',CAFE:'#8B6B4E',LOBBY:'#8A93A0',ENT:'#2B2F36'};
+const LOCAM={TEST:[-25,-6,1.7],GYM:[-25,8,1.8],ENG:[-11,-6,1.7],DES:[11,-6,1.7],MEET:[0,-8,2.1],CAFE:[11,8,1.85],ENT:[-4,11,1.9]};
+const TABS=[['answer','Answer'],['time','Time'],['people','People'],['pattern','Pattern'],['predict','Prediction'],['sql','SQL']];
+const slotOf=t=>Math.floor(t/60)*60, slotTxt=k=>fmt(k)+'–'+fmt(k+60);
+const hist=()=>[1,2,3,4,5].map(k=>S.day-6+k);
+const dcB=days=>`BETWEEN '${dayInfo(days[0]).iso}' AND '${dayInfo(days[4]).iso}'`, dcD=d=>`= '${dayInfo(d).iso}'`;
+const locName=k=>k==='LOBBY'?'Lobby & corridors':k==='ENT'?'Main Entrance':LOC[k].location_name;
+const liveDT=()=>S.replay?{day:S.replay.ret.day,t:S.replay.ret.t}:{day:S.day,t:S.t};
+const pnm=pi=>PEOPLE[pi].name;
+S.solved=new Set();
+
+// ---------- reading the records ----------
+const accRows=(days,tl,f)=>days.flatMap(d=>DB.get(d).access).filter(r=>(tl==null||r._t<=tl)&&f(r));
+const cafRows=(days,tl)=>days.flatMap(d=>DB.get(d).cafe).filter(r=>tl==null||r._t<=tl);
+function presence(day,t){ const m=new Map(); for(const r of DB.get(day).access){ if(r._t>t) break;
+  if(r._loc==='ENT'){ if(r.event_type==='entry') m.set(r._p,'LOBBY'); else m.delete(r._p); } else if(m.has(r._p)) m.set(r._p,r._loc); } return m; }
+function around(r){ const a=DB.get(r._day).access.filter(x=>x._p===r._p&&x!==r); let prev=null,next=null; for(const x of a){ if(x._t<r._t) prev=x; else if(!next) next=x; } return {prev,next}; }
+const tally=arr=>{ const m=new Map(); arr.forEach(k=>m.set(k,(m.get(k)||0)+1)); return [...m].sort((a,b)=>b[1]-a[1]); };
+function firstIns(days,tl){ return days.map(d=>accRows([d],tl,r=>r._loc==='ENT'&&r.event_type==='entry')[0]).filter(Boolean); }
+
+// ---------- the simple questions (previous format) ----------
+const YD=()=>S.ctx.days[4], yIso=()=>dayInfo(YD()).iso;
+const ACC_U={ACCESS_LOG:['person_id','location_id','event_time','event_type']}, CAF_U={CAFETERIA_LOG:['person_id','item','quantity','purchase_time']};
+const LEVELS=[[1,'Level 1','SELECT and WHERE · one table'],[2,'Level 2','ORDER BY and LIMIT · one table'],[3,'Level 3','COUNT, SUM and GROUP BY · one table'],[4,'Level 4','JOIN · two tables'],[5,'Level 5','Challenge']];
+const MINS_A=`strftime('%H', a.event_time) * 60 + strftime('%M', a.event_time)`, MINS=`strftime('%H', event_time) * 60 + strftime('%M', event_time)`;
+function tapList(recs,noun,when){ return {cols:['person_id','event_time'],rows:recs.map(r=>[r.person_id,r.event_time]),recs,
+  items:recs.map(r=>({dot:r._p,main:pnm(r._p),sub:r.person_id,right:r.event_time.slice(11)})),big:recs.length+' '+noun,sub:(when||'Yesterday')+', '+dayInfo(YD()).label}; }
+const Q=[
+ // ---------- Level 1: SELECT, WHERE ----------
+ {id:'places',lv:1,kind:'list',q:'Which places have a card reader?',sk:['SELECT *','FROM'],focus:null,uses:{LOCATION:['location_id','location_name','location_type']},
+  sql:()=>`SELECT *\nFROM location;`,
+  list:()=>({cols:['location_id','location_name','location_type'],rows:LOCS.map(l=>[l.location_id,l.location_name,l.location_type]),
+    items:LOCS.map(l=>({sw:AREA_C[l.key]||'#2B2F36',main:l.location_name,sub:l.location_type,right:l.location_id,loc:l.key})),big:LOCS.length+' places',sub:'Every row of the LOCATION table'})},
+ {id:'qa',lv:1,kind:'list',q:'Who works in the QA team?',sk:['SELECT columns','WHERE'],focus:'TEST',uses:{PERSON:['name','team','desk_id']},
+  sql:()=>`SELECT name, team, desk_id\nFROM person\nWHERE team = 'QA';`,
+  list:()=>{ const ps=PEOPLE.filter(p=>p.team==='QA'); return {cols:['name','team','desk_id'],rows:ps.map(p=>[p.name,p.team,p.desk_id]),items:ps.map(p=>({dot:p.i,main:p.name,sub:p.role,right:p.desk_id})),big:ps.length+' people',sub:'Rows of PERSON where team is QA'}; }},
+ {id:'gymY',lv:1,kind:'list',q:'Who badged into the Gym yesterday?',sk:['WHERE','AND'],focus:'GYM',uses:ACC_U,
+  sql:()=>`SELECT person_id, event_time\nFROM access_log\nWHERE location_id = 'L7'      -- Gym\n  AND event_type = 'entry'\n  AND DATE(event_time) = '${yIso()}';`,
+  list:()=>tapList(accRows([YD()],null,r=>r._loc==='GYM'&&r.event_type==='entry'),'gym entries')},
+ {id:'cafeAM',lv:1,kind:'list',q:'Who came into the Cafeteria before 11:00 yesterday?',sk:['WHERE','time filter'],focus:'CAFE',uses:ACC_U,
+  sql:()=>`SELECT person_id, event_time\nFROM access_log\nWHERE location_id = 'L5'      -- Cafeteria\n  AND event_type = 'entry'\n  AND DATE(event_time) = '${yIso()}'\n  AND strftime('%H:%M', event_time) < '11:00';`,
+  list:()=>tapList(accRows([YD()],null,r=>r._loc==='CAFE'&&r.event_type==='entry'&&r.event_time.slice(11)<'11:00'),'cafeteria entries')},
+ // ---------- Level 2: ORDER BY, LIMIT ----------
+ {id:'firstY',lv:2,kind:'list',q:'Who was first through the front door yesterday?',sk:['ORDER BY','LIMIT'],focus:'ENT',uses:ACC_U,
+  sql:()=>`SELECT person_id, event_time\nFROM access_log\nWHERE location_id = 'L1'      -- Main Entrance\n  AND event_type = 'entry'\n  AND DATE(event_time) = '${yIso()}'\nORDER BY event_time\nLIMIT 1;`,
+  list:()=>{ const rs=accRows([YD()],null,r=>r._loc==='ENT'&&r.event_type==='entry').sort((a,b)=>a._t-b._t), L=tapList(rs,'arrivals'); L.limit=1; L.big=pnm(rs[0]._p); L.sub='First in at '+rs[0].event_time.slice(11)+', '+dayInfo(YD()).label; return L; }},
+ {id:'lastY',lv:2,kind:'list',q:'Who left last yesterday?',sk:['ORDER BY DESC','LIMIT'],focus:'ENT',uses:ACC_U,
+  sql:()=>`SELECT person_id, event_time\nFROM access_log\nWHERE location_id = 'L1'      -- Main Entrance\n  AND event_type = 'exit'\n  AND DATE(event_time) = '${yIso()}'\nORDER BY event_time DESC\nLIMIT 1;`,
+  list:()=>{ const rs=accRows([YD()],null,r=>r._loc==='ENT'&&r.event_type==='exit').sort((a,b)=>b._t-a._t), L=tapList(rs,'departures'); L.limit=1; L.big=pnm(rs[0]._p); L.sub='Last out at '+rs[0].event_time.slice(11)+', '+dayInfo(YD()).label; return L; }},
+ {id:'lastSold',lv:2,kind:'list',q:'What were the last 5 things sold yesterday?',sk:['ORDER BY DESC','LIMIT 5'],focus:'CAFE',uses:{CAFETERIA_LOG:['item','quantity','purchase_time']},
+  sql:()=>`SELECT item, quantity, purchase_time\nFROM cafeteria_log\nWHERE DATE(purchase_time) = '${yIso()}'\nORDER BY purchase_time DESC\nLIMIT 5;`,
+  list:()=>{ const rs=cafRows([YD()]).sort((a,b)=>b._t-a._t); return {cols:['item','quantity','purchase_time'],rows:rs.map(r=>[r.item,r.quantity,r.purchase_time]),limit:5,
+    items:rs.map(r=>({dot:r._p,main:r.item,sub:'× '+r.quantity,right:r.purchase_time.slice(11)})),big:rs[0].item,sub:'Last sale at '+rs[0].purchase_time.slice(11)+', '+dayInfo(YD()).label}; }},
+ // ---------- Level 3: COUNT, SUM, GROUP BY (one table) ----------
+ {id:'gymCount',lv:3,kind:'count',q:'How many Gym visits were there in the last 5 days?',sk:['COUNT(*)'],focus:'GYM',noun:'gym visits',nopred:true,
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc==='GYM'&&r.event_type==='entry'),W:`location_id = 'L7'      -- Gym\n  AND event_type = 'entry'`,
+  sql:dc=>`SELECT COUNT(*) AS gym_visits\nFROM access_log\nWHERE location_id = 'L7'      -- Gym\n  AND event_type = 'entry'\n  AND DATE(event_time) ${dc};`,cols:['gym_visits']},
+ {id:'cafe',lv:3,kind:'slots',q:'When is the lunch hall busiest?',sk:['GROUP BY','COUNT'],focus:'CAFE',noun:'cafeteria visits',cname:'visits',
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc==='CAFE'&&r.event_type==='entry'),W:`location_id = 'L5'      -- Cafeteria\n  AND event_type = 'entry'`},
+ {id:'gym',lv:3,kind:'slots',q:'When is the gym busiest?',sk:['GROUP BY','COUNT'],focus:'GYM',noun:'gym visits',cname:'visits',
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc==='GYM'&&r.event_type==='entry'),W:`location_id = 'L7'      -- Gym\n  AND event_type = 'entry'`},
+ {id:'arrive',lv:3,kind:'slots',q:'When do most people arrive?',sk:['GROUP BY','ORDER BY'],focus:'ENT',noun:'arrivals',cname:'arrivals',
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc==='ENT'&&r.event_type==='entry'),W:`location_id = 'L1'      -- Main Entrance\n  AND event_type = 'entry'`},
+ {id:'leave',lv:3,kind:'slots',q:'When does the office become quiet?',sk:['GROUP BY','ORDER BY'],focus:'ENT',noun:'departures',cname:'departures',
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc==='ENT'&&r.event_type==='exit'),W:`location_id = 'L1'      -- Main Entrance\n  AND event_type = 'exit'`},
+ {id:'snack',lv:3,kind:'rank',q:'What sells most at the counter?',sk:['SUM','GROUP BY'],focus:'CAFE',noun:'items sold',cafe:true,uses:{CAFETERIA_LOG:['item','quantity','purchase_time']},rel:[],
+  rows:cafRows,W:'',key:r=>r.item,label:k=>k,qty:true,cols:['item','sold'],
+  sql:dc=>`SELECT item, SUM(quantity) AS sold\nFROM cafeteria_log\nWHERE DATE(purchase_time) ${dc}\nGROUP BY item\nORDER BY sold DESC;`},
+ {id:'afternoon',lv:3,kind:'rank',q:'What do people buy after 15:00?',sk:['WHERE','SUM','GROUP BY'],focus:'CAFE',noun:'items sold after 15:00',cafe:true,uses:{CAFETERIA_LOG:['item','quantity','purchase_time']},rel:[],
+  rows:(d,tl)=>cafRows(d,tl).filter(r=>r.purchase_time.slice(11)>='15:00'),W:`strftime('%H:%M', purchase_time) >= '15:00'`,key:r=>r.item,label:k=>k,qty:true,cols:['item','sold'],
+  sql:dc=>`SELECT item, SUM(quantity) AS sold\nFROM cafeteria_log\nWHERE strftime('%H:%M', purchase_time) >= '15:00'\n  AND DATE(purchase_time) ${dc}\nGROUP BY item\nORDER BY sold DESC;`},
+ {id:'checkout',lv:3,kind:'rank',q:'Which day does the office empty earliest?',sk:['AVG','GROUP BY'],focus:'ENT',noun:'departures',avg:true,best:'min',nopred:true,uses:ACC_U,rel:[],
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc==='ENT'&&r.event_type==='exit'),W:`location_id = 'L1'      -- Main Entrance\n  AND event_type = 'exit'`,key:r=>r._day,label:k=>dayInfo(k).label,cols:['day','avg_checkout'],
+  sql:dc=>`SELECT DATE(event_time) AS day,\n       TIME(ROUND(AVG(${MINS})) * 60, 'unixepoch')\n         AS avg_checkout\nFROM access_log\nWHERE location_id = 'L1'\n  AND event_type = 'exit'\n  AND DATE(event_time) ${dc}\nGROUP BY day\nORDER BY avg_checkout;`},
+ // ---------- Level 4: JOIN ----------
+ {id:'meet',lv:4,kind:'rank',q:'Who uses the Meeting Room most?',sk:['JOIN','GROUP BY'],focus:'MEET',noun:'meeting room entries',
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc==='MEET'&&r.event_type==='entry'),W:`location_id = 'L4'      -- Meeting Room\n  AND event_type = 'entry'`,key:r=>r._p,label:pnm,person:true,cols:['name','meetings'],
+  sql:dc=>`SELECT p.name, COUNT(*) AS meetings\nFROM access_log AS a\nJOIN person AS p ON p.person_id = a.person_id\nWHERE a.location_id = 'L4'\n  AND a.event_type = 'entry'\n  AND DATE(a.event_time) ${dc}\nGROUP BY p.name\nORDER BY meetings DESC;`},
+ {id:'areas',lv:4,kind:'rank',q:'Which area gets the most visits?',sk:['JOIN','GROUP BY'],focus:null,noun:'area visits',uses:{LOCATION:['location_id','location_name','location_type'],ACCESS_LOG:['location_id','event_time','event_type']},rel:['la'],
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc!=='ENT'&&r.event_type==='entry'),W:`location_id <> 'L1'\n  AND event_type = 'entry'`,key:r=>r._loc,label:k=>locName(k),swatch:k=>AREA_C[k],cols:['location_name','visits'],
+  sql:dc=>`SELECT l.location_name, COUNT(*) AS visits\nFROM access_log AS a\nJOIN location AS l ON l.location_id = a.location_id\nWHERE a.event_type = 'entry'\n  AND l.location_type <> 'entrance'\n  AND DATE(a.event_time) ${dc}\nGROUP BY l.location_name\nORDER BY visits DESC;`},
+ {id:'team',lv:4,kind:'rank',q:'Which team starts the day earliest?',sk:['JOIN','AVG','GROUP BY'],focus:'ENT',noun:'arrivals',best:'min',avg:true,
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc==='ENT'&&r.event_type==='entry'),W:`location_id = 'L1'\n  AND event_type = 'entry'`,key:r=>PEOPLE[r._p].team,label:k=>k,cols:['team','avg_arrival'],
+  sql:dc=>`SELECT p.team,\n       TIME(ROUND(AVG(${MINS_A})) * 60, 'unixepoch')\n         AS avg_arrival\nFROM access_log AS a\nJOIN person AS p ON p.person_id = a.person_id\nWHERE a.location_id = 'L1'\n  AND a.event_type = 'entry'\n  AND DATE(a.event_time) ${dc}\nGROUP BY p.team\nORDER BY avg_arrival;`},
+ {id:'late',lv:4,kind:'rank',q:'Who arrives after 09:15 most often?',sk:['JOIN','WHERE','GROUP BY'],focus:'ENT',noun:'late arrivals',
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc==='ENT'&&r.event_type==='entry'&&r.event_time.slice(11)>'09:15'),W:`location_id = 'L1'\n  AND event_type = 'entry'\n  AND strftime('%H:%M', event_time) > '09:15'`,key:r=>r._p,label:pnm,person:true,cols:['name','late_days'],
+  sql:dc=>`SELECT p.name, COUNT(*) AS late_days\nFROM access_log AS a\nJOIN person AS p ON p.person_id = a.person_id\nWHERE a.location_id = 'L1'\n  AND a.event_type = 'entry'\n  AND strftime('%H:%M', a.event_time) > '09:15'\n  AND DATE(a.event_time) ${dc}\nGROUP BY p.name\nORDER BY late_days DESC;`},
+ {id:'labvis',lv:4,kind:'rank',q:'Who from outside QA visits the Testing Lab most?',sk:['JOIN','WHERE <>'],focus:'TEST',noun:'lab visits by other teams',
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc==='TEST'&&r.event_type==='entry'&&PEOPLE[r._p].home!=='TEST'),W:`location_id = 'L6'      -- Testing Lab\n  AND event_type = 'entry'\n  AND person_id NOT IN (SELECT person_id FROM person\n                        WHERE team = 'QA')`,key:r=>r._p,label:pnm,person:true,cols:['name','lab_visits'],
+  sql:dc=>`SELECT p.name, COUNT(*) AS lab_visits\nFROM access_log AS a\nJOIN person AS p ON p.person_id = a.person_id\nWHERE a.location_id = 'L6'\n  AND a.event_type = 'entry'\n  AND p.team <> 'QA'\n  AND DATE(a.event_time) ${dc}\nGROUP BY p.name\nORDER BY lab_visits DESC;`},
+ {id:'explorer',lv:4,kind:'rank',q:'Who visits the most different areas?',sk:['JOIN','COUNT DISTINCT'],focus:null,noun:'area visits',distinct:r=>r._loc,unit:'areas',
+  rows:(d,tl)=>accRows(d,tl,r=>r._loc!=='ENT'&&r.event_type==='entry'),W:`location_id <> 'L1'\n  AND event_type = 'entry'`,key:r=>r._p,label:pnm,person:true,cols:['name','different_areas'],
+  sql:dc=>`SELECT p.name,\n       COUNT(DISTINCT a.location_id) AS different_areas\nFROM access_log AS a\nJOIN person AS p ON p.person_id = a.person_id\nWHERE a.location_id <> 'L1'\n  AND a.event_type = 'entry'\n  AND DATE(a.event_time) ${dc}\nGROUP BY p.name\nORDER BY different_areas DESC;`},
+ // ---------- Level 5: challenge ----------
+ {id:'now',lv:5,kind:'presence',q:'How many people are in the building right now?',sk:['window function','LEFT JOIN']},
+ {id:'first',lv:5,kind:'rank',q:'Who is usually the first one in?',sk:['subquery','MIN'],focus:'ENT',noun:'first arrivals',
+  rows:firstIns,W:`location_id = 'L1'\n  AND event_type = 'entry'\n  AND event_time = (SELECT MIN(b.event_time)\n                    FROM access_log AS b\n                    WHERE b.location_id = 'L1'\n                      AND b.event_type = 'entry'\n                      AND DATE(b.event_time) = DATE(access_log.event_time))`,key:r=>r._p,label:pnm,person:true,cols:['name','days_first'],
+  sql:dc=>`SELECT name, COUNT(*) AS days_first\nFROM (\n  SELECT DATE(a.event_time) AS day, p.name,\n         MIN(a.event_time) AS first_in\n  FROM access_log AS a\n  JOIN person AS p ON p.person_id = a.person_id\n  WHERE a.location_id = 'L1'\n    AND a.event_type = 'entry'\n    AND DATE(a.event_time) ${dc}\n  GROUP BY day\n)\nGROUP BY name\nORDER BY days_first DESC;`},
+ {id:'stay',lv:5,kind:'rank',q:'Where do visits last longest?',sk:['LEAD','window function'],focus:null,noun:'visits to shared spaces',avg:true,unit:'min',uses:{LOCATION:['location_id','location_name','location_type'],ACCESS_LOG:['person_id','location_id','event_time','event_type']},rel:['la'],
+  rows:(d,tl)=>accRows(d,tl,r=>['MEET','CAFE','GYM','TEST'].includes(r._loc)&&r.event_type==='entry'&&!(r._loc==='TEST'&&PEOPLE[r._p].home==='TEST')&&!!around(r).next&&(tl==null||around(r).next._t<=tl)),
+  W:`location_id IN ('L4', 'L5', 'L6', 'L7')\n  AND event_type = 'entry'`,key:r=>r._loc,label:k=>locName(k),swatch:k=>AREA_C[k],val:r=>around(r).next._t-r._t,cols:['location_name','avg_minutes'],
+  sql:dc=>`WITH taps AS (\n  SELECT person_id, location_id, event_type, event_time,\n         LEAD(event_time) OVER (\n           PARTITION BY person_id, DATE(event_time)\n           ORDER BY event_time) AS next_tap\n  FROM access_log\n  WHERE DATE(event_time) ${dc}\n)\nSELECT l.location_name,\n       ROUND(AVG((julianday(t.next_tap)\n                - julianday(t.event_time)) * 1440)) AS avg_minutes\nFROM taps AS t\nJOIN location AS l ON l.location_id = t.location_id\nJOIN person   AS p ON p.person_id   = t.person_id\nWHERE t.event_type = 'entry'\n  AND t.next_tap IS NOT NULL\n  AND l.location_type IN ('meeting room', 'cafeteria', 'lab', 'gym')\n  AND NOT (t.location_id = 'L6' AND p.team = 'QA')\nGROUP BY l.location_name\nORDER BY avg_minutes DESC;`},
+];
+
+const QBY={}; Q.forEach(q=>QBY[q.id]=q);
+
+// the record set the analysis works on: the question's records, or a chosen location for the "right now" question
+function src(){ const c=S.ctx, q=c.q; if(q.kind!=='presence') return q;
+  const L=LOC[c.loc]; return {id:'loc',kind:'slots',focus:c.loc,noun:'visits to '+L.location_name,rows:(d,tl)=>accRows(d,tl,r=>r._loc===c.loc&&r.event_type==='entry'),W:`location_id = '${L.location_id}'      -- ${L.location_name}\n  AND event_type = 'entry'`}; }
+const tcol=s=>s.cafe?'purchase_time':'event_time';
+const tbl=s=>s.cafe?'cafeteria_log':'access_log';
+
+// answer = grouped result of a record set
+function answer(s,days,tl){
+  const rows=s.rows(days,tl);
+  if(s.kind==='slots'){ const m=new Map(); rows.forEach(r=>{ const k=slotOf(r._t); m.set(k,(m.get(k)||0)+1); });
+    const ks=[...m.keys()].sort((a,b)=>a-b), groups=[]; if(ks.length) for(let k=ks[0];k<=ks[ks.length-1];k+=60) groups.push({key:k,label:slotTxt(k),value:m.get(k)||0});
+    let best=null; groups.forEach(g=>{ if(!best||g.value>best.value) best=g; }); return {rows,groups,best,total:rows.length}; }
+  const m=new Map(); rows.forEach(r=>{ const k=s.key(r); if(!m.has(k)) m.set(k,{key:k,label:s.label(k),value:0,n:0,set:new Set()}); const g=m.get(k); g.n++;
+    if(s.distinct) g.set.add(s.distinct(r)); else g.value+=s.val?s.val(r):s.avg?Math.floor(r._t):s.qty?r.quantity:1; });
+  let groups=[...m.values()]; groups.forEach(g=>{ if(s.distinct) g.value=g.set.size+g.n/1e4; else if(s.avg) g.value=g.value/g.n; });
+  groups.sort((a,b)=>(s.best==='min'?a.value-b.value:b.value-a.value)||String(a.label).localeCompare(String(b.label)));
+  return {rows,groups,best:groups[0]||null,total:groups.reduce((t,g)=>t+(s.avg||s.distinct?g.n:g.value),0)};
+}
+const valTxt=(s,v)=>s.unit==='min'?Math.round(v)+' min':s.distinct?String(Math.floor(v)):s.avg?fmt(Math.round(v)):String(Math.round(v));
+
+// ---------- UI helpers ----------
+const pane=()=>$('pane');
+const dot=(pi,delay)=>`<i class="pdot" title="${esc(pnm(pi))}" style="background:${PEOPLE[pi].accent};animation-delay:${RM?0:delay}ms">${pnm(pi)[0]}</i>`;
+const chip=(pi,j)=>`<span class="chip" style="animation-delay:${RM?0:j*50}ms"><i class="pdot" style="background:${PEOPLE[pi].accent}">${pnm(pi)[0]}</i>${esc(pnm(pi))}</span>`;
+const nextBtn=(tab,label)=>`<button class="nxb" data-next="${tab}">${label}<span aria-hidden="true">›</span></button>`;
+function countUp(el,to,f,dur){ if(!el) return; f=f||(v=>Math.round(v)); if(RM){ el.textContent=f(to); return; } const t0=performance.now(), d=dur||700;
+  (function g(){ const q=Math.min(1,(performance.now()-t0)/d), e=1-Math.pow(1-q,3); el.textContent=f(to*e); if(q<1) requestAnimationFrame(g); })(); }
+function segBar(list,colorOf,labelOf){ const tot=list.reduce((s,x)=>s+x[1],0)||1;
+  return `<div class="seg">${list.map(([k,n])=>`<i data-w="${n/tot*100}" style="background:${colorOf(k)}"></i>`).join('')}</div><div class="segl">${list.map(([k,n])=>`<span><i class="sw" style="background:${colorOf(k)}"></i>${esc(labelOf(k))} ${n}</span>`).join('')}</div>`; }
+function colChart(groups,o){ o=o||{}; const thin=groups.length>12;
+  return `<div class="cols" id="cols">${groups.map((g,i)=>`<button class="col ${o.peak===g.key||(o.peaks&&o.peaks.includes(g.key))?'peak':''} ${o.sel===g.key?'sel':''} ${o.pick===g.key?'pick':''}" data-k="${g.key}" aria-label="${slotTxt(g.key)}: ${g.value}"><span class="v">${g.value}</span><span class="bar" data-v="${g.value}"></span>${!thin||i%2===0?`<span class="x">${fmt(g.key)}</span>`:''}</button>`).join('')}</div>`; }
+function growCols(max){ const c=$('cols'); if(!c) return; const m=max||Math.max(1,...[...c.querySelectorAll('.bar')].map(b=>+b.dataset.v));
+  requestAnimationFrame(()=>{ c.querySelectorAll('.bar').forEach((b,i)=>{ b.style.transitionDelay=(RM?0:i*25)+'ms'; b.style.height=(+b.dataset.v/m*86)+'%'; }); c.classList.add('shown'); }); }
+function rankRows(s,groups,best,limit){ const gs=groups.slice(0,limit||8), lo=s.avg&&!s.unit?Math.min(...gs.map(g=>g.value))-30:0, hi=Math.max(1,...gs.map(g=>g.value));
+  return `<div class="rk">${gs.map((g,i)=>`<div class="rr ${best&&(best.keys?best.keys.includes(g.key):g.key===best.key)?'win':''}" style="animation-delay:${RM?0:i*60}ms"><span class="nm">${s.person?dot(g.key,0):s.swatch?`<i class="sw" style="background:${s.swatch(g.key)}"></i>`:''}${esc(g.label)}</span><span class="rb"><i data-w="${clamp((g.value-lo)/(hi-lo),.04,1)*100}"></i></span><b>${valTxt(s,g.value)}</b></div>`).join('')}</div>`; }
+function growRanks(){ requestAnimationFrame(()=>pane().querySelectorAll('.rb i').forEach((i,j)=>{ i.style.transitionDelay=(RM?0:j*60)+'ms'; i.style.width=i.dataset.w+'%'; })); }
+function afterRender(){ const p=pane(); requestAnimationFrame(()=>p.querySelectorAll('.seg i').forEach(i=>i.style.width=i.dataset.w+'%'));
+  p.querySelectorAll('[data-next]').forEach(b=>b.onclick=()=>show(b.dataset.next)); }
+
+// ---------- window + tabs ----------
+const newCtx=tab=>({days:hist(),q:null,loc:null,slot:null,tab:tab||'answer',view:'result',pick:null,run:null});
+function openInv(){
+  hideCard(); closeMenu();
+  if(!S.ctx||(!S.watch&&S.ctx.days[4]!==S.day-1&&!S.ctx.run)) S.ctx=newCtx();
+  if(!S.ctx.q){ openMenu(); return; }
+  $('inv').classList.add('open'); document.body.classList.add('pane'); show(S.ctx.tab,true);
+}
+function openMenu(){ hideCard(); if(!S.ctx||(!S.watch&&S.ctx.days[4]!==S.day-1&&!S.ctx.run)) S.ctx=newCtx(); $('inv').classList.remove('open'); document.body.classList.remove('pane'); rQuestions(); $('qmenu').classList.add('open'); }
+function closeMenu(){ $('qmenu').classList.remove('open'); }
+function toggleInvestigate(){ if($('qmenu').classList.contains('open')) closeMenu(); else if($('inv').classList.contains('open')) closeInv(); else openMenu(); }
+function closeInv(){ $('inv').classList.remove('open'); document.body.classList.remove('pane'); if(!S.watch&&!S.replay){ S.focus=null; spot.visible=false; } S.sel=null; }
+function needs(tab){ const c=S.ctx; if(!c.q) return false; if(tab==='answer'||tab==='sql') return true; if(c.q.kind==='list') return false;
+  if(tab==='predict'&&(c.q.nopred||c.q.kind==='count')) return false; return c.q.kind!=='presence'||!!c.loc; }
+function drawTabs(){
+  const c=S.ctx, T=$('tabs');
+  T.innerHTML=TABS.map(([k,l])=>`<button class="tab ${c.tab===k?'on':''}" role="tab" aria-selected="${c.tab===k}" data-t="${k}" ${needs(k)?'':'disabled'}>${l}</button>`).join('')+'<span class="ink" id="ink"></span>';
+  T.querySelectorAll('.tab').forEach(b=>b.onclick=()=>show(b.dataset.t));
+  requestAnimationFrame(()=>{ const a=T.querySelector('.tab.on'), ink=$('ink'); if(a&&ink){ ink.style.left=a.offsetLeft+10+'px'; ink.style.width=(a.offsetWidth-20)+'px'; } });
+  let cr='Investigation'; if(c.q) cr+=` › <b>${esc(c.q.q.replace(/\?$/,''))}</b>`; if(c.loc) cr+=` › ${esc(locName(c.loc))}`; if(c.slot!=null&&['time','people','pattern'].includes(c.tab)) cr+=` › ${slotTxt(c.slot)}`;
+  $('crumb').innerHTML=cr; $('crumb').title=$('crumb').textContent;
+}
+function show(tab,instant,keepView){
+  if(!needs(tab)) tab='answer';
+  const c=S.ctx; c.tab=tab; c.view='result'; if(tab!=='sql') c.sqlFor=tab; drawTabs();
+  const p=pane(); const go=()=>{ p.className='pane'; p.scrollTop=0; render(); p.classList.remove('out'); afterRender(); };
+  if(instant||RM) go(); else { p.classList.add('out'); setTimeout(go,150); }
+}
+function focusLoc(k,fly){ S.focus=k; if(k&&DOORS[k]){ const d=DOORS[k]; spot.position.set(d.x,0,d.z+d.s*.6); spot.visible=true; if(fly&&LOCAM[k]){ const c=LOCAM[k]; flyTo(c[0],c[1],c[2]); } } else { spot.visible=false; if(fly) flyTo(-7,0,.95,1100); } }
+function render(){ const c=S.ctx;
+  ({sql:rSQL,answer:rAnswer,time:rTime,people:rPeople,pattern:rPattern,predict:rPredict})[c.tab](); }
+
+// ---------- Questions: the menu of simple questions ----------
+function dbCounts(){ let acc=0,caf=0; for(let d=0;d<=S.day;d++){ const D=DB.get(d); const tl=d===S.day?S.t:1e9; acc+=D.access.filter(r=>r._t<=tl).length; caf+=D.cafe.filter(r=>r._t<=tl).length; } return {acc,caf}; }
+function rQuestions(){
+  const n=dbCounts(), p=$('qmBody');
+  $('qmMeta').innerHTML=`Database: <b>4 tables</b> · PERSON ${PEOPLE.length} rows · LOCATION ${LOCS.length} rows · ACCESS_LOG ${n.acc.toLocaleString()} rows · CAFETERIA_LOG ${n.caf.toLocaleString()} rows · ${S.solved.size} of ${Q.length} answered`;
+  let idx=0;
+  p.innerHTML=LEVELS.map(([lv,t,d])=>`<div class="lvl"><div class="lvh"><b>${t}</b><span>${d}</span></div><div class="qgrid">${Q.filter(q=>q.lv===lv).map(q=>{ idx++;
+    return `<button class="qc ${S.ctx.q===q?'on':''}" data-q="${q.id}" style="animation-delay:${RM?0:idx*25}ms"><span class="no">${pad(idx)}</span><span class="qt2">${esc(q.q)}</span><span class="tg">${q.sk.map(k=>`<code>${esc(k)}</code>`).join('')}${S.solved.has(q.id)?'<em>answered</em>':''}</span></button>`; }).join('')}</div></div>`).join('');
+  p.querySelectorAll('.qc').forEach(b=>b.onclick=()=>pickQ(b.dataset.q));
+}
+function pickQ(id){ const c=S.ctx, q=QBY[id]; Object.assign(c,{q,loc:null,slot:null,pick:null,run:null,regs:null,tab:'answer',view:'result'}); if(S.watch){ S.watch=null; S.speed=1; } openInv(); }
+function nextQ(){ const i=Q.indexOf(S.ctx.q); return Q[i+1]||null; }
+const nextQBtn=()=>{ const n=nextQ(); return n?`<button class="nxb" id="bNextQ">Next question: ${esc(n.q)}<span aria-hidden="true">›</span></button>`:''; };
+function bindNextQ(){ const b=$('bNextQ'); if(b) b.onclick=()=>pickQ(nextQ().id); }
+
+// ---------- Answer: the simple question's result, shown visually ----------
+function rAnswer(){
+  const c=S.ctx, q=c.q; S.solved.add(q.id);
+  if(q.kind==='presence') return rNow();
+  if(q.kind==='list') return rList();
+  if(q.kind==='count') return rCount();
+  focusLoc(q.focus||null,true);
+  const r=answer(q,c.days), b0=r.best, ties=b0?r.groups.filter(g=>Math.abs(g.value-b0.value)<1e-9):[], b=b0&&ties.length>1?Object.assign({},b0,{label:ties.length===2?ties.map(g=>g.label).join(' and '):b0.label+' (tied)',keys:ties.map(g=>g.key)}):b0;
+  if(!b){ pane().innerHTML=`<div class="ans"><div class="qq">${esc(q.q)}</div><div class="big">No records</div></div><div class="viz"></div>`; return; }
+  const pct=Math.round((q.avg?b.n:b.value)/Math.max(1,r.total)*100), each=ties.length>1?' each':'';
+  const sub=q.kind==='slots'?`<b id="aN">0</b> of ${r.total} ${q.noun} in this hour, about ${pct}%`:q.unit==='min'?`${valTxt(q,b.value)} on average${each}, over ${b.n} visits`:q.distinct?`${Math.floor(b.value)} different areas${each}, ${b.n} visits`:q.avg?`average ${fmt12(Math.round(b.value))}${each}, over ${b.n} ${q.noun}`:`<b id="aN">0</b> of ${r.total} ${q.noun}${each}, about ${pct}%${each}`;
+  pane().innerHTML=`<div class="ans"><div class="qq">${esc(q.q)}</div><div class="big focusin">${esc(b.label)}</div><div class="sub">${sub}</div><div class="sub" style="margin-top:4px">Last 5 working days</div>
+      <div class="foot">${nextBtn('time','Analyse: when does this happen?')}${nextQBtn()}</div></div>
+    <div class="viz">${q.kind==='slots'?colChart(r.groups,{peak:b.key,peaks:b.keys}):rankRows(q,r.groups,b)}</div>`;
+  if($('aN')) countUp($('aN'),b.value,null,600); q.kind==='slots'?growCols():growRanks(); bindNextQ();
+}
+function rList(){
+  const q=S.ctx.q, L=q.list(), lim=L.limit; focusLoc(q.focus||null,true);
+  pane().innerHTML=`<div class="ans"><div class="qq">${esc(q.q)}</div><div class="big focusin">${esc(L.big)}</div><div class="sub">${esc(L.sub)}</div>
+      ${lim?`<div class="sub" style="margin-top:8px">Sorted by ORDER BY. LIMIT ${lim} keeps the highlighted row${lim>1?'s':''}.</div>`:''}
+      <div class="foot">${nextQBtn()}</div></div>
+    <div class="viz"><div class="recs">${L.items.map((it,i)=>`<div class="rec ${lim?(i<lim?'win':'dim'):''}" ${it.loc?`data-loc="${it.loc}"`:''} ${it.dot!=null?`data-p="${it.dot}"`:''} style="animation-delay:${RM?0:Math.min(i,24)*45}ms">${it.dot!=null?dot(it.dot,0):it.sw?`<i class="sw" style="background:${it.sw}"></i>`:'<i></i>'}<span class="m">${esc(it.main)}<small>${esc(it.sub||'')}</small></span><b>${esc(it.right||'')}</b></div>`).join('')||'<div class="meta">No rows.</div>'}</div></div>`;
+  pane().querySelectorAll('.rec').forEach(r=>{ r.onmouseenter=()=>{ if(r.dataset.loc) focusLoc(r.dataset.loc,false); if(r.dataset.p) S.sel=+r.dataset.p; }; r.onmouseleave=()=>{ S.sel=null; if(r.dataset.loc) focusLoc(q.focus||null,false); }; });
+  bindNextQ();
+}
+function rCount(){
+  const c=S.ctx, q=c.q, rows=q.rows(c.days); focusLoc(q.focus||null,true);
+  pane().innerHTML=`<div class="ans"><div class="qq">${esc(q.q)}</div><div class="big" id="cN">0</div><div class="sub">${esc(q.noun)} in the last 5 working days</div>
+      <div class="foot">${nextBtn('time','Analyse: when do they happen?')}${nextQBtn()}</div></div>
+    <div class="viz"><div class="units">${c.days.map((d,i)=>{ const n=rows.filter(r=>r._day===d).length; return `<div class="ur"><span>${dayInfo(d).label}</span><span class="uq">${Array.from({length:n},(_,j)=>`<i style="animation-delay:${RM?0:i*120+j*45}ms"></i>`).join('')}</span><b>${n}</b></div>`; }).join('')}</div></div>`;
+  countUp($('cN'),rows.length,null,900); bindNextQ();
+}
+function rNow(){
+  const L=liveDT(), m=presence(L.day,L.t), rows=[...AREAS,'LOBBY'].map(k=>({k,ppl:[...m].filter(([,l])=>l===k).map(([p])=>p)}));
+  if(!S.ctx.loc) focusLoc(null,true);
+  pane().innerHTML=`<div class="ans"><div class="qq">How many people are in the building right now?</div><div class="big" id="ovN">0</div><div class="sub">of ${PEOPLE.length} staff at ${fmt12(L.t)}</div>
+    <div class="foot"><div class="sub">Select a location to analyse it.</div></div></div>
+    <div class="viz"><div class="lrows">${rows.map((r,i)=>`<button class="lrow ${S.ctx.loc===r.k?'on':''}" data-k="${r.k}" ${r.k==='LOBBY'?'disabled':''}><span class="nm"><i class="sw" style="background:${AREA_C[r.k]}"></i>${esc(locName(r.k))}</span><span class="track">${r.ppl.map((p,j)=>dot(p,120+i*70+j*70)).join('')}</span><b class="n" data-n="${r.ppl.length}">0</b></button>`).join('')}</div></div>`;
+  countUp($('ovN'),m.size); pane().querySelectorAll('.lrow .n').forEach((e,i)=>setTimeout(()=>countUp(e,+e.dataset.n,null,500),RM?0:120+i*70));
+  pane().querySelectorAll('.lrow:not(:disabled)').forEach(b=>{ b.onclick=()=>{ const c=S.ctx; if(c.loc!==b.dataset.k){ c.loc=b.dataset.k; c.slot=null; c.pick=null; c.run=null; c.regs=null; } focusLoc(c.loc,true); show('time'); };
+    b.onmouseenter=()=>{ if(!S.ctx.loc) focusLoc(b.dataset.k); }; b.onmouseleave=()=>{ if(!S.ctx.loc) focusLoc(null); }; });
+}
+
+// ---------- analysis tabs: Time / People / Pattern over the answer's records ----------
+function slotsOf(s,days,tl,keys){ const rows=s.rows(days,tl), m=new Map(); rows.forEach(r=>{ const k=slotOf(r._t); m.set(k,(m.get(k)||0)+1); });
+  let ks=keys; if(!ks){ const a=[...m.keys()].sort((x,y)=>x-y); ks=[]; if(a.length) for(let k=a[0];k<=a[a.length-1];k+=60) ks.push(k); }
+  const groups=ks.map(k=>({key:k,label:slotTxt(k),value:m.get(k)||0})); let peak=null; groups.forEach(g=>{ if(!peak||g.value>peak.value) peak=g; }); return {rows,groups,peak}; }
+function slotPeople(s,days,k){ const rows=s.rows(days).filter(r=>slotOf(r._t)===k), m=new Map();
+  rows.forEach(r=>{ if(!m.has(r._p)) m.set(r._p,{pi:r._p,days:new Set(),rows:[]}); const o=m.get(r._p); o.days.add(r._day); o.rows.push(r); });
+  return {rows,list:[...m.values()].sort((a,b)=>b.days.size-a.days.size||pnm(a.pi).localeCompare(pnm(b.pi)))}; }
+function patternOf(s,days,k){
+  const sp=slotPeople(s,days,k); let thr=4, reg=sp.list.filter(o=>o.days.size>=4); if(reg.length<2){ thr=3; reg=sp.list.filter(o=>o.days.size>=3); } if(reg.length<2){ thr=2; reg=sp.list.filter(o=>o.days.size>=2); }
+  const rows=reg.flatMap(o=>o.rows), ts=rows.map(r=>r._t), mean=ts.reduce((a,b)=>a+b,0)/Math.max(1,ts.length), sd=Math.sqrt(ts.reduce((a,b)=>a+(b-mean)**2,0)/Math.max(1,ts.length));
+  return {sp,thr,reg,rows,mean,sd,home:tally(reg.map(o=>PEOPLE[o.pi].home)),team:tally(reg.map(o=>PEOPLE[o.pi].team)),from:tally(rows.map(r=>{ const p=around(r).prev; return p?p._loc:'ENT'; }))}; }
+const ensureSlot=()=>{ const c=S.ctx; if(c.slot==null){ const s=slotsOf(src(),c.days); c.slot=s.peak?s.peak.key:null; } return c.slot; };
+function rTime(){
+  const c=S.ctx, s=src(), r=slotsOf(s,c.days); if(!r.peak){ pane().innerHTML=`<div class="ans"><div class="big">No records</div></div><div class="viz"></div>`; return; }
+  if(c.slot==null||!r.groups.some(g=>g.key===c.slot)) c.slot=r.peak.key;
+  focusLoc(s.focus||null,true); const sel=()=>r.groups.find(g=>g.key===c.slot);
+  pane().innerHTML=`<div class="ans"><div class="qq">When do the ${esc(s.noun)} happen?</div><div class="big focusin" id="tsl">${slotTxt(c.slot)}</div><div class="sub" id="tsub"></div>
+      <div class="foot">${s.focus&&!s.cafe?'<button class="btn sec sm" id="bRe">Replay this hour</button>':''}${nextBtn('people','Who is behind them?')}</div></div>
+    <div class="viz">${colChart(r.groups,{peak:r.peak.key,sel:c.slot})}</div>`;
+  const sub=()=>{ const g=sel(); $('tsub').innerHTML=`<b id="tv">0</b> over 5 days${g.key===r.peak.key?', the busiest hour':''}. Select a bar to analyse another time.`; countUp($('tv'),g.value,null,450); };
+  sub(); growCols();
+  pane().querySelectorAll('.col').forEach(b=>b.onclick=()=>{ c.slot=+b.dataset.k; c.regs=null; pane().querySelectorAll('.col').forEach(x=>x.classList.toggle('sel',x===b));
+    const t=$('tsl'); t.textContent=slotTxt(c.slot); t.classList.remove('focusin'); void t.offsetWidth; t.classList.add('focusin'); sub(); drawTabs(); });
+  if($('bRe')) $('bRe').onclick=()=>startReplay(s.focus,c.slot,c.days[4]);
+}
+function rPeople(){
+  const c=S.ctx, s=src(), k=ensureSlot(), sp=slotPeople(s,c.days,k); focusLoc(s.focus||null,false);
+  pane().innerHTML=`<div class="ans"><div class="qq">Who is behind the ${esc(s.noun)} at ${slotTxt(k)}?</div><div class="big"><span id="pN">0</span> people</div><div class="sub">seen in this hour on the last 5 days</div>
+      <div class="foot">${nextBtn('pattern','Who repeats it, and why?')}</div></div>
+    <div class="viz"><div class="plist">${sp.list.map((o,i)=>`<div class="prow ${o.days.size>=4?'reg':''}" data-p="${o.pi}" style="animation-delay:${RM?0:i*55}ms">${dot(o.pi,0)}<span class="w">${esc(pnm(o.pi))}<small>${esc(PEOPLE[o.pi].team)}</small></span>
+      <span class="d5">${c.days.map(d=>`<i data-on="${o.days.has(d)?1:0}" title="${dayInfo(d).label}"></i>`).join('')}</span><b class="c">${o.days.size}/5</b></div>`).join('')}</div></div>`;
+  countUp($('pN'),sp.list.length,null,500);
+  pane().querySelectorAll('.d5 i').forEach((el,i)=>{ if(el.dataset.on==='1') setTimeout(()=>el.classList.add('on'),RM?0:250+i*18); });
+  pane().querySelectorAll('.prow').forEach(r=>{ r.onmouseenter=()=>S.sel=+r.dataset.p; r.onmouseleave=()=>S.sel=null; });
+}
+function rPattern(){
+  const c=S.ctx, s=src(), k=ensureSlot(), P=patternOf(s,c.days,k); focusLoc(s.focus||null,false);
+  if(!P.reg.length){ pane().innerHTML=`<div class="ans"><div class="qq">Who repeats it?</div><div class="big">No repeats</div><div class="sub">Nobody appears at ${slotTxt(k)} on two or more days. Pick another hour on the Time tab.</div><div class="foot">${nextBtn('time','Pick another time')}</div></div><div class="viz"></div>`; return; }
+  const lo=k-20, hi=k+80, pos=t=>clamp((t-lo)/(hi-lo)*100,0,100), home=P.home[0], from=P.from[0];
+  pane().innerHTML=`<div class="ans"><div class="qq">What do the people who repeat it have in common?</div><div class="big"><span id="rN">0</span> regulars</div><div class="sub">at ${slotTxt(k)} on ${P.thr} or more of the last 5 days</div>
+      <div class="chips">${P.reg.map(o=>o.pi).map(chip).join('')}</div><div class="foot">${nextBtn('predict','What will happen tomorrow?')}</div></div>
+    <div class="viz"><div class="traits">
+      <div class="trait"><div class="k">Similar timing</div><div class="v">${fmt(P.mean)}, give or take ${Math.max(1,Math.round(P.sd))} min</div>
+        <div class="strip"><span class="band" style="left:${pos(P.mean-P.sd)}%;width:${Math.max(1,pos(P.mean+P.sd)-pos(P.mean-P.sd))}%"></span>${P.rows.map(r=>`<i style="left:${pos(r._t)}%" data-h="${60+((r._t*37)%35)}"></i>`).join('')}<div class="lab"><span>${fmt(lo)}</span><span>${fmt(k)}</span><span>${fmt(k+60)}</span><span>${fmt(hi)}</span></div></div></div>
+      <div class="trait" style="animation-delay:80ms"><div class="k">Same home area</div><div class="v">${esc(locName(home[0]))} (${home[1]} of ${P.reg.length})</div>${segBar(P.home,x=>AREA_C[x],locName)}
+        <div class="segl" style="margin-top:10px">${P.team.map(([t,n])=>`<span>${esc(t)} ${n}</span>`).join('')}</div></div>
+      <div class="trait" style="animation-delay:160ms"><div class="k">Same route</div><div class="v">From ${esc(locName(from[0]))} (${Math.round(from[1]/P.rows.length*100)}%)</div>${segBar(P.from,x=>AREA_C[x]||'#8A93A0',locName)}</div>
+    </div></div>`;
+  countUp($('rN'),P.reg.length,null,450);
+  requestAnimationFrame(()=>{ pane().querySelectorAll('.strip i').forEach((i,j)=>setTimeout(()=>i.style.height=i.dataset.h+'%',RM?0:j*30)); pane().querySelectorAll('.strip .band').forEach(b=>setTimeout(()=>b.style.transform='scaleX(1)',RM?0:400)); });
+  c.regs=P.reg.map(o=>o.pi);
+}
+
+// ---------- Prediction: predict the question's answer for tomorrow, then verify ----------
+const predSrc=()=>src();   // presence → the chosen location's busiest hour; others → the question's own answer
+function rPredict(){
+  const c=S.ctx, s=predSrc(); focusLoc(s.focus||null,false);
+  if(c.run) return c.run.done?rVerify():rLive();
+  const r=answer(s,c.days), opts=[...r.groups].sort((a,b)=>s.best==='min'?a.value-b.value:b.value-a.value).slice(0,4);
+  if(s.kind==='slots') opts.sort((a,b)=>a.key-b.key);
+  const mx=Math.max(1,...opts.map(o=>o.value)), mn=Math.min(...opts.map(o=>o.value));
+  const ask=s.kind==='slots'?'when will the '+s.noun+' peak tomorrow?':c.q.q.replace(/\?$/,'')+' tomorrow?';
+  pane().innerHTML=`<div class="ans"><div class="qq">Based on this pattern, ${esc(ask.charAt(0).toLowerCase()+ask.slice(1))}</div><div class="big focusin" id="pk">${c.pick!=null?esc(String(opts.find(o=>o.key===c.pick)?.label||'Choose')):'Choose'}</div>
+      <div class="sub">The last 5 days point to ${esc(String(r.best.label))}</div><div class="foot"><button class="btn" id="bRun" ${c.pick==null?'disabled':''}>Run tomorrow</button></div></div>
+    <div class="viz"><div class="opts">${opts.map((o,i)=>`<button class="opt ${c.pick===o.key?'on':''}" data-k="${esc(o.key)}" style="animation-delay:${RM?0:i*60}ms"><b>${esc(o.label)}</b><span>${s.avg||s.distinct?valTxt(s,o.value)+(s.avg&&!s.unit?' on average':''):Math.round(o.value)+' in 5 days'}</span><div class="mb"><i data-w="${s.best==='min'?(mn/o.value*100):(o.value/mx*100)}"></i></div></button>`).join('')}</div></div>`;
+  requestAnimationFrame(()=>pane().querySelectorAll('.opt .mb i').forEach(i=>i.style.width=i.dataset.w+'%'));
+  pane().querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ const o=opts.find(x=>String(x.key)===b.dataset.k); c.pick=o.key; pane().querySelectorAll('.opt').forEach(x=>x.classList.toggle('on',x===b)); const t=$('pk'); t.textContent=o.label; t.classList.remove('focusin'); void t.offsetWidth; t.classList.add('focusin'); $('bRun').disabled=false; });
+  $('bRun').onclick=runTomorrow;
+}
+function runTomorrow(){
+  const c=S.ctx; if(c.pick==null) return; endReplay(); const s=predSrc(), r=answer(s,c.days);
+  const times=r.rows.map(x=>x._t), start=clamp(Math.floor((s.kind==='slots'?r.groups[0].key:Math.min(...times))-20),460,1100), end=clamp(Math.ceil((s.kind==='slots'?r.groups[r.groups.length-1].key+60:Math.max(...times))+15),start+60,1160);
+  const pk=slotsOf(s,c.days).peak; if(!c.regs&&pk) c.regs=patternOf(s,c.days,c.slot!=null?c.slot:pk.key).reg.map(o=>o.pi);
+  c.run={keys:s.kind==='slots'?r.groups.map(g=>g.key):null,hist:r.best.key,regs:c.regs||[],start,end,done:false,day:S.day+1};
+  nextDay(start,dayInfo(S.day).wd+' is over',()=>{ S.watch={end}; S.speed=clamp(Math.round((end-start)/35),4,16); S.playing=true; focusLoc(s.focus||null,true); if(S.ctx===c&&c.tab==='predict') show('predict',true); });
+}
+function liveView(s,r,tl){ return s.kind==='slots'?slotsOf(s,[r.day],tl,r.keys):answer(s,[r.day],tl); }
+function rLive(){
+  const c=S.ctx, r=c.run, s=predSrc(), v=liveView(s,r,Math.min(S.t,r.end));
+  pane().innerHTML=`<div class="ans"><div class="qq">${esc(dayInfo(r.day).wd)}, as it happens</div><div class="big" id="lvN">${v.rows.length}</div><div class="sub">${esc(s.noun)} so far</div>
+      <div class="foot"><div class="livebar"><i></i>Recording ${fmt(r.start)}–${fmt(r.end)}</div></div></div>
+    <div class="viz" id="lvViz">${s.kind==='slots'?colChart(v.groups,{pick:c.pick}):rankRows(s,v.groups,null)}</div>`;
+  s.kind==='slots'?growCols(Math.max(4,...v.groups.map(g=>g.value))):growRanks();
+}
+let lastLive=0;
+function liveTick(){ const c=S.ctx; if(!c||!c.run||c.run.done||c.tab!=='predict'||!$('inv').classList.contains('open')) return;
+  if(!$('lvViz')) return; const r=c.run, s=predSrc(), v=liveView(s,r,Math.min(S.t,r.end)), n=$('lvN'); if(n) n.textContent=v.rows.length;
+  if(s.kind==='slots'){ const m=Math.max(4,...v.groups.map(g=>g.value)), C=$('cols'); if(!C) return; C.querySelectorAll('.col').forEach((b,i)=>{ const x=v.groups[i].value; b.querySelector('.bar').style.height=(x/m*86)+'%'; b.querySelector('.v').textContent=x; }); }
+  else if(performance.now()-lastLive>900){ lastLive=performance.now(); $('lvViz').innerHTML=rankRows(s,v.groups,null); pane().querySelectorAll('.rr').forEach(e=>e.style.animation='none'); pane().querySelectorAll('.rb i').forEach(i=>{ i.style.transition='none'; i.style.width=i.dataset.w+'%'; }); } }
+function finishWatch(){ const c=S.ctx; S.playing=false; S.watch=null; S.speed=1; if(c&&c.run){ c.run.done=true; if(!$('inv').classList.contains('open')) openInv(); show('predict'); } }
+function rVerify(){
+  const c=S.ctx, r=c.run, s=predSrc(), v=liveView(s,r,r.end), act=v.best||v.peak;
+  const pickV=(v.groups.find(g=>g.key===c.pick)||{value:0}).value, histV=(v.groups.find(g=>g.key===r.hist)||{value:-1}).value;
+  const ok=act&&Math.abs(pickV-act.value)<1e-9, near=!ok&&s.kind==='slots'&&act&&Math.abs(act.key-c.pick)===60, held=act&&Math.abs(histV-act.value)<1e-9;
+  const verdict=ok?['ok','Prediction supported']:near?['ok','Close prediction']:held?['no','The usual pattern held']:['no','The pattern changed'];
+  const came=r.regs.filter(pi=>v.rows.some(x=>x._p===pi));
+  const lab=k=>s.kind==='slots'?slotTxt(k):(v.groups.find(g=>g.key===k)||{label:String(s.label?s.label(k):k)}).label;
+  pane().innerHTML=`<div class="ans"><div class="qq">Was the prediction right?</div><div class="big focusin" style="color:var(${verdict[0]==='ok'?'--grant':'--warn'})">${verdict[1]}</div>
+      <div class="sub">${esc(dayInfo(r.day).wd)}, ${esc(dayInfo(r.day).long)}</div>
+      <div class="foot"><button class="nxb" id="bAgain">Choose another question<span>›</span></button></div></div>
+    <div class="viz">${act?(s.kind==='slots'?colChart(v.groups,{peak:act.key,pick:c.pick}):rankRows(s,v.groups,act,5)):'<div class="meta">No records tomorrow.</div>'}
+      <div class="vlist"><div class="vb" style="animation-delay:200ms"><div class="k">Your prediction</div><div class="v">${esc(lab(c.pick))}</div></div>
+        <div class="vb" style="animation-delay:500ms"><div class="k">Actual</div><div class="v">${act?esc(act.label):'—'}</div></div>
+        <div class="vb ${verdict[0]}" style="animation-delay:800ms"><div class="k">${s.avg?'Your choice averaged':'Your choice scored'}</div><div class="v">${s.avg?fmt(Math.round(pickV)):pickV}</div></div>
+        <div class="vb" style="animation-delay:1100ms"><div class="k">Regulars who came back</div><div class="v">${r.regs.length?came.length+' of '+r.regs.length:'—'}</div></div></div></div>`;
+  const cols=$('cols'); if(cols){ cols.style.height='150px'; cols.style.minHeight='150px'; growCols(); } else growRanks();
+  $('bAgain').onclick=()=>{ S.ctx=newCtx(); openMenu(); };
+}
+
+// ---------- 3D replay of a chosen hour ----------
+function startReplay(loc,k,day){
+  endReplay(); S.replay={ret:{day:S.day,t:S.t,speed:S.speed,playing:S.playing},end:k+60};
+  S.day=day; S.t=k-2; S.snap=true; S.speed=2; S.playing=true; focusLoc(loc,true);
+  $('rpT').textContent=`Replaying ${dayInfo(day).label}, ${slotTxt(k)}`; $('replay').hidden=false;
+}
+function endReplay(){ if(!S.replay) return; const r=S.replay.ret; S.replay=null; S.day=r.day; S.t=r.t; S.speed=r.speed; S.playing=r.playing; S.snap=true; $('replay').hidden=true; }
+
+// ---------- View data / See SQL (only on request) ----------
+const HR=k=>pad(Math.floor(k/60));
+function wh(s,extra,dc){ const t=tcol(s); return 'WHERE '+[s.W,...extra,`DATE(${t}) ${dc}`].filter(Boolean).join('\n  AND '); }
+function timeSQL(s,dc,cn){ const t=tcol(s); cn=cn||'records'; return `SELECT strftime('%H', ${t}) AS hour,\n       COUNT(*) AS ${cn}\nFROM ${tbl(s)}\n${wh(s,[],dc)}\nGROUP BY hour\nORDER BY ${cn} DESC;`; }
+const usesOf=s=>s.uses||(s.cafe?CAF_U:ACC_U);
+const joinUses=s=>s.uses||{PERSON:['person_id','name','team'],...ACC_U};
+const hourRows=gs=>gs.filter(g=>g.value).sort((a,b)=>b.value-a.value||a.key-b.key).map(g=>[HR(g.key),g.value]);
+function spec(T){
+  const c=S.ctx; T=T||c.sqlFor||'answer'; const q=c.q, s=T==='answer'?q:src(), dcs=dcB(c.days), live=liveDT(), t=tcol(s), k=(T==='people'||T==='pattern')?ensureSlot():c.slot;
+  switch(T){
+  case 'answer': {
+    if(q.kind==='presence'){ const day=live.day, tl=live.t, m=presence(day,tl);
+      return {title:'People in the building now',uses:{...ACC_U,LOCATION:['location_id','location_name','location_type']},rel:['la'],
+        sql:`SELECT COALESCE(l.location_name, 'Lobby & corridors') AS location,\n       COUNT(*) AS people\nFROM (\n  SELECT person_id, location_id, event_type,\n         ROW_NUMBER() OVER (PARTITION BY person_id\n                            ORDER BY event_time DESC) AS rn\n  FROM access_log\n  WHERE DATE(event_time) = '${dayInfo(day).iso}'\n    AND strftime('%H:%M', event_time) <= '${fmt(tl)}'\n) AS last_tap\nLEFT JOIN location AS l\n       ON l.location_id = last_tap.location_id\n      AND l.location_type <> 'entrance'\nWHERE last_tap.rn = 1\n  AND last_tap.event_type = 'entry'\nGROUP BY location\nORDER BY people DESC;`,
+        run:()=>({cols:['location','people'],rows:tally([...m.values()]).map(([x,n])=>[locName(x),n])})}; }
+    if(q.kind==='list'){ const L=q.list(); return {title:q.q,uses:q.uses,rel:q.rel||[],sql:q.sql(),run:()=>({cols:L.cols,rows:L.limit?L.rows.slice(0,L.limit):L.rows})}; }
+    if(q.kind==='count'){ const n=q.rows(c.days).length; return {title:q.q,uses:usesOf(q),rel:[],sql:q.sql(dcs),run:()=>({cols:q.cols,rows:[[n]]})}; }
+    const r=answer(q,c.days);
+    if(q.kind==='slots') return {title:q.q,uses:usesOf(q),rel:[],sql:timeSQL(q,dcs,q.cname),run:()=>({cols:['hour',q.cname||'records'],rows:hourRows(r.groups)})};
+    return {title:q.q,uses:joinUses(q),rel:q.rel||['pa'],sql:q.sql(dcs),run:()=>({cols:q.cols,rows:r.groups.map(g=>[g.label,valTxt(q,g.value)])})}; }
+  case 'time': { const r=slotsOf(s,c.days);
+    return {title:'When do the records happen?',uses:usesOf(s),rel:[],sql:timeSQL(s,dcs),run:()=>({cols:['hour','records'],rows:hourRows(r.groups)})}; }
+  case 'people': { const sp=slotPeople(s,c.days,k);
+    return {title:'Who is behind the records at '+slotTxt(k)+'?',uses:usesOf(s),rel:[],
+      sql:`SELECT person_id,\n       COUNT(DISTINCT DATE(${t})) AS days\nFROM ${tbl(s)}\n${wh(s,[`strftime('%H', ${t}) = '${HR(k)}'`],dcs)}\nGROUP BY person_id\nORDER BY days DESC;`,
+      run:()=>({cols:['person_id','days'],rows:sp.list.map(o=>[PEOPLE[o.pi].id,o.days.size])})}; }
+  case 'pattern': { const P=patternOf(s,c.days,k);
+    return {title:'Who repeats it, and when exactly?',uses:usesOf(s),rel:[],
+      sql:`SELECT person_id,\n       COUNT(DISTINCT DATE(${t})) AS days,\n       TIME(ROUND(AVG(strftime('%H', ${t}) * 60\n                    + strftime('%M', ${t}))) * 60,\n            'unixepoch') AS avg_time\nFROM ${tbl(s)}\n${wh(s,[`strftime('%H', ${t}) = '${HR(k)}'`],dcs)}\nGROUP BY person_id\nHAVING days >= ${P.thr}\nORDER BY days DESC;`,
+      run:()=>({cols:['person_id','days','avg_time'],rows:P.reg.map(o=>{ const av=o.rows.reduce((x,r)=>x+Math.floor(r._t),0)/o.rows.length; return [PEOPLE[o.pi].id,o.days.size,fmt(Math.round(av))+':00']; })})}; }
+  case 'predict': { const day=c.run?c.run.day:S.day+1, dc=dcD(day), v=c.run?liveView(s,c.run,Math.min(S.t,c.run.end)):{groups:[],rows:[]}, sl=s.kind==='slots';
+    return {title:'Tomorrow, checked against the records',uses:sl?usesOf(s):joinUses(s),rel:sl?[]:(s.rel||['pa']),sql:sl?timeSQL(s,dc,s.cname):s.sql(dc),
+      run:()=>({cols:sl?['hour',s.cname||'records']:s.cols,rows:c.run?(sl?hourRows(v.groups):v.groups.map(g=>[g.label,valTxt(s,g.value)])):[],empty:c.run?null:'0 rows. Tomorrow has not happened yet.'})}; }
+  }
+}
+const KW=/^(SELECT|FROM|JOIN|LEFT|ON|WHERE|AND|OR|GROUP|BY|ORDER|DESC|ASC|LIMIT|AS|HAVING|DISTINCT|BETWEEN|IN|NOT|OVER|PARTITION|WITH|IS|NULL)$/, FN=/^(COUNT|SUM|AVG|MIN|MAX|ROUND|DATE|TIME|IIF|strftime|COALESCE|ROW_NUMBER|LEAD|julianday)$/;
+const hlSQL=t=>esc(t).replace(/('[^']*')|(--.*$)|\b(\d+(?:\.\d+)?)\b|\b([A-Za-z_]+)\b/gm,(m,s,cm,n,w)=>s?`<span class="cs">${s}</span>`:cm?`<span class="cc">${cm}</span>`:n?`<span class="cn">${n}</span>`:KW.test(w)?`<span class="ck">${w}</span>`:FN.test(w)?`<span class="cf">${w}</span>`:w);
+function boxTable(cols,rows){ const W=cols.map((c,i)=>Math.min(26,Math.max(String(c).length,...rows.map(r=>String(r[i]).length))));
+  const cut=(v,w)=>{ v=String(v); return v.length>w?v.slice(0,w-1)+'…':v.padEnd(w); }, line=(l,m,r)=>l+W.map(w=>'─'.repeat(w+2)).join(m)+r;
+  return [line('┌','┬','┐'),'│'+cols.map((c,i)=>' '+cut(c,W[i])+' ').join('│')+'│',line('├','┼','┤'),...rows.map(r=>'│'+r.map((v,i)=>' '+cut(v,W[i])+' ').join('│')+'│'),line('└','┴','┘')]; }
+const FKT={ACCESS_LOG:{person_id:['PERSON','pa'],location_id:['LOCATION','la']},CAFETERIA_LOG:{person_id:['PERSON','pc']}};
+function schemaCards(uses,rel){
+  const n=dbCounts(), rows={PERSON:PEOPLE.length,LOCATION:LOCS.length,ACCESS_LOG:n.acc,CAFETERIA_LOG:n.caf};
+  const pkUsed=t=>rel.some(r=>(r==='pa'||r==='pc')&&t==='PERSON'||r==='la'&&t==='LOCATION');
+  return `<div class="sch2" id="sch2">${['PERSON','ACCESS_LOG','LOCATION','CAFETERIA_LOG'].map((t,ti)=>{ const T=TBL[t], u=uses[t];
+    return `<div class="tcard ${u?'use':'dim'}" style="animation-delay:${RM?0:ti*60}ms"><div class="th2"><span>${t.toLowerCase()}</span><em>${rows[t].toLocaleString()} rows</em></div>${T.cols.map((col,i)=>{ const on=u&&u.includes(col), fk=(FKT[t]||{})[col], pk=col===T.pk;
+      return `<div class="tr2 ${on?'on':''}" style="transition-delay:${RM?0:250+ti*60+i*45}ms"><span>${col}</span>${pk?`<b class="pk ${pkUsed(t)?'on':''}">PK</b>`:''}${fk?`<b class="fk ${rel.includes(fk[1])?'on':''}">FK → ${fk[0].toLowerCase()}</b>`:''}</div>`; }).join('')}</div>`; }).join('')}</div>`;
+}
+function rSQL(){
+  const c=S.ctx, T=c.sqlFor&&needs(c.sqlFor)&&c.sqlFor!=='sql'?c.sqlFor:'answer', sp=spec(T), tabsAv=TABS.filter(([k])=>k!=='sql'&&needs(k));
+  pane().className='pane full';
+  const sch=()=>schemaCards(sp.uses,sp.rel), lit=()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{ const x=$('sch2'); if(x) x.classList.add('lit'); }));
+  pane().innerHTML=`<div class="sqlv2">
+    <div class="sgrid"><div class="editor"><div class="eh"><div class="qsel" role="group" aria-label="Query for">${tabsAv.map(([k,l])=>`<button class="${k===T?'on':''}" data-k="${k}" title="${k===T?esc(sp.title):''}">${l}</button>`).join('')}</div><button class="btn sm exec" id="qRun">▶ Execute</button></div>
+      <div class="code"><pre>${hlSQL(sp.sql).split('\n').map((l,i)=>`<span class="ln" style="animation-delay:${RM?0:i*45}ms">${l||' '}</span>`).join('\n')}</pre></div></div>
+    <div class="right" id="qRight">${sch()}</div></div></div>`;
+  lit();
+  pane().querySelectorAll('.qsel button').forEach(b=>b.onclick=()=>{ c.sqlFor=b.dataset.k; const p=pane(); p.classList.add('out'); setTimeout(()=>{ rSQL(); p.classList.remove('out'); },RM?0:150); });
+  $('qRun').onclick=()=>{ $('qRight').innerHTML=`<div class="term"><div class="tbar"><i></i><i></i><i></i><span>sqlite3 northwind.db</span><button class="tlink" id="bSch">Show tables</button></div><pre id="tout"></pre></div>`;
+    $('bSch').onclick=()=>{ $('qRight').innerHTML=sch(); lit(); };
+    const r=sp.run(), out=$('tout'), one=sp.sql.replace(/--.*$/gm,'').replace(/\s+/g,' ').trim();
+    const shown=r.rows.slice(0,40), lines=[`<span class="p">sqlite&gt;</span> ${esc(one.length>90?one.slice(0,89)+'…':one)}`,''];
+    if(r.rows.length) boxTable(r.cols,shown.map(x=>x.map(v=>String(v)))).forEach(l=>lines.push(esc(l))); else lines.push(esc(r.empty||'(no rows)'));
+    if(r.rows.length>shown.length) lines.push(`… ${r.rows.length-shown.length} more rows`);
+    lines.push('',`<span class="ok">${r.rows.length} row${r.rows.length===1?'':'s'} returned</span>`,`<span class="p">sqlite&gt;</span> <span class="cur">▌</span>`);
+    let i=0; const step=()=>{ if(!$('tout')) return; i=i<2?i+1:i<5?5:Math.min(lines.length,i+3); out.innerHTML=lines.slice(0,i).join('\n'); out.scrollTop=out.scrollHeight; if(i<lines.length) setTimeout(step,RM?0:i<2?240:70); };
+    out.innerHTML=`<span class="p">sqlite&gt;</span> running…`; setTimeout(step,RM?0:280); };
+}
+
+// ---------- day change ----------
+function nextDay(t0,msg,cb){
+  if(S.busy) return; S.busy=true; const nd=dayInfo(S.day+1); $('cu1').textContent=msg; $('cu2').textContent=''; $('cur').classList.add('on');
+  setTimeout(()=>{ $('cu1').textContent='Next working day'; $('cu2').textContent=nd.wd+', '+nd.long; S.day++; S.t=t0; S.snap=true; hideCard(); },RM?100:900);
+  setTimeout(()=>{ $('cur').classList.remove('on'); S.busy=false; if(cb) cb(); },RM?400:2200);
+}
+function bindInv(){
+  $('iwX').onclick=closeInv; $('iwQ').onclick=openMenu; $('qmX').onclick=closeMenu; $('rpX').onclick=endReplay;
+  addEventListener('resize',()=>{ if(S.ctx&&$('inv').classList.contains('open')) drawTabs(); });
+}
+
+init(); bind(); moveT(-7,0); camera.zoom=MOB()?1.4:.95; camera.updateProjectionMatrix(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>
