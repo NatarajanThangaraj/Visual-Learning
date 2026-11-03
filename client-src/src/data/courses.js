@@ -340,6 +340,15 @@ export const courses = [
             blurb: 'Watch a 3D office whose every badge tap and cafeteria purchase lands in a table, then answer questions about it: SELECT and WHERE, ORDER BY, GROUP BY, JOIN, predict tomorrow and check it against the records.' },
         ],
       },
+      {
+        id: 'indexes',
+        title: 'Indexes',
+        summary: 'How a database finds one row without checking every row.',
+        lessons: [
+          { id: 'index-playground', title: 'Index Playground', minutes: 20,
+            blurb: 'Find Kavya row by row, then with an index like the back of a book. Watch the index fold into a tree, then see how MySQL keeps two trees: one for the rows, one for the index.' },
+        ],
+      },
     ],
   },
 ];

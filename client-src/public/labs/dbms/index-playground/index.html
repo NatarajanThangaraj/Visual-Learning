@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Index Playground: how a database index finds a row</title>
+<meta name="description" content="Start from zero: find a student row by row, use an index like the back of a book, grow it into a tree, then see how MySQL uses two trees.">
+<meta name="theme-color" content="#F2EFE7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15181C" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Index Playground: how a database index finds a row">
+<meta property="og:description" content="Six small hands-on steps, from checking every row to MySQL's two trees.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23F2EFE7'/%3E%3Cpath d='M16 6v6M16 12l-7 8M16 12l7 8' fill='none' stroke='%231E2125' stroke-width='2.4'/%3E%3Crect x='5' y='20' width='8' height='6' fill='%23B83C14'/%3E%3Crect x='19' y='20' width='8' height='6' fill='none' stroke='%231E2125' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="tokens.css?v=20261103">
+<link rel="stylesheet" href="styles.css?v=20261103">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Index Playground","description":"An interactive, step-by-step introduction to database indexes for beginners, ending with how MySQL (InnoDB) uses a clustered index and a secondary index.","learningResourceType":"interactive resource","educationalLevel":"beginner","inLanguage":"en","isAccessibleForFree":true,"teaches":"Database indexes"}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the lesson</a>
+<p class="sr-only" id="sr-status" role="status" aria-live="polite"></p>
+<!-- Every factual line carries its source ID in a data-src attribute; the full map is in content/copy.md.
+     The user asked for no visible sources (2026-11-02). Analogy steps (1-4) are framed as analogies, not MySQL facts. -->
+
+<header class="bar">
+  <a class="wordmark" href="#step-1" aria-label="Index Playground, step 1">
+    <svg viewBox="0 0 28 20" width="26" height="19" aria-hidden="true"><path d="M7 2v5M7 7l-4 5M7 7l4 5M21 2v5M21 7l-4 5M21 7l4 5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 14 Q14 6 17 9" fill="none" stroke="var(--color-accent)" stroke-width="1.8" stroke-dasharray="2 2"/></svg>
+    <span>Index Playground</span>
+  </a>
+  <nav class="steps" aria-label="Steps">
+    <button type="button" data-go="1"><b>1</b><span>Problem</span></button>
+    <button type="button" data-go="2"><b>2</b><span>Index</span></button>
+    <button type="button" data-go="3"><b>3</b><span>Pages</span></button>
+    <button type="button" data-go="4"><b>4</b><span>Grow</span></button>
+    <button type="button" data-go="5"><b>5</b><span>MySQL</span></button>
+    <button type="button" data-go="6"><b>6</b><span>Check</span></button>
+  </nav>
+</header>
+
+<main id="main">
+  <!-- STEP 1: the problem (full scan) -->
+  <section class="step" id="step-1" data-step="1" aria-labelledby="t1">
+    <div class="step-head">
+      <div>
+        <p class="kicker">Step 1 · The problem</p>
+        <h2 id="t1">Find Kavya.</h2>
+        <p class="hint" id="hint-1" aria-live="polite">Tap the rows, one by one.</p>
+      </div>
+      <div class="tools">
+        <div class="stamp" id="stamp-1" aria-live="polite" aria-atomic="true"><span class="count" id="count-1">0</span><span class="count-label">rows checked</span></div>
+        <button class="btn" type="button" id="auto-1">Check for me</button>
+        <button class="btn btn-ghost" type="button" id="reset-1">Again</button>
+      </div>
+    </div>
+    <div class="scrollbox"><ol class="rowgrid data" id="table-1" aria-label="Students table, in roll number order"></ol></div>
+    <p class="take" id="take-1" hidden data-src="S01">MySQL does the same when there is no index: row after row.</p>
+  </section>
+
+  <!-- STEP 2: the idea of an index (book analogy) -->
+  <section class="step" id="step-2" data-step="2" aria-labelledby="t2" hidden>
+    <div class="step-head">
+      <div>
+        <p class="kicker">Step 2 · The idea</p>
+        <h2 id="t2">Use an index, like the one at the back of a book.</h2>
+        <p class="hint" id="hint-2" aria-live="polite">Tap K, then Kavya.</p>
+      </div>
+      <div class="tools">
+        <div class="stamp" aria-live="polite" aria-atomic="true"><span class="count" id="count-2">0</span><span class="count-label">taps</span></div>
+      </div>
+    </div>
+    <div class="idea-grid">
+      <figure class="card book data" aria-label="Example: index at the back of a textbook">
+        <figcaption>Back of a textbook</figcaption>
+        <ul><li><span>atom</span><span>p. 12</span></li><li><span>cell</span><span>p. 45</span></li><li><span>force</span><span>p. 78</span></li><li><span>gravity</span><span>p. 91</span></li></ul>
+      </figure>
+      <div class="card ours">
+        <p class="card-t">Our index: name → row</p>
+        <div class="letters" id="letters-2" role="group" aria-label="Jump to a letter"></div>
+        <ul class="namelist data" id="names-2"></ul>
+      </div>
+    </div>
+    <p class="take" id="take-2" hidden data-src="S02 S05">An index is a sorted list that points to where the data is.</p>
+  </section>
+
+  <!-- STEP 3: pages + signpost -> tree -->
+  <section class="step" id="step-3" data-step="3" aria-labelledby="t3" hidden>
+    <div class="step-head">
+      <div>
+        <p class="kicker">Step 3 · Pages and a signpost</p>
+        <h2 id="t3">A long list? Cut it into pages. Put a signpost on top.</h2>
+        <p class="hint" id="hint-3" aria-live="polite">Tap the signpost line where Kavya fits.</p>
+      </div>
+      <div class="tools">
+        <div class="stamp" aria-live="polite" aria-atomic="true"><span class="count" id="count-3">0</span><span class="count-label">pages opened</span></div>
+        <button class="btn" type="button" id="fold-3" aria-pressed="false">See its shape</button>
+      </div>
+    </div>
+    <div class="board" id="board-3" role="group" aria-label="Signpost and pages" aria-describedby="desc-3"></div>
+    <p class="sr-only" id="desc-3"></p>
+    <p class="take" id="take-3" hidden data-src="S04">This shape is a tree, drawn upside down. Top: the root. Bottom: the leaves.</p>
+  </section>
+
+  <!-- STEP 4: more rows -> one more level (toy) -->
+  <section class="step" id="step-4" data-step="4" aria-labelledby="t4" hidden>
+    <div class="step-head">
+      <div>
+        <p class="kicker">Step 4 · More rows</p>
+        <h2 id="t4">More students? Add one more signpost level.</h2>
+        <p class="hint" id="hint-4" aria-live="polite">Kavya’s path is marked in red.</p>
+      </div>
+      <div class="tools">
+        <button class="btn" type="button" id="grow-4" aria-pressed="false">Add 48 students</button>
+      </div>
+    </div>
+    <div class="stats" id="stats-4" aria-live="polite"></div>
+    <div class="board folded" id="board-4" role="img" aria-label="Toy tree of signposts and pages" aria-describedby="desc-4"></div>
+    <p class="sr-only" id="desc-4"></p>
+    <p class="toy-note">Toy rule: a signpost holds 4 lines, a page holds 12 names.</p>
+  </section>
+
+  <!-- STEP 5: inside MySQL (two trees, jump) -->
+  <section class="step step-mysql" id="step-5" data-step="5" aria-labelledby="t5" hidden>
+    <div class="step-head">
+      <div>
+        <p class="kicker">Step 5 · Inside MySQL</p>
+        <h2 id="t5" data-src="S03 S25">The table is a tree sorted by roll no. An index on name is a second tree that points back.</h2>
+      </div>
+      <div class="subtabs" role="group" aria-label="Practice">
+        <button type="button" data-sub="a"><b>a</b> Find 42</button>
+        <button type="button" data-sub="b"><b>b</b> The jump</button>
+        <button type="button" data-sub="c"><b>c</b> Skip it</button>
+        <button type="button" data-sub="d"><b>d</b> Add one</button>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="hud hud-goal">
+        <p class="goal" id="goal-5">Find roll no 42. Open as few pages as you can.</p>
+        <p class="hint" id="hint-5" aria-live="polite">Tap the top page to start.</p>
+      </div>
+      <div class="stamp hud-count" aria-live="polite" aria-atomic="true"><span class="count" id="count-5">0</span><span class="count-label" id="count-label-5">pages opened</span><span class="count-sub" id="count-sub-5"></span></div>
+      <svg id="scene" tabindex="0" role="group" aria-label="Two trees. Tab to a page and press Enter to open it. Left and right arrows turn the drawing."></svg>
+      <div class="peek" id="peek" hidden role="dialog" aria-labelledby="peek-title">
+        <div class="peek-head"><p id="peek-title">Page</p><button type="button" class="peek-x" id="peek-x" aria-label="Close">×</button></div>
+        <ul id="peek-list"></ul>
+      </div>
+    </div>
+    <div class="dock">
+      <div class="dock-task" id="task-5"></div>
+      <div class="dock-play" aria-label="Playback">
+        <button class="ibtn" type="button" id="btn-back" aria-label="Step back"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M13 4 6 10l7 6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+        <button class="ibtn ibtn-play" type="button" id="btn-play" aria-label="Play" aria-pressed="false">
+          <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" class="i-play"><path d="M6 3.5v13l11-6.5z" fill="currentColor"/></svg>
+          <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" class="i-pause"><path d="M6 4h3v12H6zM11 4h3v12h-3z" fill="currentColor"/></svg>
+        </button>
+        <button class="ibtn" type="button" id="btn-fwd" aria-label="Step forward"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 4l7 6-7 6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+        <label class="sr-only" for="scrub">Scrub</label>
+        <input type="range" id="scrub" min="0" max="1" value="0" step="1">
+        <button class="ibtn" type="button" data-rotate="-1" aria-label="Turn left"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M8 5 3 10l5 5M3 10h9a5 5 0 0 1 5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        <button class="ibtn" type="button" data-rotate="1" aria-label="Turn right"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M12 5l5 5-5 5M17 10H8a5 5 0 0 0-5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+      </div>
+      <details class="says" id="says" data-src="S06"><summary>What MySQL typically says</summary><div id="says-body"></div></details>
+    </div>
+  </section>
+
+  <!-- STEP 6: check yourself -->
+  <section class="step" id="step-6" data-step="6" aria-labelledby="t6" hidden>
+    <div class="step-head">
+      <div>
+        <p class="kicker">Step 6 · Check yourself</p>
+        <h2 id="t6">Three quick questions.</h2>
+      </div>
+      <div class="tools"><div class="stamp" aria-live="polite" aria-atomic="true"><span class="count" id="count-6">0</span><span class="count-label">of 3 right</span></div></div>
+    </div>
+    <ol class="quiz" id="quiz"></ol>
+  </section>
+</main>
+
+<nav class="stepnav" aria-label="Step navigation">
+  <button class="btn btn-ghost" type="button" id="prev">Back</button>
+  <span class="where" id="where">Step 1 of 6</span>
+  <button class="btn btn-primary" type="button" id="next">Next</button>
+</nav>
+<p class="foot" data-src="S04">Toy data: made-up students. Real MySQL pages hold 16 KB by default.</p>
+
+<script src="app.js?v=20261103"></script>
+</body>
+</html>
