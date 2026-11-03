@@ -174,6 +174,83 @@ button:disabled{cursor:not-allowed}
 .seg-btn{flex:1 1 0;min-height:46px;border:0;border-radius:9px;background:transparent;color:var(--link);font-weight:700;font-size:16px}
 .seg-btn[aria-pressed="true"]{background:var(--primary);color:var(--on-primary)}
 .linkbtn{background:none;border:0;padding:6px 0;min-height:32px;color:var(--on-deep-muted);font-size:13px;text-align:left;text-decoration:underline}
+
+/* ---------- Behind the counter (always dark, like a terminal) ---------- */
+.btc, .btc-toggle{
+  --c-bg:#0D1411; --c-surface:#141E19; --c-surface2:#1B2721; --c-line:#26352D; --c-ink:#DCE8E0; --c-muted:#8EA397;
+  --c-kw:#7FD1A3; --c-str:#E8C27A; --c-num:#9CC7F0; --c-com:#76887D; --c-err:#FF8F85; --c-err-bg:#3A1F1C; --c-write:#E8A33D; --c-hit:#2D3A1E;
+  --c-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+.btc-toggle{position:fixed;right:16px;bottom:16px;z-index:40;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 18px;border-radius:999px;border:1px solid var(--c-line);background:var(--c-bg);color:var(--c-ink);font:600 15px/1 Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.28);cursor:pointer}
+.btc-toggle svg{color:var(--c-kw)}
+.btc-toggle[hidden]{display:none}
+.btc-badge{min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--c-write);color:#1A1206;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.btc{position:fixed;top:0;right:0;bottom:0;z-index:50;width:min(460px,100vw);display:flex;flex-direction:column;background:var(--c-bg);color:var(--c-ink);border-left:1px solid var(--c-line);box-shadow:-12px 0 32px rgba(0,0,0,.25);font:14px/1.45 Inter,system-ui,sans-serif}
+.btc[hidden]{display:none}
+@media (min-width:1100px){ html.btc-open body{margin-right:460px} }
+.btc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 16px 12px 20px;border-bottom:1px solid var(--c-line)}
+.btc-title{display:flex;gap:12px;align-items:flex-start}
+.btc-title svg{color:var(--c-kw);margin-top:3px;flex:none}
+.btc-title strong{display:block;font-size:17px}
+.btc-title span{display:block;color:var(--c-muted);font-size:13px}
+.btc-x{flex:none;width:40px;height:40px;border-radius:10px;border:1px solid var(--c-line);background:transparent;color:var(--c-ink);font-size:22px;line-height:1;cursor:pointer}
+.btc-tabs{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 0 20px;border-bottom:1px solid var(--c-line)}
+.btc-tabs [role=tab]{min-height:40px;padding:0 4px;margin-right:16px;border:0;border-bottom:2px solid transparent;background:none;color:var(--c-muted);font:600 14px Inter,system-ui,sans-serif;cursor:pointer}
+.btc-tabs [role=tab][aria-selected=true]{color:var(--c-ink);border-bottom-color:var(--c-kw)}
+.btc-clear{border:0;background:none;color:var(--c-muted);font-size:13px;text-decoration:underline;cursor:pointer;min-height:40px}
+.btc-clear[hidden]{display:none}
+.btc-body{flex:1;overflow:auto;padding:14px 16px 24px 20px;display:flex;flex-direction:column;gap:12px}
+.btc-empty{color:var(--c-muted);margin:8px 0}
+.btc-req{border:1px solid var(--c-line);border-left:3px solid var(--c-line);border-radius:10px;background:var(--c-surface);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.btc-req.write{border-left-color:var(--c-write)}
+.btc-req.bad{border-left-color:var(--c-err)}
+.btc-req.fresh{animation:btc-in .6s ease-out}
+@keyframes btc-in{from{background:var(--c-surface2);transform:translateY(-4px);opacity:.4}to{background:var(--c-surface);transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){ .btc-req.fresh{animation:none} }
+.btc-req-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.btc-req-h .m{font:700 11px var(--c-mono);letter-spacing:.04em;padding:2px 6px;border-radius:5px;background:var(--c-surface2);color:var(--c-kw)}
+.btc-req-h code{font:13px var(--c-mono);color:var(--c-ink)}
+.btc-req-h .st{font:600 12px var(--c-mono)}
+.btc-req-h .st.ok{color:var(--c-kw)}
+.btc-req-h .st.no{color:var(--c-err)}
+.btc-req-h .x{font:12px var(--c-mono);color:var(--c-muted)}
+.btc-req-h .when{margin-left:auto;color:var(--c-muted);font-size:12px}
+.btc-why{color:var(--c-muted);font-size:13px}
+.btc-why .tag{margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(232,163,61,.15);color:var(--c-write);font-size:11px;font-weight:700}
+.btc-stmt{background:var(--c-bg);border-radius:6px;padding:7px 10px}
+.btc-stmt pre{margin:0;white-space:pre-wrap;word-break:break-word;font:12.5px/1.5 var(--c-mono);color:var(--c-ink)}
+.btc-stmt .k{color:var(--c-kw);font-weight:600}
+.btc-stmt .s{color:var(--c-str)}
+.btc-stmt .c{color:var(--c-com);font-style:italic}
+.btc-stmt .r{display:block;margin-top:3px;font:12px var(--c-mono);color:var(--c-muted)}
+.btc-stmt.note{background:transparent;padding:0 10px}
+.btc-stmt.err{background:var(--c-err-bg)}
+.btc-stmt.err pre{color:var(--c-err)}
+.btc-res-err{font-size:13px;font-weight:600;color:var(--c-err)}
+.btc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.btc-chip{position:relative;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--c-line);background:var(--c-surface);color:var(--c-ink);font:600 13px var(--c-mono);cursor:pointer}
+.btc-chip span{color:var(--c-muted);font-weight:400}
+.btc-chip[aria-pressed=true]{border-color:var(--c-kw);background:var(--c-surface2)}
+.btc-chip i{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:var(--c-write)}
+.btc-note{margin:0;color:var(--c-muted);font-size:13px}
+.btc-cols{display:flex;flex-wrap:wrap;gap:6px}
+.btc-col{font:12px var(--c-mono);color:var(--c-muted);padding:3px 8px;border-radius:6px;background:var(--c-surface)}
+.btc-col b{color:var(--c-ink);font-weight:600}
+.btc-col em{font-style:normal;font-weight:700;font-size:10px;padding:0 4px;border-radius:4px}
+.btc-col em.pk{background:rgba(127,209,163,.18);color:var(--c-kw)}
+.btc-col em.fk{background:rgba(156,199,240,.18);color:var(--c-num)}
+.btc-keys strong{font-size:13px}
+.btc-keys ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;display:flex;flex-direction:column;gap:3px}
+.btc-keys code{font:12px var(--c-mono);color:var(--c-kw)}
+.btc-keys .dim{color:var(--c-muted)}
+.btc-grid{overflow:auto;max-height:46vh;border:1px solid var(--c-line);border-radius:8px}
+.btc-grid table{border-collapse:collapse;font:12px var(--c-mono);min-width:100%}
+.btc-grid th{position:sticky;top:0;background:var(--c-surface2);color:var(--c-muted);font-weight:600;text-align:left;padding:6px 10px;white-space:nowrap}
+.btc-grid td{padding:5px 10px;border-top:1px solid var(--c-line);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.btc-grid .n{color:var(--c-num)}
+.btc-grid .dim{color:var(--c-muted)}
+.btc-grid tr.hit td{background:var(--c-hit);color:#F3F7E9}
+.btc-count{margin:0;color:var(--c-muted);font-size:12px}
 </style>
 </head>
 <body>
@@ -184,7 +261,9 @@ button:disabled{cursor:not-allowed}
 /* In-page store                                                       */
 /* The original app runs on Express + MySQL. This page has no server, */
 /* so the same routes run here against tables kept in localStorage,   */
-/* seeded exactly like `npm run db:seed:demo`.                        */
+/* seeded exactly like `npm run db:seed:demo`. Every route also       */
+/* writes down the SQL the real server sends for it, with the values  */
+/* filled in, for the "Behind the counter" panel.                     */
 /* ------------------------------------------------------------------ */
 var Store = (function () {
   'use strict';
@@ -195,6 +274,7 @@ var Store = (function () {
   var PAYMENTS = ['upi', 'card', 'cod'];
   var ADMIN = { name: 'Store Manager', email: 'admin@kurinjimetro.local', mobile: '9000000000', password: 'ChangeMe@123' };
   var DEMO_PASSWORD = 'Demo@12345';
+  var HASH = { raw: "'<bcrypt hash>'" };
 
   var CATEGORIES = ['Fruits & Vegetables', 'Dairy & Eggs', 'Rice & Grains', 'Pulses', 'Oils & Masala', 'Beverages'];
   var CODE = { 'Fruits & Vegetables': 'FV', 'Dairy & Eggs': 'DE', 'Rice & Grains': 'RG', Pulses: 'PL', 'Oils & Masala': 'OM', Beverages: 'BV' };
@@ -234,12 +314,12 @@ var Store = (function () {
     CATEGORIES.forEach(function (c) { d.categories.push({ id: ++d.seq.category, name: c }); });
     var catId = {}; d.categories.forEach(function (c) { catId[c.name] = c.id; });
     PRODUCTS.forEach(function (p, i) {
-      d.products.push({ id: ++d.seq.product, sku: 'KM-' + CODE[p[2]] + '-' + String(i + 1).padStart(4, '0'), name: p[0], pack: p[1], category_id: catId[p[2]], price: p[3], stock_qty: p[4], reorder_level: 10, is_visible: 1 });
+      d.products.push({ id: ++d.seq.product, sku: 'KM-' + CODE[p[2]] + '-' + String(i + 1).padStart(4, '0'), name: p[0], pack: p[1], category_id: catId[p[2]], price: p[3], stock_qty: p[4], reorder_level: 10, is_visible: 1, updated_at: now });
     });
-    d.users.push({ id: ++d.seq.user, name: ADMIN.name, email: ADMIN.email, mobile: ADMIN.mobile, pass: ADMIN.password, address: 'Kurinji Metro store', city: 'Chennai', pincode: '600001', role: 'staff' });
+    d.users.push({ id: ++d.seq.user, name: ADMIN.name, email: ADMIN.email, mobile: ADMIN.mobile, pass: ADMIN.password, address: 'Kurinji Metro store', city: 'Chennai', pincode: '600001', role: 'staff', created_at: now });
 
     var users = DEMO_NAMES.map(function (name, i) {
-      var u = { id: ++d.seq.user, name: name, email: 'demo' + (i + 1) + '@kurinjimetro.local', mobile: '98000000' + String(i + 1).padStart(2, '0'), pass: DEMO_PASSWORD, address: (i + 10) + ', Sample Street', city: 'Chennai', pincode: '600001', role: 'customer' };
+      var u = { id: ++d.seq.user, name: name, email: 'demo' + (i + 1) + '@kurinjimetro.local', mobile: '98000000' + String(i + 1).padStart(2, '0'), pass: DEMO_PASSWORD, address: (i + 10) + ', Sample Street', city: 'Chennai', pincode: '600001', role: 'customer', created_at: now };
       d.users.push(u);
       return u;
     });
@@ -280,7 +360,43 @@ var Store = (function () {
     if (!db || db.v !== 1) { db = seedDb(); persist(); }
     catchUp();
   }
-  function reset() { db = seedDb(); persist(); setSession(null); }
+
+  /* ---------- the SQL journal ---------- */
+  var journal = [], listeners = [], cur = null, MAX_JOURNAL = 60;
+  function quote(v) {
+    if (v == null) { return 'NULL'; }
+    if (v.raw) { return v.raw; }
+    if (Array.isArray(v)) { return v.map(quote).join(', '); }
+    if (typeof v === 'number') { return String(v); }
+    return "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+  }
+  // Records one statement as mysql2 would send it: each ? replaced by its escaped value.
+  function sql(text, params) {
+    var i = 0;
+    var e = { sql: text.replace(/\?/g, function () { return quote((params || [])[i++]); }), res: '' };
+    if (cur) { cur.statements.push(e); }
+    return e;
+  }
+  function note(text) { if (cur) { cur.statements.push({ sql: '-- ' + text, note: true }); } }
+  function sqlError(text) { if (cur) { cur.statements.push({ sql: text, error: true }); } }
+  function rows(e, n) { e.res = n + (n === 1 ? ' row' : ' rows'); return n; }
+  function affected(e, n) { e.res = 'Query OK, ' + n + (n === 1 ? ' row' : ' rows') + ' affected'; }
+  function touch(table, id) { if (cur) { (cur.touched[table] || (cur.touched[table] = [])).push(id); } }
+  function publish() {
+    var g = cur, last = journal[0];
+    cur = null;
+    var same = last && !last.write && !Object.keys(g.touched).length && last.method === g.method && last.path === g.path && last.status === g.status &&
+      last.statements.map(function (s) { return s.sql; }).join('\n') === g.statements.map(function (s) { return s.sql; }).join('\n');
+    if (same) { last.count += 1; last.at = g.at; } // the app re-reads the same list every 30 s; fold the repeats
+    else {
+      g.write = Object.keys(g.touched).length > 0;
+      journal.unshift(g);
+      if (journal.length > MAX_JOURNAL) { journal.length = MAX_JOURNAL; }
+    }
+    listeners.forEach(function (fn) { fn(); });
+  }
+
+  function reset() { db = seedDb(); persist(); setSession(null); journal.length = 0; listeners.forEach(function (fn) { fn(); }); }
 
   /* ---------- small helpers ---------- */
   var V = {
@@ -322,60 +438,102 @@ var Store = (function () {
   function placedLong(t) { var x = new Date(t); return dateKey(t) + ' ' + pad2(x.getHours()) + ':' + pad2(x.getMinutes()); }
   function category(id) { return db.categories.filter(function (c) { return c.id === id; })[0]; }
   function product(id) { return db.products.filter(function (p) { return p.id === id; })[0]; }
+  function userById(id) { return db.users.filter(function (u) { return u.id === id; })[0] || null; }
   function itemsOf(o) { return db.order_items.filter(function (it) { return it.order_id === o.id; }); }
   function sinceDays(days) { return midnight(Date.now()) - (days - 1) * DAY; }
   function publicUser(u) { return { id: u.id, name: u.name, email: u.email, mobile: u.mobile, address: u.address, city: u.city, pincode: u.pincode, role: u.role }; }
-  function currentUser() { var id = sessionId(); return id == null ? null : db.users.filter(function (u) { return u.id === id; })[0] || null; }
+
+  /* loadUser in src/auth.js: a request that carries the sign-in cookie loads
+     that user fresh from MySQL, so a role change applies at once. */
+  var reqUser = null;
+  function loadUser() {
+    var id = sessionId();
+    reqUser = null;
+    if (id == null) { return; }
+    var e = sql('SELECT * FROM users WHERE id = ?', [id]);
+    reqUser = userById(id);
+    rows(e, reqUser ? 1 : 0);
+  }
 
   function Fail(status, error, extra) { this.status = status; this.data = extra || {}; this.data.error = error; }
   function fail(status, error, extra) { throw new Fail(status, error, extra); }
-  function requireUser() { var u = currentUser(); if (!u) { fail(401, 'Please sign in first.'); } return u; }
+  function requireUser() { if (!reqUser) { fail(401, 'Please sign in first.'); } return reqUser; }
   function requireStaff() { var u = requireUser(); if (u.role !== 'staff') { fail(403, 'This area is for store staff.'); } return u; }
+  function duplicate(value, key) { sqlError("ERROR 1062 (23000): Duplicate entry '" + value + "' for key '" + key + "'"); }
 
   /* ---------- routes ---------- */
-  function categories() { return { categories: db.categories.slice().sort(byName).map(function (c) { return c.name; }) }; }
-
-  function products(query) {
-    var q = (query.q || '').trim().slice(0, 60).toLowerCase(), cat = query.cat || '';
-    var rows = db.products.filter(function (p) {
-      if (!p.is_visible) { return false; }
-      if (cat && !same(category(p.category_id).name, cat)) { return false; }
-      return !q || p.name.toLowerCase().indexOf(q) >= 0 || p.sku.toLowerCase().indexOf(q) >= 0;
-    }).sort(byName);
-    return { products: rows.map(function (p) { return { id: p.id, sku: p.sku, name: p.name, pack: p.pack, category: category(p.category_id).name, price: p.price, stock: p.stock_qty, reorder: p.reorder_level }; }) };
+  function categories() {
+    var e = sql('SELECT name FROM categories ORDER BY name');
+    var list = db.categories.slice().sort(byName);
+    rows(e, list.length);
+    return { categories: list.map(function (c) { return c.name; }) };
   }
 
+  // The storefront list: only visible products, with live stock.
+  function products(query) {
+    var q = (query.q || '').trim().slice(0, 60), cat = query.cat || '';
+    var where = ['p.is_visible = 1'], args = [];
+    if (cat) { where.push('c.name = ?'); args.push(cat); }
+    if (q) { where.push('(p.name LIKE ? OR p.sku LIKE ?)'); args.push('%' + q + '%', '%' + q + '%'); }
+    var e = sql('SELECT p.id, p.sku, p.name, p.pack, c.name AS category, p.price, p.stock_qty AS stock, p.reorder_level AS reorder\n' +
+      'FROM products p JOIN categories c ON c.id = p.category_id\nWHERE ' + where.join(' AND ') + '\nORDER BY p.name', args);
+    var lq = q.toLowerCase();
+    var list = db.products.filter(function (p) {
+      if (!p.is_visible) { return false; }
+      if (cat && !same(category(p.category_id).name, cat)) { return false; }
+      return !lq || p.name.toLowerCase().indexOf(lq) >= 0 || p.sku.toLowerCase().indexOf(lq) >= 0;
+    }).sort(byName);
+    rows(e, list.length);
+    return { products: list.map(function (p) { return { id: p.id, sku: p.sku, name: p.name, pack: p.pack, category: category(p.category_id).name, price: p.price, stock: p.stock_qty, reorder: p.reorder_level }; }) };
+  }
+
+  // Create an account. The delivery address is saved so checkout never asks for it.
   function register(b) {
     var err = profileError(b) || (!V.email(b.email) && 'Enter a valid email address.') || (!V.text(b.password, 8, 72) && 'Choose a password of at least 8 characters.');
     if (err) { fail(400, err); }
     var email = b.email.trim().toLowerCase();
-    if (db.users.some(function (u) { return same(u.email, email); })) { fail(409, 'That email already has an account. Try signing in.'); }
-    if (db.users.some(function (u) { return u.mobile === b.mobile; })) { fail(409, 'That mobile number already has an account.'); }
-    var u = { id: ++db.seq.user, name: b.name.trim(), email: email, mobile: b.mobile, pass: b.password, address: b.address.trim(), city: b.city.trim(), pincode: b.pincode, role: 'customer' };
-    db.users.push(u); persist(); setSession(u.id);
+    note('bcrypt.hash(password, 10) runs in Node; only the hash is sent to MySQL');
+    var e = sql('INSERT INTO users (name, email, mobile, pass_hash, address, city, pincode) VALUES (?,?,?,?,?,?,?)',
+      [b.name.trim(), email, b.mobile, HASH, b.address.trim(), b.city.trim(), b.pincode]);
+    if (db.users.some(function (u) { return same(u.email, email); })) { duplicate(email, 'users.uq_user_email'); fail(409, 'That email already has an account. Try signing in.'); }
+    if (db.users.some(function (u) { return u.mobile === b.mobile; })) { duplicate(b.mobile, 'users.uq_user_mobile'); fail(409, 'That mobile number already has an account.'); }
+    var u = { id: ++db.seq.user, name: b.name.trim(), email: email, mobile: b.mobile, pass: b.password, address: b.address.trim(), city: b.city.trim(), pincode: b.pincode, role: 'customer', created_at: Date.now() };
+    db.users.push(u); affected(e, 1); touch('users', u.id);
+    rows(sql('SELECT * FROM users WHERE id = ?', [u.id]), 1);
+    persist(); setSession(u.id);
+    cur.status = 201;
     return { user: publicUser(u) };
   }
 
+  // Sign in with email or mobile number.
   function login(b) {
     if (!V.text(b.login, 3, 120) || !V.text(b.password, 1, 72)) { fail(400, 'Enter your email or mobile number and your password.'); }
     var id = b.login.trim().toLowerCase();
+    var e = sql('SELECT * FROM users WHERE email = ? OR mobile = ? LIMIT 1', [id, id]);
     var u = db.users.filter(function (x) { return same(x.email, id) || x.mobile === id; })[0];
+    rows(e, u ? 1 : 0);
+    if (u) { note('bcrypt.compare(password, pass_hash) runs in Node, not in SQL'); }
     if (!u || u.pass !== b.password) { fail(401, 'That email, mobile number or password is not right.'); }
+    note('signed in: a km_token cookie now carries user id ' + u.id);
     setSession(u.id);
     return { user: publicUser(u) };
   }
 
+  // Update name, mobile and delivery address.
   function updateMe(b) {
     var u = requireUser(), err = profileError(b);
     if (err) { fail(400, err); }
-    if (db.users.some(function (x) { return x.id !== u.id && x.mobile === b.mobile; })) { fail(409, 'That mobile number already has an account.'); }
+    var e = sql('UPDATE users SET name=?, mobile=?, address=?, city=?, pincode=? WHERE id=?', [b.name.trim(), b.mobile, b.address.trim(), b.city.trim(), b.pincode, u.id]);
+    if (db.users.some(function (x) { return x.id !== u.id && x.mobile === b.mobile; })) { duplicate(b.mobile, 'users.uq_user_mobile'); fail(409, 'That mobile number already has an account.'); }
     u.name = b.name.trim(); u.mobile = b.mobile; u.address = b.address.trim(); u.city = b.city.trim(); u.pincode = b.pincode;
+    affected(e, 1); touch('users', u.id);
+    rows(sql('SELECT * FROM users WHERE id = ?', [u.id]), 1);
     persist();
     return { user: publicUser(u) };
   }
 
-  // Place an order: check every price and stock level first, then write it all
-  // at once, so a rejected cart leaves the tables exactly as they were.
+  // Place an order. Prices and stock are checked inside one transaction,
+  // so two customers can never buy the last unit twice.
   function placeOrder(b) {
     var u = requireUser();
     var slot = Number(b.slot);
@@ -388,12 +546,18 @@ var Store = (function () {
       if (!Number.isInteger(id) || id < 1 || !Number.isInteger(qty) || qty < 1 || qty > 99) { fail(400, 'Your cart has an invalid item.'); }
       want[id] = (want[id] || 0) + qty;
     });
-    var ids = Object.keys(want).map(Number).sort(function (a, c) { return a - c; });
+    var ids = Object.keys(want).map(Number).sort(function (a, c) { return a - c; }); // lock rows in a fixed order to avoid deadlocks
+    sql('START TRANSACTION');
+    var lock = sql('SELECT p.id, p.name, p.pack, p.price, p.stock_qty, p.is_visible, c.name AS category\n' +
+      'FROM products p JOIN categories c ON c.id = p.category_id\nWHERE p.id IN (?) ORDER BY p.id FOR UPDATE OF p', [ids]);
+    rows(lock, ids.filter(product).length);
+    note('these product rows stay locked until COMMIT or ROLLBACK');
     var items = [], subtotal = 0;
     ids.forEach(function (id) {
       var p = product(id), qty = want[id];
-      if (!p || !p.is_visible) { fail(409, 'A product in your cart is no longer available.', { productId: id }); }
-      if (p.stock_qty < qty) { fail(409, p.stock_qty > 0 ? p.name + ' has only ' + p.stock_qty + ' left.' : p.name + ' is out of stock.', { productId: id }); }
+      var stop = function (msg) { note('checked in Node: ' + msg); sql('ROLLBACK'); fail(409, msg, { productId: id }); };
+      if (!p || !p.is_visible) { stop('A product in your cart is no longer available.'); }
+      if (p.stock_qty < qty) { stop(p.stock_qty > 0 ? p.name + ' has only ' + p.stock_qty + ' left.' : p.name + ' is out of stock.'); }
       items.push({ productId: id, name: p.name, pack: p.pack, category: category(p.category_id).name, qty: qty, price: p.price });
       subtotal += p.price * qty;
     });
@@ -402,24 +566,35 @@ var Store = (function () {
     var address = u.address + ', ' + u.city + ' – ' + u.pincode;
     var hex = Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(4)), function (x) { return x.toString(16).padStart(2, '0'); }).join('');
     var code = 'KM-' + hex.toUpperCase();
+    affected(sql('INSERT INTO orders (order_code, user_id, subtotal, delivery_fee, total, payment_method, delivery_slot, customer_name, customer_mobile, address_text)\nVALUES (?,?,?,?,?,?,?,?,?,?)',
+      [code, u.id, subtotal, DELIVERY_FEE, total, b.payment, SLOTS[slot], u.name, u.mobile, address]), 1);
     var o = { id: ++db.seq.order, order_code: code, user_id: u.id, placed_at: Date.now(), subtotal: subtotal, delivery_fee: DELIVERY_FEE, total: total, payment_method: b.payment, delivery_slot: SLOTS[slot], customer_name: u.name, customer_mobile: u.mobile, address_text: address };
-    db.orders.push(o);
+    db.orders.push(o); touch('orders', o.id);
     items.forEach(function (it) {
-      db.order_items.push({ id: ++db.seq.item, order_id: o.id, product_id: it.productId, qty: it.qty, unit_price: it.price });
-      product(it.productId).stock_qty -= it.qty;
+      var row = { id: ++db.seq.item, order_id: o.id, product_id: it.productId, qty: it.qty, unit_price: it.price };
+      affected(sql('INSERT INTO order_items (order_id, product_id, qty, unit_price) VALUES (?,?,?,?)', [o.id, it.productId, it.qty, it.price]), 1);
+      db.order_items.push(row); touch('order_items', row.id);
+      affected(sql('UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?', [it.qty, it.productId]), 1);
+      var p = product(it.productId); p.stock_qty -= it.qty; p.updated_at = Date.now(); touch('products', p.id);
     });
+    sql('COMMIT');
     persist();
+    cur.status = 201;
     return { order: { code: code, items: items, subtotal: subtotal, fee: DELIVERY_FEE, total: total, payment: b.payment, slot: SLOTS[slot], name: u.name, address: address } };
   }
 
   // Daily revenue for the last N days (today included), with empty days filled in as zero.
   function dailySeries(days) {
+    var e = sql("SELECT DATE_FORMAT(placed_at, '%Y-%m-%d') AS d, SUM(total) AS total, COUNT(*) AS orders\nFROM orders\nWHERE placed_at >= CURDATE() - INTERVAL ? DAY\nGROUP BY d", [days - 1]);
     var map = {};
     db.orders.forEach(function (o) {
       if (o.placed_at < sinceDays(days)) { return; }
       var k = dateKey(o.placed_at), r = map[k] || (map[k] = { total: 0, orders: 0 });
       r.total = round2(r.total + o.total); r.orders += 1;
     });
+    rows(e, Object.keys(map).length);
+    rows(sql("SELECT DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS d"), 1);
+    note('days with no orders are filled in as zero in Node');
     var out = [], t = new Date();
     for (var i = days - 1; i >= 0; i--) {
       var k = dateKey(new Date(t.getFullYear(), t.getMonth(), t.getDate() - i).getTime());
@@ -434,26 +609,35 @@ var Store = (function () {
     db.products.forEach(function (p) {
       if (p.stock_qty === 0) { c.outOfStock++; } else if (p.stock_qty <= p.reorder_level) { c.low++; } else { c.inStock++; }
     });
+    rows(sql('SELECT COUNT(*) AS total,\n       COALESCE(SUM(stock_qty = 0), 0) AS outOfStock,\n       COALESCE(SUM(stock_qty > 0 AND stock_qty <= reorder_level), 0) AS low,\n       COALESCE(SUM(stock_qty > reorder_level), 0) AS inStock\nFROM products'), 1);
     var outList = db.products.filter(function (p) { return p.stock_qty === 0; }).sort(byName).slice(0, 5)
       .map(function (p) { return { id: p.id, name: p.name, pack: p.pack, category: category(p.category_id).name }; });
+    rows(sql('SELECT p.id, p.name, p.pack, c.name AS category FROM products p JOIN categories c ON c.id = p.category_id\nWHERE p.stock_qty = 0 ORDER BY p.name LIMIT 5'), outList.length);
     var lowList = db.products.filter(function (p) { return p.stock_qty > 0 && p.stock_qty <= p.reorder_level; })
       .sort(function (a, b) { return a.stock_qty - b.stock_qty; }).slice(0, 5)
       .map(function (p) { return { id: p.id, name: p.name, pack: p.pack, category: category(p.category_id).name, stock: p.stock_qty, reorder: p.reorder_level }; });
+    rows(sql('SELECT p.id, p.name, p.pack, c.name AS category, p.stock_qty AS stock, p.reorder_level AS reorder\nFROM products p JOIN categories c ON c.id = p.category_id\nWHERE p.stock_qty > 0 AND p.stock_qty <= p.reorder_level ORDER BY p.stock_qty LIMIT 5'), lowList.length);
     var week = dailySeries(7), today = week[week.length - 1];
     return { counts: c, today: { revenue: today.total, orders: today.orders }, week: week, outList: outList, lowList: lowList };
   }
 
+  // All products for the admin table (the browser filters and searches this list).
   function adminProducts() {
     requireStaff();
+    var e = sql('SELECT p.id, p.sku, p.name, p.pack, c.name AS category, p.price, p.stock_qty AS stock, p.reorder_level AS reorder, p.is_visible AS visible\nFROM products p JOIN categories c ON c.id = p.category_id ORDER BY p.sku');
+    rows(e, db.products.length);
     return { products: db.products.slice().sort(function (a, b) { return a.sku < b.sku ? -1 : a.sku > b.sku ? 1 : 0; })
       .map(function (p) { return { id: p.id, sku: p.sku, name: p.name, pack: p.pack, category: category(p.category_id).name, price: p.price, stock: p.stock_qty, reorder: p.reorder_level, visible: !!p.is_visible }; }) };
   }
 
   function categoryId(name) {
+    var e = sql('SELECT id FROM categories WHERE name = ?', [name]);
     var found = db.categories.filter(function (c) { return same(c.name, name); })[0];
+    rows(e, found ? 1 : 0);
     if (found) { return found.id; }
+    affected(sql('INSERT INTO categories (name) VALUES (?)', [name]), 1);
     var c = { id: ++db.seq.category, name: name };
-    db.categories.push(c);
+    db.categories.push(c); touch('categories', c.id);
     return c.id;
   }
 
@@ -463,18 +647,40 @@ var Store = (function () {
     if (err) { fail(400, err); }
     var sku = (b.sku || '').trim();
     var p = id ? product(id) : null;
-    if (id && !p) { fail(404, 'That product no longer exists.'); }
-    if (sku && db.products.some(function (x) { return x !== p && same(x.sku, sku); })) { fail(409, 'Another product already uses that SKU.'); }
-    var fields = { name: b.name.trim(), pack: (b.pack || '').trim(), category_id: categoryId(b.category.trim()), price: round2(b.price), stock_qty: b.stock, reorder_level: b.reorder, is_visible: b.visible ? 1 : 0 };
+    var catCount = db.categories.length, catSeq = db.seq.category;
+    // ROLLBACK also takes back a category this transaction had just inserted.
+    var rollback = function (status, msg) {
+      sql('ROLLBACK');
+      db.categories.length = catCount; db.seq.category = catSeq; delete cur.touched.categories;
+      fail(status, msg);
+    };
+    sql('START TRANSACTION');
+    var cid = categoryId(b.category.trim());
+    var price = round2(b.price);
+    var fields = { name: b.name.trim(), pack: (b.pack || '').trim(), category_id: cid, price: price, stock_qty: b.stock, reorder_level: b.reorder, is_visible: b.visible ? 1 : 0 };
+    var vals = [fields.name, fields.pack, cid, price, b.stock, b.reorder, fields.is_visible];
+    var clash = sku && db.products.some(function (x) { return x !== p && same(x.sku, sku); });
+    var e;
+    if (id) {
+      e = sql('UPDATE products SET name=?, pack=?, category_id=?, price=?, stock_qty=?, reorder_level=?, is_visible=?' + (sku ? ', sku=?' : '') + ' WHERE id=?', vals.concat(sku ? [sku] : [], [id]));
+      if (!p) { affected(e, 0); rollback(404, 'That product no longer exists.'); }
+    } else {
+      e = sql('INSERT INTO products (sku, name, pack, category_id, price, stock_qty, reorder_level, is_visible) VALUES (?,?,?,?,?,?,?,?)', [sku || 'TMP' + Date.now().toString(36).toUpperCase().slice(-8)].concat(vals));
+    }
+    if (clash) { duplicate(sku, 'products.uq_product_sku'); rollback(409, 'Another product already uses that SKU.'); }
+    affected(e, 1);
     if (!p) {
       p = { id: ++db.seq.product, sku: sku };
-      if (!sku) { p.sku = 'KM-' + String(p.id).padStart(5, '0'); }
+      if (!sku) { p.sku = 'KM-' + String(p.id).padStart(5, '0'); affected(sql('UPDATE products SET sku = ? WHERE id = ?', [p.sku, p.id]), 1); }
       db.products.push(p);
     } else if (sku) {
       p.sku = sku;
     }
     Object.keys(fields).forEach(function (k) { p[k] = fields[k]; });
+    p.updated_at = Date.now(); touch('products', p.id);
+    sql('COMMIT');
     persist();
+    if (!id) { cur.status = 201; }
     return { id: p.id };
   }
 
@@ -498,11 +704,14 @@ var Store = (function () {
     });
     var desc = function (a, b) { return b.revenue - a.revenue; };
     var cats = Object.keys(byCat).map(function (k) { return byCat[k]; }).sort(desc);
+    rows(sql('SELECT c.name, SUM(oi.qty * oi.unit_price) AS revenue\nFROM order_items oi\nJOIN orders o ON o.id = oi.order_id AND o.placed_at >= CURDATE() - INTERVAL ? DAY\nJOIN products p ON p.id = oi.product_id\nJOIN categories c ON c.id = p.category_id\nGROUP BY c.id, c.name ORDER BY revenue DESC', [days - 1]), cats.length);
     var top = Object.keys(byProd).map(function (k) { return byProd[k]; }).sort(desc).slice(0, 5);
+    rows(sql('SELECT p.name, p.pack, SUM(oi.qty) AS units, SUM(oi.qty * oi.unit_price) AS revenue\nFROM order_items oi\nJOIN orders o ON o.id = oi.order_id AND o.placed_at >= CURDATE() - INTERVAL ? DAY\nJOIN products p ON p.id = oi.product_id\nGROUP BY p.id, p.name, p.pack ORDER BY revenue DESC LIMIT 5', [days - 1]), top.length);
     var recent = db.orders.slice().sort(function (a, b) { return b.placed_at - a.placed_at || b.id - a.id; }).slice(0, 8).map(function (o) {
       return { code: o.order_code, name: o.customer_name, address: o.address_text, total: o.total, payment: o.payment_method, placed: placedShort(o.placed_at),
         items: itemsOf(o).reduce(function (s, it) { return s + it.qty; }, 0) };
     });
+    rows(sql("SELECT o.order_code AS code, o.customer_name AS name, o.address_text AS address, o.total, o.payment_method AS payment,\n       DATE_FORMAT(o.placed_at, '%d %b, %l:%i %p') AS placed, COALESCE(SUM(oi.qty), 0) AS items\nFROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id\nGROUP BY o.id ORDER BY o.placed_at DESC, o.id DESC LIMIT 8"), recent.length);
     return {
       days: days, series: series,
       kpis: { today: series[series.length - 1], weekTotal: week.reduce(function (s, d) { return s + d.total; }, 0), rangeTotal: rangeTotal, rangeOrders: rangeOrders, avgOrder: rangeOrders ? rangeTotal / rangeOrders : 0 },
@@ -514,9 +723,10 @@ var Store = (function () {
   function revenueCsv(query) {
     requireStaff();
     var days = daysParam(query), since = sinceDays(days);
-    var rows = db.orders.filter(function (o) { return o.placed_at >= since; }).sort(function (a, b) { return b.placed_at - a.placed_at; });
+    var list = db.orders.filter(function (o) { return o.placed_at >= since; }).sort(function (a, b) { return b.placed_at - a.placed_at; });
+    rows(sql("SELECT o.order_code, DATE_FORMAT(o.placed_at, '%Y-%m-%d %H:%i') AS placed, o.customer_name, o.customer_mobile, o.address_text,\n       COALESCE(SUM(oi.qty), 0) AS items, o.total, o.payment_method\nFROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id\nWHERE o.placed_at >= CURDATE() - INTERVAL ? DAY\nGROUP BY o.id ORDER BY o.placed_at DESC", [days - 1]), list.length);
     var head = ['Order', 'Placed', 'Customer', 'Mobile', 'Delivery address', 'Items', 'Amount (INR)', 'Payment'];
-    var lines = [head].concat(rows.map(function (o) {
+    var lines = [head].concat(list.map(function (o) {
       return [o.order_code, placedLong(o.placed_at), o.customer_name, o.customer_mobile, o.address_text, itemsOf(o).reduce(function (s, it) { return s + it.qty; }, 0), o.total, o.payment_method];
     }));
     return { file: 'kurinji-metro-orders-' + days + '-days.csv', text: '﻿' + lines.map(function (l) { return l.map(csvCell).join(','); }).join('\r\n') };
@@ -526,12 +736,13 @@ var Store = (function () {
     var qi = path.indexOf('?'), p = qi < 0 ? path : path.slice(0, qi), query = {};
     if (qi >= 0) { new URLSearchParams(path.slice(qi + 1)).forEach(function (v, k) { query[k] = v; }); }
     var m = method + ' ' + p, mm;
+    loadUser();
     if (m === 'GET /categories') { return categories(); }
     if (m === 'GET /products') { return products(query); }
     if (m === 'POST /auth/register') { return register(body); }
     if (m === 'POST /auth/login') { return login(body); }
-    if (m === 'POST /auth/logout') { setSession(null); return { ok: true }; }
-    if (m === 'GET /auth/me') { var u = currentUser(); return { user: u ? publicUser(u) : null }; }
+    if (m === 'POST /auth/logout') { note('no SQL: the km_token cookie is cleared'); setSession(null); return { ok: true }; }
+    if (m === 'GET /auth/me') { return { user: reqUser ? publicUser(reqUser) : null }; }
     if (m === 'PUT /auth/me') { return updateMe(body); }
     if (m === 'POST /orders') { return placeOrder(body); }
     if (m === 'GET /admin/summary') { return adminSummary(); }
@@ -549,11 +760,16 @@ var Store = (function () {
   function request(method, path, body) {
     return new Promise(function (resolve, reject) {
       setTimeout(function () {
+        if (!db) { load(); }
+        cur = { method: method, path: '/api' + path, at: Date.now(), statements: [], touched: {}, status: 200, error: '', count: 1 };
         try {
-          if (!db) { load(); }
-          resolve(JSON.parse(JSON.stringify(route(method, path, body || {}))));
+          var data = JSON.parse(JSON.stringify(route(method, path, body || {})));
+          publish();
+          resolve(data);
         } catch (f) {
           if (!(f instanceof Fail)) { console.error(f); f = new Fail(500, 'Something went wrong on our side. Please try again.'); }
+          cur.status = f.status; cur.error = f.data.error;
+          publish();
           var e = new Error(f.data.error); e.status = f.status; e.data = f.data;
           reject(e);
         }
@@ -561,7 +777,15 @@ var Store = (function () {
     });
   }
 
-  return { request: request, reset: reset, demo: { customer: ['demo1@kurinjimetro.local', DEMO_PASSWORD], staff: [ADMIN.email, ADMIN.password] } };
+  return {
+    request: request, reset: reset,
+    demo: { customer: ['demo1@kurinjimetro.local', DEMO_PASSWORD], staff: [ADMIN.email, ADMIN.password] },
+    journal: function () { return journal; },
+    clearJournal: function () { journal.length = 0; listeners.forEach(function (fn) { fn(); }); },
+    onChange: function (fn) { listeners.push(fn); },
+    tables: function () { if (!db) { load(); } return db; },
+    category: function (id) { return category(id); }
+  };
 }());
 
 (function () {
@@ -1314,6 +1538,207 @@ function boot() {
 }
 boot();
 })();
+
+/* ------------------------------------------------------------------ */
+/* Behind the counter                                                  */
+/* A side panel that shows what the store's server asks MySQL for     */
+/* each thing done in the app (SQL log), and the five tables as they  */
+/* stand right now (Tables). It reads from Store; it never writes.    */
+/* ------------------------------------------------------------------ */
+(function () {
+  'use strict';
+
+  // From db/schema.sql: columns, keys and the comment that says which screen each index serves.
+  var SCHEMA = {
+    categories: {
+      note: 'Product categories (Fruits & Vegetables, Dairy & Eggs, …).',
+      cols: [['id', 'SMALLINT', 'PK'], ['name', 'VARCHAR(40)']],
+      keys: [['uq_category_name', 'UNIQUE (name)', '']]
+    },
+    users: {
+      note: 'Customers and store staff. The delivery address is saved at sign-up, so checkout never asks for it again. Passwords are stored only as bcrypt hashes (this page keeps the plain password so it can run without a server).',
+      cols: [['id', 'BIGINT', 'PK'], ['name', 'VARCHAR(80)'], ['email', 'VARCHAR(120)'], ['mobile', 'CHAR(10)'], ['pass_hash', 'VARCHAR(100)'], ['address', 'VARCHAR(200)'], ['city', 'VARCHAR(60)'], ['pincode', 'CHAR(6)'], ['role', "ENUM('customer','staff')"], ['created_at', 'DATETIME']],
+      keys: [['uq_user_email', 'UNIQUE (email)', 'sign-in by email'], ['uq_user_mobile', 'UNIQUE (mobile)', 'sign-in by mobile number']]
+    },
+    products: {
+      note: 'Products and their live stock.',
+      cols: [['id', 'INT', 'PK'], ['sku', 'VARCHAR(20)'], ['name', 'VARCHAR(80)'], ['pack', 'VARCHAR(30)'], ['category_id', 'SMALLINT', 'FK'], ['price', 'DECIMAL(10,2)'], ['stock_qty', 'INT'], ['reorder_level', 'INT'], ['is_visible', 'TINYINT(1)'], ['updated_at', 'DATETIME']],
+      keys: [['uq_product_sku', 'UNIQUE (sku)', ''], ['idx_cat_visible_name', '(category_id, is_visible, name)', 'category chips + sorted product grid'], ['idx_stock', '(stock_qty)', 'out-of-stock and low-stock lists'],
+        ['fk_product_category', 'FOREIGN KEY (category_id) → categories(id)', ''], ['chk_stock_not_negative', 'CHECK (stock_qty >= 0)', '']]
+    },
+    orders: {
+      note: 'One row per order. The customer’s name and address are copied here at order time, so old orders stay correct even if the customer later changes their details.',
+      cols: [['id', 'BIGINT', 'PK'], ['order_code', 'CHAR(11)'], ['user_id', 'BIGINT', 'FK'], ['placed_at', 'DATETIME'], ['subtotal', 'DECIMAL(10,2)'], ['delivery_fee', 'DECIMAL(10,2)'], ['total', 'DECIMAL(10,2)'], ['payment_method', "ENUM('upi','card','cod')"], ['delivery_slot', 'VARCHAR(40)'], ['customer_name', 'VARCHAR(80)'], ['customer_mobile', 'CHAR(10)'], ['address_text', 'VARCHAR(300)']],
+      keys: [['uq_order_code', 'UNIQUE (order_code)', ''], ['idx_placed_at', '(placed_at)', 'revenue by day and date range'], ['idx_user_placed', '(user_id, placed_at)', 'a customer’s orders, newest first'], ['fk_order_user', 'FOREIGN KEY (user_id) → users(id)', '']]
+    },
+    order_items: {
+      note: 'The products inside each order. The price is copied at order time.',
+      cols: [['id', 'BIGINT', 'PK'], ['order_id', 'BIGINT', 'FK'], ['product_id', 'INT', 'FK'], ['qty', 'INT'], ['unit_price', 'DECIMAL(10,2)']],
+      keys: [['idx_item_order', '(order_id)', ''], ['idx_item_product', '(product_id, qty)', 'top-selling products'],
+        ['fk_item_order', 'FOREIGN KEY (order_id) → orders(id) ON DELETE CASCADE', ''], ['fk_item_product', 'FOREIGN KEY (product_id) → products(id)', '']]
+    }
+  };
+  var TABLES = Object.keys(SCHEMA);
+  var NEWEST_FIRST = { orders: true, order_items: true };
+  var MAX_ROWS = 30;
+
+  var WHY = {
+    'GET /api/categories': 'Load the category chips', 'GET /api/products': 'Load the shelves',
+    'POST /api/auth/register': 'Create an account', 'POST /api/auth/login': 'Sign in', 'POST /api/auth/logout': 'Sign out',
+    'GET /api/auth/me': 'Who is signed in?', 'PUT /api/auth/me': 'Save my details', 'POST /api/orders': 'Place the order',
+    'GET /api/admin/summary': 'Open the dashboard', 'GET /api/admin/products': 'Load the products table', 'POST /api/admin/products': 'Add a product',
+    'PUT /api/admin/products': 'Save a product', 'GET /api/admin/revenue': 'Open the revenue report', 'GET /api/admin/revenue.csv': 'Download the report'
+  };
+  function why(g) { return WHY[g.method + ' ' + g.path.split('?')[0].replace(/\/\d+$/, '')] || ''; }
+
+  var KEYWORDS = /^(SELECT|FROM|WHERE|JOIN|LEFT|ON|AND|OR|ORDER|BY|GROUP|LIMIT|INSERT|INTO|VALUES|UPDATE|SET|START|TRANSACTION|COMMIT|ROLLBACK|FOR|AS|IN|LIKE|DESC|COALESCE|SUM|COUNT|DATE_FORMAT|CURDATE|INTERVAL|DAY|NULL)$/;
+
+  var P = { open: false, tab: 'log', table: 'products', seenAt: 0, renderedAt: 0 };
+  try { P.open = localStorage.getItem('km-btc-open') === '1'; } catch (e) { /* storage may be blocked */ }
+
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function datetime(t) {
+    var x = new Date(t);
+    return x.getFullYear() + '-' + pad2(x.getMonth() + 1) + '-' + pad2(x.getDate()) + ' ' + pad2(x.getHours()) + ':' + pad2(x.getMinutes()) + ':' + pad2(x.getSeconds());
+  }
+  function clock(t) { return new Date(t).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', second: '2-digit' }); }
+
+  // Colours keywords, strings and comments. Works on the raw text and escapes each piece.
+  function highlight(text) {
+    return text.replace(/'(?:\\.|[^'\\])*'|--.*$|[A-Za-z_]+|[^'A-Za-z_-]+|-/gm, function (t) {
+      if (t[0] === "'") { return '<span class="s">' + esc(t) + '</span>'; }
+      if (t.slice(0, 2) === '--') { return '<span class="c">' + esc(t) + '</span>'; }
+      return KEYWORDS.test(t) ? '<span class="k">' + t + '</span>' : esc(t);
+    });
+  }
+
+  /* ---------- DOM ---------- */
+  var DB_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v13c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-13"/><path d="M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3"/></svg>';
+  var toggle = document.createElement('button');
+  toggle.type = 'button'; toggle.className = 'btc-toggle';
+  toggle.setAttribute('aria-controls', 'btc');
+  var panel = document.createElement('aside');
+  panel.id = 'btc'; panel.className = 'btc'; panel.setAttribute('aria-label', 'Behind the counter');
+  panel.innerHTML = '<header class="btc-head"><div class="btc-title">' + DB_ICON + '<div><strong>Behind the counter</strong><span>What the server asks MySQL for each thing you do</span></div></div>' +
+    '<button class="btc-x" type="button" data-btc="close" aria-label="Close the panel">×</button></header>' +
+    '<div class="btc-tabs"><div role="tablist" aria-label="Behind the counter views"><button type="button" role="tab" data-btc="tab" data-tab="log">SQL log</button><button type="button" role="tab" data-btc="tab" data-tab="tables">Tables</button></div>' +
+    '<button type="button" class="btc-clear" data-btc="clear">Clear log</button></div><div class="btc-body" role="tabpanel"></div>';
+  document.body.appendChild(toggle);
+  document.body.appendChild(panel);
+  var body = panel.querySelector('.btc-body');
+
+  /* ---------- SQL log ---------- */
+  function viewLog() {
+    var list = Store.journal();
+    if (!list.length) {
+      return '<p class="btc-empty">Nothing yet. Browse the shop, sign in, place an order or open the admin area, and the SQL the server runs for it appears here, newest first.</p>';
+    }
+    return list.map(function (g) {
+      var stmts = g.statements.map(function (s) {
+        var cls = s.error ? ' err' : s.note ? ' note' : '';
+        return '<div class="btc-stmt' + cls + '"><pre>' + (s.error ? esc(s.sql) : highlight(s.sql)) + '</pre>' + (s.res ? '<span class="r">→ ' + esc(s.res) + '</span>' : '') + '</div>';
+      }).join('') || '<div class="btc-stmt note"><pre><span class="c">-- no SQL</span></pre></div>';
+      var ok = g.status < 400;
+      return '<section class="btc-req' + (g.write ? ' write' : '') + (ok ? '' : ' bad') + (g.at > P.renderedAt ? ' fresh' : '') + '">' +
+        '<div class="btc-req-h"><span class="m">' + esc(g.method) + '</span><code>' + esc(g.path) + '</code><span class="st ' + (ok ? 'ok' : 'no') + '">' + g.status + '</span>' +
+        (g.count > 1 ? '<span class="x" title="The same request, repeated">×' + g.count + '</span>' : '') + '<span class="when">' + esc(clock(g.at)) + '</span></div>' +
+        (why(g) ? '<div class="btc-why">' + esc(why(g)) + (g.write ? ' <span class="tag">changes data</span>' : '') + '</div>' : '') +
+        stmts + (g.error ? '<div class="btc-res-err">' + g.status + ' · ' + esc(g.error) + '</div>' : '') + '</section>';
+    }).join('');
+  }
+
+  /* ---------- Tables ---------- */
+  function lastWrite() {
+    var list = Store.journal();
+    for (var i = 0; i < list.length; i++) { if (list[i].write) { return list[i]; } }
+    return null;
+  }
+  function lastTouched() { var g = lastWrite(); return g ? g.touched : {}; }
+  function cell(table, col, r) {
+    var v;
+    if (col === 'pass_hash') { return '<span class="dim">&lt;bcrypt hash&gt;</span>'; }
+    if (col === 'created_at' || col === 'placed_at' || col === 'updated_at') { v = r[col] ? datetime(r[col]) : ''; }
+    else { v = r[col]; }
+    if (v == null) { return '<span class="dim">NULL</span>'; }
+    return typeof v === 'number' ? '<span class="n">' + v + '</span>' : esc(v);
+  }
+  function viewTables() {
+    var db = Store.tables(), hit = lastTouched();
+    var chips = TABLES.map(function (t) {
+      return '<button type="button" class="btc-chip" data-btc="table" data-table="' + t + '" aria-pressed="' + (P.table === t) + '">' + t + ' <span>' + db[t].length + '</span>' + (hit[t] ? '<i title="Changed by the last write"></i>' : '') + '</button>';
+    }).join('');
+    var s = SCHEMA[P.table], rows = db[P.table].slice(), ids = hit[P.table] || [];
+    rows.sort(function (a, b) { return NEWEST_FIRST[P.table] ? b.id - a.id : a.id - b.id; });
+    var shown = rows.slice(0, MAX_ROWS);
+    var cols = s.cols.map(function (c) {
+      return '<span class="btc-col"><b>' + c[0] + '</b> ' + esc(c[1]) + (c[2] ? ' <em class="' + c[2].toLowerCase() + '">' + c[2] + '</em>' : '') + '</span>';
+    }).join('');
+    var keys = s.keys.map(function (k) {
+      return '<li><code>' + esc(k[0]) + '</code> ' + esc(k[1]) + (k[2] ? ' <span class="dim">— ' + esc(k[2]) + '</span>' : '') + '</li>';
+    }).join('');
+    var head = '<tr>' + s.cols.map(function (c) { return '<th scope="col">' + c[0] + '</th>'; }).join('') + '</tr>';
+    var trs = shown.map(function (r) {
+      return '<tr' + (ids.indexOf(r.id) >= 0 ? ' class="hit"' : '') + '>' + s.cols.map(function (c) { return '<td>' + cell(P.table, c[0], r) + '</td>'; }).join('') + '</tr>';
+    }).join('');
+    return '<div class="btc-chips" role="group" aria-label="Tables">' + chips + '</div>' +
+      '<p class="btc-note">' + esc(s.note) + '</p>' +
+      '<div class="btc-cols">' + cols + '</div>' +
+      '<div class="btc-keys"><strong>Keys and indexes</strong><ul>' + keys + '</ul></div>' +
+      '<div class="btc-grid"><table><thead>' + head + '</thead><tbody>' + trs + '</tbody></table></div>' +
+      '<p class="btc-count">' + (rows.length > MAX_ROWS ? 'Showing ' + MAX_ROWS + ' of ' + rows.length + ' rows' : rows.length + (rows.length === 1 ? ' row' : ' rows')) +
+      (NEWEST_FIRST[P.table] ? ', newest first' : '') + (ids.length ? '. Rows the last change wrote are highlighted.' : '.') + '</p>';
+  }
+
+  /* ---------- render ---------- */
+  function unseen() { return Store.journal().filter(function (g) { return g.at > P.seenAt; }).length; }
+  function render() {
+    document.documentElement.classList.toggle('btc-open', P.open);
+    panel.hidden = !P.open;
+    toggle.hidden = P.open;
+    toggle.setAttribute('aria-expanded', String(P.open));
+    var n = P.open ? 0 : unseen();
+    toggle.innerHTML = DB_ICON + '<span>Behind the counter</span>' + (n ? '<span class="btc-badge" aria-label="' + n + ' new requests">' + (n > 9 ? '9+' : n) + '</span>' : '');
+    if (!P.open) { return; }
+    panel.querySelectorAll('[data-btc=tab]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === P.tab)); });
+    panel.querySelector('.btc-clear').hidden = P.tab !== 'log';
+    var top = body.scrollTop, grid = body.querySelector('.btc-grid'), left = grid ? grid.scrollLeft : 0;
+    body.innerHTML = P.tab === 'log' ? viewLog() : viewTables();
+    body.scrollTop = top;
+    grid = body.querySelector('.btc-grid');
+    if (grid) {
+      grid.scrollLeft = left;
+      // Bring the rows a new write changed into view once, then leave the scroll to the reader.
+      var w = lastWrite(), hit = grid.querySelector('tr.hit'), mark = w ? w.at + ':' + P.table : '';
+      if (hit && mark !== P.scrolledTo) { grid.scrollTop = hit.offsetTop - grid.querySelector('thead').offsetHeight - 4; P.scrolledTo = mark; }
+    }
+    P.renderedAt = Date.now(); P.seenAt = P.renderedAt;
+  }
+  function setOpen(on) {
+    P.open = on;
+    try { localStorage.setItem('km-btc-open', on ? '1' : '0'); } catch (e) { /* storage may be blocked */ }
+    render();
+    (on ? panel.querySelector('.btc-x') : toggle).focus();
+  }
+
+  toggle.addEventListener('click', function () { setOpen(true); });
+  panel.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-btc]');
+    if (!el) { return; }
+    var act = el.dataset.btc;
+    if (act === 'close') { setOpen(false); }
+    else if (act === 'tab') { P.tab = el.dataset.tab; body.scrollTop = 0; render(); }
+    else if (act === 'table') { P.table = el.dataset.table; render(); }
+    else if (act === 'clear') { Store.clearJournal(); }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && P.open) { setOpen(false); } });
+  Store.onChange(render);
+  render();
+}());
 </script>
 </body>
 </html>

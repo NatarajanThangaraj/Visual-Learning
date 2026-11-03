@@ -355,7 +355,7 @@ export const courses = [
         summary: 'A working app on top of the tables: accounts, orders that check stock, and reports read straight from the records.',
         lessons: [
           { id: 'kurinji-metro', title: 'Kurinji Metro', minutes: 40,
-            blurb: 'A neighbourhood supermarket running on five tables. Shop and check out as a customer, then sign in as staff to restock products and read revenue reports built from the same orders.' },
+            blurb: 'A neighbourhood supermarket running on five tables. Shop and check out as a customer, then sign in as staff to restock products and read revenue reports built from the same orders. Open Behind the counter to watch the SQL each click runs and the rows it changes.' },
         ],
       },
     ],
