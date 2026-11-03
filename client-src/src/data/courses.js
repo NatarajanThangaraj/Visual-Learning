@@ -349,6 +349,15 @@ export const courses = [
             blurb: 'Find Kavya row by row, then with an index like the back of a book. Watch the index fold into a tree, then see how MySQL keeps two trees: one for the rows, one for the index.' },
         ],
       },
+      {
+        id: 'database-apps',
+        title: 'Database-backed Apps',
+        summary: 'A working app on top of the tables: accounts, orders that check stock, and reports read straight from the records.',
+        lessons: [
+          { id: 'kurinji-metro', title: 'Kurinji Metro', minutes: 40,
+            blurb: 'A neighbourhood supermarket running on five tables. Shop and check out as a customer, then sign in as staff to restock products and read revenue reports built from the same orders.' },
+        ],
+      },
     ],
   },
 ];
