@@ -350,6 +350,15 @@ export const courses = [
         ],
       },
       {
+        id: 'transactions',
+        title: 'Transactions',
+        summary: 'Make a group of changes all happen, or none: COMMIT, ROLLBACK and SAVEPOINT.',
+        lessons: [
+          { id: 'tcl-transactions', title: 'TCL Transactions', minutes: 25,
+            blurb: 'Asha sends Ravi ₹500 between two phones. Watch the money wait in the ledger until COMMIT seals it, cancel it with ROLLBACK, undo just a tip with a SAVEPOINT, then see what a dead battery, an overdraft error and a deadlock do. A bonus world compares MySQL, PostgreSQL and Oracle.' },
+        ],
+      },
+      {
         id: 'database-apps',
         title: 'Database-backed Apps',
         summary: 'A working app on top of the tables: accounts, orders that check stock, and reports read straight from the records.',
