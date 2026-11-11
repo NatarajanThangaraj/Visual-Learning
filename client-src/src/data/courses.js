@@ -356,6 +356,8 @@ export const courses = [
         lessons: [
           { id: 'tcl-transactions', title: 'TCL Transactions', minutes: 25,
             blurb: 'Asha sends Ravi ₹500 between two phones. Watch the money wait in the ledger until COMMIT seals it, cancel it with ROLLBACK, undo just a tip with a SAVEPOINT, then see what a dead battery, an overdraft error and a deadlock do. A bonus world compares MySQL, PostgreSQL and Oracle.' },
+          { id: 'acid', title: 'ACID', minutes: 30,
+            blurb: 'Four everyday stories, one per letter: send ₹500 and cut the connection halfway, grab the last Tatkal berths, race a stranger for the last phone, and pull the bank server\'s power mid-payment. Try each the right way and the wrong way.' },
         ],
       },
       {
