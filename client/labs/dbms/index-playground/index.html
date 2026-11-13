@@ -7,23 +7,40 @@
 <meta name="description" content="Search a real students table with and without an index, and watch MySQL build the index behind the scenes.">
 <style>
 :root {
-  --bg: #F5F8EC;
+  --bg: #F5F7FA;
   --surface: #FFFFFF;
-  --ink: #14171F;
-  --muted: #5B6472;
-  --line: #E3E8D6;
-  --lime: #A3E635;
-  --lime-deep: #3F6212;
-  --lime-soft: #ECFCCB;
-  --violet: #7C3AED;
-  --violet-deep: #5B21B6;
-  --violet-soft: #EDE9FE;
+  --ink: #0F172A;
+  --muted: #475569;
+  --line: #E2E8F0;
+  --lime: #60A5FA;
+  --lime-deep: #1E40AF;
+  --lime-soft: #DBEAFE;
+  --violet: #334155;
+  --violet-deep: #1E293B;
+  --violet-soft: #EEF2F6;
   --red: #E11D48;
   --red-soft: #FFE4E6;
   --sky: #0EA5E9;
   --sky-soft: #E0F2FE;
-  --console: #1E1B4B;
-  --console-ink: #E0E7FF;
+  --console: #0F172A;
+  --console-ink: #E2E8F0;
+  --console-dot: #334155;
+  --code-str: #FDE68A;
+  --code-id: #93C5FD;
+  --violet-line: #CBD5E1;
+  --violet-mid: #E2E8F0;
+  --lime-press: #3B82F6;
+  --lime-press-dark: #2563EB;
+  --red-light: #FB7185;
+  --red-deep: #9F1239;
+  --panel: #F8FAFC;
+  --line-strong: #CBD5E1;
+  --muted-2: #94A3B8;
+  --on-ink: #FFFFFF;
+  --bar-bg: rgba(245,247,250,.88);
+  --hero-bg: #EEF2F6;
+  --on-lime: #0F172A;
+  --dim: #0F172A;
   --radius: 18px;
   --shadow: 0 1px 2px rgba(20,23,31,.06), 0 8px 24px rgba(20,23,31,.06);
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -37,7 +54,7 @@ button { font: inherit; cursor: pointer; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
 /* ---------- top bar ---------- */
-.top { position: sticky; top: 0; z-index: 20; background: rgba(245,248,236,.88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.top { position: sticky; top: 0; z-index: 20; background: var(--bar-bg); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
 .top-in { max-width: 1160px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 16px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; white-space: nowrap; color: var(--ink); text-decoration: none; }
 .brand-mark { width: 30px; height: 30px; border-radius: 9px; background: var(--lime); display: grid; place-items: center; }
@@ -45,14 +62,15 @@ button { font: inherit; cursor: pointer; }
 .pills::-webkit-scrollbar { display: none; }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; min-height: 36px; }
 .pill b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); font-size: 12px; color: var(--ink); }
-.pill.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.pill.is-on { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
 .pill.is-on b { background: var(--lime); }
 
 /* ---------- scenes ---------- */
 main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
-.hero { padding: 56px 0 24px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 32px; align-items: center; }
+.hero { position: sticky; top: var(--stick, 72px); margin: 24px 0 32px; padding: 48px 40px; border-radius: 30px; background: var(--hero-bg); transform-origin: 50% 0; transform: scale(calc(1 - var(--p, 0) * .05)); display: grid; grid-template-columns: 1.2fr .8fr; gap: 32px; align-items: center; }
 .hero h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.04; letter-spacing: -.03em; margin: 0 0 16px; }
 .hero h1 mark { background: linear-gradient(transparent 58%, var(--lime) 58%); color: inherit; padding: 0 4px; }
+.hero::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--dim); opacity: calc(var(--p, 0) * .22); pointer-events: none; }
 .hero p { font-size: 19px; color: var(--muted); margin: 0 0 24px; max-width: 34ch; }
 .hero-art { background: var(--surface); border-radius: 28px; box-shadow: var(--shadow); padding: 22px; position: relative; overflow: hidden; }
 .hero-art .mini-row { display: grid; grid-template-columns: 34px 1fr 1fr 40px; gap: 8px; padding: 7px 10px; border-radius: 10px; font-size: 14px; }
@@ -60,36 +78,64 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 .hero-art .mini-row.hit { background: var(--lime); font-weight: 700; animation: pulse 2.4s ease-in-out infinite; }
 @keyframes pulse { 50% { transform: scale(1.03); } }
 
-.scene { padding: 56px 0 24px; border-top: 1px dashed #D5DCC4; }
+.scene { position: sticky; top: var(--stick, 72px); margin: 0 0 32px; padding: 30px 36px 28px; background: var(--surface); border-radius: 30px; box-shadow: 0 -12px 34px rgba(20,23,31,.10), 0 2px 4px rgba(20,23,31,.04); transform-origin: 50% 0; transform: scale(calc(1 - var(--p, 0) * .05)); }
+.scene::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--dim); opacity: calc(var(--p, 0) * .22); pointer-events: none; z-index: 5; }
+.scene .card { background: var(--panel); box-shadow: none; border: 1px solid var(--line); }
+.scene .card.bstage, .scene .card.lk-tree { background: var(--surface); }
+.scene .console { box-shadow: none; }
+.anchor { height: 0; }
+.fit { transform-origin: 0 0; }
+.scene.is-fit { overflow: hidden; }
+.scene-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.scene-head .next { margin: 0; flex: none; }
+.next.next-phone { display: none; }
+.scene-head .lead { margin-bottom: 18px; }
+.scene h2 { font-size: clamp(26px, 2.8vw, 36px); }
+.scene .lead { margin-bottom: 14px; }
+.kicker { margin-bottom: 10px; }
 .kicker { display: inline-flex; align-items: center; gap: 8px; font: 700 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--violet-deep); background: var(--violet-soft); padding: 7px 12px; border-radius: 999px; margin: 0 0 14px; }
 .scene h2 { font-size: clamp(28px, 4vw, 42px); line-height: 1.1; letter-spacing: -.02em; margin: 0 0 8px; }
 .scene .lead { font-size: 18px; color: var(--muted); margin: 0 0 24px; max-width: 60ch; }
 .btn { display: inline-flex; align-items: center; gap: 10px; border: 0; border-radius: 14px; padding: 13px 20px; font-weight: 700; font-size: 16px; min-height: 48px; transition: transform .15s, box-shadow .15s; }
 .btn:active { transform: translateY(1px); }
-.btn-lime { background: var(--lime); color: var(--ink); box-shadow: 0 6px 0 #65A30D; }
-.btn-lime:active { box-shadow: 0 3px 0 #65A30D; transform: translateY(3px); }
+.btn-lime { background: var(--lime); color: var(--ink); box-shadow: 0 6px 0 var(--lime-press); }
+.btn-lime:active { box-shadow: 0 3px 0 var(--lime-press); transform: translateY(3px); }
 .btn-ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .btn[disabled] { opacity: .5; cursor: default; }
-.next { margin-top: 28px; display: flex; justify-content: flex-end; }
+.next { margin-top: 20px; display: flex; justify-content: flex-end; }
 .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); }
 
 /* ---------- console ---------- */
 .console { background: var(--console); color: var(--console-ink); border-radius: var(--radius); padding: 16px 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; box-shadow: 0 12px 30px rgba(30,27,75,.25); }
 .console-dots { display: flex; gap: 6px; }
-.console-dots i { width: 10px; height: 10px; border-radius: 50%; background: #4C467F; }
+.console-dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--console-dot); }
 .sql { font: 600 17px/1.4 var(--mono); flex: 1 1 360px; min-width: 0; }
 .sql .kw { color: var(--lime); }
-.sql .str { color: #FDE68A; }
-.sql .id { color: #C4B5FD; }
-.sql select { font: inherit; color: #FDE68A; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 2px 6px; }
-.console .btn-lime { box-shadow: 0 5px 0 #4D7C0F; }
+.sql .str { color: var(--code-str); }
+.sql .id { color: var(--code-id); }
+.sql select { font: inherit; color: var(--code-str); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 2px 6px; }
+.console .btn-lime { box-shadow: 0 5px 0 var(--lime-press-dark); }
 .console > .btn, .console > .seg { flex: none; width: auto; }
 .seg { display: inline-flex; background: rgba(255,255,255,.08); border-radius: 12px; padding: 4px; gap: 4px; }
 .seg button { border: 0; background: transparent; color: var(--console-ink); padding: 8px 12px; border-radius: 9px; font: 600 14px var(--mono); min-height: 40px; }
 .seg button.is-on { background: var(--console-ink); color: var(--console); }
 
 /* ---------- table + row map ---------- */
-.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 20px; margin-top: 20px; }
+.split { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 20px; margin-top: 18px; }
+.scan-grid { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; align-items: start; }
+.result-col { display: grid; gap: 14px; }
+.result-col .meter { grid-template-columns: 1fr auto; margin: 0; }
+.result-col .meter .bar { grid-column: 1 / -1; }
+.result-col .alert { margin: 0; }
+.plan { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.plan-cap { width: 100%; font: 600 12px var(--font); color: var(--muted); }
+.plan span { font: 12px var(--mono); background: var(--surface); border-radius: 8px; padding: 4px 8px; }
+.plan b { font-weight: 800; }
+.alert-bad .plan b.hot { color: var(--red); }
+.alert-good .plan b.hot { color: var(--lime-deep); }
+.lk-bottom { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr) minmax(0, 1.4fr); gap: 18px; align-items: start; }
+.caption.is-done { color: var(--lime-deep); }
+.caption.is-done::before { background: var(--lime); box-shadow: 0 0 0 4px var(--lime-soft); }
 .panel { padding: 18px; }
 .panel-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; }
 .panel-h h3 { margin: 0; font-size: 16px; }
@@ -106,8 +152,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 .tview { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
 .trow { display: grid; grid-template-columns: 56px 1.3fr 1.2fr 64px; align-items: center; padding: 0 14px; height: 40px; font-size: 15px; border-bottom: 1px solid var(--line); transition: background .2s; }
 .trow:last-child { border-bottom: 0; }
-.thead { background: var(--ink); color: #fff; font: 600 13px var(--mono); height: 38px; }
-.thead span:first-child { color: var(--lime); }
+.thead { background: var(--console); color: var(--console-ink); font: 600 13px var(--mono); height: 38px; }
+.thead span:first-child { color: var(--code-str); }
 .tbody { height: 320px; overflow-y: auto; scroll-behavior: smooth; position: relative; }
 .trow .n { font: 600 13px var(--mono); color: var(--muted); }
 .trow .m { font-family: var(--mono); text-align: right; }
@@ -121,8 +167,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 .meter-num small { font-size: 16px; color: var(--muted); }
 .meter-label { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
 .bar { height: 14px; border-radius: 999px; background: var(--bg); overflow: hidden; }
-.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #FB7185, var(--red)); border-radius: inherit; transition: width .12s linear; }
-.bar.good i { background: linear-gradient(90deg, var(--lime), #65A30D); }
+.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--red-light), var(--red)); border-radius: inherit; transition: width .12s linear; }
+.bar.good i { background: linear-gradient(90deg, var(--lime), var(--lime-press)); }
 
 .alert { margin-top: 20px; border-radius: var(--radius); padding: 20px 22px; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; opacity: 0; transform: translateY(12px); transition: opacity .4s, transform .4s; }
 .alert.show { opacity: 1; transform: none; }
@@ -133,9 +179,9 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 .alert p { margin: 0 0 6px; }
 .alert-bad { background: var(--red-soft); border: 2px solid var(--red); }
 .alert-bad .alert-ic { background: var(--red); color: #fff; animation: siren 1s ease-in-out 3; }
-.alert-bad h3 { color: #9F1239; }
+.alert-bad h3 { color: var(--red-deep); }
 @keyframes siren { 50% { transform: rotate(-10deg) scale(1.1); } }
-.alert-good { background: var(--lime-soft); border: 2px solid #65A30D; }
+.alert-good { background: var(--lime-soft); border: 2px solid var(--lime-press); }
 .alert-good .alert-ic { background: var(--lime); color: var(--ink); }
 .alert-good h3 { color: var(--lime-deep); }
 .bigo { display: inline-block; font: 700 14px var(--mono); background: #fff; border-radius: 8px; padding: 3px 8px; margin-top: 4px; }
@@ -150,9 +196,11 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 .explain caption { text-align: left; font: 600 12px var(--font); color: var(--muted); padding-bottom: 4px; caption-side: top; }
 
 /* ---------- build stage ---------- */
-.phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0 16px; }
-.phase { padding: 14px 16px; border-radius: 16px; background: var(--surface); border: 2px solid var(--line); transition: border-color .3s, background .3s; }
+.phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0 12px; }
+.phase { padding: 10px 14px; border-radius: 16px; background: var(--surface); border: 2px solid var(--line); transition: border-color .3s, background .3s; }
 .phase b { display: block; font-size: 15px; }
+#s3 .phase { display: flex; align-items: baseline; gap: 8px; }
+#s3 .phase b { display: inline; white-space: nowrap; }
 .phase span { font-size: 13px; color: var(--muted); }
 .phase .num { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--bg); font: 700 13px var(--mono); margin-right: 6px; }
 .phase.is-on { border-color: var(--violet); background: var(--violet-soft); }
@@ -161,10 +209,12 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 .caption { min-height: 28px; font-weight: 600; margin: 0 0 12px; display: flex; gap: 10px; align-items: center; }
 .caption::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--violet); flex: none; }
 
-.bstage { position: relative; overflow: hidden; padding: 18px; display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 2fr); grid-template-areas: "src buf" "tmp tmp" "tree tree"; gap: 18px; }
+.bstage { position: relative; overflow: hidden; padding: 14px 18px; display: grid; grid-template-columns: 170px minmax(0, 1fr) 230px; grid-template-areas: "src buf tmp" "tree tree tree"; gap: 18px; }
+.bz-tmp .run { display: block; }
+.bz-tmp .run > span { display: block; width: auto; margin-bottom: 3px; }
 .bz { min-width: 0; }
 .bz-label { margin: 0 0 8px; font: 700 12px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
-.bz-label em { font-style: normal; text-transform: none; letter-spacing: 0; color: #8A93A0; }
+.bz-label em { font-style: normal; text-transform: none; letter-spacing: 0; color: var(--muted-2); }
 .bz-src { grid-area: src; }
 .bz-buf { grid-area: buf; }
 .bz-tmp { grid-area: tmp; }
@@ -172,8 +222,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 .grid-src { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
 .grid-src i { aspect-ratio: 1; border-radius: 4px; background: var(--lime-soft); transition: background .2s; }
 .grid-src i.read { background: var(--lime); }
-.grid-buf { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; padding: 8px; border-radius: 14px; background: var(--bg); border: 2px dashed #CFD7BC; }
-.grid-buf .slot { height: 26px; }
+.grid-buf { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; padding: 8px; border-radius: 14px; background: var(--bg); border: 2px dashed var(--line-strong); }
+.grid-buf .slot { height: 22px; }
 .runs { display: grid; gap: 8px; }
 .run { display: flex; align-items: center; gap: 10px; }
 .run > span { flex: none; width: 74px; font: 600 12px var(--mono); color: var(--muted); }
@@ -181,25 +231,25 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 .dslot { width: 9px; height: 9px; }
 .tree { position: relative; padding-top: 24px; overflow: hidden; }
 .tree svg.links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
-.tree svg path { fill: none; stroke: #C4B5FD; stroke-width: 2; transition: stroke .3s, stroke-width .3s; }
+.tree svg path { fill: none; stroke: var(--violet-line); stroke-width: 2; transition: stroke .3s, stroke-width .3s; }
 .tree svg path.on { stroke: var(--violet); stroke-width: 3.5; }
-.root { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; max-width: 760px; margin: 0 auto 42px; padding: 6px; border-radius: 12px; background: var(--violet); position: relative; z-index: 1; opacity: 0; transform: scale(.9); transition: opacity .4s, transform .4s; }
+.root { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; max-width: 760px; margin: 0 auto 34px; padding: 6px; border-radius: 12px; background: var(--violet); position: relative; z-index: 1; opacity: 0; transform: scale(.9); transition: opacity .4s, transform .4s; }
 .root.is-on { opacity: 1; transform: none; }
 .root::before { content: "root page"; position: absolute; top: -20px; left: 0; font: 700 11px var(--mono); color: var(--violet-deep); text-transform: uppercase; letter-spacing: .05em; }
 .pslot { height: 26px; border-radius: 7px; background: rgba(255,255,255,.14); color: #fff; font: 700 11px/26px var(--mono); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 3px; transition: background .25s, color .25s, transform .25s; }
-.pslot.filled { background: #fff; color: var(--violet-deep); animation: pop .35s; }
+.pslot.filled { background: var(--surface); color: var(--violet-deep); animation: pop .35s; }
 .pslot.on { background: var(--lime); color: var(--ink); transform: scale(1.08); }
 @keyframes pop { from { transform: scale(.4); } }
 .leaves { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; position: relative; z-index: 1; }
 .leaf { border-radius: 12px; background: var(--surface); border: 2px solid var(--line); padding: 5px; display: grid; gap: 2px; opacity: .25; transition: opacity .3s, border-color .3s, box-shadow .3s, transform .3s; position: relative; }
-.leaf.is-alloc { opacity: 1; border-color: #C4B5FD; }
+.leaf.is-alloc { opacity: 1; border-color: var(--violet-line); }
 .leaf.is-right { border-color: var(--violet); box-shadow: 0 0 0 4px var(--violet-soft); }
 .leaf.is-right::after { content: "← writing here"; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font: 700 10px var(--mono); color: var(--violet); white-space: nowrap; }
 .leaf.on { border-color: var(--lime-deep); box-shadow: 0 0 0 4px var(--lime); transform: translateY(-4px); }
-.leaf .slot { height: 19px; }
+.leaf .slot { height: 17px; }
 .leaf-n { font: 700 10px var(--mono); color: var(--muted); text-align: center; height: 14px; }
 .chips { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
-.chip { position: absolute; left: 0; top: 0; width: 10px; height: 10px; display: flex; align-items: center; justify-content: space-between; gap: 3px; padding: 0 5px; border-radius: 6px; background: var(--violet-soft); color: var(--ink); border: 1px solid #C4B5FD; font: 600 11px/1 var(--font); white-space: nowrap; overflow: hidden; opacity: 0; transition: left var(--t) cubic-bezier(.3,.7,.2,1), top var(--t) cubic-bezier(.3,.7,.2,1), width var(--t), height var(--t), border-radius var(--t), background .3s, opacity .25s; }
+.chip { position: absolute; left: 0; top: 0; width: 10px; height: 10px; display: flex; align-items: center; justify-content: space-between; gap: 3px; padding: 0 5px; border-radius: 6px; background: var(--violet-soft); color: var(--ink); border: 1px solid var(--violet-line); font: 600 11px/1 var(--font); white-space: nowrap; overflow: hidden; opacity: 0; transition: left var(--t) cubic-bezier(.3,.7,.2,1), top var(--t) cubic-bezier(.3,.7,.2,1), width var(--t), height var(--t), border-radius var(--t), background .3s, opacity .25s; }
 .chip i { font: 600 10px var(--mono); font-style: normal; color: var(--violet); }
 .chip b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
 .chip.dot { border-radius: 50%; padding: 0; background: var(--violet); border-color: var(--violet); }
@@ -210,9 +260,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 .done-note { margin-top: 14px; }
 
 /* ---------- lookup ---------- */
-.lookup { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; margin-top: 20px; }
-.lookup .lk-side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: start; }
-.lookup .lk-side .stats { grid-row: span 2; }
+.lookup { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 18px; }
 .lk-tree { padding: 18px 18px 30px; }
 .lk-tree .root { opacity: 1; transform: none; }
 .lk-tree .leaf { opacity: 1; border-color: var(--line); }
@@ -220,7 +268,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 .entry i { font: 600 9px var(--mono); font-style: normal; color: var(--violet); }
 .entry b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
 .entry.on { background: var(--lime); transform: scale(1.06); }
-.entry.peek { background: #DDD6FE; }
+.entry.peek { background: var(--violet-mid); }
 .lk-side { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
 .lk-side .trow { grid-template-columns: 44px 1fr 1fr 44px; font-size: 14px; padding: 0 10px; }
 .lk-table { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; opacity: .35; transition: opacity .3s; }
@@ -247,9 +295,17 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
 footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(--muted); font-size: 13px; }
 
 /* ---------- responsive ---------- */
+/* text that sits on the highlight colour */
+.btn-lime, .tile.match, .trow.is-match, .entry.on, .pslot.on, .chip.hit, .alert-good .alert-ic, .pill.is-on b, .brand-mark { color: var(--on-lime); }
+
 @media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; padding-top: 32px; }
-  .split, .lookup, .versus, .lookup .lk-side { grid-template-columns: 1fr; }
+  .hero { grid-template-columns: 1fr; padding: 32px 22px; }
+  .scene { padding: 32px 20px 28px; border-radius: 24px; }
+  .split, .lookup, .versus, .scan-grid, .lk-bottom { grid-template-columns: 1fr; }
+  .bstage { grid-template-columns: 1fr; grid-template-areas: "src" "buf" "tmp" "tree"; }
+  .scene-head { flex-direction: column; gap: 0; }
+  .scene-head .next { display: none; }
+  .next.next-phone { display: flex; }
   .bstage { grid-template-columns: 1fr; grid-template-areas: "src" "buf" "tmp" "tree"; }
   .grid-src { max-width: 260px; }
   .phases { grid-template-columns: 1fr; }
@@ -271,6 +327,7 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .scene, .hero { transform: none !important; }
   *, *::before, *::after { animation: none !important; transition-duration: 0s !important; }
 }
 </style>
@@ -280,21 +337,22 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
   <div class="top-in">
     <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 2v5M9 7 4 12M9 7l5 5" stroke="#14171F" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="4" cy="14" r="2.2" fill="#14171F"/><circle cx="14" cy="14" r="2.2" fill="#14171F"/></svg></span><span>Index Playground</span></a>
     <nav class="pills" aria-label="Steps">
-      <a class="pill" href="#s1"><b>1</b>The table</a>
-      <a class="pill" href="#s2"><b>2</b>Search</a>
-      <a class="pill" href="#s3"><b>3</b>Build index</a>
-      <a class="pill" href="#s4"><b>4</b>Search again</a>
-      <a class="pill" href="#s5"><b>5</b>Compare</a>
+      <a class="pill" href="#go-s1"><b>1</b>The table</a>
+      <a class="pill" href="#go-s2"><b>2</b>Search</a>
+      <a class="pill" href="#go-s3"><b>3</b>Build index</a>
+      <a class="pill" href="#go-s4"><b>4</b>Search again</a>
+      <a class="pill" href="#go-s5"><b>5</b>Compare</a>
     </nav>
   </div>
 </header>
 
 <main id="top">
-  <section class="hero">
+  <div class="anchor" id="go-top"></div>
+  <section class="hero stack-card">
     <div>
       <h1>How does MySQL find <mark>one row</mark> in a big table?</h1>
       <p>Search a real table. Watch it struggle. Then give it an index and watch it fly.</p>
-      <a class="btn btn-lime" href="#s1">Start ↓</a>
+      <a class="btn btn-lime" href="#go-s1">Start ↓</a>
     </div>
     <div class="hero-art card" aria-hidden="true">
       <div class="mini-row"><b>id</b><b>name</b><b>city</b><b>marks</b></div>
@@ -306,9 +364,11 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
   </section>
 
   <!-- 1 · table -->
-  <section class="scene" id="s1" aria-labelledby="h1t">
-    <p class="kicker">Step 1 · The table</p>
-    <h2 id="h1t">Meet the <code>students</code> table</h2>
+  <div class="anchor" id="go-s1"></div>
+  <section class="scene stack-card" id="s1" aria-labelledby="h1t">
+    <div class="fit">
+    <div class="scene-head"><div><p class="kicker">Step 1 · The table</p>
+    <h2 id="h1t">Meet the <code>students</code> table</h2></div><div class="next"><a class="btn btn-ghost" href="#go-s2">Next: search for Kavya →</a></div></div>
     <p class="lead">100 students, 4 columns, and no index on <b>name</b> yet. Each square below is one row. Tap one to see it.</p>
     <div class="console"><div class="console-dots" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="sql"><span class="kw">CREATE TABLE</span> <span class="id">students</span> (id <span class="kw">INT PRIMARY KEY</span>, name <span class="kw">VARCHAR</span>(40), city <span class="kw">VARCHAR</span>(30), marks <span class="kw">INT</span>);</div>
@@ -323,24 +383,22 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
         <div class="tview" id="tv1"></div>
       </div>
     </div>
-    <div class="next"><a class="btn btn-ghost" href="#s2">Next: search for Kavya →</a></div>
+    </div>
+    <div class="next next-phone"><a class="btn btn-ghost" href="#go-s2">Next: search for Kavya →</a></div>
   </section>
 
   <!-- 2 · full scan -->
-  <section class="scene" id="s2" aria-labelledby="h2t">
-    <p class="kicker">Step 2 · Search without an index</p>
-    <h2 id="h2t">Find one student</h2>
+  <div class="anchor" id="go-s2"></div>
+  <section class="scene stack-card" id="s2" aria-labelledby="h2t">
+    <div class="fit">
+    <div class="scene-head"><div><p class="kicker">Step 2 · Search without an index</p>
+    <h2 id="h2t">Find one student</h2></div><div class="next"><a class="btn btn-ghost" href="#go-s3">Next: fix it with an index →</a></div></div>
     <p class="lead">Press Run and watch what MySQL has to do.</p>
     <div class="console"><div class="console-dots" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="sql"><span class="kw">SELECT</span> name <span class="kw">FROM</span> <span class="id">students</span> <span class="kw">WHERE</span> name = <label class="sr-only" for="pick2">Name to find</label><select id="pick2" class="pick"></select>;</div>
       <button class="btn btn-lime" id="run2" type="button">▶ Run</button>
     </div>
-    <div class="card meter">
-      <div><div class="meter-label">Rows checked</div><div class="meter-num" aria-live="polite"><span id="cnt2">0</span><small> / 100</small></div></div>
-      <div class="bar" aria-hidden="true"><i id="bar2"></i></div>
-      <div class="tag" id="state2">ready</div>
-    </div>
-    <div class="split">
+        <div class="scan-grid">
       <div class="card panel">
         <div class="panel-h"><h3>Rows MySQL checks</h3></div>
         <div class="rowmap" id="map2" aria-hidden="true"></div>
@@ -350,27 +408,34 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
         <div class="panel-h"><h3>students</h3><span class="tag">row by row</span></div>
         <div class="tview" id="tv2"></div>
       </div>
+      <div class="result-col">
+        <div class="card meter">
+      <div><div class="meter-label">Rows checked</div><div class="meter-num" aria-live="polite"><span id="cnt2">0</span><small> / 100</small></div></div>
+      <div class="bar" aria-hidden="true"><i id="bar2"></i></div>
+      <div class="tag" id="state2">ready</div>
     </div>
-    <div class="alert alert-bad" id="alert2" hidden role="status">
+        <div class="alert alert-bad" id="alert2" hidden role="status">
       <div class="alert-ic" aria-hidden="true">!</div>
       <div>
-        <h3>Full table scan: 100 rows checked to return 1</h3>
+        <h3>Full table scan</h3>
+        <p><b>100 rows checked to return 1.</b></p>
         <p id="alert2-why"></p>
         <p>With no index, the work grows with the table: <b>n rows → n checks</b>. 1,00,000 students means 1,00,000 checks.</p>
-        <div class="explain"><table><caption>EXPLAIN (typical for this table)</caption>
-          <tr><th>table</th><th>type</th><th>possible_keys</th><th>key</th><th>rows</th><th>Extra</th></tr>
-          <tr><td>students</td><td class="hot">ALL</td><td>NULL</td><td class="hot">NULL</td><td class="hot">100</td><td>Using where</td></tr>
-        </table></div>
+        <div class="plan"><span class="plan-cap">EXPLAIN (typical for this table)</span><span>type <b class="hot">ALL</b></span><span>key <b class="hot">NULL</b></span><span>rows <b class="hot">100</b></span><span>Extra <b>Using where</b></span></div>
       </div>
     </div>
-    <div class="next"><a class="btn btn-ghost" href="#s3">Next: fix it with an index →</a></div>
+      </div>
+    </div>
+    </div>
+    <div class="next next-phone"><a class="btn btn-ghost" href="#go-s3">Next: fix it with an index →</a></div>
   </section>
 
   <!-- 3 · build -->
-  <section class="scene" id="s3" aria-labelledby="h3t">
-    <p class="kicker">Step 3 · Behind the scenes</p>
-    <h2 id="h3t">What MySQL does when you create an index</h2>
-    <p class="lead">One command. Here is what happens inside, step by step, with our 100 students.</p>
+  <div class="anchor" id="go-s3"></div>
+  <section class="scene stack-card" id="s3" aria-labelledby="h3t">
+    <div class="fit">
+    <div class="scene-head"><div><p class="kicker">Step 3 · Behind the scenes</p>
+    <h2 id="h3t">What MySQL does when you create an index</h2></div><div class="next"><a class="btn btn-ghost" href="#go-s4">Next: search again →</a></div></div>
     <div class="console"><div class="console-dots" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="sql"><span class="kw">CREATE INDEX</span> <span class="id">idx_name</span> <span class="kw">ON</span> <span class="id">students</span> (name);</div>
       <div class="seg" role="group" aria-label="Speed"><button type="button" data-speed="1" class="is-on">1×</button><button type="button" data-speed="2.5">Fast</button></div>
@@ -393,17 +458,16 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
       </div>
       <div class="chips" id="chips3" aria-hidden="true"></div>
     </div>
-    <div class="alert alert-good done-note" id="done3" hidden role="status">
-      <div class="alert-ic" aria-hidden="true">✓</div>
-      <div><h3>idx_name is ready</h3><p>100 entries (name + id), sorted by name, in 10 leaf pages under one root page. The table itself didn't move.</p></div>
     </div>
-    <div class="next"><a class="btn btn-ghost" href="#s4">Next: search again →</a></div>
+    <div class="next next-phone"><a class="btn btn-ghost" href="#go-s4">Next: search again →</a></div>
   </section>
 
   <!-- 4 · indexed lookup -->
-  <section class="scene" id="s4" aria-labelledby="h4t">
-    <p class="kicker">Step 4 · Search with the index</p>
-    <h2 id="h4t">Same question, new path</h2>
+  <div class="anchor" id="go-s4"></div>
+  <section class="scene stack-card" id="s4" aria-labelledby="h4t">
+    <div class="fit">
+    <div class="scene-head"><div><p class="kicker">Step 4 · Search with the index</p>
+    <h2 id="h4t">Same question, new path</h2></div><div class="next"><a class="btn btn-ghost" href="#go-s5">Next: compare →</a></div></div>
     <p class="lead">MySQL starts at the root page, follows one pointer down, and lands on the right leaf.</p>
     <div class="console"><div class="console-dots" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="sql"><span class="kw">SELECT</span> <span id="cols4">name</span> <span class="kw">FROM</span> <span class="id">students</span> <span class="kw">WHERE</span> name = <label class="sr-only" for="pick4">Name to find</label><select id="pick4" class="pick"></select>;</div>
@@ -412,30 +476,30 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
     </div>
     <div class="lookup">
       <div class="card lk-tree"><div class="tree" id="tree4"><svg class="links" aria-hidden="true"></svg><div class="root" id="root4"></div><div class="leaves" id="leaves4"></div></div></div>
-      <div class="card lk-side">
-        <div class="stats"><div class="stat"><b id="pg4">0</b><span>pages opened</span></div><div class="stat"><b id="rw4">0</b><span>rows checked in the table</span></div></div>
-        <div class="jump" id="jump4">id → table: jump to row …</div>
-        <div class="lk-table" id="lkt4"></div>
-      </div>
-    </div>
-    <div class="alert alert-good" id="alert4" hidden role="status">
+      <div class="lk-bottom">
+        <div class="card lk-side"><div class="stats"><div class="stat"><b id="pg4">0</b><span>pages opened</span></div><div class="stat"><b id="rw4">0</b><span>rows checked in the table</span></div></div></div>
+        <div class="card lk-side"><div class="jump" id="jump4">id → table: jump to row …</div>
+        <div class="lk-table" id="lkt4"></div></div>
+        <div class="alert alert-good" id="alert4" style="margin:0" hidden role="status">
       <div class="alert-ic" aria-hidden="true">✓</div>
       <div>
         <h3 id="alert4-h">Found with idx_name</h3>
         <p id="alert4-p"></p>
-        <div class="explain"><table><caption>EXPLAIN (typical for this table)</caption>
-          <tr><th>table</th><th>type</th><th>possible_keys</th><th>key</th><th>rows</th><th>Extra</th></tr>
-          <tr><td>students</td><td class="hot">ref</td><td>idx_name</td><td class="hot">idx_name</td><td class="hot">1</td><td id="extra4">Using index</td></tr>
-        </table></div>
+        <div class="plan"><span class="plan-cap">EXPLAIN (typical for this table)</span><span>type <b class="hot">ref</b></span><span>key <b class="hot">idx_name</b></span><span>rows <b class="hot">1</b></span><span>Extra <b id="extra4">Using index</b></span></div>
       </div>
     </div>
-    <div class="next"><a class="btn btn-ghost" href="#s5">Next: compare →</a></div>
+      </div>
+    </div>
+    </div>
+    <div class="next next-phone"><a class="btn btn-ghost" href="#go-s5">Next: compare →</a></div>
   </section>
 
   <!-- 5 · compare -->
-  <section class="scene" id="s5" aria-labelledby="h5t">
-    <p class="kicker">Step 5 · Side by side</p>
-    <h2 id="h5t">Same query, two very different jobs</h2>
+  <div class="anchor" id="go-s5"></div>
+  <section class="scene stack-card" id="s5" aria-labelledby="h5t">
+    <div class="fit">
+    <div class="scene-head"><div><p class="kicker">Step 5 · Side by side</p>
+    <h2 id="h5t">Same query, two very different jobs</h2></div></div>
     <div class="versus">
       <div class="vs vs-bad"><h3>Without an index</h3><span>type: ALL</span><div class="big">100</div><b>rows checked</b>
         <ul><li>Reads every row, start to end.</li><li>Twice the rows, twice the work.</li></ul></div>
@@ -444,6 +508,7 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
     </div>
     <div class="card price"><div class="alert-ic" aria-hidden="true">i</div>
       <p style="margin:0">The price: every <b>INSERT</b>, <b>UPDATE</b> and <b>DELETE</b> must also update idx_name. So index the columns you search, not every column.</p></div>
+    </div>
   </section>
 </main>
 <footer>Toy data: 100 made-up students. Toy sizes: 50 entries per sort buffer, 10 entries per page. Real InnoDB pages are 16 KB by default.</footer>
@@ -523,10 +588,82 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
 
   /* ---------- step pills ---------- */
   const pills = $$('.pill');
-  const io = new IntersectionObserver(es => es.forEach(e => {
-    if (e.isIntersecting) pills.forEach(p => p.classList.toggle('is-on', p.getAttribute('href') === '#' + e.target.id));
-  }), { rootMargin: '-40% 0px -55% 0px' });
-  $$('.scene').forEach(s => io.observe(s));
+  /* Stacking cards: each card sticks under the bar and the next one slides
+     over it. On a laptop every step card is fitted to one screen (shrunk a
+     little if it must be), so landing on a step shows all of it. On a phone
+     cards keep their height and stick only once their bottom is in view. */
+  const cards = $$('.stack-card');
+  const wide = () => innerWidth >= 900 && innerHeight >= 560;
+  const peek = i => $('.top').offsetHeight + 12 + i * 8;
+  function fitCard(c, i) {
+    const fit = $('.fit', c);
+    c.style.height = ''; c.classList.remove('is-fit');
+    if (fit) { fit.style.transform = ''; fit.style.width = ''; }
+    if (!fit || !wide()) return;
+    const cs = getComputedStyle(c);
+    const avail = innerHeight - peek(i) - 12 - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    let k = 1;
+    for (let n = 0; n < 4; n++) {
+      const h = fit.offsetHeight;
+      if (h * k <= avail + 1 && (k === 1 || h * k > avail - 24)) break;
+      k = Math.min(1, avail / h);
+      fit.style.width = (100 / k) + '%';
+    }
+    if (k < 0.62) { fit.style.width = ''; return; }
+    if (k < 1) fit.style.transform = `scale(${k})`;
+    c.style.height = (avail + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) + 'px';
+    c.classList.add('is-fit');
+  }
+  let laying = false;
+  function layoutStack() {
+    if (laying) return;
+    laying = true;
+    const H = innerHeight;
+    cards.forEach((c, i) => {
+      fitCard(c, i);
+      c.style.setProperty('--stick', Math.min(peek(i), H - c.offsetHeight - 12) + 'px');
+    });
+    laying = false;
+    onScroll();
+    dispatchEvent(new Event('stack-layout'));
+  }
+  let ticking = false;
+  function onScroll() {
+    ticking = false;
+    const H = innerHeight;
+    cards.forEach((c, i) => {
+      const next = cards[i + 1];
+      let p = 0;
+      if (next && !reduce) {
+        const stick = parseFloat(next.style.getPropertyValue('--stick')) || 0;
+        p = Math.min(1, Math.max(0, (H - next.getBoundingClientRect().top) / Math.max(1, H - stick)));
+      }
+      c.style.setProperty('--p', p.toFixed(3));
+    });
+    let on = 0;
+    $$('.scene').forEach((sc, i) => { if (sc.getBoundingClientRect().top < H * 0.5) on = i + 1; });
+    pills.forEach((pl, i) => pl.classList.toggle('is-on', i + 1 === on));
+  }
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  let lt;
+  const relayout = () => { clearTimeout(lt); lt = setTimeout(layoutStack, 60); };
+  addEventListener('resize', relayout);
+  const ro = new ResizeObserver(relayout);
+  $$('.fit').forEach(f => ro.observe(f));
+  layoutStack();
+
+  /* Step links land each card exactly under the bar. Capture phase, so a
+     host page's own fragment-link handler sees the click as handled. */
+  document.addEventListener('click', e => {
+    const a = e.target.closest && e.target.closest('a[href^="#go-"]');
+    if (!a) return;
+    const anchor = document.getElementById(a.getAttribute('href').slice(1));
+    if (!anchor) return;
+    e.preventDefault();
+    const card = anchor.nextElementSibling, i = cards.indexOf(card);
+    const y = anchor.getBoundingClientRect().top + scrollY - (i < 0 ? peek(0) : peek(i));
+    scrollTo({ top: Math.max(0, y), behavior: reduce ? 'auto' : 'smooth' });
+  }, true);
 
   /* ---------- 1 · table ---------- */
   const tv1 = tableView($('#tv1'));
@@ -586,15 +723,15 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
     });
   }
   function drawLinks(tree, upto, active) {
-    const svg = $('svg.links', tree), base = tree.getBoundingClientRect();
+    const svg = $('svg.links', tree), base = tree.getBoundingClientRect(), k = base.width / tree.offsetWidth || 1;
     const ps = $$('.pslot', tree), ls = $$('.leaf', tree);
     let d = '';
     svg.innerHTML = '';
     ps.forEach((p, i) => {
       if (i >= upto) return;
       const a = p.getBoundingClientRect(), b = ls[i].getBoundingClientRect();
-      const x1 = a.left + a.width / 2 - base.left, y1 = a.bottom - base.top;
-      const x2 = b.left + b.width / 2 - base.left, y2 = b.top - base.top;
+      const x1 = (a.left + a.width / 2 - base.left) / k, y1 = (a.bottom - base.top) / k;
+      const x2 = (b.left + b.width / 2 - base.left) / k, y2 = (b.top - base.top) / k;
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', `M${x1},${y1} C${x1},${(y1 + y2) / 2} ${x2},${(y1 + y2) / 2} ${x2},${y2}`);
       if (i === active) path.classList.add('on');
@@ -620,14 +757,14 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
     chipsLayer.appendChild(c); c._row = r; return c;
   });
   function place(c, slot, mode, instant) {
-    const a = slot.getBoundingClientRect(), b = stage.getBoundingClientRect();
+    const a = slot.getBoundingClientRect(), b = stage.getBoundingClientRect(), k = b.width / stage.offsetWidth || 1;
     c._slot = slot; c._mode = mode;
     if (instant) c.style.transition = 'none';
     c.classList.toggle('dot', mode === 'dot' || mode === 'spawn');
     c.classList.toggle('in-leaf', mode === 'leaf');
     const s = mode === 'spawn' ? 10 : 0;
     const box = s ? { x: a.left + a.width / 2 - s / 2, y: a.top + a.height / 2 - s / 2, w: s, h: s } : { x: a.left, y: a.top, w: a.width, h: a.height };
-    Object.assign(c.style, { left: box.x - b.left + 'px', top: box.y - b.top + 'px', width: box.w + 'px', height: box.h + 'px', opacity: 1 });
+    Object.assign(c.style, { left: (box.x - b.left) / k + 'px', top: (box.y - b.top) / k + 'px', width: box.w / k + 'px', height: box.h / k + 'px', opacity: 1 });
     if (instant) { c.offsetWidth; c.style.transition = ''; }
   }
   const tick = ms => sleep(ms / speed);
@@ -644,7 +781,7 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
     $('#root3').classList.remove('is-on');
     $$('.pslot', tree3).forEach(p => { p.textContent = ''; p.classList.remove('filled'); });
     linksUpto = 0; drawLinks(tree3, 0);
-    $('#done3').hidden = true; $('#done3').classList.remove('show');
+    $('#cap3').classList.remove('is-done');
     setPhase(0);
   }
   $$('#s3 .seg button').forEach(b => b.addEventListener('click', () => {
@@ -712,17 +849,19 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
     ptrs[9].textContent = POINTERS[9]; ptrs[9].classList.add('filled');
     leafEls[9].classList.remove('is-right');
     linksUpto = 10; drawLinks(tree3, 10);
-    setPhase(4); cap('Done. Every leaf page has a pointer in the root page.');
-    const done = $('#done3'); done.hidden = false; requestAnimationFrame(() => done.classList.add('show'));
+    setPhase(4);
+    cap('Done! idx_name is ready: 100 entries (name + id), sorted by name, in 10 leaf pages under one root page. The table itself didn\'t move.'); $('#cap3').classList.add('is-done');
   });
   let rt;
-  addEventListener('resize', () => {
+  const redraw = () => {
     clearTimeout(rt);
     rt = setTimeout(() => {
       chips.forEach(c => { if (c._slot) place(c, c._slot, c._mode, true); });
       drawLinks(tree3, linksUpto); drawLinks(tree4, 10, lkActive);
     }, 120);
-  });
+  };
+  addEventListener('resize', redraw);
+  addEventListener('stack-layout', redraw);
 
   /* ---------- 4 · lookup ---------- */
   const tree4 = $('#tree4');
@@ -777,6 +916,9 @@ footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(
     $('#extra4').textContent = cols === '*' ? 'NULL' : 'Using index';
     al.hidden = false; requestAnimationFrame(() => al.classList.add('show'));
   });
+  /* Fit again now that every table, map and tree is on the page. */
+  layoutStack();
+  addEventListener('load', layoutStack);
 })();
 </script>
 </body>
