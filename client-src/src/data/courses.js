@@ -367,6 +367,8 @@ export const courses = [
         lessons: [
           { id: 'kurinji-metro', title: 'Kurinji Metro', minutes: 40,
             blurb: 'A neighbourhood supermarket running on five tables. Shop and check out as a customer, then sign in as staff to restock products and read revenue reports built from the same orders. Open Behind the counter to watch the SQL each click runs and the rows it changes.' },
+          { id: 'kaveri-kitchen', title: 'Kaveri Kitchen', minutes: 40,
+            blurb: 'Follow one family\'s dinner order through a 3D restaurant, from the door to the plate, and watch every phone tap, kitchen screen and chef write to the live database. Then design the tables yourself and read insights and predictions from the records.' },
         ],
       },
     ],
