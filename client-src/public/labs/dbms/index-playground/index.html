@@ -2,1143 +2,781 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Index Playground: how a database index finds a row</title>
-<meta name="description" content="Start from zero: find a student row by row, use an index like the back of a book, grow it into a tree, then see how MySQL uses two trees.">
-<meta name="theme-color" content="#F2EFE7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#15181C" media="(prefers-color-scheme: dark)">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Index Playground: how a database index finds a row">
-<meta property="og:description" content="Six small hands-on steps, from checking every row to MySQL's two trees.">
-<meta name="twitter:card" content="summary">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23F2EFE7'/%3E%3Cpath d='M16 6v6M16 12l-7 8M16 12l7 8' fill='none' stroke='%231E2125' stroke-width='2.4'/%3E%3Crect x='5' y='20' width='8' height='6' fill='%23B83C14'/%3E%3Crect x='19' y='20' width='8' height='6' fill='none' stroke='%231E2125' stroke-width='2'/%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Index Playground: how a MySQL index finds a row</title>
+<meta name="description" content="Search a real students table with and without an index, and watch MySQL build the index behind the scenes.">
 <style>
-/* Design tokens: mysql-indexes, direction "Drafting Table" (v1, 2026-11-02).
-   Values come from direction/direction-sheet.md. Shared by the mock-up and the site.
-   Contrast ratios (WCAG) are listed in the direction sheet. */
 :root {
-  color-scheme: light dark;
-
-  /* colors by role (light: paper and graphite) */
-  --color-bg: #F2EFE7;        /* drafting paper */
-  --color-surface: #FBF9F4;   /* the sheet pinned on the board */
-  --color-text: #1E2125;      /* graphite, 14.1:1 on bg */
-  --color-muted: #555A61;     /* soft graphite, 6.1:1 on bg */
-  --color-line: #7E848C;      /* construction lines and page outlines, 3.3:1 on bg (UI/graphics only) */
-  --color-faint: #D9D4C8;     /* grid and hatch, decorative only */
-  --color-primary: #2C3540;   /* ink: buttons, active controls, 10.8:1 on bg */
-  --color-on-primary: #FFFFFF;/* 12.4:1 on primary */
-  --color-accent: #B83C14;    /* the one signal colour: active search path, current page, 4.95:1 on bg */
-  --color-on-accent: #FFFFFF; /* 5.7:1 on accent */
-  --color-success: #2C6A45;
-  --color-warning: #835600;
-  --color-danger: #9E2230;
-
-  /* scene roles (derived; never the only carrier of meaning, always paired with a pattern or label) */
-  --scene-slab-top: #FBF9F4;
-  --scene-slab-side: #E4DFD3;
-  --scene-slab-front: #D4CEC0;
-  --scene-hatch: #B9B3A6;
-  --scene-visited: #F3D9CC;   /* accent tint for pages already read */
-
-  /* type: system stacks only, no font files shipped (nothing to license) */
-  --font-display: "Iowan Old Style", "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
-  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-  --text-base: 1rem;          /* 16 px minimum body */
-  --scale: 1.25;
-  --text-sm: 0.875rem;
-  --text-xs: 0.8rem;
-  --text-md: 1.25rem;
-  --text-lg: 1.5625rem;
-  --text-xl: clamp(1.75rem, 1.2rem + 2.4vw, 2.75rem);
-  --text-xxl: clamp(2.1rem, 1.3rem + 3.6vw, 3.6rem);
-  --leading: 1.55;
-  --measure: 66ch;
-
-  /* shape and space */
-  --radius: 2px;              /* drafted corners, nearly square */
-  --space: 8px;
-  --space-1: 4px;  --space-2: 8px;  --space-3: 16px;  --space-4: 24px;
-  --space-5: 32px; --space-6: 48px; --space-7: 64px;  --space-8: 96px;
-  --rule: 1px solid var(--color-line);
-  --rule-faint: 1px solid var(--color-faint);
-  --shadow: none;             /* depth comes from line work and the sheet edge, not shadows */
-  --container: 1200px;
-  --touch: 44px;
-
-  /* motion: calm, one move at a time */
-  --dur-step: 650ms;
-  --dur-ui: 160ms;
-  --ease: cubic-bezier(.3, .0, .2, 1);
+  --bg: #F5F8EC;
+  --surface: #FFFFFF;
+  --ink: #14171F;
+  --muted: #5B6472;
+  --line: #E3E8D6;
+  --lime: #A3E635;
+  --lime-deep: #3F6212;
+  --lime-soft: #ECFCCB;
+  --violet: #7C3AED;
+  --violet-deep: #5B21B6;
+  --violet-soft: #EDE9FE;
+  --red: #E11D48;
+  --red-soft: #FFE4E6;
+  --sky: #0EA5E9;
+  --sky-soft: #E0F2FE;
+  --console: #1E1B4B;
+  --console-ink: #E0E7FF;
+  --radius: 18px;
+  --shadow: 0 1px 2px rgba(20,23,31,.06), 0 8px 24px rgba(20,23,31,.06);
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --t: 450ms;
 }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--font); overflow-x: hidden; }
+button { font: inherit; cursor: pointer; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* graphite board under a desk lamp */
-    --color-bg: #15181C;
-    --color-surface: #1D2126;
-    --color-text: #ECE8E0;
-    --color-muted: #A9AEB5;
-    --color-line: #7D838B;
-    --color-faint: #2C3138;
-    --color-primary: #D5DAE0;
-    --color-on-primary: #15181C;
-    --color-accent: #FF7F4D;
-    --color-on-accent: #15181C;
-    --color-success: #6CC28F;
-    --color-warning: #E3B34F;
-    --color-danger: #FF8A93;
-    --scene-slab-top: #262B31;
-    --scene-slab-side: #1F2328;
-    --scene-slab-front: #1A1D21;
-    --scene-hatch: #3A4048;
-    --scene-visited: #4A2C20;
-  }
+/* ---------- top bar ---------- */
+.top { position: sticky; top: 0; z-index: 20; background: rgba(245,248,236,.88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.top-in { max-width: 1160px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; white-space: nowrap; color: var(--ink); text-decoration: none; }
+.brand-mark { width: 30px; height: 30px; border-radius: 9px; background: var(--lime); display: grid; place-items: center; }
+.pills { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-left: auto; }
+.pills::-webkit-scrollbar { display: none; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; min-height: 36px; }
+.pill b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); font-size: 12px; color: var(--ink); }
+.pill.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.pill.is-on b { background: var(--lime); }
+
+/* ---------- scenes ---------- */
+main { max-width: 1160px; margin: 0 auto; padding: 0 16px 80px; }
+.hero { padding: 56px 0 24px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 32px; align-items: center; }
+.hero h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.04; letter-spacing: -.03em; margin: 0 0 16px; }
+.hero h1 mark { background: linear-gradient(transparent 58%, var(--lime) 58%); color: inherit; padding: 0 4px; }
+.hero p { font-size: 19px; color: var(--muted); margin: 0 0 24px; max-width: 34ch; }
+.hero-art { background: var(--surface); border-radius: 28px; box-shadow: var(--shadow); padding: 22px; position: relative; overflow: hidden; }
+.hero-art .mini-row { display: grid; grid-template-columns: 34px 1fr 1fr 40px; gap: 8px; padding: 7px 10px; border-radius: 10px; font-size: 14px; }
+.hero-art .mini-row:nth-child(odd) { background: var(--bg); }
+.hero-art .mini-row.hit { background: var(--lime); font-weight: 700; animation: pulse 2.4s ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(1.03); } }
+
+.scene { padding: 56px 0 24px; border-top: 1px dashed #D5DCC4; }
+.kicker { display: inline-flex; align-items: center; gap: 8px; font: 700 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--violet-deep); background: var(--violet-soft); padding: 7px 12px; border-radius: 999px; margin: 0 0 14px; }
+.scene h2 { font-size: clamp(28px, 4vw, 42px); line-height: 1.1; letter-spacing: -.02em; margin: 0 0 8px; }
+.scene .lead { font-size: 18px; color: var(--muted); margin: 0 0 24px; max-width: 60ch; }
+.btn { display: inline-flex; align-items: center; gap: 10px; border: 0; border-radius: 14px; padding: 13px 20px; font-weight: 700; font-size: 16px; min-height: 48px; transition: transform .15s, box-shadow .15s; }
+.btn:active { transform: translateY(1px); }
+.btn-lime { background: var(--lime); color: var(--ink); box-shadow: 0 6px 0 #65A30D; }
+.btn-lime:active { box-shadow: 0 3px 0 #65A30D; transform: translateY(3px); }
+.btn-ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.next { margin-top: 28px; display: flex; justify-content: flex-end; }
+.card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+/* ---------- console ---------- */
+.console { background: var(--console); color: var(--console-ink); border-radius: var(--radius); padding: 16px 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; box-shadow: 0 12px 30px rgba(30,27,75,.25); }
+.console-dots { display: flex; gap: 6px; }
+.console-dots i { width: 10px; height: 10px; border-radius: 50%; background: #4C467F; }
+.sql { font: 600 17px/1.4 var(--mono); flex: 1 1 360px; min-width: 0; }
+.sql .kw { color: var(--lime); }
+.sql .str { color: #FDE68A; }
+.sql .id { color: #C4B5FD; }
+.sql select { font: inherit; color: #FDE68A; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 2px 6px; }
+.console .btn-lime { box-shadow: 0 5px 0 #4D7C0F; }
+.console > .btn, .console > .seg { flex: none; width: auto; }
+.seg { display: inline-flex; background: rgba(255,255,255,.08); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg button { border: 0; background: transparent; color: var(--console-ink); padding: 8px 12px; border-radius: 9px; font: 600 14px var(--mono); min-height: 40px; }
+.seg button.is-on { background: var(--console-ink); color: var(--console); }
+
+/* ---------- table + row map ---------- */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 20px; margin-top: 20px; }
+.panel { padding: 18px; }
+.panel-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; }
+.panel-h h3 { margin: 0; font-size: 16px; }
+.tag { font: 600 12px var(--mono); color: var(--muted); background: var(--bg); padding: 4px 8px; border-radius: 8px; }
+.rowmap { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+.tile { aspect-ratio: 1; border-radius: 7px; background: var(--lime-soft); border: 0; padding: 0; font: 600 11px var(--mono); color: var(--lime-deep); display: grid; place-items: center; transition: background .2s, transform .2s, color .2s; }
+.tile:hover, .tile:focus-visible, .tile.is-current { outline: 3px solid var(--ink); outline-offset: 1px; }
+.tile.checked { background: var(--red-soft); color: var(--red); }
+.tile.scan { background: var(--red); color: #fff; transform: scale(1.15); }
+.tile.match { background: var(--lime); color: var(--ink); transform: scale(1.12); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+
+.tview { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.trow { display: grid; grid-template-columns: 56px 1.3fr 1.2fr 64px; align-items: center; padding: 0 14px; height: 40px; font-size: 15px; border-bottom: 1px solid var(--line); transition: background .2s; }
+.trow:last-child { border-bottom: 0; }
+.thead { background: var(--ink); color: #fff; font: 600 13px var(--mono); height: 38px; }
+.thead span:first-child { color: var(--lime); }
+.tbody { height: 320px; overflow-y: auto; scroll-behavior: smooth; position: relative; }
+.trow .n { font: 600 13px var(--mono); color: var(--muted); }
+.trow .m { font-family: var(--mono); text-align: right; }
+.trow.is-current { background: var(--red-soft); }
+.trow.is-match { background: var(--lime); font-weight: 700; }
+.trow.is-sel { background: var(--violet-soft); }
+
+/* ---------- meter + alerts ---------- */
+.meter { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; margin-top: 20px; padding: 16px 18px; }
+.meter-num { font: 800 34px/1 var(--mono); }
+.meter-num small { font-size: 16px; color: var(--muted); }
+.meter-label { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.bar { height: 14px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #FB7185, var(--red)); border-radius: inherit; transition: width .12s linear; }
+.bar.good i { background: linear-gradient(90deg, var(--lime), #65A30D); }
+
+.alert { margin-top: 20px; border-radius: var(--radius); padding: 20px 22px; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; opacity: 0; transform: translateY(12px); transition: opacity .4s, transform .4s; }
+.alert.show { opacity: 1; transform: none; }
+.alert > div { min-width: 0; }
+.alert[hidden] { display: none; }
+.alert-ic { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 24px; font-weight: 800; }
+.alert h3 { margin: 2px 0 6px; font-size: 21px; }
+.alert p { margin: 0 0 6px; }
+.alert-bad { background: var(--red-soft); border: 2px solid var(--red); }
+.alert-bad .alert-ic { background: var(--red); color: #fff; animation: siren 1s ease-in-out 3; }
+.alert-bad h3 { color: #9F1239; }
+@keyframes siren { 50% { transform: rotate(-10deg) scale(1.1); } }
+.alert-good { background: var(--lime-soft); border: 2px solid #65A30D; }
+.alert-good .alert-ic { background: var(--lime); color: var(--ink); }
+.alert-good h3 { color: var(--lime-deep); }
+.bigo { display: inline-block; font: 700 14px var(--mono); background: #fff; border-radius: 8px; padding: 3px 8px; margin-top: 4px; }
+
+.explain { margin-top: 14px; overflow-x: auto; }
+.explain table { border-collapse: collapse; font: 13px var(--mono); min-width: 520px; }
+.explain th, .explain td { padding: 6px 10px; text-align: left; border-bottom: 1px solid rgba(20,23,31,.12); white-space: nowrap; }
+.explain th { color: var(--muted); font-weight: 600; }
+.explain td.hot { font-weight: 800; }
+.alert-bad td.hot { color: var(--red); }
+.alert-good td.hot { color: var(--lime-deep); }
+.explain caption { text-align: left; font: 600 12px var(--font); color: var(--muted); padding-bottom: 4px; caption-side: top; }
+
+/* ---------- build stage ---------- */
+.phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0 16px; }
+.phase { padding: 14px 16px; border-radius: 16px; background: var(--surface); border: 2px solid var(--line); transition: border-color .3s, background .3s; }
+.phase b { display: block; font-size: 15px; }
+.phase span { font-size: 13px; color: var(--muted); }
+.phase .num { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--bg); font: 700 13px var(--mono); margin-right: 6px; }
+.phase.is-on { border-color: var(--violet); background: var(--violet-soft); }
+.phase.is-on .num { background: var(--violet); color: #fff; }
+.phase.is-done .num { background: var(--lime); }
+.caption { min-height: 28px; font-weight: 600; margin: 0 0 12px; display: flex; gap: 10px; align-items: center; }
+.caption::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--violet); flex: none; }
+
+.bstage { position: relative; overflow: hidden; padding: 18px; display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 2fr); grid-template-areas: "src buf" "tmp tmp" "tree tree"; gap: 18px; }
+.bz { min-width: 0; }
+.bz-label { margin: 0 0 8px; font: 700 12px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.bz-label em { font-style: normal; text-transform: none; letter-spacing: 0; color: #8A93A0; }
+.bz-src { grid-area: src; }
+.bz-buf { grid-area: buf; }
+.bz-tmp { grid-area: tmp; }
+.bz-tree { grid-area: tree; }
+.grid-src { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+.grid-src i { aspect-ratio: 1; border-radius: 4px; background: var(--lime-soft); transition: background .2s; }
+.grid-src i.read { background: var(--lime); }
+.grid-buf { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; padding: 8px; border-radius: 14px; background: var(--bg); border: 2px dashed #CFD7BC; }
+.grid-buf .slot { height: 26px; }
+.runs { display: grid; gap: 8px; }
+.run { display: flex; align-items: center; gap: 10px; }
+.run > span { flex: none; width: 74px; font: 600 12px var(--mono); color: var(--muted); }
+.dots { display: flex; flex-wrap: wrap; gap: 3px; flex: 1; min-height: 12px; }
+.dslot { width: 9px; height: 9px; }
+.tree { position: relative; padding-top: 24px; overflow: hidden; }
+.tree svg.links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+.tree svg path { fill: none; stroke: #C4B5FD; stroke-width: 2; transition: stroke .3s, stroke-width .3s; }
+.tree svg path.on { stroke: var(--violet); stroke-width: 3.5; }
+.root { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; max-width: 760px; margin: 0 auto 42px; padding: 6px; border-radius: 12px; background: var(--violet); position: relative; z-index: 1; opacity: 0; transform: scale(.9); transition: opacity .4s, transform .4s; }
+.root.is-on { opacity: 1; transform: none; }
+.root::before { content: "root page"; position: absolute; top: -20px; left: 0; font: 700 11px var(--mono); color: var(--violet-deep); text-transform: uppercase; letter-spacing: .05em; }
+.pslot { height: 26px; border-radius: 7px; background: rgba(255,255,255,.14); color: #fff; font: 700 11px/26px var(--mono); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 3px; transition: background .25s, color .25s, transform .25s; }
+.pslot.filled { background: #fff; color: var(--violet-deep); animation: pop .35s; }
+.pslot.on { background: var(--lime); color: var(--ink); transform: scale(1.08); }
+@keyframes pop { from { transform: scale(.4); } }
+.leaves { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; position: relative; z-index: 1; }
+.leaf { border-radius: 12px; background: var(--surface); border: 2px solid var(--line); padding: 5px; display: grid; gap: 2px; opacity: .25; transition: opacity .3s, border-color .3s, box-shadow .3s, transform .3s; position: relative; }
+.leaf.is-alloc { opacity: 1; border-color: #C4B5FD; }
+.leaf.is-right { border-color: var(--violet); box-shadow: 0 0 0 4px var(--violet-soft); }
+.leaf.is-right::after { content: "← writing here"; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font: 700 10px var(--mono); color: var(--violet); white-space: nowrap; }
+.leaf.on { border-color: var(--lime-deep); box-shadow: 0 0 0 4px var(--lime); transform: translateY(-4px); }
+.leaf .slot { height: 19px; }
+.leaf-n { font: 700 10px var(--mono); color: var(--muted); text-align: center; height: 14px; }
+.chips { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.chip { position: absolute; left: 0; top: 0; width: 10px; height: 10px; display: flex; align-items: center; justify-content: space-between; gap: 3px; padding: 0 5px; border-radius: 6px; background: var(--violet-soft); color: var(--ink); border: 1px solid #C4B5FD; font: 600 11px/1 var(--font); white-space: nowrap; overflow: hidden; opacity: 0; transition: left var(--t) cubic-bezier(.3,.7,.2,1), top var(--t) cubic-bezier(.3,.7,.2,1), width var(--t), height var(--t), border-radius var(--t), background .3s, opacity .25s; }
+.chip i { font: 600 10px var(--mono); font-style: normal; color: var(--violet); }
+.chip b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.chip.dot { border-radius: 50%; padding: 0; background: var(--violet); border-color: var(--violet); }
+.chip.dot b, .chip.dot i { display: none; }
+.chip.in-leaf { font-size: 10px; padding: 0 4px; border-radius: 5px; }
+.chip.in-leaf i { font-size: 9px; }
+.chip.hit { background: var(--lime); border-color: var(--lime-deep); }
+.done-note { margin-top: 14px; }
+
+/* ---------- lookup ---------- */
+.lookup { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; margin-top: 20px; }
+.lookup .lk-side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: start; }
+.lookup .lk-side .stats { grid-row: span 2; }
+.lk-tree { padding: 18px 18px 30px; }
+.lk-tree .root { opacity: 1; transform: none; }
+.lk-tree .leaf { opacity: 1; border-color: var(--line); }
+.entry { height: 19px; display: flex; align-items: center; justify-content: space-between; gap: 3px; padding: 0 4px; border-radius: 5px; background: var(--violet-soft); font: 600 10px/1 var(--font); white-space: nowrap; overflow: hidden; transition: background .25s, transform .25s; }
+.entry i { font: 600 9px var(--mono); font-style: normal; color: var(--violet); }
+.entry b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.entry.on { background: var(--lime); transform: scale(1.06); }
+.entry.peek { background: #DDD6FE; }
+.lk-side { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.lk-side .trow { grid-template-columns: 44px 1fr 1fr 44px; font-size: 14px; padding: 0 10px; }
+.lk-table { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; opacity: .35; transition: opacity .3s; }
+.lk-table.on { opacity: 1; }
+.jump { font: 700 13px var(--mono); color: var(--violet-deep); background: var(--violet-soft); padding: 8px 10px; border-radius: 10px; opacity: 0; transition: opacity .3s; }
+.jump.on { opacity: 1; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat { background: var(--bg); border-radius: 14px; padding: 12px; }
+.stat b { display: block; font: 800 28px/1 var(--mono); }
+.stat span { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+/* ---------- compare ---------- */
+.versus { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+.vs { padding: 24px; border-radius: 24px; }
+.vs-bad { background: var(--red-soft); }
+.vs-good { background: var(--lime-soft); }
+.vs h3 { margin: 0 0 4px; font-size: 22px; }
+.vs .big { font: 800 64px/1 var(--mono); margin: 16px 0 4px; }
+.vs-bad .big { color: var(--red); }
+.vs-good .big { color: var(--lime-deep); }
+.vs ul { margin: 14px 0 0; padding-left: 18px; }
+.price { margin-top: 20px; padding: 20px 22px; display: flex; gap: 16px; align-items: center; }
+.price .alert-ic { background: var(--sky-soft); color: var(--sky); flex: none; }
+footer { max-width: 1160px; margin: 0 auto; padding: 24px 16px 40px; color: var(--muted); font-size: 13px; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; padding-top: 32px; }
+  .split, .lookup, .versus, .lookup .lk-side { grid-template-columns: 1fr; }
+  .bstage { grid-template-columns: 1fr; grid-template-areas: "src" "buf" "tmp" "tree"; }
+  .grid-src { max-width: 260px; }
+  .phases { grid-template-columns: 1fr; }
 }
-
+@media (max-width: 640px) {
+  .brand span { display: none; }
+  .grid-buf { grid-template-columns: repeat(5, 1fr); }
+  .root, .leaves { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .root { margin-bottom: 34px; }
+  .leaves { row-gap: 26px; }
+  .tbody { height: 280px; }
+  .trow { grid-template-columns: 40px 1.2fr 1fr 48px; padding: 0 10px; font-size: 14px; }
+  .meter { grid-template-columns: 1fr; gap: 8px; }
+  .sql { font-size: 15px; flex-basis: 100%; }
+  .vs .big { font-size: 48px; }
+  .chip.in-leaf i, .entry i { display: none; }
+  .chip.in-leaf, .entry { justify-content: center; padding: 0 2px; font-size: 9.5px; }
+  .entry.on i { display: inline; }
+}
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-step: 0ms; --dur-ui: 0ms; }
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition-duration: 0s !important; }
 }
 </style>
-<style>
-/* Index Playground site. Built from approved design v3. Mobile first; tokens from tokens.css only. */
-*, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0; min-height: 100svh; display: flex; flex-direction: column;
-  background-color: var(--color-bg);
-  background-image: linear-gradient(var(--color-faint) 1px, transparent 1px), linear-gradient(90deg, var(--color-faint) 1px, transparent 1px);
-  background-size: 28px 28px;
-  color: var(--color-text); font: var(--text-base)/1.45 var(--font-body); overflow-x: hidden;
-}
-button { font: inherit; color: inherit; }
-code { font-family: var(--font-mono); }
-p, h2, ul, ol, figure { margin: 0; }
-ul, ol { padding: 0; list-style: none; }
-:focus-visible { outline: 2.5px solid var(--color-accent); outline-offset: 2px; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-[hidden] { display: none !important; }
-
-.skip { position: absolute; left: -999px; top: 0; z-index: 10; background: var(--color-primary); color: var(--color-on-primary); padding: 10px 14px; }
-.skip:focus { left: 8px; top: 8px; }
-/* Same rules as the OS reduced-motion setting; the class is applied by app.js when the setting is on (or ?reduce=1 for testing). */
-html.reduce-motion { --dur-step: 0ms; --dur-ui: 0ms; }
-html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
-
-/* header */
-.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) max(var(--space-3), env(safe-area-inset-left)); border-bottom: var(--rule); background: var(--color-bg); }
-.wordmark { color: inherit; display: inline-flex; align-items: center; gap: var(--space-2); text-decoration: none; font: 700 1.1rem/1 var(--font-display); min-height: var(--touch); white-space: nowrap; }
-.steps { display: flex; gap: 4px; flex: 1 1 100%; min-width: 0; }
-.steps button { flex: 1 1 0; min-width: 0; height: var(--touch); display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: var(--rule); border-radius: var(--radius); background: var(--color-surface); cursor: pointer; padding: 0 6px; }
-.steps button b { font: 700 0.95rem/1 var(--font-mono); }
-.steps button span { display: none; font-size: var(--text-sm); white-space: nowrap; }
-.steps button[aria-current="step"] { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
-.steps button.seen:not([aria-current]) b { color: var(--color-success); }
-
-/* buttons */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: var(--touch); padding: 0 var(--space-3); border: 1.5px solid var(--color-primary); border-radius: var(--radius); font: 600 var(--text-sm)/1 var(--font-body); cursor: pointer; background: var(--color-surface); color: var(--color-primary); transition: background-color var(--dur-ui) var(--ease), color var(--dur-ui) var(--ease); }
-.btn:hover { background: var(--color-primary); color: var(--color-on-primary); }
-.btn-primary { background: var(--color-primary); color: var(--color-on-primary); }
-.btn-primary:hover { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); }
-.btn-ghost { border-color: var(--color-line); }
-.btn[aria-pressed="true"] { background: var(--color-primary); color: var(--color-on-primary); }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
-
-/* steps */
-main { flex: 1 0 auto; display: flex; flex-direction: column; overflow-x: clip; }
-.step { flex: 1 0 auto; width: 100%; max-width: 1200px; margin: 0 auto; padding: var(--space-3) max(var(--space-3), env(safe-area-inset-left)) var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
-.step-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
-.step-head > div:first-child { flex: 1 1 280px; min-width: 0; }
-.kicker { font: 600 0.72rem/1.3 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--color-accent); }
-.step h2 { font: 700 clamp(1.35rem, 1.1rem + 1.2vw, 2rem)/1.15 var(--font-display); margin-top: 4px; max-width: 30ch; }
-.hint { margin-top: 6px; font-size: 1rem; color: var(--color-muted); min-height: 1.5em; }
-.hint.win { color: var(--color-success); font-weight: 600; }
-.hint.lose { color: var(--color-danger); font-weight: 600; }
-.tools { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
-.take { font: 700 1.15rem/1.3 var(--font-display); border-left: 4px solid var(--color-accent); padding: 6px 12px; background: var(--color-surface); max-width: 46ch; }
-.toy-note { font: 0.78rem/1.4 var(--font-mono); color: var(--color-muted); }
-
-.stamp { display: inline-flex; flex-direction: column; align-items: center; min-width: 92px; background: var(--color-surface); border: 1.5px solid var(--color-text); border-radius: var(--radius); padding: 4px 8px 6px; box-shadow: 3px 3px 0 var(--color-text); }
-.count { font: 700 2rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
-.count.bump { animation: bump 380ms var(--ease); }
-.count-label { font: 600 0.66rem/1.2 var(--font-mono); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; text-align: center; }
-.count-sub { font: 0.66rem/1.25 var(--font-mono); color: var(--color-muted); margin-top: 2px; }
-.count-sub:empty { display: none; }
-
-/* step 1: the table */
-.scrollbox { max-height: 56svh; overflow-y: auto; border: var(--rule); background: var(--color-surface); border-radius: var(--radius); padding: 6px; }
-.rowgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(146px, 1fr)); gap: 6px; }
-.rowbtn { width: 100%; min-height: var(--touch); display: grid; grid-template-columns: 2.2em 1fr auto; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--color-line); border-radius: var(--radius); background: var(--color-bg); cursor: pointer; text-align: left; transition: background-color var(--dur-ui) var(--ease); }
-.rowbtn .r { font: 600 0.8rem/1 var(--font-mono); color: var(--color-muted); }
-.rowbtn .n { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rowbtn .m { font: 0.75rem/1 var(--font-mono); color: var(--color-muted); }
-.rowbtn.checked { background: var(--scene-slab-side); }
-.rowbtn.checked .n { text-decoration: line-through; color: var(--color-muted); }
-.rowbtn.found { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); }
-.rowbtn.found .n { text-decoration: none; color: inherit; }
-.rowbtn.found .r, .rowbtn.found .m { color: inherit; }
-
-/* step 2: book index + our index */
-.idea-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); align-items: start; }
-.card { background: var(--color-surface); border: 1.5px solid var(--color-text); border-radius: var(--radius); padding: 10px 12px; box-shadow: 3px 3px 0 var(--color-text); }
-.book { transform: rotate(-1.2deg); max-width: 300px; }
-.book figcaption, .card-t { font: 600 0.72rem/1.3 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--color-muted); margin-bottom: 6px; }
-.book li { display: flex; justify-content: space-between; font: 0.95rem/1.9 var(--font-display); border-bottom: 1px dotted var(--color-faint); }
-.letters { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-.letters button { width: var(--touch); height: var(--touch); border: 1px solid var(--color-line); border-radius: var(--radius); background: var(--color-bg); font: 700 1rem/1 var(--font-mono); cursor: pointer; }
-.letters button[aria-pressed="true"] { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
-.namelist { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; min-height: 52px; }
-.namelist button { width: 100%; min-height: var(--touch); display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--color-line); border-radius: var(--radius); background: var(--color-bg); cursor: pointer; }
-.namelist button span:last-child { font: 0.8rem/1 var(--font-mono); color: var(--color-muted); }
-.namelist button.found { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); }
-.namelist button.found span:last-child { color: inherit; }
-.namelist .empty { color: var(--color-muted); font-size: var(--text-sm); align-self: center; }
-
-/* steps 3-4: the board that folds into a tree */
-.board { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 26px; padding: 8px 4px 22px; transform-origin: 50% 0; transition: transform 900ms var(--ease); }
-.board .links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-.links line { stroke: var(--color-text); stroke-width: 1.5; }
-.links line.on { stroke: var(--color-accent); stroke-width: 3; }
-.lvl { position: relative; display: flex; justify-content: center; gap: 10px; }
-.lvl-label { position: absolute; left: 0; top: -20px; font: 600 0.7rem/1 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--color-accent); opacity: 0; transition: opacity 600ms var(--ease) 400ms; }
-.board.folded .lvl-label { opacity: 1; }
-.node { position: relative; z-index: 1; background: var(--color-surface); border: 1.5px solid var(--color-text); border-radius: var(--radius); padding: 6px 8px; transition: box-shadow 600ms var(--ease), background-color var(--dur-ui) var(--ease); }
-.node-t { font: 600 0.75rem/1.3 var(--font-mono); text-align: center; }
-.node.on { border-color: var(--color-accent); background: var(--scene-visited); }
-.node.sign { min-width: min(100%, 300px); }
-.sign-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin-top: 4px; }
-.sign-rows button, .page-rows button { min-height: var(--touch); border: 1px solid var(--color-line); border-radius: var(--radius); background: var(--color-bg); cursor: pointer; font-size: 0.9rem; padding: 0 8px; }
-.sign-rows button { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-.sign-rows button span:last-child { font: 0.75rem/1 var(--font-mono); color: var(--color-muted); }
-.sign-rows button.on { border-color: var(--color-accent); background: var(--scene-visited); }
-.lvl-pages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: start; }
-.node.page.open { grid-column: 1 / -1; }
-.page-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin-top: 6px; }
-.page-rows button.found { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); }
-.board.folded { transform: perspective(1100px) rotateX(26deg) scale(0.94); gap: 72px; padding-top: 28px; }
-.board.folded .lvl-pages { max-width: 820px; width: 100%; margin: 0 auto; gap: 14px; }
-.board.folded .lvl-mid { max-width: 820px; width: 100%; margin: 0 auto; gap: 14px; }
-.board.folded .sign-rows, .board.folded .page-rows { display: none; }
-.board.folded .lvl-pages { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); }
-.board.folded .node.page.open { grid-column: auto; }
-.board.folded .node { box-shadow: 0 7px 0 -1px var(--scene-slab-front), 0 7px 0 0.5px var(--color-text); padding: 10px 4px; }
-.board.folded .node.sign { min-width: 0; width: min(46%, 220px); margin: 0 auto; }
-.board.folded .lvl-mid .node.sign { width: auto; flex: 0 1 200px; }
-.board.folded .node-t { font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.stats { display: flex; flex-wrap: wrap; gap: 8px; }
-.stats div { background: var(--color-surface); border: var(--rule); border-radius: var(--radius); padding: 6px 10px; font: 0.8rem/1.35 var(--font-mono); }
-.stats b { font: 700 1.2rem/1 var(--font-display); display: block; }
-
-/* step 5: inside MySQL (stage + dock) */
-.step-mysql { padding-bottom: 0; }
-.subtabs { display: flex; flex-wrap: wrap; gap: 4px; }
-.subtabs button { min-height: var(--touch); padding: 0 10px; border: var(--rule); border-radius: var(--radius); background: var(--color-surface); cursor: pointer; font-size: var(--text-sm); }
-.subtabs button b { font-family: var(--font-mono); margin-right: 4px; }
-.subtabs button[aria-pressed="true"] { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
-.subtabs button.done b::after { content: "✓"; margin-left: 2px; color: var(--color-success); }
-.stage { position: relative; display: grid; grid-template-rows: auto 1fr; min-height: 380px; border: var(--rule); border-radius: var(--radius); background: var(--color-bg); }
-.hud-goal { padding: 10px 116px 0 12px; }
-.goal { font: 700 1.1rem/1.25 var(--font-display); }
-.hud-count { position: absolute; top: 10px; right: 10px; }
-#scene { display: block; width: 100%; height: 100%; min-height: 320px; cursor: grab; touch-action: pan-y; }
-#scene.dragging { cursor: grabbing; }
-.peek { position: absolute; z-index: 3; width: min(240px, calc(100% - 24px)); background: var(--color-surface); border: 1.5px solid var(--color-text); border-radius: var(--radius); box-shadow: 3px 3px 0 var(--color-text); padding: 8px 10px 10px; font: 0.82rem/1.5 var(--font-mono); }
-.peek-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.peek-head p { font-weight: 700; }
-.peek-x { width: var(--touch); height: var(--touch); border: 0; background: none; font-size: 1.3rem; cursor: pointer; margin: -8px -8px -8px 0; }
-.peek li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted var(--color-faint); }
-.peek li.hit { color: var(--color-accent); font-weight: 700; }
-.peek li.new { background: var(--scene-visited); }
-.peek li.more { color: var(--color-muted); border: 0; }
-.dock { display: grid; gap: var(--space-2); grid-template-columns: minmax(0, 1fr); align-items: center; padding: var(--space-2) 0 var(--space-3); }
-.dock-task { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
-.dock-play { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.says summary { cursor: pointer; min-height: var(--touch); display: inline-flex; align-items: center; font: 600 var(--text-xs)/1 var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--color-muted); }
-#says-body { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 0.8rem/1.5 var(--font-mono); }
-#says-body code { background: var(--color-surface); padding: 1px 5px; overflow-wrap: anywhere; }
-#says-body b { color: var(--color-accent); }
-.ibtn { display: inline-grid; place-items: center; width: var(--touch); height: var(--touch); flex: none; border: var(--rule); border-radius: var(--radius); background: var(--color-surface); cursor: pointer; }
-.ibtn:hover { border-color: var(--color-primary); }
-.ibtn-play { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
-.ibtn-play .i-pause { display: none; }
-.ibtn-play[aria-pressed="true"] .i-play { display: none; }
-.ibtn-play[aria-pressed="true"] .i-pause { display: block; }
-#scrub { flex: 1 1 auto; min-width: 50px; width: 100%; height: var(--touch); margin: 0 4px; accent-color: var(--color-accent); cursor: pointer; }
-.chip-toggle { min-height: var(--touch); padding: 0 12px; border: 1.5px dashed var(--color-line); border-radius: 22px; background: var(--color-surface); font: 600 var(--text-sm)/1 var(--font-mono); cursor: pointer; }
-.chip-toggle[aria-pressed="true"] { border-style: solid; border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
-.task-label { font: 600 var(--text-xs)/1 var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--color-muted); }
-.field input { width: 6em; height: var(--touch); padding: 0 10px; border: 1.5px solid var(--color-primary); border-radius: var(--radius); background: var(--color-surface); font: 600 1rem/1 var(--font-mono); color: var(--color-text); }
-.field input[aria-invalid="true"] { border-color: var(--color-danger); }
-.err { font-size: var(--text-sm); color: var(--color-danger); width: 100%; }
-
-/* scene svg */
-.s-top { fill: var(--scene-slab-top); stroke: var(--color-text); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-.s-side { fill: var(--scene-slab-side); stroke: var(--color-text); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-.s-front { fill: var(--scene-slab-front); stroke: var(--color-text); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-.s-hatch { fill: url(#hatch); pointer-events: none; }
-.s-hit { fill: transparent; stroke: none; pointer-events: all; }
-.slab { cursor: pointer; outline: none; }
-.slab:hover .s-top, .slab:focus-visible .s-top { stroke: var(--color-accent); stroke-width: 2; }
-.slab:focus-visible .s-top { stroke-width: 3; }
-.slab.open .s-top { fill: var(--scene-visited); }
-.slab.now .s-top { stroke: var(--color-accent); stroke-width: 3; }
-.slab.now .s-side, .slab.now .s-front { stroke: var(--color-accent); stroke-width: 1.8; }
-.slab.miss .s-top { fill: var(--scene-slab-side); stroke-dasharray: 4 3; }
-.slab.ghost { opacity: .28; }
-.slab.pop { animation: pop 420ms var(--ease); transform-box: fill-box; transform-origin: center; }
-.t-slab { font-family: var(--font-mono); font-weight: 600; fill: var(--color-text); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
-.t-title { font-family: var(--font-display); font-weight: 700; fill: var(--color-text); text-anchor: middle; }
-.t-sub { font-family: var(--font-mono); fill: var(--color-muted); text-anchor: middle; }
-.t-floor { fill: none; stroke: var(--color-faint); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-.p-line, .p-hop { fill: none; stroke: var(--color-accent); stroke-linecap: round; }
-.p-line.drawn { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw var(--dur-step) var(--ease) forwards; }
-.p-hop.drawn { animation: fadein var(--dur-step) var(--ease) both; }
-.p-dot { fill: var(--color-accent); stroke: var(--color-surface); }
-.p-jump { font-family: var(--font-display); font-weight: 700; fill: var(--color-accent); text-anchor: middle; }
-.p-new { fill: none; stroke: var(--color-accent); }
-.p-new.drawn { animation: ring 900ms var(--ease) both; transform-box: fill-box; transform-origin: center; }
-
-/* step 6: quiz */
-.quiz { display: grid; gap: var(--space-3); max-width: 760px; }
-.quiz li.q { background: var(--color-surface); border: 1.5px solid var(--color-text); border-radius: var(--radius); box-shadow: 3px 3px 0 var(--color-text); padding: 12px; }
-.quiz .qt { font: 700 1.1rem/1.3 var(--font-display); margin-bottom: 8px; }
-.quiz .opts { display: grid; gap: 6px; }
-.quiz .opts button { min-height: var(--touch); text-align: left; padding: 6px 12px; border: 1px solid var(--color-line); border-radius: var(--radius); background: var(--color-bg); cursor: pointer; }
-.quiz .opts button.right { background: var(--color-success); border-color: var(--color-success); color: var(--color-bg); }
-.quiz .opts button.wrong { border-color: var(--color-danger); color: var(--color-danger); text-decoration: line-through; }
-.quiz .why { margin-top: 6px; font-size: var(--text-sm); color: var(--color-muted); }
-
-/* bottom step navigation */
-.stepnav { position: sticky; bottom: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px max(var(--space-3), env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)); background: var(--color-surface); border-top: var(--rule); }
-.where { font: 600 var(--text-xs)/1 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--color-muted); }
-.foot { padding: 6px var(--space-3) calc(6px + env(safe-area-inset-bottom)); font: 0.72rem/1.4 var(--font-mono); color: var(--color-muted); }
-
-@keyframes draw { to { stroke-dashoffset: 0; } }
-@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
-@keyframes pop { 0% { transform: translateY(0); } 40% { transform: translateY(-6%); } 100% { transform: translateY(0); } }
-@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
-@keyframes ring { 0% { opacity: 0; transform: scale(.4); } 30% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
-
-@media (min-width: 768px) {
-  .steps { flex: 0 1 auto; }
-  .steps button { flex: 0 0 auto; min-width: var(--touch); }
-  .step { padding-inline: var(--space-5); }
-  .idea-grid { grid-template-columns: minmax(200px, 300px) minmax(0, 1fr); }
-  .lvl-pages { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .node.page.open { grid-column: auto; }
-  .board.folded .node.sign { width: min(36%, 260px); }
-  .stage { min-height: 440px; }
-  .dock { grid-template-columns: minmax(0, 1fr) auto; }
-  .says { grid-column: 1 / -1; }
-}
-@media (min-width: 1024px) {
-  .steps button span { display: inline; }
-  .step-mysql .stage { height: calc(100svh - 352px); min-height: 360px; }
-  .step-mysql h2 { max-width: 44ch; font-size: 1.55rem; }
-  .dock { grid-template-columns: minmax(0, 1fr) auto auto; }
-  .says { grid-column: auto; justify-self: end; max-width: 320px; }
-}
-</style>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Index Playground","description":"An interactive, step-by-step introduction to database indexes for beginners, ending with how MySQL (InnoDB) uses a clustered index and a secondary index.","learningResourceType":"interactive resource","educationalLevel":"beginner","inLanguage":"en","isAccessibleForFree":true,"teaches":"Database indexes"}</script>
 </head>
 <body>
-<a class="skip" href="#main">Skip to the lesson</a>
-<p class="sr-only" id="sr-status" role="status" aria-live="polite"></p>
-<!-- Every factual line carries its source ID in a data-src attribute; the full map is in content/copy.md.
-     The user asked for no visible sources (2026-11-02). Analogy steps (1-4) are framed as analogies, not MySQL facts. -->
-
-<header class="bar">
-  <a class="wordmark" href="#step-1" aria-label="Index Playground, step 1">
-    <svg viewBox="0 0 28 20" width="26" height="19" aria-hidden="true"><path d="M7 2v5M7 7l-4 5M7 7l4 5M21 2v5M21 7l-4 5M21 7l4 5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 14 Q14 6 17 9" fill="none" stroke="var(--color-accent)" stroke-width="1.8" stroke-dasharray="2 2"/></svg>
-    <span>Index Playground</span>
-  </a>
-  <nav class="steps" aria-label="Steps">
-    <button type="button" data-go="1"><b>1</b><span>Problem</span></button>
-    <button type="button" data-go="2"><b>2</b><span>Index</span></button>
-    <button type="button" data-go="3"><b>3</b><span>Pages</span></button>
-    <button type="button" data-go="4"><b>4</b><span>Grow</span></button>
-    <button type="button" data-go="5"><b>5</b><span>MySQL</span></button>
-    <button type="button" data-go="6"><b>6</b><span>Check</span></button>
-  </nav>
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 2v5M9 7 4 12M9 7l5 5" stroke="#14171F" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="4" cy="14" r="2.2" fill="#14171F"/><circle cx="14" cy="14" r="2.2" fill="#14171F"/></svg></span><span>Index Playground</span></a>
+    <nav class="pills" aria-label="Steps">
+      <a class="pill" href="#s1"><b>1</b>The table</a>
+      <a class="pill" href="#s2"><b>2</b>Search</a>
+      <a class="pill" href="#s3"><b>3</b>Build index</a>
+      <a class="pill" href="#s4"><b>4</b>Search again</a>
+      <a class="pill" href="#s5"><b>5</b>Compare</a>
+    </nav>
+  </div>
 </header>
 
-<main id="main">
-  <!-- STEP 1: the problem (full scan) -->
-  <section class="step" id="step-1" data-step="1" aria-labelledby="t1">
-    <div class="step-head">
-      <div>
-        <p class="kicker">Step 1 · The problem</p>
-        <h2 id="t1">Find Kavya.</h2>
-        <p class="hint" id="hint-1" aria-live="polite">Tap the rows, one by one.</p>
-      </div>
-      <div class="tools">
-        <div class="stamp" id="stamp-1" aria-live="polite" aria-atomic="true"><span class="count" id="count-1">0</span><span class="count-label">rows checked</span></div>
-        <button class="btn" type="button" id="auto-1">Check for me</button>
-        <button class="btn btn-ghost" type="button" id="reset-1">Again</button>
-      </div>
+<main id="top">
+  <section class="hero">
+    <div>
+      <h1>How does MySQL find <mark>one row</mark> in a big table?</h1>
+      <p>Search a real table. Watch it struggle. Then give it an index and watch it fly.</p>
+      <a class="btn btn-lime" href="#s1">Start ↓</a>
     </div>
-    <div class="scrollbox"><ol class="rowgrid data" id="table-1" aria-label="Students table, in roll number order"></ol></div>
-    <p class="take" id="take-1" hidden data-src="S01">MySQL does the same when there is no index: row after row.</p>
-  </section>
-
-  <!-- STEP 2: the idea of an index (book analogy) -->
-  <section class="step" id="step-2" data-step="2" aria-labelledby="t2" hidden>
-    <div class="step-head">
-      <div>
-        <p class="kicker">Step 2 · The idea</p>
-        <h2 id="t2">Use an index, like the one at the back of a book.</h2>
-        <p class="hint" id="hint-2" aria-live="polite">Tap K, then Kavya.</p>
-      </div>
-      <div class="tools">
-        <div class="stamp" aria-live="polite" aria-atomic="true"><span class="count" id="count-2">0</span><span class="count-label">taps</span></div>
-      </div>
-    </div>
-    <div class="idea-grid">
-      <figure class="card book data" aria-label="Example: index at the back of a textbook">
-        <figcaption>Back of a textbook</figcaption>
-        <ul><li><span>atom</span><span>p. 12</span></li><li><span>cell</span><span>p. 45</span></li><li><span>force</span><span>p. 78</span></li><li><span>gravity</span><span>p. 91</span></li></ul>
-      </figure>
-      <div class="card ours">
-        <p class="card-t">Our index: name → row</p>
-        <div class="letters" id="letters-2" role="group" aria-label="Jump to a letter"></div>
-        <ul class="namelist data" id="names-2"></ul>
-      </div>
-    </div>
-    <p class="take" id="take-2" hidden data-src="S02 S05">An index is a sorted list that points to where the data is.</p>
-  </section>
-
-  <!-- STEP 3: pages + signpost -> tree -->
-  <section class="step" id="step-3" data-step="3" aria-labelledby="t3" hidden>
-    <div class="step-head">
-      <div>
-        <p class="kicker">Step 3 · Pages and a signpost</p>
-        <h2 id="t3">A long list? Cut it into pages. Put a signpost on top.</h2>
-        <p class="hint" id="hint-3" aria-live="polite">Tap the signpost line where Kavya fits.</p>
-      </div>
-      <div class="tools">
-        <div class="stamp" aria-live="polite" aria-atomic="true"><span class="count" id="count-3">0</span><span class="count-label">pages opened</span></div>
-        <button class="btn" type="button" id="fold-3" aria-pressed="false">See its shape</button>
-      </div>
-    </div>
-    <div class="board" id="board-3" role="group" aria-label="Signpost and pages" aria-describedby="desc-3"></div>
-    <p class="sr-only" id="desc-3"></p>
-    <p class="take" id="take-3" hidden data-src="S04">This shape is a tree, drawn upside down. Top: the root. Bottom: the leaves.</p>
-  </section>
-
-  <!-- STEP 4: more rows -> one more level (toy) -->
-  <section class="step" id="step-4" data-step="4" aria-labelledby="t4" hidden>
-    <div class="step-head">
-      <div>
-        <p class="kicker">Step 4 · More rows</p>
-        <h2 id="t4">More students? Add one more signpost level.</h2>
-        <p class="hint" id="hint-4" aria-live="polite">Kavya’s path is marked in red.</p>
-      </div>
-      <div class="tools">
-        <button class="btn" type="button" id="grow-4" aria-pressed="false">Add 48 students</button>
-      </div>
-    </div>
-    <div class="stats" id="stats-4" aria-live="polite"></div>
-    <div class="board folded" id="board-4" role="img" aria-label="Toy tree of signposts and pages" aria-describedby="desc-4"></div>
-    <p class="sr-only" id="desc-4"></p>
-    <p class="toy-note">Toy rule: a signpost holds 4 lines, a page holds 12 names.</p>
-  </section>
-
-  <!-- STEP 5: inside MySQL (two trees, jump) -->
-  <section class="step step-mysql" id="step-5" data-step="5" aria-labelledby="t5" hidden>
-    <div class="step-head">
-      <div>
-        <p class="kicker">Step 5 · Inside MySQL</p>
-        <h2 id="t5" data-src="S03 S25">The table is a tree sorted by roll no. An index on name is a second tree that points back.</h2>
-      </div>
-      <div class="subtabs" role="group" aria-label="Practice">
-        <button type="button" data-sub="a"><b>a</b> Find 42</button>
-        <button type="button" data-sub="b"><b>b</b> The jump</button>
-        <button type="button" data-sub="c"><b>c</b> Skip it</button>
-        <button type="button" data-sub="d"><b>d</b> Add one</button>
-      </div>
-    </div>
-    <div class="stage">
-      <div class="hud hud-goal">
-        <p class="goal" id="goal-5">Find roll no 42. Open as few pages as you can.</p>
-        <p class="hint" id="hint-5" aria-live="polite">Tap the top page to start.</p>
-      </div>
-      <div class="stamp hud-count" aria-live="polite" aria-atomic="true"><span class="count" id="count-5">0</span><span class="count-label" id="count-label-5">pages opened</span><span class="count-sub" id="count-sub-5"></span></div>
-      <svg id="scene" tabindex="0" role="group" aria-label="Two trees. Tab to a page and press Enter to open it. Left and right arrows turn the drawing."></svg>
-      <div class="peek" id="peek" hidden role="dialog" aria-labelledby="peek-title">
-        <div class="peek-head"><p id="peek-title">Page</p><button type="button" class="peek-x" id="peek-x" aria-label="Close">×</button></div>
-        <ul id="peek-list"></ul>
-      </div>
-    </div>
-    <div class="dock">
-      <div class="dock-task" id="task-5"></div>
-      <div class="dock-play" aria-label="Playback">
-        <button class="ibtn" type="button" id="btn-back" aria-label="Step back"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M13 4 6 10l7 6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
-        <button class="ibtn ibtn-play" type="button" id="btn-play" aria-label="Play" aria-pressed="false">
-          <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" class="i-play"><path d="M6 3.5v13l11-6.5z" fill="currentColor"/></svg>
-          <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" class="i-pause"><path d="M6 4h3v12H6zM11 4h3v12h-3z" fill="currentColor"/></svg>
-        </button>
-        <button class="ibtn" type="button" id="btn-fwd" aria-label="Step forward"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 4l7 6-7 6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
-        <label class="sr-only" for="scrub">Scrub</label>
-        <input type="range" id="scrub" min="0" max="1" value="0" step="1">
-        <button class="ibtn" type="button" data-rotate="-1" aria-label="Turn left"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M8 5 3 10l5 5M3 10h9a5 5 0 0 1 5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
-        <button class="ibtn" type="button" data-rotate="1" aria-label="Turn right"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M12 5l5 5-5 5M17 10H8a5 5 0 0 0-5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
-      </div>
-      <details class="says" id="says" data-src="S06"><summary>What MySQL typically says</summary><div id="says-body"></div></details>
+    <div class="hero-art card" aria-hidden="true">
+      <div class="mini-row"><b>id</b><b>name</b><b>city</b><b>marks</b></div>
+      <div class="mini-row"><span>41</span><span>Nadia</span><span>Kochi</span><span>77</span></div>
+      <div class="mini-row hit"><span>42</span><span>Kavya</span><span>Madurai</span><span>88</span></div>
+      <div class="mini-row"><span>43</span><span>Omar</span><span>Chennai</span><span>64</span></div>
+      <div class="mini-row"><span>44</span><span>Riya</span><span>Salem</span><span>91</span></div>
     </div>
   </section>
 
-  <!-- STEP 6: check yourself -->
-  <section class="step" id="step-6" data-step="6" aria-labelledby="t6" hidden>
-    <div class="step-head">
-      <div>
-        <p class="kicker">Step 6 · Check yourself</p>
-        <h2 id="t6">Three quick questions.</h2>
-      </div>
-      <div class="tools"><div class="stamp" aria-live="polite" aria-atomic="true"><span class="count" id="count-6">0</span><span class="count-label">of 3 right</span></div></div>
+  <!-- 1 · table -->
+  <section class="scene" id="s1" aria-labelledby="h1t">
+    <p class="kicker">Step 1 · The table</p>
+    <h2 id="h1t">Meet the <code>students</code> table</h2>
+    <p class="lead">100 students, 4 columns, and no index on <b>name</b> yet. Each square below is one row. Tap one to see it.</p>
+    <div class="console"><div class="console-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="sql"><span class="kw">CREATE TABLE</span> <span class="id">students</span> (id <span class="kw">INT PRIMARY KEY</span>, name <span class="kw">VARCHAR</span>(40), city <span class="kw">VARCHAR</span>(30), marks <span class="kw">INT</span>);</div>
     </div>
-    <ol class="quiz" id="quiz"></ol>
+    <div class="split">
+      <div class="card panel">
+        <div class="panel-h"><h3>All 100 rows</h3><span class="tag">1 square = 1 row</span></div>
+        <div class="rowmap" id="map1" role="group" aria-label="All 100 rows. Tap a row to show it in the table."></div>
+      </div>
+      <div class="card panel">
+        <div class="panel-h"><h3>students</h3><span class="tag">scroll ↕</span></div>
+        <div class="tview" id="tv1"></div>
+      </div>
+    </div>
+    <div class="next"><a class="btn btn-ghost" href="#s2">Next: search for Kavya →</a></div>
+  </section>
+
+  <!-- 2 · full scan -->
+  <section class="scene" id="s2" aria-labelledby="h2t">
+    <p class="kicker">Step 2 · Search without an index</p>
+    <h2 id="h2t">Find one student</h2>
+    <p class="lead">Press Run and watch what MySQL has to do.</p>
+    <div class="console"><div class="console-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="sql"><span class="kw">SELECT</span> name <span class="kw">FROM</span> <span class="id">students</span> <span class="kw">WHERE</span> name = <label class="sr-only" for="pick2">Name to find</label><select id="pick2" class="pick"></select>;</div>
+      <button class="btn btn-lime" id="run2" type="button">▶ Run</button>
+    </div>
+    <div class="card meter">
+      <div><div class="meter-label">Rows checked</div><div class="meter-num" aria-live="polite"><span id="cnt2">0</span><small> / 100</small></div></div>
+      <div class="bar" aria-hidden="true"><i id="bar2"></i></div>
+      <div class="tag" id="state2">ready</div>
+    </div>
+    <div class="split">
+      <div class="card panel">
+        <div class="panel-h"><h3>Rows MySQL checks</h3></div>
+        <div class="rowmap" id="map2" aria-hidden="true"></div>
+        <div class="legend"><span style="--c:var(--lime-soft)">not checked</span><span style="--c:var(--red-soft)">checked</span><span style="--c:var(--lime)">match</span></div>
+      </div>
+      <div class="card panel">
+        <div class="panel-h"><h3>students</h3><span class="tag">row by row</span></div>
+        <div class="tview" id="tv2"></div>
+      </div>
+    </div>
+    <div class="alert alert-bad" id="alert2" hidden role="status">
+      <div class="alert-ic" aria-hidden="true">!</div>
+      <div>
+        <h3>Full table scan: 100 rows checked to return 1</h3>
+        <p id="alert2-why"></p>
+        <p>With no index, the work grows with the table: <b>n rows → n checks</b>. 1,00,000 students means 1,00,000 checks.</p>
+        <div class="explain"><table><caption>EXPLAIN (typical for this table)</caption>
+          <tr><th>table</th><th>type</th><th>possible_keys</th><th>key</th><th>rows</th><th>Extra</th></tr>
+          <tr><td>students</td><td class="hot">ALL</td><td>NULL</td><td class="hot">NULL</td><td class="hot">100</td><td>Using where</td></tr>
+        </table></div>
+      </div>
+    </div>
+    <div class="next"><a class="btn btn-ghost" href="#s3">Next: fix it with an index →</a></div>
+  </section>
+
+  <!-- 3 · build -->
+  <section class="scene" id="s3" aria-labelledby="h3t">
+    <p class="kicker">Step 3 · Behind the scenes</p>
+    <h2 id="h3t">What MySQL does when you create an index</h2>
+    <p class="lead">One command. Here is what happens inside, step by step, with our 100 students.</p>
+    <div class="console"><div class="console-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="sql"><span class="kw">CREATE INDEX</span> <span class="id">idx_name</span> <span class="kw">ON</span> <span class="id">students</span> (name);</div>
+      <div class="seg" role="group" aria-label="Speed"><button type="button" data-speed="1" class="is-on">1×</button><button type="button" data-speed="2.5">Fast</button></div>
+      <button class="btn btn-lime" id="run3" type="button">▶ Build</button>
+    </div>
+    <div class="phases">
+      <div class="phase" id="ph1"><b><span class="num">1</span>Scan the table</b><span>Copy each row's name + id into the sort buffer.</span></div>
+      <div class="phase" id="ph2"><b><span class="num">2</span>Sort</b><span>Sort each full buffer, then merge the sorted runs.</span></div>
+      <div class="phase" id="ph3"><b><span class="num">3</span>Build the tree, bottom-up</b><span>Fill leaf pages in order; each full page gets a pointer in the page above.</span></div>
+    </div>
+    <p class="caption" id="cap3" aria-live="polite">Press Build to start.</p>
+    <div class="card bstage" id="bstage">
+      <div class="bz bz-src"><p class="bz-label">students table <em>by id</em></p><div class="grid-src" id="src3"></div></div>
+      <div class="bz bz-buf"><p class="bz-label">Sort buffer <em>holds 50 here (toy size)</em></p><div class="grid-buf" id="buf3"></div></div>
+      <div class="bz bz-tmp"><p class="bz-label">Temporary file</p>
+        <div class="runs"><div class="run"><span>run 1</span><div class="dots" id="tmp1"></div></div><div class="run"><span>run 2</span><div class="dots" id="tmp2"></div></div><div class="run"><span>merged</span><div class="dots" id="merged"></div></div></div>
+      </div>
+      <div class="bz bz-tree"><p class="bz-label">idx_name <em>10 entries per page here (toy size)</em></p>
+        <div class="tree" id="tree3"><svg class="links" aria-hidden="true"></svg><div class="root" id="root3"></div><div class="leaves" id="leaves3"></div></div>
+      </div>
+      <div class="chips" id="chips3" aria-hidden="true"></div>
+    </div>
+    <div class="alert alert-good done-note" id="done3" hidden role="status">
+      <div class="alert-ic" aria-hidden="true">✓</div>
+      <div><h3>idx_name is ready</h3><p>100 entries (name + id), sorted by name, in 10 leaf pages under one root page. The table itself didn't move.</p></div>
+    </div>
+    <div class="next"><a class="btn btn-ghost" href="#s4">Next: search again →</a></div>
+  </section>
+
+  <!-- 4 · indexed lookup -->
+  <section class="scene" id="s4" aria-labelledby="h4t">
+    <p class="kicker">Step 4 · Search with the index</p>
+    <h2 id="h4t">Same question, new path</h2>
+    <p class="lead">MySQL starts at the root page, follows one pointer down, and lands on the right leaf.</p>
+    <div class="console"><div class="console-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="sql"><span class="kw">SELECT</span> <span id="cols4">name</span> <span class="kw">FROM</span> <span class="id">students</span> <span class="kw">WHERE</span> name = <label class="sr-only" for="pick4">Name to find</label><select id="pick4" class="pick"></select>;</div>
+      <div class="seg" role="group" aria-label="Columns"><button type="button" data-cols="name" class="is-on">name</button><button type="button" data-cols="*">*</button></div>
+      <button class="btn btn-lime" id="run4" type="button">▶ Run</button>
+    </div>
+    <div class="lookup">
+      <div class="card lk-tree"><div class="tree" id="tree4"><svg class="links" aria-hidden="true"></svg><div class="root" id="root4"></div><div class="leaves" id="leaves4"></div></div></div>
+      <div class="card lk-side">
+        <div class="stats"><div class="stat"><b id="pg4">0</b><span>pages opened</span></div><div class="stat"><b id="rw4">0</b><span>rows checked in the table</span></div></div>
+        <div class="jump" id="jump4">id → table: jump to row …</div>
+        <div class="lk-table" id="lkt4"></div>
+      </div>
+    </div>
+    <div class="alert alert-good" id="alert4" hidden role="status">
+      <div class="alert-ic" aria-hidden="true">✓</div>
+      <div>
+        <h3 id="alert4-h">Found with idx_name</h3>
+        <p id="alert4-p"></p>
+        <div class="explain"><table><caption>EXPLAIN (typical for this table)</caption>
+          <tr><th>table</th><th>type</th><th>possible_keys</th><th>key</th><th>rows</th><th>Extra</th></tr>
+          <tr><td>students</td><td class="hot">ref</td><td>idx_name</td><td class="hot">idx_name</td><td class="hot">1</td><td id="extra4">Using index</td></tr>
+        </table></div>
+      </div>
+    </div>
+    <div class="next"><a class="btn btn-ghost" href="#s5">Next: compare →</a></div>
+  </section>
+
+  <!-- 5 · compare -->
+  <section class="scene" id="s5" aria-labelledby="h5t">
+    <p class="kicker">Step 5 · Side by side</p>
+    <h2 id="h5t">Same query, two very different jobs</h2>
+    <div class="versus">
+      <div class="vs vs-bad"><h3>Without an index</h3><span>type: ALL</span><div class="big">100</div><b>rows checked</b>
+        <ul><li>Reads every row, start to end.</li><li>Twice the rows, twice the work.</li></ul></div>
+      <div class="vs vs-good"><h3>With idx_name</h3><span>type: ref</span><div class="big">2</div><b>pages opened</b>
+        <ul><li>Root page → one leaf page → done.</li><li>The index is sorted, so MySQL knows where to look.</li></ul></div>
+    </div>
+    <div class="card price"><div class="alert-ic" aria-hidden="true">i</div>
+      <p style="margin:0">The price: every <b>INSERT</b>, <b>UPDATE</b> and <b>DELETE</b> must also update idx_name. So index the columns you search, not every column.</p></div>
   </section>
 </main>
+<footer>Toy data: 100 made-up students. Toy sizes: 50 entries per sort buffer, 10 entries per page. Real InnoDB pages are 16 KB by default.</footer>
 
-<nav class="stepnav" aria-label="Step navigation">
-  <button class="btn btn-ghost" type="button" id="prev">Back</button>
-  <span class="where" id="where">Step 1 of 6</span>
-  <button class="btn btn-primary" type="button" id="next">Next</button>
-</nav>
-<p class="foot" data-src="S04">Toy data: made-up students. Real MySQL pages hold 16 KB by default.</p>
+<!-- Source IDs (kept off screen at the user's request): full scan S01; type ALL / ref / Using index / Using where / rows estimate S06, S17;
+     secondary index entry = name + primary key S03; index build phases, runs, merge sort, bottom-up, node pointer S26;
+     write cost S02; 16 KB default page S04; InnoDB default engine S25. -->
 
 <script>
-/* Index Playground (site). Built from approved design v3, 2026-11-02.
-   Plain JS, no libraries, no network. Toy data only.
-   Steps 1-4 are analogies; step 5 is MySQL. Source IDs live in data-src attributes and content/copy.md. */
 (() => {
   'use strict';
   const $ = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const params = new URLSearchParams(location.search);
-  // One switch for reduced motion: the OS setting, or ?reduce=1 for testing. CSS follows the same class.
-  const syncMotion = () => document.documentElement.classList.toggle('reduce-motion', reduceMQ.matches || params.get('reduce') === '1');
-  syncMotion(); if (reduceMQ.addEventListener) reduceMQ.addEventListener('change', syncMotion);
-  const reduced = () => document.documentElement.classList.contains('reduce-motion');
-  const announce = text => { const s = document.getElementById('sr-status'); if (!s) return; s.textContent = ''; setTimeout(() => { s.textContent = text; }, 30); };
-  const NS = 'http://www.w3.org/2000/svg';
-  const bump = el => { if (reduced()) return; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); };
-  const setHint = (el, text, kind) => { el.textContent = text; el.className = 'hint' + (kind ? ' ' + kind : ''); };
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep = ms => new Promise(r => setTimeout(r, reduce ? 0 : ms));
 
-  /* ---------- toy data: 48 made-up students ---------- */
-  const NAMES = ['Aarav', 'Aditi', 'Aisha', 'Ananya', 'Arjun', 'Ben', 'Chen', 'Chloe', 'Daniel', 'Deepa', 'Diya', 'Emma',
-    'Farhan', 'Fatima', 'Gauri', 'Hana', 'Harini', 'Ishaan', 'Ivan', 'Jai', 'Kabir', 'Kavya', 'Kiran', 'Leo',
-    'Lina', 'Maya', 'Meera', 'Mohan', 'Nadia', 'Neha', 'Nikhil', 'Noah', 'Olivia', 'Omar', 'Pooja', 'Priya',
-    'Rahul', 'Ravi', 'Riya', 'Rohan', 'Sam', 'Sara', 'Sneha', 'Sofia', 'Tanvi', 'Tom', 'Vikram', 'Zara'];
-  const MORE = ['Abhay', 'Akira', 'Alex', 'Amara', 'Anil', 'Bella', 'Dev', 'Elena', 'Esha', 'Felix', 'Gita', 'Grace',
-    'Hari', 'Isha', 'Ishita', 'Jack', 'Jiya', 'Kai', 'Karan', 'Lara', 'Liam', 'Lucas', 'Mira', 'Mona',
-    'Nina', 'Nora', 'Om', 'Parth', 'Pia', 'Quinn', 'Raj', 'Rhea', 'Rio', 'Ruby', 'Sahil', 'Sana',
-    'Sia', 'Theo', 'Uma', 'Usha', 'Varun', 'Vera', 'Wen', 'Yash', 'Yara', 'Yusuf', 'Zaid', 'Zoe'];
-  const TARGET = 'Kavya', PER = 12, SIGN = 4;
-  // deterministic shuffle so the table looks random but is the same on every visit
-  let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-  const order = NAMES.map(n => [n, rnd()]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
-  const ki = order.indexOf(TARGET); [order[ki], order[41]] = [order[41], order[ki]]; // Kavya gets roll no 42
-  const students = order.map((name, i) => ({ roll: i + 1, name, marks: 40 + Math.floor(rnd() * 60) }));
-  const byName = n => students.find(s => s.name.toLowerCase() === String(n).toLowerCase());
-  const sorted = [...students].sort((a, b) => a.name.localeCompare(b.name));
-  const kavya = byName(TARGET);
+  /* ---------- data: 100 students, Kavya is id 42 ---------- */
+  const NAMES = ['Aarav','Aditi','Akash','Amara','Ananya','Anika','Arjun','Asha','Ayaan','Bala',
+    'Ben','Bhavna','Chen','Chitra','Daniel','Deepa','Dev','Divya','Elena','Emma',
+    'Farhan','Fatima','Gauri','Gokul','Hana','Harini','Hari','Ishaan','Isha','Jai',
+    'Janani','Javier','Jothi','Kabir','Karthik','Kavin','Kavya','Keerthi','Kiran','Lakshmi',
+    'Leo','Lina','Liam','Madhu','Maya','Meera','Mohan','Nadia','Naveen','Neha',
+    'Nila','Nikhil','Noah','Olivia','Omar','Pooja','Pranav','Priya','Rahul','Ravi',
+    'Riya','Rohan','Ruth','Sam','Sana','Saravanan','Sara','Shreya','Siddharth','Sneha',
+    'Sofia','Surya','Tamil','Tanvi','Tara','Tom','Uma','Usha','Varun','Vikram',
+    'Vimal','Divakar','Wei','Yamini','Yash','Zara','Zoya','Abdul','Bharath','Catherine',
+    'Dinesh','Ezhil','Gayathri','Hemanth','Indira','Joel','Kumar','Lavanya','Manoj','Nandini'];
+  const CITIES = ['Chennai','Madurai','Coimbatore','Trichy','Salem','Bengaluru','Hyderabad','Kochi','Mumbai','Delhi'];
+  let seed = 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const names = NAMES.slice();
+  for (let i = names.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [names[i], names[j]] = [names[j], names[i]]; }
+  const k = names.indexOf('Kavya'); [names[k], names[41]] = [names[41], names[k]];
+  const ROWS = names.map((name, i) => ({ id: i + 1, name, city: CITIES[Math.floor(rnd() * CITIES.length)], marks: 45 + Math.floor(rnd() * 55) }));
+  ROWS[41].city = 'Madurai'; ROWS[41].marks = 88;
+  const byName = (a, b) => a.name.localeCompare(b.name, 'en') || a.id - b.id;
+  const SORTED = ROWS.slice().sort(byName);
+  const PER_PAGE = 10, BUF = 50;
+  const LEAVES = Array.from({ length: SORTED.length / PER_PAGE }, (_, i) => SORTED.slice(i * PER_PAGE, (i + 1) * PER_PAGE));
+  const POINTERS = LEAVES.map(l => l[0].name);
 
-  /* ---------- step navigation ---------- */
-  const TOTAL = 6; let step = 1; const seen = new Set([1]);
-  const inits = {};
-  function go(n, focus) {
-    step = Math.max(1, Math.min(TOTAL, n)); seen.add(step);
-    $$('.step').forEach(s => { s.hidden = +s.dataset.step !== step; });
-    $$('.steps button').forEach(b => { const on = +b.dataset.go === step; if (on) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); b.classList.toggle('seen', seen.has(+b.dataset.go)); });
-    $('#where').textContent = `Step ${step} of ${TOTAL}`;
-    $('#prev').disabled = step === 1;
-    $('#next').textContent = step === TOTAL ? 'Start again' : 'Next';
-    if (inits[step]) inits[step]();
-    if (focus) { const h = $(`#t${step}`); h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); }
+  /* ---------- shared bits ---------- */
+  function rowEl(r, extra = '') {
+    const d = document.createElement('div');
+    d.className = 'trow ' + extra; d.dataset.id = r.id;
+    d.innerHTML = `<span class="n">${r.id}</span><span>${r.name}</span><span>${r.city}</span><span class="m">${r.marks}</span>`;
+    return d;
   }
-  const hashStep = () => parseInt((location.hash.match(/^#step-(\d)$/) || [])[1], 10) || 0;
-  // Every move goes through the URL hash, so #step-N links and browser Back/Forward work.
-  function navigate(n) { n = Math.max(1, Math.min(TOTAL, n)); if (hashStep() === n) go(n, true); else location.hash = '#step-' + n; }
-  window.addEventListener('hashchange', () => go(hashStep() || 1, true)); // no hash = step 1
-  $$('.steps button').forEach(b => b.addEventListener('click', () => navigate(+b.dataset.go)));
-  $('#prev').addEventListener('click', () => navigate(step - 1));
-  $('#next').addEventListener('click', () => navigate(step === TOTAL ? 1 : step + 1));
-
-  /* ---------- step 1: the problem ---------- */
-  const s1 = { checked: new Set(), found: false, timer: null };
-  function render1() {
-    const ol = $('#table-1');
-    if (!ol.children.length) {
-      for (const s of students) {
-        const li = document.createElement('li');
-        li.innerHTML = `<button type="button" class="rowbtn" data-roll="${s.roll}"><span class="r">${s.roll}</span><span class="n"></span><span class="m">${s.marks}</span></button>`;
-        li.querySelector('.n').textContent = s.name;
-        li.firstChild.setAttribute('aria-label', `Row ${s.roll}: ${s.name}, ${s.marks} marks`);
-        ol.appendChild(li);
-      }
-      ol.addEventListener('click', e => { const b = e.target.closest('.rowbtn'); if (b) check1(+b.dataset.roll); });
-    }
-    $$('.rowbtn', ol).forEach(b => { const r = +b.dataset.roll; b.classList.toggle('checked', s1.checked.has(r)); b.classList.toggle('found', s1.found && r === kavya.roll); });
-    $('#count-1').textContent = s1.checked.size;
-    $('#take-1').hidden = !s1.found;
+  function tableView(host) {
+    const head = document.createElement('div');
+    head.className = 'trow thead'; head.innerHTML = '<span>id</span><span>name</span><span>city</span><span class="m">marks</span>';
+    const body = document.createElement('div'); body.className = 'tbody';
+    ROWS.forEach(r => body.appendChild(rowEl(r)));
+    host.append(head, body);
+    return body;
   }
-  function check1(roll) {
-    if (s1.found || s1.checked.has(roll)) return;
-    s1.checked.add(roll); bump($('#count-1'));
-    if (roll === kavya.roll) { s1.found = true; setHint($('#hint-1'), `Found her after checking ${s1.checked.size} rows.`, 'win'); }
-    else setHint($('#hint-1'), s1.checked.size < 3 ? 'Not Kavya. Keep going.' : `Still looking… ${s1.checked.size} rows checked.`, '');
-    render1();
+  function focusRow(body, id, cls) {
+    $$('.trow.' + cls, body).forEach(e => e.classList.remove(cls));
+    const el = body.children[id - 1];
+    el.classList.add(cls);
+    body.scrollTop = el.offsetTop - body.clientHeight / 2 + el.offsetHeight / 2;
   }
-  $('#auto-1').addEventListener('click', () => {
-    clearInterval(s1.timer); reset1(false);
-    let r = 1;
-    const stepOnce = () => { check1(r); const b = $(`.rowbtn[data-roll="${r}"]`); if (b && b.scrollIntoView) b.scrollIntoView({ block: 'nearest' }); r++; if (s1.found) clearInterval(s1.timer); };
-    $('#stamp-1').setAttribute('aria-live', 'off');
-    const done = () => { $('#stamp-1').setAttribute('aria-live', 'polite'); };
-    if (reduced()) { while (!s1.found) stepOnce(); done(); } else s1.timer = setInterval(() => { stepOnce(); if (s1.found) done(); }, 70);
-  });
-  function reset1(hint = true) { clearInterval(s1.timer); s1.checked.clear(); s1.found = false; if (hint) setHint($('#hint-1'), 'Tap the rows, one by one.', ''); render1(); }
-  $('#reset-1').addEventListener('click', () => reset1());
-  inits[1] = render1;
-
-  /* ---------- step 2: the idea of an index ---------- */
-  const s2 = { letter: null, taps: 0, found: false };
-  function render2() {
-    const box = $('#letters-2');
-    if (!box.children.length) {
-      [...new Set(sorted.map(s => s.name[0]))].forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.textContent = L; b.dataset.l = L; b.setAttribute('aria-pressed', 'false'); box.appendChild(b); });
-      box.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; s2.letter = b.dataset.l; s2.taps++; bump($('#count-2')); if (!s2.found) setHint($('#hint-2'), s2.letter === 'K' ? 'Now tap Kavya.' : 'Kavya starts with K.', s2.letter === 'K' ? '' : 'lose'); render2(); });
-      $('#names-2').addEventListener('click', e => {
-        const b = e.target.closest('button'); if (!b || s2.found) return;
-        s2.taps++; bump($('#count-2'));
-        if (b.dataset.n === TARGET) { s2.found = true; setHint($('#hint-2'), `Kavya → row ${kavya.roll}. Found in ${s2.taps} taps, not ${kavya.roll}.`, 'win'); }
-        else setHint($('#hint-2'), 'Not her. Look for Kavya.', 'lose');
-        render2();
-      });
-    }
-    $$('button', box).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.l === s2.letter)));
-    const ul = $('#names-2'); ul.innerHTML = '';
-    if (!s2.letter) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'Pick a letter.'; ul.appendChild(li); }
-    else sorted.filter(s => s.name[0] === s2.letter).forEach(s => {
-      const li = document.createElement('li');
-      li.innerHTML = `<button type="button" data-n="${s.name}"><span></span><span>→ row ${s.roll}</span></button>`;
-      li.querySelector('span').textContent = s.name;
-      if (s2.found && s.name === TARGET) li.firstChild.classList.add('found');
-      ul.appendChild(li);
+  function rowMap(host, tag) {
+    ROWS.forEach(r => {
+      const t = document.createElement(tag);
+      t.className = 'tile'; t.textContent = r.id; t.dataset.id = r.id;
+      if (tag === 'button') { t.type = 'button'; t.setAttribute('aria-label', `Row ${r.id}: ${r.name}, ${r.city}, ${r.marks}`); }
+      host.appendChild(t);
     });
-    $('#count-2').textContent = s2.taps;
-    $('#take-2').hidden = !s2.found;
+    return [...host.children];
   }
-  inits[2] = render2;
+  function fillPick(sel) {
+    const opts = ['Kavya', 'Aarav', 'Tamil', 'Zoya', 'Meera', 'Javier'];
+    sel.innerHTML = opts.map(n => `<option>'${n}'</option>`).join('');
+  }
+  const pickName = sel => sel.value.replace(/'/g, '');
 
-  /* ---------- boards (steps 3 and 4): a list that folds into a tree ---------- */
-  const pagesOf = list => { const out = []; for (let i = 0; i < list.length; i += PER) out.push(list.slice(i, i + PER)); return out; };
-  const short = n => n.slice(0, 2);
-  const range = pg => `${short(pg[0])}–${short(pg[pg.length - 1])}`;
-  function offsetIn(el, root) { let x = 0, y = 0; while (el && el !== root) { x += el.offsetLeft; y += el.offsetTop; el = el.offsetParent; } return { x, y }; }
-  function drawLinks(board, edges) {
-    let svg = $('.links', board);
-    if (!svg) { svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'links'); svg.setAttribute('aria-hidden', 'true'); board.prepend(svg); }
+  /* ---------- step pills ---------- */
+  const pills = $$('.pill');
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) pills.forEach(p => p.classList.toggle('is-on', p.getAttribute('href') === '#' + e.target.id));
+  }), { rootMargin: '-40% 0px -55% 0px' });
+  $$('.scene').forEach(s => io.observe(s));
+
+  /* ---------- 1 · table ---------- */
+  const tv1 = tableView($('#tv1'));
+  const tiles1 = rowMap($('#map1'), 'button');
+  tiles1.forEach(t => t.addEventListener('click', () => {
+    tiles1.forEach(x => x.classList.remove('is-current'));
+    t.classList.add('is-current'); focusRow(tv1, +t.dataset.id, 'is-sel');
+  }));
+
+  /* ---------- 2 · full scan ---------- */
+  const tv2 = tableView($('#tv2'));
+  const tiles2 = rowMap($('#map2'), 'span');
+  fillPick($('#pick2'));
+  let scanRun = 0;
+  $('#run2').addEventListener('click', async () => {
+    const me = ++scanRun, target = pickName($('#pick2'));
+    tiles2.forEach(t => t.className = 'tile');
+    $$('.trow', tv2).forEach(r => r.classList.remove('is-current', 'is-match'));
+    const alert = $('#alert2'); alert.hidden = true; alert.classList.remove('show');
+    $('#state2').textContent = 'scanning…';
+    let foundAt = 0;
+    for (let i = 0; i < ROWS.length; i++) {
+      if (me !== scanRun) return;
+      const r = ROWS[i], t = tiles2[i];
+      if (i) tiles2[i - 1].classList.remove('scan');
+      t.classList.add('checked', 'scan');
+      if (r.name === target) { t.classList.add('match'); tv2.children[i].classList.add('is-match'); foundAt = r.id; }
+      focusRow(tv2, r.id, 'is-current');
+      $('#cnt2').textContent = i + 1; $('#bar2').style.width = (i + 1) + '%';
+      await sleep(r.name === target ? 700 : 45);
+    }
+    tiles2[99].classList.remove('scan');
+    $('#state2').textContent = 'done';
+    $('#alert2-why').textContent = `MySQL found ${target} at row ${foundAt}, but it couldn't stop there. With no index, another ${target} could be anywhere, so it checked every row to the end.`;
+    alert.hidden = false; requestAnimationFrame(() => alert.classList.add('show'));
+  });
+
+  /* ---------- tree drawing (steps 3 and 4) ---------- */
+  function buildTree(tree, withEntries) {
+    const root = $('.root', tree), leaves = $('.leaves', tree);
+    root.innerHTML = ''; leaves.innerHTML = '';
+    POINTERS.forEach((p, i) => {
+      const s = document.createElement('div'); s.className = 'pslot'; s.dataset.i = i;
+      if (withEntries) { s.textContent = p; s.classList.add('filled'); s.style.animation = 'none'; }
+      root.appendChild(s);
+    });
+    LEAVES.forEach((leaf, li) => {
+      const L = document.createElement('div'); L.className = 'leaf'; L.dataset.i = li;
+      L.innerHTML = `<div class="leaf-n">page ${li + 1}</div>`;
+      leaf.forEach(e => {
+        const s = document.createElement('div');
+        if (withEntries) { s.className = 'entry'; s.dataset.id = e.id; s.innerHTML = `<b>${e.name}</b><i>${e.id}</i>`; }
+        else s.className = 'slot';
+        L.appendChild(s);
+      });
+      leaves.appendChild(L);
+    });
+  }
+  function drawLinks(tree, upto, active) {
+    const svg = $('svg.links', tree), base = tree.getBoundingClientRect();
+    const ps = $$('.pslot', tree), ls = $$('.leaf', tree);
+    let d = '';
     svg.innerHTML = '';
-    if (!board.classList.contains('folded')) return;
-    for (const [a, b, on] of edges) {
-      const pa = offsetIn(a, board), pb = offsetIn(b, board);
-      const l = document.createElementNS(NS, 'line');
-      l.setAttribute('x1', pa.x + a.offsetWidth / 2); l.setAttribute('y1', pa.y + a.offsetHeight);
-      l.setAttribute('x2', pb.x + b.offsetWidth / 2); l.setAttribute('y2', pb.y);
-      if (on) l.setAttribute('class', 'on');
-      svg.appendChild(l);
-    }
-  }
-
-  /* step 3 */
-  const s3 = { open: null, opened: new Set(), found: false, folded: false };
-  const pages48 = pagesOf(sorted.map(s => s.name));
-  const kPage = pages48.findIndex(p => p.includes(TARGET));
-  function render3() {
-    const board = $('#board-3');
-    board.classList.toggle('folded', s3.folded);
-    board.style.setProperty('--cols', 4);
-    board.innerHTML = `
-      <div class="lvl lvl-top"><span class="lvl-label">root</span>
-        <div class="node sign${s3.folded && s3.found ? ' on' : ''}" id="sign-3">
-          <p class="node-t">Signpost</p>
-          <div class="sign-rows">${pages48.map((p, i) => `<button type="button" data-p="${i}" class="${s3.opened.has(i) ? 'on' : ''}"><span>${p[0]}…</span><span>p. ${i + 1}</span></button>`).join('')}</div>
-        </div>
-      </div>
-      <div class="lvl lvl-pages"><span class="lvl-label">leaves</span>
-        ${pages48.map((p, i) => `<div class="node page${s3.open === i ? ' open' : ''}${s3.folded && s3.found && i === kPage ? ' on' : ''}" data-page="${i}">
-            <p class="node-t">${s3.folded ? range(p) : `Page ${i + 1} · ${p[0]}–${p[p.length - 1]}`}</p>
-            ${s3.open === i ? `<div class="page-rows">${p.map(n => `<button type="button" data-n="${n}" class="${s3.found && n === TARGET ? 'found' : ''}">${n}</button>`).join('')}</div>` : ''}
-          </div>`).join('')}
-      </div>`;
-    $('#count-3').textContent = s3.opened.size;
-    $('#fold-3').setAttribute('aria-pressed', String(s3.folded));
-    $('#fold-3').textContent = s3.folded ? 'Back to the list' : 'See its shape';
-    $('#take-3').hidden = !s3.folded;
-    $('#desc-3').textContent = s3.folded
-      ? `Shown as a tree: the signpost is the root on top; four pages are the leaves below: ${pages48.map(range).join(', ')}.${s3.found ? ` Kavya's path: signpost, then page ${kPage + 1}.` : ''}`
-      : 'A signpost with four lines, each pointing to one page of twelve sorted names. Opening a signpost line opens that page.';
-    const sign = $('#sign-3', board);
-    drawLinks(board, $$('.node.page', board).map(p => [sign, p, s3.found && +p.dataset.page === kPage]));
-  }
-  $('#board-3').addEventListener('click', e => {
-    if (s3.folded) return;
-    const sb = e.target.closest('.sign-rows button');
-    if (sb) {
-      const i = +sb.dataset.p; s3.open = i;
-      if (!s3.opened.has(i)) { s3.opened.add(i); bump($('#count-3')); }
-      if (!s3.found) setHint($('#hint-3'), i === kPage ? 'Now tap Kavya.' : 'Kavya isn’t on this page. Check the signpost.', i === kPage ? '' : 'lose');
-      render3(); return;
-    }
-    const nb = e.target.closest('.page-rows button');
-    if (nb && !s3.found) {
-      if (nb.dataset.n === TARGET) { s3.found = true; setHint($('#hint-3'), `Found in ${s3.opened.size} page${s3.opened.size > 1 ? 's' : ''}. Now tap “See its shape”.`, 'win'); }
-      else setHint($('#hint-3'), 'Not her. Look for Kavya.', 'lose');
-      render3();
-    }
-  });
-  $('#fold-3').addEventListener('click', () => { s3.folded = !s3.folded; if (s3.folded) announce('The list is now drawn as a tree. Top: the root. Bottom: the leaves.'); if (s3.folded) { s3.open = null; setHint($('#hint-3'), 'Same signpost, same pages. Just a different shape.', ''); } render3(); });
-  inits[3] = render3;
-
-  /* step 4 (toy rule: a signpost holds 4 lines, a page holds 12 names) */
-  const s4 = { big: false };
-  function render4() {
-    const names = (s4.big ? [...NAMES, ...MORE] : NAMES).slice().sort((a, b) => a.localeCompare(b));
-    const pgs = pagesOf(names), kp = pgs.findIndex(p => p.includes(TARGET));
-    const groups = []; for (let i = 0; i < pgs.length; i += SIGN) groups.push(pgs.slice(i, i + SIGN));
-    const kg = Math.floor(kp / SIGN);
-    const board = $('#board-4');
-    board.style.setProperty('--cols', pgs.length);
-    const pageHtml = pgs.map((p, i) => `<div class="node page${i === kp ? ' on' : ''}" data-i="${i}"><p class="node-t">${range(p)}</p></div>`).join('');
-    if (groups.length === 1) {
-      board.innerHTML = `<div class="lvl"><span class="lvl-label">root</span><div class="node sign on" id="root-4"><p class="node-t">Signpost</p></div></div>
-        <div class="lvl lvl-pages"><span class="lvl-label">leaves</span>${pageHtml}</div>`;
-    } else {
-      board.innerHTML = `<div class="lvl"><span class="lvl-label">root</span><div class="node sign on" id="root-4"><p class="node-t">Top signpost</p></div></div>
-        <div class="lvl lvl-mid">${groups.map((g, j) => `<div class="node sign${j === kg ? ' on' : ''}" data-g="${j}"><p class="node-t">${short(g[0][0])}…</p></div>`).join('')}</div>
-        <div class="lvl lvl-pages"><span class="lvl-label">leaves</span>${pageHtml}</div>`;
-    }
-    const levels = groups.length === 1 ? 2 : 3;
-    $('#stats-4').innerHTML = `<div>Students<b>${names.length}</b></div><div>Row by row<b>up to ${names.length}</b>checks</div><div>With the tree<b>${levels}</b>pages to open</div>`;
-    $('#grow-4').setAttribute('aria-pressed', String(s4.big));
-    $('#grow-4').textContent = s4.big ? 'Back to 48' : 'Add 48 students';
-    setHint($('#hint-4'), s4.big ? 'A new level appeared on top. Kavya’s path is in red.' : 'Kavya’s path is marked in red.', '');
-    $('#desc-4').textContent = groups.length === 1
-      ? `${names.length} students. Root signpost on top, ${pgs.length} leaf pages below. Kavya's path: root, then page ${kp + 1}.`
-      : `${names.length} students. Root signpost on top, ${groups.length} middle signposts, ${pgs.length} leaf pages. Kavya's path: root, middle signpost ${kg + 1}, page ${kp + 1}.`;
-    const root = $('#root-4', board), pages = $$('.node.page', board);
-    {
-      const edges = [];
-      if (groups.length === 1) pages.forEach(p => edges.push([root, p, +p.dataset.i === kp]));
-      else {
-        const mids = $$('.lvl-mid .node', board);
-        mids.forEach(m => edges.push([root, m, +m.dataset.g === kg]));
-        pages.forEach(p => { const i = +p.dataset.i; edges.push([mids[Math.floor(i / SIGN)], p, i === kp]); });
-      }
-      drawLinks(board, edges);
-    }
-  }
-  $('#grow-4').addEventListener('click', () => { s4.big = !s4.big; render4(); announce(s4.big ? 'A new signpost level appeared. 96 students, 3 pages to open.' : 'Back to 48 students, 2 pages to open.'); });
-  inits[4] = render4;
-
-  /* ---------- step 5: inside MySQL (two trees, two levels each, as in the toy) ---------- */
-  const EXTRA = ['Ira', 'Zubin', 'Bea', 'Neel'];
-  const rows = students.map(s => ({ ...s }));
-  const RB = [0, 1, 2, 3].map(j => sorted[j * PER].name); // name-index page starts
-  const leafC = r => Math.min(3, Math.floor((r - 1) / PER));
-  const leafS = n => { let j = 0; for (let k = 0; k < 4; k++) if (n.localeCompare(RB[k]) >= 0) j = k; return j; };
-  const rowByName = n => rows.find(r => r.name === n);
-  let P = {};
-  function buildPages() {
-    P = {};
-    const c = [[], [], [], []], s = [[], [], [], []];
-    [...rows].sort((a, b) => a.roll - b.roll).forEach(r => c[leafC(r.roll)].push(r));
-    [...rows].sort((a, b) => a.name.localeCompare(b.name)).forEach(r => s[leafS(r.name)].push(r));
-    c.forEach((l, j) => { P['C.l' + j] = { t: 'C', lvl: 0, label: `${l[0].roll}–${l[l.length - 1].roll}`, title: `Main tree · page ${j + 1}`, rows: l.map(r => [String(r.roll), `${r.name} · ${r.marks}`, r.added]) }; });
-    s.forEach((l, j) => { P['S.l' + j] = { t: 'S', lvl: 0, label: `${short(l[0].name)}–${short(l[l.length - 1].name)}`, title: `Name index · page ${j + 1}`, rows: l.map(r => [r.name, 'roll ' + r.roll, r.added]) }; });
-    P['C.root'] = { t: 'C', lvl: 1, label: '1 | 13 | 25 | 37', title: 'Main tree · signpost', rows: [['1…', 'page 1'], ['13…', 'page 2'], ['25…', 'page 3'], ['37…', 'page 4']] };
-    P['S.root'] = { t: 'S', lvl: 1, label: RB.map(short).join(' | '), title: 'Name index · signpost', rows: RB.map((n, i) => [n + '…', 'page ' + (i + 1)]) };
-  }
-  buildPages();
-  const ORDER = t => [`${t}.root`, `${t}.l0`, `${t}.l1`, `${t}.l2`, `${t}.l3`];
-  const pathC = r => ['C.root', 'C.l' + leafC(r)];
-  const pathS = n => ['S.root', 'S.l' + leafS(n)];
-
-  const SUB = {
-    a: { goal: 'Find roll no 42. Open as few pages as you can.', count: 'pages opened' },
-    b: { goal: 'Find Kavya by name. Watch the jump.', count: 'pages opened' },
-    c: { goal: 'Ask for less. Make the jump disappear.', count: 'pages opened' },
-    d: { goal: 'Add a student. Count the trees that change.', count: 'trees changed' }
-  };
-  const S = { sub: 'a', step: -1, playing: false, timer: null, yaw: -14, animate: false, done: new Set(),
-    a: { manual: true, trail: [] }, c: { cols: new Set(['roll_no', 'name', 'marks']) }, d: { added: [] } };
-
-  function steps() {
-    if (S.sub === 'a') { const p = pathC(42); return [{ p: p[0], hint: 'The signpost: 42 is after 37.' }, { p: p[1], hit: '42', hint: 'Found roll no 42. Two pages.' }]; }
-    if (S.sub === 'b') { const r = rowByName(TARGET), a = pathS(r.name), b = pathC(r.roll); return [
-      { p: a[0], hint: 'Name index signpost: Kavya is on page 2.' },
-      { p: a[1], hit: TARGET, hint: `Found Kavya. It says: roll ${r.roll}.` },
-      { p: b[0], hop: true, hint: `Jump! Take roll ${r.roll} to the main tree.` },
-      { p: b[1], hit: String(r.roll), hint: 'Here is her whole row, with marks.' }]; }
-    if (S.sub === 'c') { const r = rowByName(TARGET), a = pathS(r.name), b = pathC(r.roll); const st = [
-      { p: a[0], hint: 'Name index signpost.' },
-      { p: a[1], hit: TARGET, hint: S.c.cols.has('marks') ? 'Found Kavya. But marks aren’t here…' : 'No jump! Roll no and name were already here.' }];
-      if (S.c.cols.has('marks')) st.push({ p: b[0], hop: true, hint: 'Jump to the main tree for the marks.' }, { p: b[1], hit: String(r.roll), hint: 'Got the marks. That took a jump.' });
-      return st; }
-    if (S.sub === 'd') { const last = S.d.added[S.d.added.length - 1]; if (!last) return []; const a = pathC(last.roll), b = pathS(last.name); return [
-      { p: a[0], write: true, hint: `New student ${last.name}, roll ${last.roll}.` },
-      { p: a[1], write: true, hit: String(last.roll), hint: 'Written to the main tree. One more…' },
-      { p: b[0], write: true, fresh: true, hint: 'The name index needs it too.' },
-      { p: b[1], write: true, hit: last.name, hint: 'Written to both trees.' }]; }
-    return [];
-  }
-  const trail = () => (S.sub === 'a' && S.a.manual) ? S.a.trail : steps().slice(0, S.step + 1);
-
-  // geometry: two levels (signpost + 4 pages), as in the toy
-  const W = 2.4, D = 1.8, H = 0.6, GAP = 0.45, LZ = [0, 3.0], DEF = -14, LIM = 18, PITCH = 38 * Math.PI / 180;
-  const treesNow = narrow => (S.sub === 'a' && narrow) ? ['C'] : ['S', 'C'];
-  function layout(narrow) {
-    const pos = {};
-    const place = (t, ox, oy) => {
-      const ids = ORDER(t), span = 4 * W + 3 * GAP, x0 = ox - span / 2 + W / 2;
-      ids.slice(1).forEach((id, i) => { pos[id] = { x: x0 + i * (W + GAP), y: oy, z: LZ[0], w: W }; });
-      pos[ids[0]] = { x: ox, y: oy, z: LZ[1], w: W * 2.4 };
-    };
-    const tr = treesNow(narrow);
-    if (tr.length === 1) place('C', 0, 0);
-    else if (narrow) { place('S', 0, 6.6); place('C', 0, -6.6); }
-    else { place('S', -6.4, 0); place('C', 6.4, 0); }
-    return pos;
-  }
-  function project(x, y, z, yawDeg) {
-    const a = yawDeg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), xr = x * c - y * s, yr = x * s + y * c;
-    return { x: xr, y: -yr * Math.sin(PITCH) - z * Math.cos(PITCH), d: yr * Math.cos(PITCH) - z * Math.sin(PITCH) };
-  }
-  const box = p => ({ x0: p.x - p.w / 2, x1: p.x + p.w / 2, y0: p.y - D / 2, y1: p.y + D / 2, z0: p.z, z1: p.z + H });
-  function bounds(pos, narrow) {
-    let a = Infinity, b = -Infinity, c = Infinity, d = -Infinity; const lim = narrow ? 12 : LIM;
-    const add = q => { a = Math.min(a, q.x); b = Math.max(b, q.x); c = Math.min(c, q.y); d = Math.max(d, q.y); };
-    for (let yaw = DEF - lim; yaw <= DEF + lim; yaw += 2) {
-      for (const id in pos) { const k = box(pos[id]); for (const x of [k.x0, k.x1]) for (const y of [k.y0, k.y1]) for (const z of [k.z0, k.z1 + 1.0]) add(project(x, y, z, yaw)); }
-      for (const t of treesNow(narrow)) { const r = pos[t + '.root']; for (const dx of [-3.4, 3.4]) add(project(r.x + dx, r.y - D / 2 - 2.6, 0, yaw)); }
-    }
-    return { x: a - 0.3, y: c - 0.4, w: b - a + 0.6, h: d - c + 0.7 };
-  }
-  const el = (name, attrs, parent) => { const n = document.createElementNS(NS, name); for (const k in attrs) if (attrs[k] != null) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; };
-  const pts = arr => arr.map(q => `${q.x.toFixed(3)},${q.y.toFixed(3)}`).join(' ');
-  const svg = $('#scene'); let geo = null, geoNarrow = false;
-
-  function renderScene() {
-    if (step !== 5) return;
-    const focused = document.activeElement && document.activeElement.closest && document.activeElement.closest('[data-page]');
-    const focusId = focused ? focused.dataset.page : null;
-    const pxW = svg.clientWidth || 800, pxH = svg.clientHeight || 400, narrow = pxW < 560;
-    if (narrow) S.yaw = Math.max(DEF - 12, Math.min(DEF + 12, S.yaw));
-    geoNarrow = narrow;
-    const pos = layout(narrow), vb = bounds(pos, narrow);
-    svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`); svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    const u = Math.max(vb.w / pxW, vb.h / pxH); geo = { pos, u };
-    svg.innerHTML = '';
-    const defs = el('defs', {}, svg), pat = el('pattern', { id: 'hatch', width: 6 * u, height: 6 * u, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, defs);
-    el('line', { x1: 0, y1: 0, x2: 0, y2: 6 * u, stroke: 'var(--scene-hatch)', 'stroke-width': 1.4 * u }, pat);
-    const tr = trail(), opened = new Set(tr.map(s => s.p)), misses = new Set(tr.filter(s => s.miss).map(s => s.p));
-    const ok = tr.filter(s => !s.miss), now = ok.length ? ok[ok.length - 1].p : null;
-    for (const t of treesNow(narrow)) {
-      const ls = ORDER(t).slice(1).map(id => pos[id]);
-      const A = { x: ls[0].x - W / 2 - 0.3, y: ls[0].y - D / 2 - 0.3 }, B = { x: ls[3].x + W / 2 + 0.3, y: ls[0].y + D / 2 + 0.3 };
-      el('polygon', { points: pts([[A.x, A.y], [B.x, A.y], [B.x, B.y], [A.x, B.y]].map(([x, y]) => project(x, y, -0.02, S.yaw))), class: 't-floor' }, svg);
-    }
-    const ar = S.yaw * Math.PI / 180, ca = Math.cos(ar), sa = Math.sin(ar), facing = (nx, ny) => (nx * sa + ny * ca) < 0;
-    const ord = Object.keys(pos).map(id => ({ id, d: project(pos[id].x, pos[id].y, pos[id].z + H / 2, S.yaw).d })).sort((p, q) => q.d - p.d);
-    for (const { id } of ord) {
-      const p = pos[id], k = box(p), m = P[id], V = (x, y, z) => project(x, y, z, S.yaw);
-      const cls = ['slab', opened.has(id) ? 'open' : '', id === now ? 'now' : '', misses.has(id) ? 'miss' : '', (S.animate && id === now && !reduced()) ? 'pop' : ''].filter(Boolean).join(' ');
-      const g = el('g', { class: cls, 'data-page': id, tabindex: '0', role: 'button', 'aria-label': `${m.title}, ${m.label}${opened.has(id) ? ', opened' : ''}` }, svg);
-      const faces = [[[0, -1], [[k.x0, k.y0, k.z0], [k.x1, k.y0, k.z0], [k.x1, k.y0, k.z1], [k.x0, k.y0, k.z1]], 's-front'], [[0, 1], [[k.x0, k.y1, k.z0], [k.x1, k.y1, k.z0], [k.x1, k.y1, k.z1], [k.x0, k.y1, k.z1]], 's-front'],
-        [[-1, 0], [[k.x0, k.y0, k.z0], [k.x0, k.y1, k.z0], [k.x0, k.y1, k.z1], [k.x0, k.y0, k.z1]], 's-side'], [[1, 0], [[k.x1, k.y0, k.z0], [k.x1, k.y1, k.z0], [k.x1, k.y1, k.z1], [k.x1, k.y0, k.z1]], 's-side']];
-      for (const [n, c, fc] of faces) if (facing(n[0], n[1])) el('polygon', { points: pts(c.map(q => V(...q))), class: fc }, g);
-      const top = [[k.x0, k.y0, k.z1], [k.x1, k.y0, k.z1], [k.x1, k.y1, k.z1], [k.x0, k.y1, k.z1]].map(q => V(...q));
-      el('polygon', { points: pts(top), class: 's-top' }, g);
-      { // invisible hit area: the page's outline, grown to at least 44 x 44 CSS px
-        const all = [...top, ...[[k.x0, k.y0, k.z0], [k.x1, k.y0, k.z0], [k.x1, k.y1, k.z0], [k.x0, k.y1, k.z0]].map(q => V(...q))];
-        let x0 = Math.min(...all.map(q => q.x)), x1 = Math.max(...all.map(q => q.x)), y0 = Math.min(...all.map(q => q.y)), y1 = Math.max(...all.map(q => q.y));
-        const minU = 46 * u, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-        if (x1 - x0 < minU) { x0 = cx - minU / 2; x1 = cx + minU / 2; }
-        if (y1 - y0 < minU) { y0 = cy - minU / 2; y1 = cy + minU / 2; }
-        g.insertBefore(el('rect', { x: x0, y: y0, width: x1 - x0, height: y1 - y0, class: 's-hit' }), g.firstChild);
-      }
-      if (m.t === 'C') el('polygon', { points: pts(top), class: 's-hatch' }, g);
-      const ct = V(p.x, p.y, k.z1), wPx = (Math.max(...top.map(q => q.x)) - Math.min(...top.map(q => q.x))) / u, fs = narrow ? 10.5 : 12.5;
-      if (wPx > m.label.length * fs * 0.62 + 8) { const tx = el('text', { x: ct.x, y: ct.y, class: 't-slab', 'font-size': fs * u }, g); tx.textContent = m.label; }
-    }
-    const anc3 = id => { const p = pos[id]; return { x: p.x, y: p.y, z: p.z + H }; };
-    const anc = id => { const a = anc3(id); return project(a.x, a.y, a.z, S.yaw); };
-    for (let i = 0; i < tr.length; i++) {
-      const s = tr[i], isNew = S.animate && i === tr.length - 1 && !reduced();
-      if (!pos[s.p]) continue;
-      if (s.write && s.hit) { const q = anc(s.p); el('circle', { cx: q.x, cy: q.y, r: 16 * u, class: 'p-new' + (isNew ? ' drawn' : ''), 'stroke-width': 2.5 * u }, svg); }
-      if (i === 0 || s.fresh || s.miss) continue;
-      let j = i - 1; while (j >= 0 && tr[j].miss) j--; if (j < 0 || !pos[tr[j].p]) continue;
-      const A = anc(tr[j].p), B = anc(s.p);
-      if (s.hop) {
-        const a3 = anc3(tr[j].p), b3 = anc3(s.p);
-        const m = project((a3.x + b3.x) / 2 + (narrow ? 1.2 : 0), (a3.y + b3.y) / 2, Math.max(a3.z, b3.z) + (narrow ? 0.4 : 2.6), S.yaw);
-        el('path', { d: `M${A.x},${A.y} Q${m.x},${m.y} ${B.x},${B.y}`, class: 'p-hop' + (isNew ? ' drawn' : ''), 'stroke-width': 3.4 * u, 'stroke-dasharray': `${8 * u} ${6 * u}` }, svg);
-        const mid = project((a3.x + b3.x) / 2 + (narrow ? -3.6 : 0), (a3.y + b3.y) / 2, Math.max(a3.z, b3.z) + (narrow ? -1.6 : 1.5), S.yaw);
-        const jt = el('text', { x: mid.x, y: mid.y, class: 'p-jump', 'font-size': 18 * u, 'data-src': 'S03' }, svg); jt.textContent = 'jump!';
-      } else el('path', { d: `M${A.x},${A.y} L${B.x},${B.y}`, class: 'p-line' + (isNew ? ' drawn' : ''), 'stroke-width': 3.4 * u, pathLength: isNew ? 1 : null }, svg);
-    }
-    if (now && pos[now]) { const q = anc(now); el('circle', { cx: q.x, cy: q.y, r: 7 * u, class: 'p-dot', 'stroke-width': 2.5 * u }, svg); }
-    const names = { S: ['Name index', 'name → roll no', 'S03'], C: ['Main tree', 'every row, by roll no (clustered index)', 'S03'] };
-    for (const t of treesNow(narrow)) {
-      const r = pos[t + '.root'], q = project(r.x, r.y - D / 2 - 1.3, 0, S.yaw), f1 = (narrow ? 15 : 18) * u;
-      el('text', { x: q.x, y: q.y, class: 't-title', 'font-size': f1 }, svg).textContent = names[t][0];
-      el('text', { x: q.x, y: q.y + f1 * 1.1, class: 't-sub', 'font-size': (narrow ? 10 : 11.5) * u, 'data-src': names[t][2] }, svg).textContent = names[t][1];
-    }
-    S.animate = false;
-    if (focusId) { const f = svg.querySelector(`[data-page="${focusId}"]`); if (f) f.focus({ preventScroll: true }); }
-  }
-
-  const HSRC = { a: 'S03 S04', b: 'S03', c: 'S01 S03 S06', d: 'S02' };
-  function hint5(text, kind) { const h = $('#hint-5'); setHint(h, text, kind); h.dataset.src = HSRC[S.sub]; }
-  function renderHUD() {
-    const tr = trail(), st = steps();
-    $('#goal-5').textContent = SUB[S.sub].goal;
-    $$('.subtabs button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.sub === S.sub)); b.classList.toggle('done', S.done.has(b.dataset.sub)); });
-    const cnt = $('#count-5'), prev = cnt.textContent;
-    let v = new Set(tr.map(s => s.p)).size, sub = '';
-    if (S.sub === 'd') { v = new Set(tr.filter(s => s.write).map(s => s.p[0])).size; sub = `pages opened: ${tr.length}`; }
-    cnt.textContent = v; $('#count-label-5').textContent = SUB[S.sub].count; $('#count-sub-5').textContent = sub;
-    if (prev !== cnt.textContent) bump(cnt);
-    if (S.sub === 'a' && S.a.manual) return;
-    const cur = tr[tr.length - 1];
-    if (cur) {
-      const end = S.step === st.length - 1; let kind = '';
-      if (end) { if (S.sub !== 'c' || !S.c.cols.has('marks')) { S.done.add(S.sub); if (S.sub === 'c') kind = 'win'; } }
-      hint5(cur.hint, kind);
-    } else hint5({ b: 'Press play.', c: 'Press play. Then switch off what you don’t need.', d: 'Press “Add a student”.' }[S.sub] || '', '');
-    $$('.subtabs button').forEach(b => b.classList.toggle('done', S.done.has(b.dataset.sub)));
-  }
-  function renderTask() {
-    const box = $('#task-5'), says = $('#says-body'), sql = t => `<code>${t}</code>`;
-    box.innerHTML = '';
-    if (S.sub === 'a') {
-      box.innerHTML = '<span class="task-label">Tap the pages yourself, or press play</span>';
-      says.innerHTML = `${sql('SELECT * FROM students WHERE roll_no = 42;')}<span>key: <b>PRIMARY</b></span><span>type: <b>const</b></span>`;
-    } else if (S.sub === 'b') {
-      box.innerHTML = '<span class="task-label">Press play</span>';
-      says.innerHTML = `${sql("SELECT * FROM students WHERE name = 'Kavya';")}<span>key: <b>idx_name</b></span><span>type: <b>ref</b></span>`;
-    } else if (S.sub === 'c') {
-      box.innerHTML = '<span class="task-label">Ask for:</span>' + ['roll_no', 'name', 'marks'].map(c => `<button type="button" class="chip-toggle" data-col="${c}" aria-pressed="${S.c.cols.has(c)}">${c.replace('_', ' ')}</button>`).join('');
-      $$('[data-col]', box).forEach(b => b.onclick = () => {
-        const next = new Set(S.c.cols); next.has(b.dataset.col) ? next.delete(b.dataset.col) : next.add(b.dataset.col);
-        if (!next.size) { hint5('Ask for at least one thing.', 'lose'); return; }
-        S.c.cols = next; resetRun(); renderTask(); setPlaying(true);
-      });
-      const cols = ['roll_no', 'name', 'marks'].filter(c => S.c.cols.has(c)).join(', ');
-      says.innerHTML = `${sql(`SELECT ${cols} FROM students WHERE name = 'Kavya';`)}<span>key: <b>idx_name</b></span><span>type: <b>ref</b></span>${S.c.cols.has('marks') ? '' : '<span><b>Using index</b></span>'}`;
-    } else if (S.sub === 'd') {
-      const left = EXTRA.length - S.d.added.length;
-      box.innerHTML = `<button class="btn" type="button" id="f-add" ${left ? '' : 'disabled'}>${left ? `Add a student (${EXTRA[S.d.added.length]})` : 'Toy is full'}</button>${S.d.added.length ? '<span class="task-label" data-src="S02">Every tree must be updated.</span>' : ''}`;
-      $('#f-add').onclick = () => { const n = EXTRA[S.d.added.length]; if (!n) return; const r = { roll: rows.length + 1, name: n, marks: 70, added: true }; rows.push(r); S.d.added.push(r); buildPages(); resetRun(); renderTask(); setPlaying(true); };
-      const last = S.d.added[S.d.added.length - 1];
-      says.innerHTML = `${sql(last ? `INSERT INTO students VALUES (${last.roll}, '${last.name}', …);` : 'INSERT INTO students VALUES (…);')}<span data-src="S02">updates: <b>PRIMARY</b>, <b>idx_name</b></span>`;
-    }
-  }
-  function renderDock() {
-    const st = steps(), sc = $('#scrub');
-    sc.max = Math.max(0, st.length - 1); sc.value = Math.max(0, S.step); sc.disabled = !st.length;
-    sc.setAttribute('aria-valuetext', st.length ? `Step ${Math.max(0, S.step) + 1} of ${st.length}` : 'Nothing to play yet');
-    $('#btn-play').disabled = !st.length;
-  }
-  function render5() { renderScene(); renderHUD(); renderDock(); }
-  function resetRun() { setPlaying(false); S.step = -1; closePeek(); if (S.sub === 'a') S.a.trail = []; }
-  function setPlaying(on) {
-    S.playing = on; clearTimeout(S.timer);
-    $('#btn-play').setAttribute('aria-pressed', String(on)); $('#btn-play').setAttribute('aria-label', on ? 'Pause' : 'Play');
-    if (on) { if (S.sub === 'a') S.a.manual = false; const st = steps(); if (!st.length) { setPlaying(false); return; } if (S.step >= st.length - 1) S.step = -1; tick(); }
-  }
-  function tick() {
-    const st = steps();
-    S.timer = setTimeout(() => {
-      if (!S.playing) return;
-      if (S.step < st.length - 1) { S.step++; S.animate = true; render5(); if (S.step < st.length - 1) tick(); else setPlaying(false); }
-    }, S.step < 0 ? 250 : 1300);
-  }
-  function stepTo(i) { setPlaying(false); if (S.sub === 'a') S.a.manual = false; S.step = Math.max(-1, Math.min(steps().length - 1, i)); S.animate = true; render5(); }
-  function goSub(k) { clearTimeout(S.timer); S.playing = false; S.sub = k; S.step = -1; closePeek(); if (k === 'a') { S.a.manual = true; S.a.trail = []; } renderTask(); render5(); if (k === 'a') hint5('Tap the top page to start.', ''); }
-  function tapA(id) {
-    const ideal = pathC(42); if (!S.a.manual) { S.a.manual = true; S.a.trail = []; S.step = -1; }
-    const okN = S.a.trail.filter(s => !s.miss).length, m = P[id];
-    if (okN >= 2) { peek(id); return; }
-    if (m.t !== 'C') { hint5('Use the main tree for roll numbers.', 'lose'); return; }
-    if (m.lvl !== P[ideal[okN]].lvl) { hint5('Start with the signpost on top.', 'lose'); return; }
-    if (id === ideal[okN]) {
-      S.a.trail.push(m.lvl === 0 ? { p: id, hit: '42' } : { p: id }); S.animate = true;
-      const n = new Set(S.a.trail.map(s => s.p)).size;
-      if (m.lvl === 0) { S.done.add('a'); hint5(n === 2 ? 'Found 42 in 2 pages. Best possible!' : `Found 42 in ${n} pages. Best is 2.`, n === 2 ? 'win' : ''); }
-      else hint5('Signpost: 1 | 13 | 25 | 37. Which page has 42?', '');
-    } else if (!S.a.trail.some(s => s.p === id)) { S.a.trail.push({ p: id, miss: true }); S.animate = true; hint5('42 isn’t on that page. Read the signpost.', 'lose'); }
-    render5();
-  }
-  const peekEl = $('#peek');
-  function peek(id) {
-    const m = P[id]; if (!m || !geo || !geo.pos[id]) return;
-    const hit = (trail().find(s => s.p === id && s.hit) || {}).hit;
-    $('#peek-title').textContent = m.title;
-    const ul = $('#peek-list'); ul.innerHTML = '';
-    let start = 0; if (m.rows.length > 4) { const hi = m.rows.findIndex(r => r[0] === hit || r[2]); start = Math.max(0, Math.min(m.rows.length - 4, (hi < 0 ? 0 : hi) - 1)); }
-    m.rows.slice(start, start + 4).forEach(r => { const li = document.createElement('li'); if (r[0] === hit) li.className = 'hit'; else if (r[2]) li.className = 'new'; li.innerHTML = '<span></span><span></span>'; li.children[0].textContent = r[0]; li.children[1].textContent = r[1]; ul.appendChild(li); });
-    if (m.rows.length > 4) { const li = document.createElement('li'); li.className = 'more'; li.textContent = `+ ${m.rows.length - 4} more`; ul.appendChild(li); }
-    const p = geo.pos[id], q = project(p.x, p.y, p.z + H, S.yaw), ctm = svg.getScreenCTM(), st = $('.stage').getBoundingClientRect();
-    const sx = ctm.a * q.x + ctm.e - st.left, sy = ctm.d * q.y + ctm.f - st.top;
-    peekEl.hidden = false; const w = peekEl.offsetWidth, h = peekEl.offsetHeight;
-    peekEl.style.left = Math.max(8, Math.min(st.width - w - 8, sx - w / 2)) + 'px';
-    peekEl.style.top = Math.max(8, sy - h - 18 < 8 ? sy + 22 : sy - h - 18) + 'px';
-    peekEl.dataset.page = id;
-  }
-  function closePeek() { peekEl.hidden = true; delete peekEl.dataset.page; }
-  const refocus = id => { const g = id && svg.querySelector(`[data-page="${id}"]`); if (g) g.focus(); };
-  $('#peek-x').addEventListener('click', () => { const id = peekEl.dataset.page; closePeek(); refocus(id); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !peekEl.hidden) { const id = peekEl.dataset.page; closePeek(); refocus(id); } });
-  const activate = id => { if (!P[id]) return; if (S.sub === 'a') { tapA(id); return; } if (peekEl.dataset.page === id && !peekEl.hidden) closePeek(); else peek(id); };
-
-  $$('.subtabs button').forEach(b => b.addEventListener('click', () => goSub(b.dataset.sub)));
-  $('#btn-play').addEventListener('click', () => setPlaying(!S.playing));
-  $('#btn-fwd').addEventListener('click', () => stepTo(S.step + 1));
-  $('#btn-back').addEventListener('click', () => stepTo(S.step - 1));
-  $('#scrub').addEventListener('input', e => stepTo(+e.target.value));
-  const clampYaw = y => { const l = geoNarrow ? 12 : LIM; return Math.max(DEF - l, Math.min(DEF + l, y)); };
-  const rotate = d => { S.yaw = clampYaw(S.yaw + d * 7); closePeek(); renderScene(); };
-  $$('[data-rotate]').forEach(b => b.addEventListener('click', () => rotate(+b.dataset.rotate)));
-  svg.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft') { e.preventDefault(); rotate(-1); }
-    else if (e.key === 'ArrowRight') { e.preventDefault(); rotate(1); }
-    else if (e.key === 'Enter' || e.key === ' ') { const g = e.target.closest('[data-page]'); if (g) { e.preventDefault(); activate(g.dataset.page); } }
-  });
-  let drag = null;
-  svg.addEventListener('pointerdown', e => { const g = e.target.closest('[data-page]'); drag = { x: e.clientX, yaw: S.yaw, moved: false, page: g ? g.dataset.page : null }; });
-  svg.addEventListener('pointermove', e => { if (!drag) return; if (Math.abs(e.clientX - drag.x) > 5) { drag.moved = true; svg.classList.add('dragging'); closePeek(); } if (drag.moved) { S.yaw = clampYaw(drag.yaw + (e.clientX - drag.x) * 0.25); renderScene(); } });
-  svg.addEventListener('pointerup', () => { if (drag && !drag.moved && drag.page) activate(drag.page); drag = null; svg.classList.remove('dragging'); });
-  svg.addEventListener('pointercancel', () => { drag = null; svg.classList.remove('dragging'); });
-  inits[5] = () => { renderTask(); render5(); if (S.sub === 'a' && S.a.manual && !S.a.trail.length) hint5('Tap the top page to start.', ''); };
-
-  /* ---------- step 6: check yourself ---------- */
-  const QUIZ = [
-    { q: 'There is no index. How does MySQL find Kavya?', src: 'S01', opts: ['It checks the rows one by one.', 'It jumps straight to her row.', 'It sorts the table first.'], a: 0, why: 'With no index, MySQL reads row after row.' },
-    { q: 'You ask only for roll no and name. Does MySQL need the jump?', src: 'S01 S03', opts: ['Yes, always.', 'No. The name index already has both.'], a: 1, why: 'The name index stores the roll no with each name.' },
-    { q: 'You add a new student. What changes?', src: 'S02', opts: ['Only the main tree.', 'The main tree and every index.', 'Nothing until tomorrow.'], a: 1, why: 'Every index must be updated when a row is added.' }
-  ];
-  const s6 = { ans: {} };
-  function render6() {
-    const ol = $('#quiz'); ol.innerHTML = '';
-    QUIZ.forEach((item, i) => {
-      const li = document.createElement('li'); li.className = 'q'; li.dataset.src = item.src;
-      const done = i in s6.ans;
-      li.innerHTML = `<p class="qt"></p><div class="opts" role="group"></div>${done ? '<p class="why"></p>' : ''}`;
-      li.querySelector('.qt').textContent = `${i + 1}. ${item.q}`;
-      item.opts.forEach((o, j) => {
-        const b = document.createElement('button'); b.type = 'button'; b.textContent = o; b.dataset.q = i; b.dataset.o = j;
-        if (done && j === item.a) b.classList.add('right');
-        if (done && j === s6.ans[i] && j !== item.a) b.classList.add('wrong');
-        li.querySelector('.opts').appendChild(b);
-      });
-      if (done) li.querySelector('.why').textContent = (s6.ans[i] === item.a ? 'Right. ' : 'Not quite. ') + item.why;
-      ol.appendChild(li);
+    ps.forEach((p, i) => {
+      if (i >= upto) return;
+      const a = p.getBoundingClientRect(), b = ls[i].getBoundingClientRect();
+      const x1 = a.left + a.width / 2 - base.left, y1 = a.bottom - base.top;
+      const x2 = b.left + b.width / 2 - base.left, y2 = b.top - base.top;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M${x1},${y1} C${x1},${(y1 + y2) / 2} ${x2},${(y1 + y2) / 2} ${x2},${y2}`);
+      if (i === active) path.classList.add('on');
+      svg.appendChild(path);
     });
-    const c = $('#count-6'), prev = c.textContent;
-    c.textContent = Object.keys(s6.ans).filter(i => s6.ans[i] === QUIZ[i].a).length;
-    if (prev !== c.textContent) bump(c);
-  }
-  $('#quiz').addEventListener('click', e => { const b = e.target.closest('button[data-q]'); if (!b) return; const i = +b.dataset.q; if (i in s6.ans) return; s6.ans[i] = +b.dataset.o; render6(); announce((s6.ans[i] === QUIZ[i].a ? 'Right. ' : 'Not quite. ') + QUIZ[i].why); });
-  inits[6] = render6;
-
-
-  /* ---------- QA self-test (only with ?qa=1): plays every step and practice, checks tap sizes ---------- */
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
-  async function smoke() {
-    const out = []; const ok = (name, c) => out.push(`${c ? 'PASS' : 'FAIL'} ${name}`);
-    const small = [];
-    const checkTargets = label => $$(`#step-${step} button, #step-${step} [role=button], #step-${step} summary, #step-${step} input, .bar button, .bar a, .stepnav button`).forEach(n => {
-      if (n.closest('[hidden]') || n.disabled) return;
-      const hitEl = n.matches('[data-page]') ? n.querySelector('.s-hit') : n;
-      const r = (hitEl || n).getBoundingClientRect();
-      if (r.width && (r.width < 43.5 || r.height < 43.5)) small.push(`${label}:${(n.dataset.page || n.textContent || n.id || n.tagName).trim().slice(0, 18)} ${Math.round(r.width)}x${Math.round(r.height)}`);
-    });
-    try {
-      go(1); reset1(); checkTargets('s1');
-      for (const s of students) { $(`.rowbtn[data-roll="${s.roll}"]`).click(); if (s1.found) break; }
-      ok('step 1: Kavya found after 42 checks, takeaway shown', s1.found && s1.checked.size === 42 && !$('#take-1').hidden);
-      go(2); $('#letters-2 button[data-l="K"]').click(); checkTargets('s2'); $('#names-2 button[data-n="Kavya"]').click();
-      ok('step 2: K then Kavya = 2 taps, takeaway shown', s2.found && s2.taps === 2 && !$('#take-2').hidden);
-      go(3); checkTargets('s3'); $(`#board-3 .sign-rows button[data-p="${kPage}"]`).click(); checkTargets('s3-open'); $('#board-3 .page-rows button[data-n="Kavya"]').click();
-      ok('step 3: found in 1 page', s3.found && s3.opened.size === 1);
-      $('#fold-3').click(); await sleep(120);
-      ok('step 3: folds into a tree (4 links, takeaway, description)', $('#board-3').classList.contains('folded') && $$('#board-3 .links line').length === 4 && !$('#take-3').hidden && /root/.test($('#desc-3').textContent));
-      go(4); if (s4.big) $('#grow-4').click(); await sleep(120);
-      ok('step 4: 48 students = 2 levels', $$('#board-4 .lvl').length === 2 && $$('#board-4 .links line').length === 4);
-      $('#grow-4').click(); await sleep(120); checkTargets('s4');
-      ok('step 4: 96 students = 3 levels, path marked', $$('#board-4 .lvl').length === 3 && $$('#board-4 .links line.on').length === 2);
-      go(5); goSub('a'); checkTargets('s5a'); activate('C.root'); activate(pathC(42)[1]);
-      ok('step 5a: roll 42 found in 2 pages', S.done.has('a') && $('#count-5').textContent === '2');
-      goSub('b'); await sleep(50); checkTargets('s5b'); stepTo(steps().length - 1);
-      ok('step 5b: jump drawn, 4 pages', $('#count-5').textContent === '4' && !!svg.querySelector('.p-hop'));
-      goSub('c'); $('#task-5 [data-col="marks"]').click(); setPlaying(false); stepTo(steps().length - 1);
-      ok('step 5c: no jump when marks are not asked', steps().length === 2 && !svg.querySelector('.p-hop') && $('#hint-5').classList.contains('win'));
-      $('#task-5 [data-col="marks"]').click(); setPlaying(false);
-      goSub('d'); $('#f-add').click(); setPlaying(false); stepTo(steps().length - 1);
-      ok('step 5d: new student written to 2 trees', $('#count-5').textContent === '2' && svg.querySelectorAll('.p-new').length === 2);
-      $('#says').open = true; ok('step 5: What MySQL typically says opens', $('#says-body').textContent.includes('INSERT') && /typically/.test($('#says summary').textContent));
-      { const sw = $('#says'), ov = document.documentElement.scrollWidth - document.documentElement.clientWidth;
-        ok(`step 5: open strip fits (page overflow ${Math.max(0, ov)}px, strip ${sw.scrollWidth}/${sw.clientWidth}px)`, ov <= 0 && sw.scrollWidth <= sw.clientWidth + 1); }
-      go(6); QUIZ.forEach((q, i) => $(`#quiz button[data-q="${i}"][data-o="${q.a}"]`).click()); checkTargets('s6');
-      ok('step 6: 3 of 3 right with reasons', $('#count-6').textContent === '3' && $$('#quiz .why').length === 3);
-      location.hash = '#step-2'; await sleep(120);
-      ok('hashchange: #step-2 opens step 2', step === 2 && !$('#step-2').hidden);
-      history.back(); await sleep(250);
-      ok('browser Back returns to the previous step', step !== 2);
-      ok('tap targets >= 44px (' + (small.length ? small.join('; ') : 'all') + ')', !small.length);
-      go(3); const td = parseFloat(getComputedStyle($('#board-3')).transitionDuration) || 0;
-      ok(`motion: fold transition ${td}s (reduce=${reduced()})`, reduced() ? td < 0.001 : td > 0.5);
-      const srcs = $$('[data-src]').length; ok(`facts carry data-src (${srcs} elements)`, srcs >= 10);
-    } catch (err) { out.push('FAIL self-test crashed: ' + err.message); }
-    console.info(`QA smoke @${document.documentElement.clientWidth}px reduce=${reduced()} | ` + out.join(' | '));
   }
 
-  /* ---------- start ---------- */
-  let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { closePeek(); if (inits[step]) inits[step](); }, 150); });
-  const start = hashStep() || 1;
-  go(start, false);
+  /* ---------- 3 · build ---------- */
+  const stage = $('#bstage'), chipsLayer = $('#chips3');
+  const src3 = $('#src3'), buf3 = $('#buf3'), tree3 = $('#tree3');
+  ROWS.forEach(() => src3.appendChild(document.createElement('i')));
+  for (let i = 0; i < BUF; i++) { const s = document.createElement('div'); s.className = 'slot'; buf3.appendChild(s); }
+  const dotSlots = (host, n) => { for (let i = 0; i < n; i++) { const s = document.createElement('div'); s.className = 'dslot'; host.appendChild(s); } return [...host.children]; };
+  const run1 = dotSlots($('#tmp1'), BUF), run2 = dotSlots($('#tmp2'), BUF), merged = dotSlots($('#merged'), ROWS.length);
+  buildTree(tree3, false);
+  const bufSlots = [...buf3.children];
+  const leafSlots = () => $$('.leaf', tree3).map(l => $$('.slot', l));
+  let speed = 1, buildRun = 0, linksUpto = 0;
 
-  // QA hooks: warn on sideways overflow. With ?qa=1, visit each step and log its words (instructions vs data labels).
-  const words = t => (t.match(/[A-Za-z0-9][A-Za-z0-9'’@._-]*/g) || []).length;
-  function stepWords(sec) {
-    const all = words(sec.innerText);
-    const clone = sec.cloneNode(true);
-    clone.querySelectorAll('.data, svg, [hidden], .sr-only, .lvl-pages, .lvl-mid, .page-rows, .sign-rows, .namelist, .letters, .stats').forEach(n => n.remove());
-    return { all, instructions: words(clone.textContent) };
+  const chips = ROWS.map(r => {
+    const c = document.createElement('div');
+    c.className = 'chip dot'; c.innerHTML = `<b>${r.name}</b><i>${r.id}</i>`;
+    chipsLayer.appendChild(c); c._row = r; return c;
+  });
+  function place(c, slot, mode, instant) {
+    const a = slot.getBoundingClientRect(), b = stage.getBoundingClientRect();
+    c._slot = slot; c._mode = mode;
+    if (instant) c.style.transition = 'none';
+    c.classList.toggle('dot', mode === 'dot' || mode === 'spawn');
+    c.classList.toggle('in-leaf', mode === 'leaf');
+    const s = mode === 'spawn' ? 10 : 0;
+    const box = s ? { x: a.left + a.width / 2 - s / 2, y: a.top + a.height / 2 - s / 2, w: s, h: s } : { x: a.left, y: a.top, w: a.width, h: a.height };
+    Object.assign(c.style, { left: box.x - b.left + 'px', top: box.y - b.top + 'px', width: box.w + 'px', height: box.h + 'px', opacity: 1 });
+    if (instant) { c.offsetWidth; c.style.transition = ''; }
   }
-  const runQA = () => setTimeout(() => {
-    if (!params.has('qa')) return; // production: no QA output unless ?qa=1
-    const over = document.documentElement.scrollWidth - document.documentElement.clientWidth;
-    if (over > 0) console.warn(`Sideways overflow of ${over}px at ${document.documentElement.clientWidth}px wide`);
-    const report = []; let i = 1;
-    const visit = () => {
-      go(i, false);
-      setTimeout(() => { try {
-        const w = stepWords($(`#step-${i}`)), ov = document.documentElement.scrollWidth - document.documentElement.clientWidth;
-        report.push(`step ${i}: ${w.instructions} instruction words, ${w.all} visible incl. data labels, overflow ${Math.max(0, ov)}px`);
-        if (++i <= TOTAL) visit(); else { console.info(`QA @${document.documentElement.clientWidth}px | chrome: ${words($('.bar').innerText) + words($('.stepnav').innerText) + words($('.foot').innerText)} words | ` + report.join(' | ')); go(start, false); smoke(); }
-      } catch (err) { console.error('QA hook failed: ' + err.message); } }, 150);
-    };
-    visit();
-  }, 400);
-  if (document.readyState === 'complete') runQA(); else window.addEventListener('load', runQA);
+  const tick = ms => sleep(ms / speed);
+  const setT = ms => stage.style.setProperty('--t', (reduce ? 0 : ms / speed) + 'ms');
+  function setPhase(n) {
+    [1, 2, 3].forEach(i => { const p = $('#ph' + i); p.classList.toggle('is-on', i === n); p.classList.toggle('is-done', i < n || n === 4); });
+  }
+  const cap = t => { $('#cap3').textContent = t; };
+  function resetBuild() {
+    buildRun++;
+    $$('i', src3).forEach(i => i.classList.remove('read'));
+    chips.forEach(c => { c.classList.remove('hit'); c._slot = null; c.style.opacity = 0; });
+    $$('.leaf', tree3).forEach(l => l.classList.remove('is-alloc', 'is-right'));
+    $('#root3').classList.remove('is-on');
+    $$('.pslot', tree3).forEach(p => { p.textContent = ''; p.classList.remove('filled'); });
+    linksUpto = 0; drawLinks(tree3, 0);
+    $('#done3').hidden = true; $('#done3').classList.remove('show');
+    setPhase(0);
+  }
+  $$('#s3 .seg button').forEach(b => b.addEventListener('click', () => {
+    $$('#s3 .seg button').forEach(x => x.classList.toggle('is-on', x === b)); speed = +b.dataset.speed;
+  }));
+  $('#run3').addEventListener('click', async () => {
+    resetBuild();
+    const me = buildRun, alive = () => me === buildRun;
+    const btn = $('#run3'); btn.textContent = '↺ Build again';
+
+    // Phase 1 + 2a: fill the buffer, sort it, write a run (twice)
+    for (let r = 0; r < 2; r++) {
+      setPhase(1); cap(`Reading rows ${r * BUF + 1}–${(r + 1) * BUF} of the table. Each row gives one entry: name + id.`);
+      setT(380);
+      for (let i = 0; i < BUF; i++) {
+        if (!alive()) return;
+        const idx = r * BUF + i, c = chips[idx];
+        src3.children[idx].classList.add('read');
+        place(c, src3.children[idx], 'spawn', true);
+        await tick(16);
+        place(c, bufSlots[i], 'card');
+        await tick(30);
+      }
+      await tick(450); if (!alive()) return;
+      setPhase(2); cap('The sort buffer is full. Sort it by name…'); setT(900);
+      const group = chips.slice(r * BUF, (r + 1) * BUF).sort((a, b) => byName(a._row, b._row));
+      group.forEach((c, i) => place(c, bufSlots[i], 'card'));
+      await tick(1300); if (!alive()) return;
+      cap(`…and write it to a temporary file as run ${r + 1}.`); setT(600);
+      const dest = r ? run2 : run1;
+      group.forEach((c, i) => place(c, dest[i], 'dot'));
+      await tick(900);
+    }
+    // Phase 2b: merge sort the runs
+    if (!alive()) return;
+    setPhase(2); cap('Merge the two sorted runs into one sorted list.'); setT(380);
+    const a = chips.slice(0, BUF).sort((x, y) => byName(x._row, y._row));
+    const b = chips.slice(BUF).sort((x, y) => byName(x._row, y._row));
+    const order = [];
+    while (a.length || b.length) order.push(!b.length || (a.length && byName(a[0]._row, b[0]._row) < 0) ? a.shift() : b.shift());
+    for (let i = 0; i < order.length; i++) { if (!alive()) return; place(order[i], merged[i], 'dot'); await tick(22); }
+    await tick(600);
+
+    // Phase 3: bottom-up build
+    setPhase(3); setT(420);
+    const slots = leafSlots(), leafEls = $$('.leaf', tree3), ptrs = $$('.pslot', tree3);
+    for (let i = 0; i < order.length; i++) {
+      if (!alive()) return;
+      const li = Math.floor(i / PER_PAGE);
+      if (i % PER_PAGE === 0) {
+        if (li > 0) {
+          cap(`Page ${li} is full → add a pointer to it in the root page, start page ${li + 1}.`);
+          $('#root3').classList.add('is-on');
+          ptrs[li - 1].textContent = POINTERS[li - 1]; ptrs[li - 1].classList.add('filled');
+          linksUpto = li; drawLinks(tree3, linksUpto);
+          leafEls[li - 1].classList.remove('is-right');
+          await tick(500);
+        } else cap('Put the sorted entries into leaf page 1, in order.');
+        leafEls[li].classList.add('is-alloc', 'is-right');
+      }
+      place(order[i], slots[li][i % PER_PAGE], 'leaf');
+      await tick(55);
+    }
+    await tick(400); if (!alive()) return;
+    ptrs[9].textContent = POINTERS[9]; ptrs[9].classList.add('filled');
+    leafEls[9].classList.remove('is-right');
+    linksUpto = 10; drawLinks(tree3, 10);
+    setPhase(4); cap('Done. Every leaf page has a pointer in the root page.');
+    const done = $('#done3'); done.hidden = false; requestAnimationFrame(() => done.classList.add('show'));
+  });
+  let rt;
+  addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      chips.forEach(c => { if (c._slot) place(c, c._slot, c._mode, true); });
+      drawLinks(tree3, linksUpto); drawLinks(tree4, 10, lkActive);
+    }, 120);
+  });
+
+  /* ---------- 4 · lookup ---------- */
+  const tree4 = $('#tree4');
+  buildTree(tree4, true);
+  let lkActive = -1, cols = 'name', lkRun = 0;
+  requestAnimationFrame(() => drawLinks(tree4, 10));
+  fillPick($('#pick4'));
+  $$('#s4 .seg button').forEach(b => b.addEventListener('click', () => {
+    $$('#s4 .seg button').forEach(x => x.classList.toggle('is-on', x === b));
+    cols = b.dataset.cols; $('#cols4').textContent = cols;
+  }));
+  $('#run4').addEventListener('click', async () => {
+    const me = ++lkRun, target = pickName($('#pick4')), alive = () => me === lkRun;
+    const ptrs = $$('.pslot', tree4), leaves = $$('.leaf', tree4);
+    ptrs.forEach(p => p.classList.remove('on')); leaves.forEach(l => l.classList.remove('on'));
+    $$('.entry', tree4).forEach(e => e.classList.remove('on', 'peek'));
+    lkActive = -1; drawLinks(tree4, 10);
+    $('#pg4').textContent = 0; $('#rw4').textContent = 0;
+    $('#jump4').classList.remove('on'); $('#lkt4').classList.remove('on'); $('#lkt4').innerHTML = '';
+    const al = $('#alert4'); al.hidden = true; al.classList.remove('show');
+
+    // root page
+    $('#pg4').textContent = 1;
+    let li = 0;
+    for (let i = 0; i < POINTERS.length; i++) {
+      if (!alive()) return;
+      ptrs[i].classList.add('on'); await sleep(140);
+      if (i + 1 < POINTERS.length && POINTERS[i + 1].localeCompare(target, 'en') <= 0) { ptrs[i].classList.remove('on'); continue; }
+      li = i; break;
+    }
+    lkActive = li; drawLinks(tree4, 10, li);
+    await sleep(500); if (!alive()) return;
+    // leaf page
+    leaves[li].classList.add('on'); $('#pg4').textContent = 2;
+    await sleep(400); if (!alive()) return;
+    const hit = $$('.entry', leaves[li]).find(e => $('b', e).textContent === target);
+    hit.classList.add('on');
+    await sleep(500); if (!alive()) return;
+    const id = +hit.dataset.id;
+    if (cols === '*') {
+      $('#jump4').textContent = `id ${id} → jump to the table row`; $('#jump4').classList.add('on');
+      await sleep(600);
+      const t = $('#lkt4'); t.innerHTML = '';
+      const head = document.createElement('div'); head.className = 'trow thead'; head.innerHTML = '<span>id</span><span>name</span><span>city</span><span class="m">marks</span>';
+      t.append(head, rowEl(ROWS[id - 1], 'is-match')); t.classList.add('on');
+      $('#rw4').textContent = 1;
+    }
+    $('#alert4-h').textContent = cols === '*' ? `Found ${target}: index, then one jump` : `Found ${target} inside the index`;
+    $('#alert4-p').textContent = cols === '*'
+      ? `idx_name gave MySQL the id (${id}). It used that id to fetch the rest of the row (city, marks) from the table.`
+      : `The index entry already holds the name, so MySQL never touched the table. That's "Using index".`;
+    $('#extra4').textContent = cols === '*' ? 'NULL' : 'Using index';
+    al.hidden = false; requestAnimationFrame(() => al.classList.add('show'));
+  });
 })();
 </script>
 </body>

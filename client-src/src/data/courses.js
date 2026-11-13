@@ -346,7 +346,7 @@ export const courses = [
         summary: 'How a database finds one row without checking every row.',
         lessons: [
           { id: 'index-playground', title: 'Index Playground', minutes: 20,
-            blurb: 'Find Kavya row by row, then with an index like the back of a book. Watch the index fold into a tree, then see how MySQL keeps two trees: one for the rows, one for the index.' },
+            blurb: 'Search a real 100-row students table and watch MySQL check every row. Then run CREATE INDEX and see what happens behind the scenes: scan, sort, merge, and build the tree bottom-up. Search again and find the row in 2 pages.' },
         ],
       },
       {
