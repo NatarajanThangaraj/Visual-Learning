@@ -27,6 +27,7 @@ function routes() {
 
   add('/browse');
   add('/learn');
+  add('/login');
 
   for (const course of courses) {
     add(`/${course.id}`);

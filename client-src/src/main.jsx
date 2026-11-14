@@ -7,6 +7,7 @@ import './styles/shell.css';
 import './styles/course.css';
 import './styles/lesson.css';
 import './styles/catalog.css';
+import './styles/login.css';
 
 // Router basename follows Vite's `base` (import.meta.env.BASE_URL), so the app
 // works whether it's served at '/' or under a subpath like '/app/'.
