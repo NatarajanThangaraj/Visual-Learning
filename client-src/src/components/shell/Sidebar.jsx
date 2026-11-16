@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import logo from '../../assets/logo.svg';
+import { useAuth } from '../../auth/AuthContext';
 
 /* The permanent left rail: the brand, then the topics of the course in view.
    Picking a topic opens its lessons on the course page. Collapsed, the rail
@@ -53,6 +54,31 @@ export default function Sidebar({ course, topicId, collapsed, onToggle, onNaviga
           );
         })}
       </nav>
+
+      <SidebarUser />
     </aside>
+  );
+}
+
+/* Pinned to the foot of the rail: who is signed in, and the way out.
+   Collapsed, only the initials and the sign-out button remain. */
+function SidebarUser() {
+  const { user, signOut } = useAuth();
+  if (!user) return null;
+
+  const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.email_id;
+  const initials = name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  return (
+    <div className="sb-user">
+      <span className="sb-avatar" aria-hidden="true">{initials}</span>
+      <span className="sb-label sb-user-name" title={user.email_id}>{name}</span>
+      <button type="button" className="sb-signout" onClick={signOut} aria-label="Sign out" title="Sign out">
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+          <path d="M8 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M12 6.5 15.5 10 12 13.5M15.5 10H8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+    </div>
   );
 }

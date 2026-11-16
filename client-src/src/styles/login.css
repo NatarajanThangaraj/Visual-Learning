@@ -115,11 +115,25 @@
   height: 24px;
   background: var(--login-line);
 }
+/* Holds Catalyst's sign-in iframe, which fills it. Sized to the restyled
+   button inside (public/zoho-signin.css), with a hair of room for its border. */
+.login-zoho-frame {
+  width: 100%;
+  max-width: 300px;
+  height: 56px;
+}
+.login-zoho-frame iframe { display: block; }
+
 .login-note {
   margin: 12px 0 0;
   font-size: 13px;
   color: var(--login-faint);
 }
+.login-error { color: #F08A92; }
+
+/* While the app asks Catalyst who is signed in — a blank page, not a flash
+   of the login screen or of a course. */
+.auth-checking { min-height: 100vh; }
 
 .login-tagline {
   text-align: center;
@@ -154,5 +168,6 @@
   .login-lede { margin-left: auto; margin-right: auto; }
   .login-using { margin-top: 28px; }
   .login-zoho { min-width: 0; width: 100%; max-width: 340px; justify-content: center; }
+  .login-zoho-frame { max-width: 340px; margin: 0 auto; }
   .login-tagline { letter-spacing: 0.3em; }
 }

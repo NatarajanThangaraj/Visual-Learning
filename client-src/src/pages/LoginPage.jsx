@@ -1,23 +1,39 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../assets/logo.svg';
 import zohoLogo from '../assets/zoho-logo.svg';
 import LoginIllustration from '../components/login/LoginIllustration';
+import { useAuth } from '../auth/AuthContext';
+import { authEnabled, renderZohoSignIn, safeNext } from '../auth/catalyst';
+
+const SIGNIN_ID = 'zoho-signin';
 
 /* The sign-in page at /login. Like a standalone lab it is the whole viewport —
    no AppShell, no sidebar.
 
-   The button does not sign anyone in yet: every page is still open, so it
-   takes you to the courses. When Catalyst Authentication is set up with Zoho
-   as a provider, its sign-in call replaces the navigate below. */
+   On the deployed site the button is Catalyst's own "Sign in with Zoho",
+   rendered into #zoho-signin and restyled by public/zoho-signin.css. On the
+   dev server there is no Catalyst, so our drawn button stands in and just
+   continues. ?next= is the page to return to afterwards. */
 export default function LoginPage() {
-  const navigate = useNavigate();
+  const { status } = useAuth();
+  const [params] = useSearchParams();
+  const next = safeNext(params.get('next'));
+  const [renderFailed, setRenderFailed] = useState(false);
+  const failed = status === 'error' || renderFailed;
 
   useEffect(() => {
     const previous = document.title;
     document.title = 'Sign in — Visual Learning';
     return () => { document.title = previous; };
   }, []);
+
+  useEffect(() => {
+    if (!authEnabled || status !== 'out') return;
+    renderZohoSignIn(SIGNIN_ID, next).catch(() => setRenderFailed(true));
+  }, [status, next]);
+
+  if (status === 'in') return <Navigate to={next} replace />;
 
   return (
     <div className="login-page">
@@ -43,16 +59,34 @@ export default function LoginPage() {
           </p>
 
           <p className="login-using">Sign in using</p>
-          <button type="button" className="login-zoho" onClick={() => navigate('/')}>
-            <img src={zohoLogo} alt="" width="54" height="24" />
-            <span className="login-zoho-rule" aria-hidden="true" />
-            <span>Sign in with Zoho</span>
-          </button>
-          <p className="login-note">Use your Zoho account to continue.</p>
+          {authEnabled ? (
+            <div id={SIGNIN_ID} className="login-zoho-frame" />
+          ) : (
+            <DevSignIn next={next} />
+          )}
+          {failed ? (
+            <p className="login-note login-error" role="alert">
+              Couldn't reach Zoho sign-in. Check your connection and refresh the page.
+            </p>
+          ) : (
+            <p className="login-note">Use your Zoho account to continue.</p>
+          )}
         </section>
       </main>
 
       <footer className="login-tagline">See · Try · Understand</footer>
     </div>
+  );
+}
+
+/* Development only: the same-looking button, without Zoho behind it. */
+function DevSignIn({ next }) {
+  const navigate = useNavigate();
+  return (
+    <button type="button" className="login-zoho" onClick={() => navigate(next)}>
+      <img src={zohoLogo} alt="" width="54" height="24" />
+      <span className="login-zoho-rule" aria-hidden="true" />
+      <span>Sign in with Zoho</span>
+    </button>
   );
 }

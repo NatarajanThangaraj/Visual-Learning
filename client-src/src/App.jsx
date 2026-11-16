@@ -5,6 +5,7 @@ import LessonPage from './pages/LessonPage';
 import LabPage from './pages/LabPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
+import { RequireAuth } from './auth/AuthContext';
 import { courses, findLesson } from './data/courses';
 
 /* The URL scheme, in full:
@@ -14,6 +15,9 @@ import { courses, findLesson } from './data/courses';
  *   /java/my-expense-tracker         a lab inside the course chrome
  *   /java/my-expense-tracker/full    that lab on its own, no chrome
  *   /login                           the Sign in with Zoho page, no chrome
+ *
+ * Every course, lesson and lab route needs a signed-in user (RequireAuth);
+ * anyone else is sent to /login?next=<where they were going>.
  *
  * The labs are real files under public/labs/, served at
  * /labs/java/my-expense-tracker/index.html. Nothing links to that path — it is
@@ -30,17 +34,21 @@ import { courses, findLesson } from './data/courses';
 export default function App() {
   return (
     <Routes>
-      {/* A lab on its own is the whole viewport — no sidebar, no chrome. */}
-      <Route path="/:courseId/:lessonId/full" element={<LabPage />} />
       <Route path="/login" element={<LoginPage />} />
 
       <Route path="/" element={<Navigate to={`/${courses[0].id}`} replace />} />
       <Route path="/browse" element={<Navigate to="/" replace />} />
 
-      <Route element={<AppShell />}>
-        <Route path="/:courseId" element={<CoursePage />} />
-        <Route path="/:courseId/:lessonId" element={<LessonPage />} />
-        <Route path="*" element={<NotFoundPage />} />
+      {/* Everything with course content needs a signed-in user. */}
+      <Route element={<RequireAuth />}>
+        {/* A lab on its own is the whole viewport — no sidebar, no chrome. */}
+        <Route path="/:courseId/:lessonId/full" element={<LabPage />} />
+
+        <Route element={<AppShell />}>
+          <Route path="/:courseId" element={<CoursePage />} />
+          <Route path="/:courseId/:lessonId" element={<LessonPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
       </Route>
 
       {/* The old /learn/… scheme. Kept as redirects so bookmarks, shared links
