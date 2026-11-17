@@ -207,6 +207,8 @@ export const courses = [
         lessons: [
           { id: 'switch-evolution', title: 'Switch Evolution', minutes: 25,
             blurb: 'Ride one value from Java 1.0 to Java 21 and watch switch grow up at every stop — enums, Strings, switch expressions, type patterns, record patterns, guards, case null, sealed types and exhaustiveness.' },
+          { id: 'smart-parking', title: 'Smart Parking', minutes: 45,
+            blurb: 'Run a five-slot lot with two gates and a sign board, then hunt five logic bugs hidden in a seven-class Java project that compiles cleanly. Feed your program\'s output back in and watch its own events drive a 3D replay of the lot.' },
         ],
       },
     ],

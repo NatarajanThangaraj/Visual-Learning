@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Parking — Java Debugging Challenge</title>
+<style>
+:root{
+  --pink:#FF6B9D;--pink-l:#FFE4F0;--pink-d:#C0396B;
+  --blue:#4A90E2;--blue-l:#E0EDFF;--blue-d:#1A5AAA;
+  --teal:#26C6A6;--teal-l:#D5F6EF;--teal-d:#0A7A64;
+  --amber:#F5A623;--amber-l:#FFF3DC;--amber-d:#9A6200;
+  --purple:#8B5CF6;--purple-l:#EDE9FE;--purple-d:#5B21B6;
+  --coral:#FF6B6B;--coral-l:#FFE5E5;--coral-d:#B91C1C;
+  --green:#22C55E;--green-l:#DCFCE7;--green-d:#15803D;
+  --ink:#0F172A;--ink2:#334155;--ink3:#64748B;
+  --border:#E2E8F0;--bg:#F8FAFF;--white:#FFFFFF;
+  --sky1:#EAF3FF;--sky2:#F7FBFF;--code:#0F172A;
+  --sans:'Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif;
+  --mono:'Fira Code','Cascadia Code',Consolas,'SFMono-Regular',Menlo,monospace;
+  --ease:cubic-bezier(.22,1,.36,1);
+  color-scheme:light;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --pink-l:#3A1C2B;--pink-d:#FF9CC0;--blue-l:#17294A;--blue-d:#9CC4FF;--teal-l:#0F332D;--teal-d:#7EE8D2;
+  --amber-l:#3A2C10;--amber-d:#FFCF7A;--purple-l:#261C45;--purple-d:#C9B6FF;--coral-l:#3E1A1A;--coral-d:#FFA3A3;
+  --green-l:#12321F;--green-d:#86EFAC;--ink:#EEF2FF;--ink2:#CBD5E1;--ink3:#94A3B8;--border:#2A3550;--bg:#0E1424;--white:#151D31;
+  --sky1:#16213A;--sky2:#0F1729;color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --pink-l:#3A1C2B;--pink-d:#FF9CC0;--blue-l:#17294A;--blue-d:#9CC4FF;--teal-l:#0F332D;--teal-d:#7EE8D2;
+  --amber-l:#3A2C10;--amber-d:#FFCF7A;--purple-l:#261C45;--purple-d:#C9B6FF;--coral-l:#3E1A1A;--coral-d:#FFA3A3;
+  --green-l:#12321F;--green-d:#86EFAC;--ink:#EEF2FF;--ink2:#CBD5E1;--ink3:#94A3B8;--border:#2A3550;--bg:#0E1424;--white:#151D31;
+  --sky1:#16213A;--sky2:#0F1729;color-scheme:dark;}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--purple);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1320px;margin:0 auto;padding:0 18px 48px}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--white);border-bottom:1.5px solid var(--border)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--white)}
+.topbar-in{max-width:1320px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.pbadge{width:36px;height:36px;border-radius:10px;background:var(--blue);color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px}
+.brand h1{font-size:18px;margin:0;letter-spacing:-.02em;line-height:1.1}
+.brand small{display:block;color:var(--ink3);font-size:12px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{border:1.5px solid var(--border);background:var(--white);border-radius:20px;padding:6px 14px 6px 8px;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;transition:background .15s,border-color .15s}
+.tab .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;background:var(--border);color:var(--ink2)}
+.tab[aria-selected="true"]{border-color:var(--c);background:var(--cl)}
+.tab[aria-selected="true"] .n{background:var(--c);color:#fff}
+.rail{display:flex;gap:6px;max-width:1320px;margin:0 auto;padding:0 18px 10px}
+.prog-seg{flex:1;height:6px;border-radius:4px;background:var(--border);cursor:pointer;transition:background .25s,transform .15s;border:0;padding:0}
+.prog-seg:hover{transform:scaleY(1.6)}
+.prog-seg.done{background:var(--teal)}
+.prog-seg.active{background:linear-gradient(90deg,var(--purple),var(--pink))}
+
+section.view{display:none;animation:cardIn .4s var(--ease)}
+section.view.on{display:block}
+.view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:22px 0 12px;flex-wrap:wrap}
+.view-head h2{font-size:22px;margin:0;letter-spacing:-.02em}
+.view-head p{margin:2px 0 0;color:var(--ink3);max-width:70ch}
+.intro{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.imp-banner{border-radius:10px;padding:12px 16px;display:flex;gap:12px;border:1.5px solid var(--c);background:var(--cl);animation:slideIn .4s var(--ease)}
+.imp-banner .star{font-size:18px;color:var(--c)}
+.imp-banner .k{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--cd)}
+.imp-banner .t{font-size:12.5px;color:var(--cd);line-height:1.55}
+.think{border:2px dashed #C4B5FD;border-radius:12px;padding:12px 16px;background:var(--purple-l);display:flex;gap:10px}
+.think .dots{display:flex;flex-direction:column;gap:3px;padding-top:4px}
+.think .dots i{display:block;border-radius:50%;background:var(--purple)}
+.think .k{font-size:10px;font-weight:700;color:var(--purple-d);letter-spacing:.05em}
+.think .t{font-size:13px;color:var(--ink2);font-style:italic;line-height:1.55}
+
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:16px}
+.card h3{margin:0 0 4px;font-size:15px;letter-spacing:-.01em}
+.card .sub{color:var(--ink3);font-size:12.5px;margin:0 0 12px}
+.grid-exp{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+/* 3D stage */
+.stage3d{position:relative;height:560px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(180deg,var(--sky1),var(--sky2));touch-action:none}
+.stage3d canvas{display:block;width:100%;height:100%;cursor:grab}
+.stage3d canvas:active{cursor:grabbing}
+.hud{position:absolute;left:12px;top:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+.chip{background:color-mix(in srgb,var(--white) 88%,transparent);border:1.5px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;display:flex;gap:6px;align-items:center;backdrop-filter:blur(6px)}
+.chip b{font-size:15px}
+.chip.free b{color:var(--green-d)} .chip.occ b{color:var(--coral-d)} .chip.clock b{font-family:var(--mono)}
+.legend{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:4px;font-size:11px;pointer-events:none}
+.legend span{display:flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--white) 85%,transparent);padding:2px 8px;border-radius:12px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.toast{position:absolute;left:50%;bottom:54px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
+.toast.on{opacity:1}
+.toast.bad{background:var(--coral-d);color:#fff}
+.toast.good{background:var(--teal-d);color:#fff}
+.viewbtns{position:absolute;right:12px;bottom:12px;display:flex;gap:6px}
+.viewbtns button{border:1.5px solid var(--border);background:var(--white);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer}
+
+/* controls */
+.btn{border:1.5px solid var(--border);background:var(--white);border-radius:9px;padding:8px 12px;font-weight:600;font-size:13px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+.btn:hover:not(:disabled){border-color:var(--ink3)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--pink);border-color:var(--pink);color:#fff}
+.btn.primary:hover:not(:disabled){background:var(--pink-d);border-color:var(--pink-d)}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.blue{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.purple{background:var(--purple);border-color:var(--purple);color:#fff}
+.btn.sm{padding:5px 10px;font-size:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.field label{font-size:11px;font-weight:600;color:var(--ink3);letter-spacing:.03em}
+input[type=text],select,textarea{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--white);width:100%}
+input[type=text]{text-transform:uppercase;font-family:var(--mono);font-size:13px}
+.seg{display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--white);padding:7px 12px;cursor:pointer;font-weight:600;font-size:12.5px}
+.seg button[aria-pressed="true"]{background:var(--blue-l);color:var(--blue-d)}
+.step{border:1.5px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px}
+.step-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px}
+.step-h .n{width:22px;height:22px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font-size:12px;flex:none}
+.status-line{font-size:12.5px;color:var(--ink2);background:var(--bg);border-radius:8px;padding:7px 10px;min-height:34px}
+.status-line b{font-family:var(--mono)}
+.clock-big{font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-.02em}
+.receipt{font-family:var(--mono);font-size:12px;background:var(--amber-l);color:var(--amber-d);border:1.5px dashed var(--amber);border-radius:10px;padding:10px 12px;line-height:1.7;animation:popIn .3s var(--ease)}
+.scen{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.scen .btn{text-align:left;font-size:12px;padding:7px 9px;line-height:1.3}
+
+/* tables / logs */
+.two{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:16px}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{text-align:left;font-size:11px;color:var(--ink3);font-weight:600;padding:6px 8px;border-bottom:1.5px solid var(--border);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+td.mono,.mono{font-family:var(--mono)}
+.pill{display:inline-block;border-radius:20px;padding:1px 9px;font-size:11px;font-weight:700}
+.pill.ok{background:var(--teal-l);color:var(--teal-d)} .pill.bad{background:var(--coral-l);color:var(--coral-d)}
+.pill.wait{background:var(--amber-l);color:var(--amber-d)} .pill.info{background:var(--blue-l);color:var(--blue-d)}
+.log{font-family:var(--mono);font-size:11.5px;background:var(--code);color:#CBD5E1;border-radius:10px;padding:10px 12px;height:250px;overflow:auto;line-height:1.65}
+.log .ev{color:#93C5FD} .log .k{color:#FCD34D} .log .ln{color:#475569}
+.empty{color:var(--ink3);font-size:12.5px;padding:12px;text-align:center}
+
+/* code */
+.code{background:var(--code);color:#E2E8F0;border-radius:10px;padding:12px 0;font-family:var(--mono);font-size:12.5px;line-height:1.6;overflow:auto;max-height:520px}
+.code .l{display:block;padding:0 14px 0 0;white-space:pre}
+.code .l .no{display:inline-block;width:42px;text-align:right;padding-right:12px;color:#475569;user-select:none}
+.code .l.hl{background:rgba(139,92,246,.28)}
+.ck{color:#93C5FD}.ct{color:#C4B5FD}.cs{color:#6EE7B7}.cb{color:#FCD34D}.cm{color:#64748B;font-style:italic}.cn{color:#FDBA74}
+.cmd{background:var(--code);color:#E2E8F0;border-radius:10px;padding:10px 14px;font-family:var(--mono);font-size:12.5px;white-space:pre;overflow-x:auto;position:relative;line-height:1.7}
+.cmd .p{color:#64748B}
+.copy{position:absolute;right:8px;top:8px;background:#1E293B;color:#CBD5E1;border:1px solid #334155;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
+
+/* investigate */
+.grid-inv{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.dia{position:relative;display:flex;flex-direction:column;gap:30px;padding:8px 0}
+.dia svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.dia-row{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;position:relative;z-index:1}
+.dia-node{background:var(--white);border-radius:12px;border:2px solid var(--c);overflow:hidden;min-width:140px;cursor:pointer;opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s var(--ease),box-shadow .2s;text-align:left;padding:0}
+.dia-node.visible{opacity:1;transform:translateY(0)}
+.dia-node:hover{box-shadow:0 8px 28px rgba(0,0,0,.12);transform:translateY(-2px)}
+.dia-node .nh{background:var(--cl);color:var(--cd);font-weight:700;padding:6px 12px;font-size:13px;font-family:var(--mono)}
+.dia-node .nb{padding:6px 12px;font-size:11.5px;color:var(--ink3);max-width:190px;line-height:1.45}
+.dia-node.sel{box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 30%,transparent)}
+.dia-node.trace{box-shadow:0 0 0 4px var(--pink);transform:translateY(-3px) scale(1.04)}
+.filetabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.filetabs button{border:1.5px solid var(--border);background:var(--white);border-radius:7px;padding:3px 9px;font-family:var(--mono);font-size:11.5px;cursor:pointer}
+.filetabs button[aria-pressed="true"]{background:var(--purple-l);border-color:var(--purple);color:var(--purple-d)}
+.trace-box{background:var(--pink-l);border:1.5px solid var(--pink);color:var(--pink-d);border-radius:10px;padding:10px 12px;font-size:12.5px;min-height:44px}
+.symptoms{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sym{border:1.5px solid var(--border);border-radius:10px;padding:9px 11px;background:var(--white);cursor:pointer;text-align:left;font-size:12.5px;line-height:1.4;transition:border-color .15s,background .15s}
+.sym:hover{border-color:var(--coral)}
+.sym[aria-pressed="true"]{border-color:var(--coral);background:var(--coral-l);color:var(--coral-d)}
+.sym .tick{float:right;color:var(--teal-d);font-weight:700}
+.ladder{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.rung{border:1.5px solid var(--border);border-radius:10px;overflow:hidden}
+.rung-h{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg)}
+.rung-h .lv{font-size:11px;font-weight:700;color:var(--purple-d);background:var(--purple-l);border-radius:20px;padding:1px 9px;white-space:nowrap}
+.rung-h .what{font-size:12.5px;font-weight:600;flex:1}
+.rung-b{padding:10px 12px;font-size:13px;color:var(--purple-d);background:var(--purple-l);border-top:1.5px solid var(--purple);animation:popIn .35s var(--ease)}
+.match{font-size:12.5px;margin-top:8px}
+
+/* demonstrate */
+.grid-demo{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+.summary{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.big-score{font-size:28px;font-weight:800;letter-spacing:-.03em}
+.areas{display:flex;gap:6px;flex-wrap:wrap}
+.area{border-radius:10px;padding:6px 10px;font-size:12px;font-weight:600;border:1.5px solid}
+.area.ok{background:var(--teal-l);border-color:var(--teal);color:var(--teal-d)}
+.area.bad{background:var(--coral-l);border-color:var(--coral);color:var(--coral-d)}
+.tc-row{cursor:pointer}
+.tc-row:hover td{background:var(--bg)}
+.tc-row.cur td{background:var(--purple-l)}
+.checks{display:flex;flex-direction:column;gap:6px}
+.check{border-radius:9px;padding:8px 10px;font-size:12.5px;border:1.5px solid}
+.check.ok{border-color:var(--teal);background:var(--teal-l)}
+.check.bad{border-color:var(--coral);background:var(--coral-l);animation:shake .4s}
+.check .w{font-weight:700;font-size:12px}
+.check.ok .w{color:var(--teal-d)} .check.bad .w{color:var(--coral-d)}
+.check .ea{display:grid;grid-template-columns:62px 1fr;gap:2px 8px;margin-top:3px;font-family:var(--mono);font-size:11.5px;color:var(--ink2);word-break:break-word}
+.check .ea span:nth-child(odd){color:var(--ink3);font-family:var(--sans)}
+.timeline{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px}
+.timeline button{width:28px;height:22px;border-radius:5px;border:1.5px solid var(--border);font-size:10px;font-weight:700;cursor:pointer;background:var(--white);padding:0}
+.timeline button.ok{background:var(--teal-l);border-color:var(--teal);color:var(--teal-d)}
+.timeline button.bad{background:var(--coral-l);border-color:var(--coral);color:var(--coral-d)}
+.timeline button.cur{outline:2.5px solid var(--purple);outline-offset:1px}
+textarea.paste{height:150px;font-family:var(--mono);font-size:11.5px;resize:vertical}
+.reveal-box{background:var(--teal-l);border:2px solid var(--teal);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--teal-d);line-height:1.6;animation:popIn .35s var(--ease)}
+.bad-box{background:var(--coral-l);border:2px solid var(--coral);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--coral-d);line-height:1.6}
+.reflect{margin-top:16px;border-radius:16px;padding:24px;color:#E2E8F0;background:radial-gradient(600px 240px at 85% 0%,rgba(38,198,166,.25),transparent),linear-gradient(135deg,#0F172A,#1E1B4B)}
+.reflect h3{margin:0 0 12px;font-size:18px;color:#fff}
+.rq{border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.rq .q{font-weight:600}
+.rq .a{color:#7EE8D2;margin-top:6px;font-size:13px;animation:popIn .3s var(--ease)}
+.rq button{background:transparent;border:1px solid #26C6A6;color:#7EE8D2;border-radius:20px;padding:2px 12px;font-size:12px;cursor:pointer;margin-top:6px}
+.principle{margin-top:16px;font-family:var(--mono);font-size:13px;line-height:1.9;color:#CBD5E1;white-space:pre-wrap}
+.principle b{color:#26C6A6}
+
+@keyframes cardIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:1020px){.grid-exp,.grid-demo,.grid-inv,.two,.intro{grid-template-columns:1fr}.stage3d{height:420px}}
+@media (max-width:520px){.tab{padding:4px 10px 4px 6px;font-size:12px}.wrap{padding:0 10px 40px}.stage3d{height:340px}.symptoms,.scen{grid-template-columns:1fr}.legend{display:none}.brand small{display:none}}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand"><div class="pbadge" aria-hidden="true">P</div><div><h1>Smart Parking</h1><small>Java debugging challenge</small></div></div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" data-view="exp" style="--c:var(--pink);--cl:var(--pink-l)"><span class="n">1</span>Experience</button>
+      <button class="tab" role="tab" data-view="inv" style="--c:var(--purple);--cl:var(--purple-l)"><span class="n">2</span>Investigate</button>
+      <button class="tab" role="tab" data-view="demo" style="--c:var(--teal);--cl:var(--teal-l)"><span class="n">3</span>Demonstrate</button>
+    </nav>
+  </div>
+  <div class="rail" id="rail"></div>
+</header>
+
+<main class="wrap">
+<!-- ================= EXPERIENCE ================= -->
+<section class="view" id="view-exp" aria-labelledby="h-exp">
+  <div class="view-head"><div><h2 id="h-exp">Run the parking lot yourself</h2><p>Five slots, two gates, one sign board. Bring vehicles in, let them leave, and watch what changes.</p></div></div>
+  <div class="intro">
+    <div class="imp-banner" style="--c:var(--pink);--cl:var(--pink-l);--cd:var(--pink-d)"><div class="star">★</div><div><div class="k">WHY THIS MATTERS</div><div class="t"><b>This is the behaviour your Java program has to copy.</b> If you can’t predict what the lot does here, you won’t notice when the Java version gets it wrong.</div></div></div>
+    <div class="think"><div class="dots"><i style="width:8px;height:8px"></i><i style="width:5px;height:5px;opacity:.55"></i><i style="width:3px;height:3px;opacity:.3"></i></div><div><div class="k">THINK ABOUT THIS</div><div class="t">When a vehicle gets a slot, <strong>which pieces of information</strong> have to change at that exact moment — and what would go wrong if one of them didn’t?</div></div></div>
+  </div>
+
+  <div class="grid-exp">
+    <div class="stage3d" id="exp3d">
+      <div class="hud"><div class="chip clock">🕗 <b id="hudClock">08:00</b></div><div class="chip free">Free <b id="hudFree">5</b></div><div class="chip occ">Occupied <b id="hudOcc">0</b></div></div>
+      <div class="legend"><span><i style="background:#3BD18A"></i>Free</span><span><i style="background:#F5A623"></i>Assigned / leaving</span><span><i style="background:#FF6B6B"></i>Occupied</span></div>
+      <div class="toast" id="expToast"></div>
+      <div class="viewbtns"><button data-cam="iso">Overview</button><button data-cam="top">Top</button><button data-cam="gate">Gates</button></div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div><div class="field"><label>SIMULATED CLOCK</label></div><div class="clock-big" id="clock">08:00</div></div>
+          <div class="row"><button class="btn sm" data-adv="15">+15 min</button><button class="btn sm" data-adv="60">+1 hour</button></div>
+        </div>
+      </div>
+      <div class="step" style="--c:var(--blue)">
+        <div class="step-h"><span class="n">1</span>Bring a vehicle to the entrance</div>
+        <div class="row">
+          <div class="field" style="flex:2"><label for="regIn">REGISTRATION</label><input type="text" id="regIn" maxlength="12" autocomplete="off"></div>
+          <div class="field" style="flex:none"><label>TYPE</label><div class="seg" id="typeSeg"><button aria-pressed="true" data-t="CAR">Car</button><button aria-pressed="false" data-t="BIKE">Bike</button></div></div>
+        </div>
+        <div class="row"><button class="btn blue" id="bBring">Drive to entrance</button><button class="btn sm" id="bRand" title="New registration number">New number</button></div>
+      </div>
+      <div class="step" style="--c:var(--pink)">
+        <div class="step-h"><span class="n">2</span>Enter and park</div>
+        <div class="status-line" id="gateLine">Nobody is waiting at the entrance.</div>
+        <div class="row"><button class="btn primary" id="bRequest">Request slot</button><button class="btn primary" id="bPark">Park vehicle</button></div>
+      </div>
+      <div class="step" style="--c:var(--amber)">
+        <div class="step-h"><span class="n">3</span>Leave and pay</div>
+        <div class="field"><label for="exitSel">PARKED VEHICLE</label><select id="exitSel"></select></div>
+        <div class="row"><button class="btn" id="bExit">Request exit</button><button class="btn" id="bCalc">Calculate charges</button><button class="btn teal" id="bRelease">Release slot</button></div>
+        <div id="receipt"></div>
+      </div>
+      <div class="card">
+        <h3>Scenarios</h3><p class="sub">Each one starts from the state it needs, then plays the key moment.</p>
+        <div class="scen">
+          <button class="btn" data-scen="two">Two vehicles request parking</button>
+          <button class="btn" data-scen="fill">Fill every slot</button>
+          <button class="btn" data-scen="full">Lot full, one more arrives</button>
+          <button class="btn" data-scen="exit">A vehicle exits</button>
+          <button class="btn" data-scen="reenter">Enter again after a release</button>
+          <button class="btn" id="bReset">Reset the lot</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="card"><h3>Parking tickets</h3><p class="sub">Every ticket ever issued today, open or closed.</p><div class="tbl-wrap"><table><thead><tr><th>Ticket</th><th>Vehicle</th><th>Slot</th><th>In</th><th>Out</th><th>Stay</th><th>Fee</th><th></th></tr></thead><tbody id="ticketBody"></tbody></table></div><div id="revenue" class="sub" style="margin:8px 0 0"></div></div>
+    <div class="card"><h3>Event log</h3><p class="sub">The same <span class="mono">@EVENT</span> lines the Java program prints. You’ll compare against these later.</p><div class="log" id="expLog"></div></div>
+  </div>
+</section>
+
+<!-- ================= INVESTIGATE ================= -->
+<section class="view" id="view-inv" aria-labelledby="h-inv">
+  <div class="view-head"><div><h2 id="h-inv">Read the Java project like a detective</h2><p>Seven classes. Five logic bugs. The code compiles, so the compiler can’t help you — the output can.</p></div></div>
+  <div class="intro">
+    <div class="imp-banner" style="--c:var(--purple);--cl:var(--purple-l);--cd:var(--purple-d)"><div class="star">★</div><div><div class="k">WHY THIS MATTERS</div><div class="t"><b>A bug is a gap between what you expect and what happens.</b> Name the gap first; the class, the method and the line come after.</div></div></div>
+    <div class="think"><div class="dots"><i style="width:8px;height:8px"></i><i style="width:5px;height:5px;opacity:.55"></i><i style="width:3px;height:3px;opacity:.3"></i></div><div><div class="k">THINK ABOUT THIS</div><div class="t">When the board shows the wrong thing, is the board wrong — or is it <strong>faithfully showing</strong> data that was already wrong somewhere else?</div></div></div>
+  </div>
+
+  <div class="grid-inv">
+    <div class="stack">
+      <div class="card">
+        <h3>Get the code</h3>
+        <p class="sub">Repository <span class="mono">smart-parking-java</span> · branch <span class="mono">main</span></p>
+        <div class="bad-box" id="remoteBox" style="background:var(--amber-l);border-color:var(--amber);color:var(--amber-d);margin-bottom:10px">Remote URL: <b>pending</b>. Your instructor publishes the repository and shares the clone URL. Paste it below to generate your commands.</div>
+        <div class="field"><label for="repoUrl">CLONE URL FROM YOUR INSTRUCTOR</label><input type="text" id="repoUrl" style="text-transform:none" placeholder="https://github.com/your-school/smart-parking-java.git"></div>
+        <div class="cmd" id="cloneCmd" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <h3>How the classes work together</h3>
+        <p class="sub">Tap a class to open its code. Trace an operation to see who calls whom.</p>
+        <div class="dia" id="dia"></div>
+        <div class="row" style="margin:12px 0 8px"><button class="btn sm" data-trace="park">Trace: park a vehicle</button><button class="btn sm" data-trace="exit">Trace: exit a vehicle</button><button class="btn sm" data-trace="status">Trace: show status</button><button class="btn sm purple" id="traceNext" disabled>Next call</button></div>
+        <div class="trace-box" id="traceBox">Pick an operation to trace through the classes.</div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card">
+        <h3>Source</h3>
+        <div class="filetabs" id="fileTabs"></div>
+        <div class="code" id="codeView"></div>
+      </div>
+      <div class="card">
+        <h3>Debugging assistant</h3>
+        <p class="sub">Tell it what you saw. It answers with clues, one level at a time — never with code.</p>
+        <div class="field"><label for="obs">WHAT DID YOU OBSERVE?</label><textarea id="obs" rows="2" placeholder="e.g. the bike and the car were both put in slot 1"></textarea></div>
+        <div class="row" style="margin-top:8px"><button class="btn purple sm" id="bMatch">Find matching problem</button></div>
+        <div class="match" id="matchOut"></div>
+        <div class="symptoms" id="symptoms" style="margin-top:10px"></div>
+        <div class="ladder" id="ladder"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DEMONSTRATE ================= -->
+<section class="view" id="view-demo" aria-labelledby="h-demo">
+  <div class="view-head"><div><h2 id="h-demo">Prove your fixes with a replay</h2><p>Your Java program’s own events drive the 3D lot. Nothing here is pre-animated: if the code is wrong, you’ll watch it go wrong.</p></div></div>
+  <div class="intro">
+    <div class="imp-banner" style="--c:var(--teal);--cl:var(--teal-l);--cd:var(--teal-d)"><div class="star">★</div><div><div class="k">WHY THIS MATTERS</div><div class="t"><b>“It works on my machine” isn’t evidence.</b> A replay compared against expected results is.</div></div></div>
+    <div class="think"><div class="dots"><i style="width:8px;height:8px"></i><i style="width:5px;height:5px;opacity:.55"></i><i style="width:3px;height:3px;opacity:.3"></i></div><div><div class="k">THINK ABOUT THIS</div><div class="t">If one test passes and the next one fails, <strong>did the bug happen in the failing step</strong> — or did it start earlier and only become visible now?</div></div></div>
+  </div>
+
+  <div class="grid-demo">
+    <div class="stack">
+      <div class="stage3d" id="demo3d">
+        <div class="hud"><div class="chip clock">Step <b id="rStep">–</b></div><div class="chip free">Free <b id="rFree">5</b></div><div class="chip occ">Occupied <b id="rOcc">0</b></div></div>
+        <div class="legend"><span><i style="background:#3BD18A"></i>Free</span><span><i style="background:#FF6B6B"></i>Occupied</span><span><i style="background:repeating-linear-gradient(45deg,#F5A623 0 3px,#3BD18A 3px 6px)"></i>Vehicle, marked FREE</span><span><i style="border:2px dashed #E11D48"></i>Expected slot</span></div>
+        <div class="toast" id="demoToast"></div>
+        <div class="viewbtns"><button data-cam2="iso">Overview</button><button data-cam2="top">Top</button></div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div class="row"><button class="btn teal" id="rPlay" disabled>▶ Play replay</button><button class="btn" id="rNext" disabled>Next step</button><button class="btn" id="rRestart" disabled>Restart</button></div>
+          <div class="row"><label for="rSpeed" class="sub" style="margin:0">Speed</label><select id="rSpeed" style="width:auto"><option value="1">1×</option><option value="2" selected>2×</option><option value="4">4×</option></select></div>
+        </div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+      <div class="card" id="resultsCard" hidden>
+        <div class="summary"><div class="big-score" id="score"></div><div class="areas" id="areas"></div></div>
+        <div class="tbl-wrap" style="margin-top:12px"><table><thead><tr><th>Test</th><th>Operation</th><th>Allocation</th><th>Entry &amp; exit</th><th>Availability</th><th>Charges</th><th>Result</th></tr></thead><tbody id="tcBody"></tbody></table></div>
+        <div id="verdict" style="margin-top:12px"></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card">
+        <h3>1. Run your program</h3>
+        <div class="cmd"><span class="p">$</span> ./run.sh            <span class="p"># or run.bat on Windows</span>
+<span class="p">$</span> javac -d out src/*.java
+<span class="p">$</span> java -cp out Main scenarios/full-day.txt</div>
+        <h3 style="margin-top:14px">2. Give the replay your output</h3>
+        <p class="sub">Upload <span class="mono">run-output.txt</span> or paste the whole console output. Only <span class="mono">@EVENT</span> lines are read.</p>
+        <div class="row" style="margin-bottom:8px"><input type="file" id="fileIn" accept=".txt,.log,text/plain" style="font-size:12px;max-width:100%"></div>
+        <textarea class="paste" id="pasteIn" placeholder="=== SMART PARKING ===&#10;@EVENT RUN_START slots=5 ...&#10;@EVENT ENTER_REQUEST reg=TN01AB1234 ..."></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn teal" id="bVerify">Replay and verify</button><button class="btn sm" id="bSample" title="The real output of the unfixed starter project">Load the starter’s run</button></div>
+        <div id="parseMsg" class="match"></div>
+      </div>
+      <div class="card">
+        <h3 id="stepTitle">Current step</h3>
+        <p class="sub" id="stepSub">Load an output to begin.</p>
+        <div class="checks" id="stepChecks"></div>
+        <div class="log" id="stepEvents" style="height:auto;max-height:180px;margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reflect">
+    <h3>Before you hand in</h3>
+    <div id="reflectQs"></div>
+    <div class="principle">Don’t trust the screen because it looks right.
+
+Instead, ask:
+  What did I <b>EXPECT</b> to happen?
+       ↓
+  What <b>ACTUALLY</b> happened?
+       ↓
+  Which <b>OBJECT</b> holds the wrong value?
+       ↓
+  Which <b>METHOD</b> last changed it?
+       ↓
+  What <b>CONCEPT</b> did that line misunderstand?
+
+Expected ≠ Actual → a question, not a guess.</div>
+  </div>
+</section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const JAVA={"Main": "import java.io.File;\nimport java.io.FileNotFoundException;\nimport java.util.Scanner;\n\n/**\n * Smart Parking console program.\n *\n *   java -cp out Main                          -> interactive menu\n *   java -cp out Main scenarios/full-day.txt   -> runs a scenario file\n *\n * Scenario file commands (times are HH:MM):\n *   ENTER TN01AB1234 CAR 08:00\n *   EXIT  TN01AB1234 09:30\n *   STATUS\n *   SUMMARY\n */\npublic class Main {\n\n    public static void main(String[] args) {\n        ParkingLot lot = new ParkingLot(\"SMART PARKING\", 5);\n        ParkingService service = new ParkingService(lot);\n        ParkingReport report = new ParkingReport(lot, service);\n\n        System.out.println(\"=== SMART PARKING ===  (\" + lot.getTotalSlots() + \" slots)\");\n\n        if (args.length > 0) {\n            runScenario(args[0], service, report, lot);\n        } else {\n            runMenu(service, report, lot);\n        }\n    }\n\n    private static void runScenario(String fileName, ParkingService service, ParkingReport report, ParkingLot lot) {\n        ParkingReport.event(\"RUN_START\", \"slots=\" + lot.getTotalSlots() + \" scenario=\" + fileName);\n        try {\n            Scanner file = new Scanner(new File(fileName));\n            while (file.hasNextLine()) {\n                String line = file.nextLine().trim();\n                if (line.isEmpty() || line.startsWith(\"#\")) {\n                    continue;\n                }\n                runCommand(line.split(\"\\\\s+\"), service, report);\n            }\n            file.close();\n        } catch (FileNotFoundException e) {\n            System.out.println(\"Scenario file not found: \" + fileName);\n        }\n        ParkingReport.event(\"RUN_END\", \"tickets=\" + service.getTicketCount());\n    }\n\n    private static void runCommand(String[] parts, ParkingService service, ParkingReport report) {\n        String command = parts[0].toUpperCase();\n        if (command.equals(\"ENTER\") && parts.length == 4) {\n            service.parkVehicle(new Vehicle(parts[1], parts[2]), toMinutes(parts[3]));\n            report.printStatus();\n        } else if (command.equals(\"EXIT\") && parts.length == 3) {\n            service.exitVehicle(parts[1], toMinutes(parts[2]));\n            report.printStatus();\n        } else if (command.equals(\"STATUS\")) {\n            report.printStatus();\n        } else if (command.equals(\"SUMMARY\")) {\n            report.printDailySummary();\n        } else {\n            System.out.println(\"Unknown command: \" + String.join(\" \", parts));\n        }\n    }\n\n    private static void runMenu(ParkingService service, ParkingReport report, ParkingLot lot) {\n        ParkingReport.event(\"RUN_START\", \"slots=\" + lot.getTotalSlots() + \" scenario=interactive\");\n        Scanner input = new Scanner(System.in);\n        boolean running = true;\n        while (running) {\n            System.out.println(\"\\n1) Park a vehicle   2) Exit a vehicle   3) Show status   4) Daily summary   0) Quit\");\n            System.out.print(\"Choose: \");\n            String choice = input.nextLine().trim();\n            if (choice.equals(\"1\")) {\n                System.out.print(\"Registration number: \");\n                String reg = input.nextLine().trim();\n                System.out.print(\"Type (CAR/BIKE): \");\n                String type = input.nextLine().trim();\n                System.out.print(\"Arrival time (HH:MM): \");\n                String time = input.nextLine().trim();\n                runCommand(new String[] {\"ENTER\", reg, type, time}, service, report);\n            } else if (choice.equals(\"2\")) {\n                System.out.print(\"Registration number: \");\n                String reg = input.nextLine().trim();\n                System.out.print(\"Exit time (HH:MM): \");\n                String time = input.nextLine().trim();\n                runCommand(new String[] {\"EXIT\", reg, time}, service, report);\n            } else if (choice.equals(\"3\")) {\n                report.printStatus();\n            } else if (choice.equals(\"4\")) {\n                report.printDailySummary();\n            } else if (choice.equals(\"0\")) {\n                running = false;\n            }\n        }\n        ParkingReport.event(\"RUN_END\", \"tickets=\" + service.getTicketCount());\n    }\n\n    /** \"09:05\" -> 545 */\n    public static int toMinutes(String time) {\n        String[] hm = time.split(\":\");\n        return Integer.parseInt(hm[0]) * 60 + Integer.parseInt(hm[1]);\n    }\n}\n", "ParkingService": "import java.util.ArrayList;\n\n/**\n * The operations of the parking lot: letting vehicles in and out.\n * Keeps every ticket it has ever issued.\n */\npublic class ParkingService {\n\n    private ParkingLot parkingLot;\n    private ArrayList<ParkingTicket> tickets = new ArrayList<>();\n    private int nextTicketNumber = 1001;\n\n    public ParkingService(ParkingLot parkingLot) {\n        this.parkingLot = parkingLot;\n    }\n\n    /** A vehicle arrives at the entrance and asks for a slot. */\n    public ParkingTicket parkVehicle(Vehicle vehicle, int time) {\n        String reg = vehicle.getRegistrationNumber();\n        System.out.println(\"\\n>> \" + vehicle + \" arrives at the entrance at \" + ParkingReport.formatTime(time));\n        ParkingReport.event(\"ENTER_REQUEST\", \"reg=\" + reg + \" vehicle=\" + vehicle.getType()\n                + \" time=\" + ParkingReport.formatTime(time));\n\n        if (findActiveTicket(reg) != null) {\n            System.out.println(\"   \" + reg + \" is already parked inside. Request refused.\");\n            ParkingReport.event(\"REJECTED\", \"reg=\" + reg + \" reason=ALREADY_PARKED\");\n            return null;\n        }\n\n        ParkingSlot slot = findAvailableSlot();\n        if (slot == null) {\n            System.out.println(\"   Sorry, the parking lot is FULL. \" + reg + \" cannot enter.\");\n            ParkingReport.event(\"REJECTED\", \"reg=\" + reg + \" reason=FULL\");\n            return null;\n        }\n\n        slot.assignVehicle(vehicle);\n        ParkingTicket ticket = new ParkingTicket(\"T\" + nextTicketNumber, vehicle, slot.getSlotNumber(), time);\n        nextTicketNumber++;\n        tickets.add(ticket);\n\n        System.out.println(\"   Slot \" + slot.getSlotNumber() + \" assigned. Ticket \" + ticket.getTicketId() + \" issued.\");\n        ParkingReport.event(\"SLOT_ASSIGNED\", \"reg=\" + reg + \" slot=\" + slot.getSlotNumber()\n                + \" ticket=\" + ticket.getTicketId());\n        System.out.println(\"   Gate opens. \" + reg + \" parks in Slot \" + slot.getSlotNumber() + \".\");\n        ParkingReport.event(\"PARKED\", \"reg=\" + reg + \" slot=\" + slot.getSlotNumber()\n                + \" occupied=\" + slot.isOccupied());\n        return ticket;\n    }\n\n    /** A parked vehicle asks to leave. Calculates the fee and frees its slot. */\n    public ParkingTicket exitVehicle(String registrationNumber, int time) {\n        String reg = registrationNumber.toUpperCase();\n        System.out.println(\"\\n<< \" + reg + \" requests exit at \" + ParkingReport.formatTime(time));\n        ParkingReport.event(\"EXIT_REQUEST\", \"reg=\" + reg + \" time=\" + ParkingReport.formatTime(time));\n\n        ParkingTicket ticket = findActiveTicket(reg);\n        if (ticket == null) {\n            System.out.println(\"   No active ticket for \" + reg + \".\");\n            ParkingReport.event(\"EXIT_FAILED\", \"reg=\" + reg + \" reason=NO_TICKET\");\n            return null;\n        }\n\n        ParkingSlot slot = parkingLot.getSlot(ticket.getSlotNumber());\n        if (slot == null) {\n            System.out.println(\"   Could not find Slot \" + ticket.getSlotNumber() + \" for \" + reg + \".\");\n            ParkingReport.event(\"EXIT_FAILED\", \"reg=\" + reg + \" reason=SLOT_NOT_FOUND\");\n            return null;\n        }\n\n        ticket.close(time);\n        System.out.println(\"   Ticket \" + ticket.getTicketId() + \": parked \" + ticket.getDurationMinutes()\n                + \" min, charged \" + ticket.getChargeableHours() + \" h x Rs.\" + ticket.getVehicle().getHourlyRate()\n                + \" = Rs.\" + ticket.getFee());\n        ParkingReport.event(\"FEE\", \"reg=\" + reg + \" minutes=\" + ticket.getDurationMinutes()\n                + \" hours=\" + ticket.getChargeableHours() + \" fee=\" + ticket.getFee());\n\n        slot.release();\n        System.out.println(\"   Slot \" + slot.getSlotNumber() + \" is now free. Goodbye \" + reg + \"!\");\n        ParkingReport.event(\"SLOT_RELEASED\", \"reg=\" + reg + \" slot=\" + slot.getSlotNumber());\n        return ticket;\n    }\n\n    private ParkingSlot findAvailableSlot() {\n        ParkingSlot freeSlot = parkingLot.getSlots().get(0);\n        for (ParkingSlot slot : parkingLot.getSlots()) {\n            if (!slot.isOccupied()) {\n                freeSlot = slot;\n                break;\n            }\n        }\n        return freeSlot;\n    }\n\n    private ParkingTicket findActiveTicket(String registrationNumber) {\n        for (ParkingTicket ticket : tickets) {\n            if (!ticket.isClosed() && ticket.getVehicle().getRegistrationNumber().equals(registrationNumber)) {\n                return ticket;\n            }\n        }\n        return null;\n    }\n\n    public int getTicketCount() {\n        return tickets.size();\n    }\n\n    public ArrayList<ParkingTicket> getTickets() {\n        return tickets;\n    }\n}\n", "ParkingLot": "import java.util.ArrayList;\n\n/**\n * The physical parking facility: a list of numbered slots.\n * Slot numbers start at 1 (Slot 1, Slot 2, ...).\n */\npublic class ParkingLot {\n\n    private String name;\n    private ArrayList<ParkingSlot> slots = new ArrayList<>();\n\n    public ParkingLot(String name, int numberOfSlots) {\n        this.name = name;\n        for (int number = 1; number <= numberOfSlots; number++) {\n            slots.add(new ParkingSlot(number));\n        }\n    }\n\n    public String getName() {\n        return name;\n    }\n\n    public ArrayList<ParkingSlot> getSlots() {\n        return slots;\n    }\n\n    public int getTotalSlots() {\n        return slots.size();\n    }\n\n    /** Finds a slot by its number, or returns null if there is no such slot. */\n    public ParkingSlot getSlot(int slotNumber) {\n        if (slotNumber < 0 || slotNumber >= slots.size()) {\n            return null;\n        }\n        return slots.get(slotNumber);\n    }\n}\n", "ParkingSlot": "/**\n * One numbered parking slot.\n * A slot is either free or occupied by exactly one vehicle.\n */\npublic class ParkingSlot {\n\n    private int slotNumber;\n    private boolean occupied;\n    private Vehicle vehicle;\n\n    public ParkingSlot(int slotNumber) {\n        this.slotNumber = slotNumber;\n        this.occupied = false;\n        this.vehicle = null;\n    }\n\n    /** Puts a vehicle into this slot. */\n    public void assignVehicle(Vehicle vehicle) {\n        this.vehicle = vehicle;\n        boolean occupied = true;\n    }\n\n    /** Empties this slot so another vehicle can use it. */\n    public void release() {\n        this.vehicle = null;\n        this.occupied = false;\n    }\n\n    public int getSlotNumber() {\n        return slotNumber;\n    }\n\n    public boolean isOccupied() {\n        return occupied;\n    }\n\n    public Vehicle getVehicle() {\n        return vehicle;\n    }\n}\n", "Vehicle": "/**\n * A vehicle that wants to use the parking lot.\n * Knows its registration number, its type and how much it pays per hour.\n */\npublic class Vehicle {\n\n    private String registrationNumber;\n    private String type;   // \"CAR\" or \"BIKE\"\n\n    public Vehicle(String registrationNumber, String type) {\n        this.registrationNumber = registrationNumber.toUpperCase();\n        this.type = type.toUpperCase();\n    }\n\n    public String getRegistrationNumber() {\n        return registrationNumber;\n    }\n\n    public String getType() {\n        return type;\n    }\n\n    /** Rate in rupees for every started hour. */\n    public int getHourlyRate() {\n        if (type.equals(\"BIKE\")) {\n            return 20;\n        }\n        return 40;\n    }\n\n    @Override\n    public String toString() {\n        return registrationNumber + \" (\" + type + \")\";\n    }\n}\n", "ParkingTicket": "/**\n * The ticket a vehicle receives at the entrance.\n * When the vehicle leaves, the ticket is closed and the fee is worked out.\n *\n * Charging rule: every started hour is charged, with a minimum of one hour.\n */\npublic class ParkingTicket {\n\n    private String ticketId;\n    private Vehicle vehicle;\n    private int slotNumber;\n    private int entryTime;   // minutes since midnight\n    private int exitTime;    // minutes since midnight\n    private int fee;\n    private boolean closed;\n\n    public ParkingTicket(String ticketId, Vehicle vehicle, int slotNumber, int entryTime) {\n        this.ticketId = ticketId;\n        this.vehicle = vehicle;\n        this.slotNumber = slotNumber;\n        this.entryTime = entryTime;\n        this.closed = false;\n    }\n\n    /** Closes the ticket at the given exit time and calculates the fee. */\n    public void close(int exitTime) {\n        this.exitTime = exitTime;\n        this.fee = getChargeableHours() * vehicle.getHourlyRate();\n        this.closed = true;\n    }\n\n    public int getDurationMinutes() {\n        return exitTime - entryTime;\n    }\n\n    public int getChargeableHours() {\n        int minutes = getDurationMinutes();\n        int hours = minutes / 60;\n        if (hours < 1) {\n            hours = 1;\n        }\n        return hours;\n    }\n\n    public String getTicketId() {\n        return ticketId;\n    }\n\n    public Vehicle getVehicle() {\n        return vehicle;\n    }\n\n    public int getSlotNumber() {\n        return slotNumber;\n    }\n\n    public int getEntryTime() {\n        return entryTime;\n    }\n\n    public int getExitTime() {\n        return exitTime;\n    }\n\n    public int getFee() {\n        return fee;\n    }\n\n    public boolean isClosed() {\n        return closed;\n    }\n}\n", "ParkingReport": "/**\n * Everything the parking lot shows to people: the status board,\n * the daily summary and the machine-readable event lines (@EVENT ...)\n * that the 3D replay reads.\n */\npublic class ParkingReport {\n\n    private ParkingLot parkingLot;\n    private ParkingService service;\n\n    public ParkingReport(ParkingLot parkingLot, ParkingService service) {\n        this.parkingLot = parkingLot;\n        this.service = service;\n    }\n\n    public int getOccupiedSlots() {\n        int count = 0;\n        for (ParkingSlot slot : parkingLot.getSlots()) {\n            if (slot.isOccupied()) {\n                count++;\n            }\n        }\n        return count;\n    }\n\n    public int getAvailableSlots() {\n        return parkingLot.getTotalSlots() - service.getTicketCount();\n    }\n\n    /** Prints the status board and a STATUS event. */\n    public void printStatus() {\n        System.out.println(\"   +---------------- \" + parkingLot.getName() + \" ----------------+\");\n        String slotList = \"\";\n        for (ParkingSlot slot : parkingLot.getSlots()) {\n            String who = \"-\";\n            if (slot.getVehicle() != null) {\n                who = slot.getVehicle().getRegistrationNumber();\n            }\n            String state = slot.isOccupied() ? \"OCCUPIED\" : \"FREE\";\n            System.out.println(\"   | Slot \" + slot.getSlotNumber() + \"  \" + pad(state, 9) + pad(who, 12) + \"        |\");\n            if (!slotList.isEmpty()) {\n                slotList = slotList + \",\";\n            }\n            slotList = slotList + slot.getSlotNumber() + \":\" + who + \":\" + (slot.isOccupied() ? \"OCC\" : \"FREE\");\n        }\n        System.out.println(\"   | Available: \" + getAvailableSlots() + \"   Occupied: \" + getOccupiedSlots()\n                + \"                |\");\n        System.out.println(\"   +--------------------------------------------+\");\n        event(\"STATUS\", \"available=\" + getAvailableSlots() + \" occupied=\" + getOccupiedSlots()\n                + \" slots=\" + slotList);\n    }\n\n    /** Prints all closed tickets and the money collected. */\n    public void printDailySummary() {\n        System.out.println(\"\\n===== DAILY SUMMARY =====\");\n        int total = 0;\n        for (ParkingTicket ticket : service.getTickets()) {\n            if (ticket.isClosed()) {\n                System.out.println(\"  \" + ticket.getTicketId() + \"  \" + pad(ticket.getVehicle().getRegistrationNumber(), 12)\n                        + \" slot \" + ticket.getSlotNumber() + \"  \" + formatTime(ticket.getEntryTime())\n                        + \" -> \" + formatTime(ticket.getExitTime()) + \"  Rs.\" + ticket.getFee());\n                total = total + ticket.getFee();\n            }\n        }\n        System.out.println(\"  Total collected: Rs.\" + total);\n        event(\"SUMMARY\", \"revenue=\" + total);\n    }\n\n    /** Prints one machine-readable line for the 3D replay. */\n    public static void event(String type, String details) {\n        System.out.println(\"@EVENT \" + type + \" \" + details);\n    }\n\n    /** 545 -> \"09:05\" */\n    public static String formatTime(int minutes) {\n        int h = minutes / 60;\n        int m = minutes % 60;\n        return (h < 10 ? \"0\" : \"\") + h + \":\" + (m < 10 ? \"0\" : \"\") + m;\n    }\n\n    private static String pad(String text, int width) {\n        String result = text;\n        while (result.length() < width) {\n            result = result + \" \";\n        }\n        return result;\n    }\n}\n"};
+const STARTER_RUN="=== SMART PARKING ===  (5 slots)\n@EVENT RUN_START slots=5 scenario=scenarios/full-day.txt\n\n>> TN01AB1234 (CAR) arrives at the entrance at 08:00\n@EVENT ENTER_REQUEST reg=TN01AB1234 vehicle=CAR time=08:00\n   Slot 1 assigned. Ticket T1001 issued.\n@EVENT SLOT_ASSIGNED reg=TN01AB1234 slot=1 ticket=T1001\n   Gate opens. TN01AB1234 parks in Slot 1.\n@EVENT PARKED reg=TN01AB1234 slot=1 occupied=false\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     TN01AB1234          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: 4   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=4 occupied=0 slots=1:TN01AB1234:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n>> TN02CD5678 (BIKE) arrives at the entrance at 08:05\n@EVENT ENTER_REQUEST reg=TN02CD5678 vehicle=BIKE time=08:05\n   Slot 1 assigned. Ticket T1002 issued.\n@EVENT SLOT_ASSIGNED reg=TN02CD5678 slot=1 ticket=T1002\n   Gate opens. TN02CD5678 parks in Slot 1.\n@EVENT PARKED reg=TN02CD5678 slot=1 occupied=false\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     TN02CD5678          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: 3   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=3 occupied=0 slots=1:TN02CD5678:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n>> KA03EF9012 (CAR) arrives at the entrance at 08:10\n@EVENT ENTER_REQUEST reg=KA03EF9012 vehicle=CAR time=08:10\n   Slot 1 assigned. Ticket T1003 issued.\n@EVENT SLOT_ASSIGNED reg=KA03EF9012 slot=1 ticket=T1003\n   Gate opens. KA03EF9012 parks in Slot 1.\n@EVENT PARKED reg=KA03EF9012 slot=1 occupied=false\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     KA03EF9012          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: 2   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=2 occupied=0 slots=1:KA03EF9012:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n>> TN04GH3456 (CAR) arrives at the entrance at 08:15\n@EVENT ENTER_REQUEST reg=TN04GH3456 vehicle=CAR time=08:15\n   Slot 1 assigned. Ticket T1004 issued.\n@EVENT SLOT_ASSIGNED reg=TN04GH3456 slot=1 ticket=T1004\n   Gate opens. TN04GH3456 parks in Slot 1.\n@EVENT PARKED reg=TN04GH3456 slot=1 occupied=false\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     TN04GH3456          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: 1   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=1 occupied=0 slots=1:TN04GH3456:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n>> MH05IJ7890 (BIKE) arrives at the entrance at 08:20\n@EVENT ENTER_REQUEST reg=MH05IJ7890 vehicle=BIKE time=08:20\n   Slot 1 assigned. Ticket T1005 issued.\n@EVENT SLOT_ASSIGNED reg=MH05IJ7890 slot=1 ticket=T1005\n   Gate opens. MH05IJ7890 parks in Slot 1.\n@EVENT PARKED reg=MH05IJ7890 slot=1 occupied=false\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     MH05IJ7890          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: 0   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=0 occupied=0 slots=1:MH05IJ7890:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n>> TN06KL2468 (CAR) arrives at the entrance at 08:25\n@EVENT ENTER_REQUEST reg=TN06KL2468 vehicle=CAR time=08:25\n   Slot 1 assigned. Ticket T1006 issued.\n@EVENT SLOT_ASSIGNED reg=TN06KL2468 slot=1 ticket=T1006\n   Gate opens. TN06KL2468 parks in Slot 1.\n@EVENT PARKED reg=TN06KL2468 slot=1 occupied=false\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     TN06KL2468          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: -1   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=-1 occupied=0 slots=1:TN06KL2468:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n<< TN01AB1234 requests exit at 09:30\n@EVENT EXIT_REQUEST reg=TN01AB1234 time=09:30\n   Ticket T1001: parked 90 min, charged 1 h x Rs.40 = Rs.40\n@EVENT FEE reg=TN01AB1234 minutes=90 hours=1 fee=40\n   Slot 2 is now free. Goodbye TN01AB1234!\n@EVENT SLOT_RELEASED reg=TN01AB1234 slot=2\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     TN06KL2468          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: -1   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=-1 occupied=0 slots=1:TN06KL2468:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n>> TN06KL2468 (CAR) arrives at the entrance at 09:40\n@EVENT ENTER_REQUEST reg=TN06KL2468 vehicle=CAR time=09:40\n   TN06KL2468 is already parked inside. Request refused.\n@EVENT REJECTED reg=TN06KL2468 reason=ALREADY_PARKED\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     TN06KL2468          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: -1   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=-1 occupied=0 slots=1:TN06KL2468:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n<< MH05IJ7890 requests exit at 10:50\n@EVENT EXIT_REQUEST reg=MH05IJ7890 time=10:50\n   Ticket T1005: parked 150 min, charged 2 h x Rs.20 = Rs.40\n@EVENT FEE reg=MH05IJ7890 minutes=150 hours=2 fee=40\n   Slot 2 is now free. Goodbye MH05IJ7890!\n@EVENT SLOT_RELEASED reg=MH05IJ7890 slot=2\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     TN06KL2468          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: -1   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=-1 occupied=0 slots=1:TN06KL2468:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n<< TN02CD5678 requests exit at 11:20\n@EVENT EXIT_REQUEST reg=TN02CD5678 time=11:20\n   Ticket T1002: parked 195 min, charged 3 h x Rs.20 = Rs.60\n@EVENT FEE reg=TN02CD5678 minutes=195 hours=3 fee=60\n   Slot 2 is now free. Goodbye TN02CD5678!\n@EVENT SLOT_RELEASED reg=TN02CD5678 slot=2\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     TN06KL2468          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: -1   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=-1 occupied=0 slots=1:TN06KL2468:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n>> DL07MN1357 (CAR) arrives at the entrance at 11:30\n@EVENT ENTER_REQUEST reg=DL07MN1357 vehicle=CAR time=11:30\n   Slot 1 assigned. Ticket T1007 issued.\n@EVENT SLOT_ASSIGNED reg=DL07MN1357 slot=1 ticket=T1007\n   Gate opens. DL07MN1357 parks in Slot 1.\n@EVENT PARKED reg=DL07MN1357 slot=1 occupied=false\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     DL07MN1357          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: -2   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=-2 occupied=0 slots=1:DL07MN1357:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n<< DL07MN1357 requests exit at 12:00\n@EVENT EXIT_REQUEST reg=DL07MN1357 time=12:00\n   Ticket T1007: parked 30 min, charged 1 h x Rs.40 = Rs.40\n@EVENT FEE reg=DL07MN1357 minutes=30 hours=1 fee=40\n   Slot 2 is now free. Goodbye DL07MN1357!\n@EVENT SLOT_RELEASED reg=DL07MN1357 slot=2\n   +---------------- SMART PARKING ----------------+\n   | Slot 1  FREE     DL07MN1357          |\n   | Slot 2  FREE     -                   |\n   | Slot 3  FREE     -                   |\n   | Slot 4  FREE     -                   |\n   | Slot 5  FREE     -                   |\n   | Available: -2   Occupied: 0                |\n   +--------------------------------------------+\n@EVENT STATUS available=-2 occupied=0 slots=1:DL07MN1357:FREE,2:-:FREE,3:-:FREE,4:-:FREE,5:-:FREE\n\n===== DAILY SUMMARY =====\n  T1001  TN01AB1234   slot 1  08:00 -> 09:30  Rs.40\n  T1002  TN02CD5678   slot 1  08:05 -> 11:20  Rs.60\n  T1005  MH05IJ7890   slot 1  08:20 -> 10:50  Rs.40\n  T1007  DL07MN1357   slot 1  11:30 -> 12:00  Rs.40\n  Total collected: Rs.180\n@EVENT SUMMARY revenue=180\n@EVENT RUN_END tickets=7\n";
+// ===== Reference parking model (correct behaviour) =====
+const RATE = { CAR: 40, BIKE: 20 };
+function toMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function fmt(m){ const h=Math.floor(m/60), mm=m%60; return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0'); }
+function chargeHours(minutes){ return Math.max(1, Math.ceil(minutes/60)); }
+
+class LotModel {
+  constructor(n=5){ this.slots=[]; for(let i=1;i<=n;i++) this.slots.push({n:i, reg:null, type:null, occ:false}); this.tickets=[]; this.next=1001; }
+  free(){ return this.slots.find(s=>!s.occ) || null; }
+  active(reg){ return this.tickets.find(t=>!t.closed && t.reg===reg) || null; }
+  occupied(){ return this.slots.filter(s=>s.occ).length; }
+  available(){ return this.slots.length - this.occupied(); }
+  enter(reg,type,time){
+    reg=reg.toUpperCase(); type=type.toUpperCase();
+    if(this.active(reg)) return {ok:false, reason:'ALREADY_PARKED'};
+    const s=this.free(); if(!s) return {ok:false, reason:'FULL'};
+    s.reg=reg; s.type=type; s.occ=true;
+    const t={id:'T'+this.next++, reg, type, slot:s.n, entry:time, exit:null, fee:null, closed:false};
+    this.tickets.push(t); return {ok:true, slot:s.n, ticket:t};
+  }
+  quote(reg,time){ const t=this.active(reg); if(!t) return null; const minutes=time-t.entry, hours=chargeHours(minutes); return {ticket:t, minutes, hours, fee:hours*RATE[t.type]}; }
+  exit(reg,time){
+    reg=reg.toUpperCase(); const q=this.quote(reg,time); if(!q) return {ok:false, reason:'NO_TICKET'};
+    const t=q.ticket; t.exit=time; t.fee=q.fee; t.closed=true;
+    const s=this.slots[t.slot-1]; s.reg=null; s.type=null; s.occ=false;
+    return {ok:true, slot:t.slot, minutes:q.minutes, hours:q.hours, fee:q.fee, ticket:t};
+  }
+  revenue(){ return this.tickets.filter(t=>t.closed).reduce((a,t)=>a+t.fee,0); }
+  snapshot(){ return {available:this.available(), occupied:this.occupied(), slots:this.slots.map(s=>({n:s.n, reg:s.reg, occ:s.occ}))}; }
+}
+
+// ===== Parse Java console output =====
+function parseEvents(text){
+  const events=[];
+  text.split(/\r?\n/).forEach((line,i)=>{
+    const k=line.indexOf('@EVENT '); if(k<0) return;
+    const parts=line.slice(k+7).trim().split(/\s+/); const ev={type:parts[0], line:i+1, raw:line.slice(k).trim()};
+    parts.slice(1).forEach(p=>{ const j=p.indexOf('='); if(j>0) ev[p.slice(0,j)]=p.slice(j+1); });
+    if(ev.type==='STATUS' && ev.slots!==undefined){
+      ev.slotList=ev.slots.split(',').map(x=>{ const [n,reg,st]=x.split(':'); return {n:+n, reg:reg==='-'?null:reg, occ:st==='OCC'}; });
+    }
+    events.push(ev);
+  });
+  return events;
+}
+
+// Group events into commands: each ENTER_REQUEST / EXIT_REQUEST starts one.
+function groupCommands(events){
+  const cmds=[]; let cur=null; let run=null;
+  for(const ev of events){
+    if(ev.type==='RUN_START'){ run=ev; continue; }
+    if(ev.type==='ENTER_REQUEST'||ev.type==='EXIT_REQUEST'){ cur={kind:ev.type==='ENTER_REQUEST'?'ENTER':'EXIT', req:ev, events:[ev]}; cmds.push(cur); continue; }
+    if(ev.type==='RUN_END') { cur=null; continue; }
+    if((ev.type==='STATUS'||ev.type==='SUMMARY') && (!cur || cur.events.some(e=>e.type==='STATUS'||e.type==='SUMMARY'))){
+      cur={kind:ev.type, req:ev, events:[ev]}; cmds.push(cur); continue;
+    }
+    if(cur) cur.events.push(ev);
+  }
+  return {run, cmds};
+}
+
+// ===== Verify actual (Java) against expected (reference model) =====
+function verify(text){
+  const events=parseEvents(text); const {run, cmds}=groupCommands(events);
+  const slotsN = run && run.slots ? +run.slots : 5;
+  const model=new LotModel(slotsN); const cases=[];
+  cmds.forEach((c,idx)=>{
+    const get=t=>c.events.find(e=>e.type===t);
+    const tc={id:'TC'+String(idx+1).padStart(2,'0'), kind:c.kind, checks:[], cmd:c, expected:{}, actual:{}};
+    if(c.kind==='ENTER'){
+      const reg=c.req.reg, type=c.req.vehicle, time=c.req.time;
+      tc.title=`${reg} (${type}) requests parking at ${time}`;
+      const exp=model.enter(reg,type,toMin(time));
+      const asg=get('SLOT_ASSIGNED'), rej=get('REJECTED'), pk=get('PARKED');
+      const expTxt=exp.ok?`Slot ${exp.slot}`:`Refused (${exp.reason})`;
+      const actTxt=asg?`Slot ${asg.slot}`:rej?`Refused (${rej.reason})`:'No result';
+      tc.expected.slot=exp.ok?exp.slot:null; tc.actual.slot=asg?+asg.slot:null;
+      tc.checks.push({area:'Allocation', what:'Slot allocation', exp:expTxt, act:actTxt, pass:expTxt===actTxt});
+      if(exp.ok) tc.checks.push({area:'Entry & exit', what:'Vehicle parked, slot marked occupied', exp:`Slot ${exp.slot} occupied`, act: pk?`Slot ${pk.slot} ${pk.occupied==='true'?'occupied':'NOT marked occupied'}`:'Not parked', pass: !!pk && +pk.slot===exp.slot && pk.occupied==='true'});
+    } else if(c.kind==='EXIT'){
+      const reg=c.req.reg, time=c.req.time;
+      tc.title=`${reg} requests exit at ${time}`;
+      const exp=model.exit(reg,toMin(time));
+      const fee=get('FEE'), rel=get('SLOT_RELEASED'), fail=get('EXIT_FAILED');
+      const expTxt=exp.ok?`Slot ${exp.slot} released`:`Refused (${exp.reason})`;
+      const actTxt=rel?`Slot ${rel.slot} released`:fail?`Failed (${fail.reason})`:'No result';
+      tc.expected.slot=exp.ok?exp.slot:null; tc.actual.slot=rel?+rel.slot:null;
+      tc.checks.push({area:'Entry & exit', what:'Exit releases the vehicle\u2019s slot', exp:expTxt, act:actTxt, pass:expTxt===actTxt.replace('Failed','Refused')});
+      if(exp.ok){
+        const e=`${exp.minutes} min \u2192 ${exp.hours} h \u2192 \u20B9${exp.fee}`;
+        const a=fee?`${fee.minutes} min \u2192 ${fee.hours} h \u2192 \u20B9${fee.fee}`:'No charge calculated';
+        tc.checks.push({area:'Charges', what:'Parking duration and charge', exp:e, act:a, pass:e===a});
+      }
+    } else if(c.kind==='STATUS'){
+      tc.title='Status check';
+    } else if(c.kind==='SUMMARY'){
+      tc.title='Daily summary'; const s=get('SUMMARY');
+      tc.checks.push({area:'Charges', what:'Total collected', exp:`\u20B9${model.revenue()}`, act:s?`\u20B9${s.revenue}`:'missing', pass:!!s && +s.revenue===model.revenue()});
+    }
+    const st=get('STATUS'); const snap=model.snapshot(); tc.expectedSnap=snap; tc.actualStatus=st||null;
+    if(c.kind!=='SUMMARY'){
+      if(st){
+        tc.checks.push({area:'Availability', what:'Available / occupied count', exp:`${snap.available} free \u00B7 ${snap.occupied} occupied`, act:`${st.available} free \u00B7 ${st.occupied} occupied`, pass:+st.available===snap.available && +st.occupied===snap.occupied});
+        const fmtMap=l=>l.map(s=>s.reg?`${s.n}:${s.reg}${s.occ?'':'(free?)'}`:`${s.n}:${s.occ?'(occ?)':'\u2013'}`).join('  ');
+        const ok=st.slotList && st.slotList.length===snap.slots.length && st.slotList.every((s,i)=>s.reg===snap.slots[i].reg && s.occ===snap.slots[i].occ);
+        tc.checks.push({area:'Availability', what:'Slot board', exp:fmtMap(snap.slots), act:st.slotList?fmtMap(st.slotList):'missing', pass:!!ok});
+      } else tc.checks.push({area:'Availability', what:'Status after operation', exp:'STATUS event', act:'missing', pass:false});
+    }
+    tc.pass=tc.checks.every(k=>k.pass);
+    cases.push(tc);
+  });
+  return {events, cases, slotsN, run};
+}
+
+
+// ===================== 3D WORLD =====================
+const SLOT_X=[-6,-3,0,3,6], SLOT_Z=-6, AISLE_Z=-1, IN_X=-10, OUT_X=10, GATE_Z=3, ROAD_Z=9;
+const SLOT_COL={free:0x3BD18A, reserved:0xF5A623, leaving:0xF5A623, occupied:0xFF6B6B, odd:0x8B5CF6};
+const CAR_COLORS=[0x4A90E2,0xFFFFFF,0x26C6A6,0xE11D48,0x334155,0xF5A623,0x8B5CF6,0x94A3B8,0x22C55E,0xFF6B9D];
+const WORLDS=[];
+function canvasTex(w,h,draw){ const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'); draw(g,w,h); const t=new THREE.CanvasTexture(c); t.anisotropy=4; t.userData={canvas:c,g}; return t; }
+function textSprite(text,{bg='#0F172A',fg='#FFFFFF',w=3,font=56,pad=18}={}){
+  const tex=canvasTex(512,128,(g,W,H)=>{ g.fillStyle=bg; roundRect(g,4,4,W-8,H-8,40); g.fill(); g.fillStyle=fg; g.font=`700 ${font}px Segoe UI, system-ui, sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(text,W/2,H/2+3); });
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthTest:false,transparent:true})); s.scale.set(w,w/4,1); s.renderOrder=10; return s;
+}
+function roundRect(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function angDiff(a,b){ let d=b-a; while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI; return d; }
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+class World{
+  constructor(el,{toast}={}){
+    this.el=el; this.toastEl=toast; this.speed=1; this.cars=new Map(); this.anims=new Set(); this.gen=0;
+    const r=this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    r.setPixelRatio(Math.min(devicePixelRatio,2)); r.shadowMap.enabled=true; r.shadowMap.type=THREE.PCFSoftShadowMap; r.outputEncoding=THREE.sRGBEncoding;
+    el.prepend(r.domElement);
+    this.scene=new THREE.Scene();
+    this.camera=new THREE.PerspectiveCamera(40,1,0.5,300);
+    this.cam={theta:0.62,phi:0.92,radius:34,target:new THREE.Vector3(-1,0,-1)}; this.camGoal=null;
+    this.build(); this.bindControls(); this.resize();
+    new ResizeObserver(()=>this.resize()).observe(el);
+    WORLDS.push(this);
+  }
+  // ---------- scene ----------
+  build(){
+    const S=this.scene, M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85,metalness:0},o));
+    S.add(new THREE.HemisphereLight(0xEAF3FF,0x8C9BB0,0.75));
+    const sun=new THREE.DirectionalLight(0xFFFFFF,0.85); sun.position.set(14,26,16); sun.castShadow=true;
+    sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-30,right:30,top:30,bottom:-30,near:1,far:80}); S.add(sun);
+    const box=(w,h,d,mat,x,y,z,shadow=true)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); m.castShadow=shadow; m.receiveShadow=true; S.add(m); return m; };
+    // grass, road, lot
+    box(80,0.2,56,M(0x9ED4A4),0,-0.12,-2,false);
+    box(80,0.06,5,M(0x5B6472),0,0,ROAD_Z,false);
+    for(let x=-38;x<40;x+=4) box(1.8,0.02,0.18,M(0xFFFFFF),x,0.04,ROAD_Z,false);
+    box(28,0.08,14,M(0x6B7280),0,0.01,-3.5,false);                 // lot asphalt
+    box(3.6,0.07,6.4,M(0x6B7280),IN_X,0.0,6.0,false);               // entrance lane
+    box(3.6,0.07,6.4,M(0x6B7280),OUT_X,0.0,6.0,false);              // exit lane
+    // kerbs / walls around lot (gaps at lanes)
+    const wall=M(0xE5E7EB);
+    box(28.4,0.6,0.4,wall,0,0.3,-10.7); box(0.4,0.6,14,wall,-14.2,0.3,-3.5); box(0.4,0.6,14,wall,14.2,0.3,-3.5);
+    box(2.4,0.6,0.4,wall,-13,0.3,3.3); box(16.4,0.6,0.4,wall,0,0.3,3.3); box(2.4,0.6,0.4,wall,13,0.3,3.3);
+    // slot lines + pads + numbers + sensor lights
+    const white=new THREE.MeshBasicMaterial({color:0xFFFFFF});
+    this.pads=[]; this.lights=[];
+    for(let i=0;i<=5;i++){ const x=-7.5+i*3; box(0.12,0.02,5,white,x,0.07,SLOT_Z,false); }
+    box(15.12,0.02,0.12,white,0,0.07,SLOT_Z-2.5,false);
+    SLOT_X.forEach((x,i)=>{
+      const pad=new THREE.Mesh(new THREE.PlaneGeometry(2.7,4.7),new THREE.MeshBasicMaterial({color:SLOT_COL.free,transparent:true,opacity:.5}));
+      pad.rotation.x=-Math.PI/2; pad.position.set(x,0.075,SLOT_Z); S.add(pad); this.pads.push(pad);
+      const num=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.0),new THREE.MeshBasicMaterial({map:canvasTex(128,96,(g,W,H)=>{g.fillStyle='#fff';g.font='800 80px Segoe UI, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(String(i+1),W/2,H/2+4);}),transparent:true}));
+      num.rotation.x=-Math.PI/2; num.position.set(x,0.09,SLOT_Z+3.05); S.add(num);
+      box(0.12,1.8,0.12,M(0x475569),x,0.9,SLOT_Z-2.9);
+      const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.26,16,12),new THREE.MeshStandardMaterial({color:0x3BD18A,emissive:0x3BD18A,emissiveIntensity:.9}));
+      bulb.position.set(x,1.95,SLOT_Z-2.9); S.add(bulb); this.lights.push(bulb);
+    });
+    // aisle arrows & lane words
+    const arrowTex=canvasTex(256,128,(g,W,H)=>{g.fillStyle='#fff';g.beginPath();g.moveTo(20,48);g.lineTo(160,48);g.lineTo(160,18);g.lineTo(236,64);g.lineTo(160,110);g.lineTo(160,80);g.lineTo(20,80);g.closePath();g.fill();});
+    [-4,4].forEach(x=>{ const a=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshBasicMaterial({map:arrowTex,transparent:true,opacity:.85})); a.rotation.x=-Math.PI/2; a.position.set(x,0.08,AISLE_Z+0.2); S.add(a); });
+    const word=(t,x,z)=>{ const m=new THREE.Mesh(new THREE.PlaneGeometry(3,0.9),new THREE.MeshBasicMaterial({map:canvasTex(256,80,(g,W,H)=>{g.fillStyle='#fff';g.font='800 54px Segoe UI, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(t,W/2,H/2+3);}),transparent:true})); m.rotation.x=-Math.PI/2; m.position.set(x,0.08,z); S.add(m); };
+    word('ENTRY',IN_X,7.6); word('EXIT',OUT_X,7.6);
+    // gates
+    this.gates={in:this.makeGate(-11.9,1,M), out:this.makeGate(11.9,-1,M)};
+    // cabin + exit booth
+    const cabin=(x)=>{ box(2.2,2.4,2.2,M(0xF2D7A6),x,1.2,5.2); box(2.6,0.25,2.6,M(0xB45309),x,2.5,5.2); const gl=box(1.4,0.9,0.05,M(0x93C5FD,{roughness:.2,metalness:.2}),x,1.5,6.32,false); return gl; };
+    cabin(-14.6); cabin(14.6);
+    // sign board
+    this.signTex=canvasTex(512,384,()=>{}); this.drawSign(5,5);
+    box(0.2,2.6,0.2,M(0x475569),-17.4,1.3,6.5); box(0.2,2.6,0.2,M(0x475569),-15.2,1.3,6.5);
+    const sign=new THREE.Mesh(new THREE.BoxGeometry(3.2,2.4,0.25),[M(0x334155),M(0x334155),M(0x334155),M(0x334155),new THREE.MeshBasicMaterial({map:this.signTex}),M(0x334155)]);
+    sign.position.set(-16.3,3.6,6.5); sign.rotation.y=0.35; sign.castShadow=true; S.add(sign);
+    // trees & lamps
+    const tree=(x,z,s=1)=>{ box(0.3*s,1.2*s,0.3*s,M(0x8B5A2B),x,0.6*s,z); const c=new THREE.Mesh(new THREE.ConeGeometry(1.1*s,2.4*s,10),M(0x3FA34D)); c.position.set(x,2.2*s,z); c.castShadow=true; S.add(c); };
+    [[-19,-8],[-21,-2],[19,-7],[21,-1.5],[-19,2],[18.5,3],[-6,13.5],[6,13.5],[-24,13],[24,13],[0,-14]].forEach(([x,z],i)=>tree(x,z,0.8+(i%3)*0.2));
+    [[-14,-10.4],[0,-10.4],[14,-10.4]].forEach(([x,z])=>{ box(0.15,4.2,0.15,M(0x64748B),x,2.1,z); box(1.2,0.15,0.3,M(0x64748B),x,4.2,z+0.4); });
+    // expected marker (replay)
+    const eg=new THREE.EdgesGeometry(new THREE.BoxGeometry(2.9,1.8,4.9));
+    this.expMarker=new THREE.LineSegments(eg,new THREE.LineDashedMaterial({color:0xE11D48,dashSize:.35,gapSize:.2,linewidth:2}));
+    this.expMarker.computeLineDistances(); this.expMarker.visible=false; S.add(this.expMarker);
+    this.expLabel=null;
+    // beam (assigned slot)
+    this.beam=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,6,24,1,true),new THREE.MeshBasicMaterial({color:0xF5A623,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false}));
+    this.beam.visible=false; S.add(this.beam);
+    this.floaters=[];
+  }
+  makeGate(x,dir,M){
+    const S=this.scene; const post=new THREE.Mesh(new THREE.BoxGeometry(0.6,1.2,0.6),M(0xE11D48)); post.position.set(x,0.6,GATE_Z); post.castShadow=true; S.add(post);
+    const pivot=new THREE.Group(); pivot.position.set(x,1.05,GATE_Z); S.add(pivot);
+    const tex=canvasTex(256,32,(g,W,H)=>{for(let i=0;i<8;i++){g.fillStyle=i%2?'#fff':'#E11D48';g.fillRect(i*32,0,32,H);}});
+    const arm=new THREE.Mesh(new THREE.BoxGeometry(3.6,0.14,0.14),new THREE.MeshStandardMaterial({map:tex})); arm.position.set(dir*1.8,0,0); arm.castShadow=true; pivot.add(arm);
+    return {pivot,dir,open:0,goal:0};
+  }
+  drawSign(avail,total,flash){
+    const {canvas:c,g}=this.signTex.userData, W=c.width,H=c.height;
+    g.fillStyle='#1E293B'; g.fillRect(0,0,W,H);
+    g.fillStyle='#F5A623'; g.font='900 92px Segoe UI, sans-serif'; g.textBaseline='top'; g.fillText('P',24,14);
+    g.font='700 40px Segoe UI, sans-serif'; g.fillText('Available',110,40); g.fillRect(24,118,W-48,6);
+    g.fillStyle='#000'; g.fillRect(40,150,W-80,180);
+    const bad=avail<0||flash; g.fillStyle=bad?'#FF3B3B':avail===0?'#FF6B6B':'#3BFF8A';
+    g.font='700 128px Consolas, monospace'; g.textAlign='center'; g.fillText(flash?'FULL':`${avail}/${total}`,W/2,170); g.textAlign='left';
+    this.signTex.needsUpdate=true;
+  }
+  // ---------- camera ----------
+  bindControls(){
+    const cv=this.renderer.domElement; let drag=null; const pts=new Map();
+    cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); drag={x:e.clientX,y:e.clientY}; this.camGoal=null;});
+    cv.addEventListener('pointermove',e=>{ if(!pts.has(e.pointerId)) return;
+      if(pts.size===2){ const [a,b]=[...pts.values()]; const d0=Math.hypot(a.x-b.x,a.y-b.y); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); const [c,d]=[...pts.values()]; const d1=Math.hypot(c.x-d.x,c.y-d.y); this.cam.radius=Math.min(80,Math.max(18,this.cam.radius*d0/d1)); return; }
+      pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(drag){ this.cam.theta-=(e.clientX-drag.x)*0.006; this.cam.phi=Math.min(1.45,Math.max(0.25,this.cam.phi-(e.clientY-drag.y)*0.005)); drag={x:e.clientX,y:e.clientY}; }});
+    const up=e=>{pts.delete(e.pointerId); if(!pts.size) drag=null;}; cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+    cv.addEventListener('wheel',e=>{e.preventDefault(); this.cam.radius=Math.min(80,Math.max(18,this.cam.radius*(1+Math.sign(e.deltaY)*0.08)));},{passive:false});
+  }
+  view(name){ const v={iso:{theta:0.62,phi:0.92,radius:34,t:[-1,0,-1]},top:{theta:0,phi:0.28,radius:46,t:[0,0,0]},gate:{theta:-0.35,phi:1.05,radius:30,t:[-8,0,4]}}[name]; this.camGoal=v; }
+  resize(){ const w=this.el.clientWidth,h=this.el.clientHeight; if(!w||!h) return; this.renderer.setSize(w,h,false); this.camera.aspect=w/h;
+    if(w<560) this.cam.radius=Math.max(this.cam.radius,54); this.camera.updateProjectionMatrix(); }
+  // ---------- per-frame ----------
+  tick(dt){
+    const c=this.cam;
+    if(this.camGoal){ const g=this.camGoal,k=Math.min(1,dt*4); c.theta+=angDiff(c.theta,g.theta)*k; c.phi+=(g.phi-c.phi)*k; c.radius+=(g.radius-c.radius)*k; c.target.lerp(new THREE.Vector3(...g.t),k); }
+    this.camera.position.set(c.target.x+c.radius*Math.sin(c.phi)*Math.sin(c.theta), c.target.y+c.radius*Math.cos(c.phi), c.target.z+c.radius*Math.sin(c.phi)*Math.cos(c.theta));
+    this.camera.lookAt(c.target);
+    for(const k of ['in','out']){ const g=this.gates[k]; g.open+=(g.goal-g.open)*Math.min(1,dt*6); g.pivot.rotation.z=g.dir*g.open*1.35; }
+    for(const a of [...this.anims]) a(dt);
+    const t=performance.now()/1000; if(this.beam.visible) this.beam.material.opacity=.16+.1*Math.sin(t*5);
+    this.floaters=this.floaters.filter(f=>{ f.life-=dt; f.s.position.y+=dt*0.3; f.s.material.opacity=Math.min(1,f.life); if(f.life<=0){this.scene.remove(f.s); return false;} return true; });
+    this.renderer.render(this.scene,this.camera);
+  }
+  // ---------- state helpers ----------
+  setSlot(n,state){ const col=state==='striped'?null:SLOT_COL[state]; const pad=this.pads[n-1], bulb=this.lights[n-1];
+    if(state==='striped'){ if(!this._stripe) this._stripe=canvasTex(64,64,(g)=>{for(let i=-64;i<128;i+=16){g.fillStyle='#F5A623';g.beginPath();g.moveTo(i,0);g.lineTo(i+8,0);g.lineTo(i+72,64);g.lineTo(i+64,64);g.fill();g.fillStyle='#3BD18A';g.beginPath();g.moveTo(i+8,0);g.lineTo(i+16,0);g.lineTo(i+80,64);g.lineTo(i+72,64);g.fill();}}),this._stripe.wrapS=this._stripe.wrapT=THREE.RepeatWrapping,this._stripe.repeat.set(3,5);
+      pad.material.map=this._stripe; pad.material.color.set(0xFFFFFF); pad.material.opacity=.75; bulb.material.color.set(0x3BD18A); bulb.material.emissive.set(0x3BD18A); }
+    else { pad.material.map=null; pad.material.color.set(col); pad.material.opacity=.5; bulb.material.color.set(col); bulb.material.emissive.set(col); }
+    pad.material.needsUpdate=true; }
+  resetSlots(){ for(let i=1;i<=5;i++) this.setSlot(i,'free'); this.drawSign(5,5); this.showBeam(null); this.showExpected(null); }
+  showBeam(n){ if(n==null){this.beam.visible=false;return;} this.beam.position.set(SLOT_X[n-1],3,SLOT_Z); this.beam.visible=true; }
+  showExpected(n,text){ if(this.expLabel){this.scene.remove(this.expLabel);this.expLabel=null;}
+    if(n==null){this.expMarker.visible=false; if(text){ this.expLabel=textSprite(text,{bg:'#E11D48',w:4.6,font:44}); this.expLabel.position.set(-5,3.6,1.2); this.scene.add(this.expLabel);} return;}
+    this.expMarker.position.set(SLOT_X[n-1],0.95,SLOT_Z); this.expMarker.visible=true;
+    this.expLabel=textSprite(text||`Expected: slot ${n}`,{bg:'#E11D48',w:4,font:46}); this.expLabel.position.set(SLOT_X[n-1],4.4,SLOT_Z-1); this.scene.add(this.expLabel); }
+  gate(which,open){ this.gates[which].goal=open?1:0; }
+  float(text,x,y,z,opts={}){ const s=textSprite(text,Object.assign({w:3.4},opts)); s.position.set(x,y,z); this.scene.add(s); this.floaters.push({s,life:opts.life||3}); return s; }
+  toast(msg,kind=''){ if(!this.toastEl) return; const t=this.toastEl; t.textContent=msg; t.className='toast on '+kind; clearTimeout(this._tt); this._tt=setTimeout(()=>t.className='toast '+kind,2600); }
+  // ---------- vehicles ----------
+  addCar(reg,type,color,key=reg){
+    const g=new THREE.Group(); const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.45,metalness:.15},o));
+    const add=(geo,mat,x,y,z)=>{const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.castShadow=true; g.add(m); return m;};
+    const plate=canvasTex(256,64,(c,W,H)=>{c.fillStyle='#FFFFFF';c.fillRect(0,0,W,H);c.strokeStyle='#111';c.lineWidth=6;c.strokeRect(3,3,W-6,H-6);c.fillStyle='#111';c.font='700 38px Consolas, monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(reg,W/2,H/2+2);});
+    const plateMat=new THREE.MeshBasicMaterial({map:plate}); const wheelMat=M(0x1F2937,{roughness:.9});
+    if(type==='BIKE'){
+      add(new THREE.BoxGeometry(1.5,0.35,0.36),M(color),0,0.75,0);
+      add(new THREE.BoxGeometry(0.7,0.18,0.42),M(0x111827),-0.25,1.0,0);
+      add(new THREE.BoxGeometry(0.08,0.5,0.08),M(0x6B7280),0.62,1.05,0); add(new THREE.BoxGeometry(0.08,0.08,0.8),M(0x6B7280),0.62,1.3,0);
+      [0.75,-0.75].forEach(x=>{const w=add(new THREE.CylinderGeometry(0.36,0.36,0.14,18),wheelMat,x,0.36,0); w.rotation.x=Math.PI/2;});
+      const p=add(new THREE.PlaneGeometry(0.6,0.15),plateMat,-0.78,0.7,0); p.rotation.y=-Math.PI/2;
+    } else {
+      add(new THREE.BoxGeometry(4.0,0.7,1.8),M(color),0,0.65,0);
+      add(new THREE.BoxGeometry(2.1,0.62,1.62),M(0x1E293B,{roughness:.15,metalness:.4}),-0.25,1.3,0);
+      add(new THREE.BoxGeometry(1.9,0.08,1.66),M(color),-0.25,1.64,0);
+      [[1.3,0.85],[1.3,-0.85],[-1.3,0.85],[-1.3,-0.85]].forEach(([x,z])=>{const w=add(new THREE.CylinderGeometry(0.38,0.38,0.28,18),wheelMat,x,0.38,z); w.rotation.x=Math.PI/2;});
+      [0.6,-0.6].forEach(z=>add(new THREE.BoxGeometry(0.06,0.18,0.4),new THREE.MeshBasicMaterial({color:0xFFF7C2}),2.01,0.75,z));
+      [0.6,-0.6].forEach(z=>add(new THREE.BoxGeometry(0.06,0.16,0.36),new THREE.MeshBasicMaterial({color:0xE11D48}),-2.01,0.75,z));
+      const p=add(new THREE.PlaneGeometry(0.9,0.22),plateMat,-2.02,0.6,0); p.rotation.y=-Math.PI/2;
+      const f=add(new THREE.PlaneGeometry(0.9,0.22),plateMat,2.02,0.6,0); f.rotation.y=Math.PI/2;
+    }
+    const tag=textSprite(reg,{bg:'rgba(15,23,42,.85)',w:2.6,font:52}); tag.position.set(0,type==='BIKE'?2.2:2.6,0); g.add(tag);
+    this.scene.add(g);
+    const car={reg,key,type,group:g,tag,heading:0,slot:null,state:'new'};
+    this.cars.set(key,car); return car;
+  }
+  setTag(car,text,bg){ car.group.remove(car.tag); car.tag=textSprite(text,{bg,w:text.length>12?4.2:2.6,font:text.length>12?40:52}); car.tag.position.set(0,car.type==='BIKE'?2.2:2.6,0); car.group.add(car.tag); }
+  place(car,x,z,heading){ car.group.position.set(x,0,z); if(heading!==undefined){car.heading=heading; car.group.rotation.y=heading;} }
+  removeCar(car){ this.scene.remove(car.group); if(this.cars.get(car.key)===car) this.cars.delete(car.key); }
+  clearCars(){ for(const c of [...this.cars.values()]) this.removeCar(c); this.anims.clear(); this.gen++; }
+  // drive through points; reverse keeps heading opposite to motion
+  drive(car,pts,{reverse=false,speed=7,instant=false}={}){
+    const gen=this.gen;
+    if(instant){ const p=pts[pts.length-1]; const prev=pts.length>1?pts[pts.length-2]:[car.group.position.x,car.group.position.z];
+      let h=Math.atan2(-(p[1]-prev[1]),p[0]-prev[0]); if(reverse) h+=Math.PI; this.place(car,p[0],p[1],h); return Promise.resolve(); }
+    return new Promise(res=>{
+      let i=0; const step=(dt)=>{
+        if(gen!==this.gen){ this.anims.delete(step); res(); return; }
+        const pos=car.group.position, tgt=pts[i]; const dx=tgt[0]-pos.x, dz=tgt[1]-pos.z, d=Math.hypot(dx,dz);
+        let mv=speed*this.speed*dt;
+        if(d>0.001){ let h=Math.atan2(-dz,dx); if(reverse) h+=Math.PI; car.heading+=angDiff(car.heading,h)*Math.min(1,dt*9*this.speed); car.group.rotation.y=car.heading; }
+        if(d<=mv){ pos.x=tgt[0]; pos.z=tgt[1]; i++; if(i>=pts.length){ this.anims.delete(step); res(); } }
+        else { pos.x+=dx/d*mv; pos.z+=dz/d*mv; }
+      }; this.anims.add(step);
+    });
+  }
+  // canonical routes
+  pathToGate(){ return [[IN_X,ROAD_Z],[IN_X,GATE_Z+1.8]]; }
+  pathToSlot(n){ const x=SLOT_X[n-1]; return [[IN_X,AISLE_Z],[x,AISLE_Z],[x,SLOT_Z]]; }
+  async leaveSlot(car,o={}){ const p=car.group.position; await this.drive(car,[[p.x,AISLE_Z]],{reverse:true,...o}); await this.drive(car,[[OUT_X,AISLE_Z],[OUT_X,GATE_Z-1.6]],o); }
+  async exitToRoad(car,o={}){ this.gate('out',true); await this.drive(car,[[OUT_X,ROAD_Z],[34,ROAD_Z]],o); this.gate('out',false); this.removeCar(car); }
+  async turnAway(car,o={}){ await this.drive(car,[[IN_X,ROAD_Z]],{reverse:true,...o}); await this.drive(car,[[-34,ROAD_Z]],o); this.removeCar(car); }
+}
+let lastT=performance.now();
+function frame(t){ const dt=Math.min(0.2,(t-lastT)/1000); lastT=t; for(const w of WORLDS){ if(w.el.offsetParent!==null) w.tick(dt); } requestAnimationFrame(frame); }
+
+// ===================== HELPERS =====================
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rupee=n=>'\u20B9'+n;
+function evLine(type,details){ return `@EVENT ${type} ${details}`; }
+function fmtEvHtml(line){ const m=/^@EVENT (\S+)(.*)$/.exec(line); if(!m) return esc(line); return '<span class="ln">@EVENT</span> <span class="ev">'+esc(m[1])+'</span>'+esc(m[2]).replace(/(\w+)=/g,'<span class="k">$1</span>='); }
+const STATES=['TN','KA','KL','AP','MH','DL','TS','GJ'], LET='ABCDEFGHJKLMNPRSTUVWXYZ';
+function randomReg(){ const r=n=>Math.floor(Math.random()*n); return STATES[r(STATES.length)]+String(r(90)+10)+LET[r(LET.length)]+LET[r(LET.length)]+String(r(9000)+1000); }
+
+// ===================== NAVIGATION =====================
+const VIEWS=[{id:'exp',hash:'experience'},{id:'inv',hash:'investigate'},{id:'demo',hash:'demonstrate'}];
+const visited=new Set(); let current='exp';
+function show(id){
+  current=id; visited.add(id);
+  VIEWS.forEach(v=>{ $('#view-'+v.id).classList.toggle('on',v.id===id); });
+  $$('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.view===id?'true':'false'));
+  const rail=$('#rail'); rail.innerHTML='';
+  VIEWS.forEach(v=>{ const b=document.createElement('button'); b.className='prog-seg'+(v.id===id?' active':visited.has(v.id)?' done':''); b.title=v.hash; b.setAttribute('aria-label','Go to '+v.hash); b.onclick=()=>go(v.id); rail.appendChild(b); });
+  WORLDS.forEach(w=>w.resize());
+  if(id==='inv') buildDiagram();
+}
+function go(id){ const v=VIEWS.find(x=>x.id===id); if(location.hash!=='#'+v.hash) location.hash=v.hash; else show(id); }
+function fromHash(){ const h=location.hash.slice(1); const v=VIEWS.find(x=>x.hash===h); show(v?v.id:'exp'); }
+
+// ===================== EXPERIENCE =====================
+const X={world:null,model:null,clock:480,vehicles:new Map(),queue:[],exitReg:null,quote:null,busy:false,type:'CAR',color:0,log:[]};
+const GATE_PT=[IN_X,GATE_Z+1.8], WAIT_PT=[-17,ROAD_Z];
+function xlog(type,details){ X.log.push(evLine(type,details)); renderLog(); }
+function renderLog(){ const el=$('#expLog'); el.innerHTML=X.log.map(fmtEvHtml).join('<br>'); el.scrollTop=el.scrollHeight; }
+function resetExp(){
+  X.world.clearCars(); X.world.resetSlots(); X.world.gate('in',false); X.world.gate('out',false); X.world.speed=1;
+  X.model=new LotModel(5); X.clock=480; X.vehicles.clear(); X.queue=[]; X.exitReg=null; X.quote=null; X.log=[];
+  xlog('RUN_START','slots=5 scenario=3d-app'); $('#receipt').innerHTML=''; xrefresh();
+}
+function head(){ return X.queue.length?X.vehicles.get(X.queue[0]):null; }
+function xrefresh(){
+  const m=X.model, h=head(), ex=X.exitReg?X.vehicles.get(X.exitReg):null;
+  $('#clock').textContent=fmt(X.clock); $('#hudClock').textContent=fmt(X.clock);
+  $('#hudFree').textContent=m.available(); $('#hudOcc').textContent=m.occupied();
+  if(!X._signFlash) X.world.drawSign(m.available(),5);
+  // gate line
+  let gl='Nobody is waiting at the entrance.';
+  if(h){ const w=X.queue.length>1?` · <b>${X.queue[1]}</b> waiting behind`:'';
+    gl= h.state==='gate'?`<b>${h.reg}</b> (${h.type.toLowerCase()}) is at the barrier.${w}`
+      : h.state==='assigned'?`<b>${h.reg}</b> → Slot <b>${h.slot}</b>, ticket <b>${h.ticket.id}</b>. Barrier open.${w}`
+      : `<b>${h.reg}</b> is driving to the entrance…`; }
+  $('#gateLine').innerHTML=gl;
+  const b=X.busy;
+  $('#bBring').disabled=b; $('#bRand').disabled=b;
+  $('#bRequest').disabled=b||!h||h.state!=='gate';
+  $('#bPark').disabled=b||!h||h.state!=='assigned';
+  // exit select
+  const sel=$('#exitSel'), prev=sel.value; const parked=[...X.vehicles.values()].filter(v=>v.state==='parked').sort((a,c)=>a.slot-c.slot);
+  sel.innerHTML=parked.length?parked.map(v=>`<option value="${v.reg}">Slot ${v.slot} · ${v.reg} (${v.type.toLowerCase()})</option>`).join(''):'<option value="">No parked vehicles</option>';
+  if(parked.some(v=>v.reg===prev)) sel.value=prev;
+  $('#bExit').disabled=b||!!X.exitReg||!parked.length;
+  $('#bCalc').disabled=b||!ex||ex.state!=='atexit'||!!X.quote;
+  $('#bRelease').disabled=b||!X.quote;
+  $$('[data-scen]').forEach(x=>x.disabled=b); $('#bReset').disabled=b; $$('[data-adv]').forEach(x=>x.disabled=b);
+  // tickets
+  const tb=$('#ticketBody');
+  tb.innerHTML=m.tickets.length?m.tickets.slice().reverse().map(t=>`<tr><td class="mono">${t.id}</td><td class="mono">${t.reg}</td><td>${t.slot}</td><td class="mono">${fmt(t.entry)}</td><td class="mono">${t.closed?fmt(t.exit):'–'}</td><td>${t.closed?(t.exit-t.entry)+' min':'–'}</td><td>${t.closed?rupee(t.fee):'–'}</td><td>${t.closed?'<span class="pill ok">Paid</span>':'<span class="pill wait">Open</span>'}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">No tickets yet. Bring a vehicle to the entrance.</td></tr>';
+  $('#revenue').textContent=`Collected today: ${rupee(m.revenue())}`;
+}
+async function act(fn){ if(X.busy) return; X.busy=true; xrefresh(); try{ await fn(); } finally { X.busy=false; X.world.speed=1; xrefresh(); } }
+
+async function xBring(reg,type){
+  reg=reg.trim().toUpperCase().replace(/\s+/g,'');
+  if(!/^[A-Z0-9]{4,12}$/.test(reg)){ X.world.toast('Enter a registration number (letters and digits).','bad'); return false; }
+  if(X.vehicles.has(reg)){ X.world.toast(`${reg} is already here.`,'bad'); return false; }
+  if(X.queue.length>=2){ X.world.toast('The entrance lane is full. Let the waiting vehicle in first.','bad'); return false; }
+  const car=X.world.addCar(reg,type,CAR_COLORS[X.color++%CAR_COLORS.length]); X.world.place(car,-34,ROAD_Z,0);
+  const v={reg,type,car,state:'arriving',slot:null,ticket:null}; X.vehicles.set(reg,v); X.queue.push(reg); xrefresh();
+  if(X.queue.length===1){ await X.world.drive(car,[[IN_X,ROAD_Z],GATE_PT]); v.state='gate'; }
+  else { await X.world.drive(car,[WAIT_PT]); v.state='queued'; }
+  $('#regIn').value=randomReg(); return true;
+}
+async function advanceQueue(){ const h=head(); if(h && h.state==='queued'){ h.state='arriving'; xrefresh(); await X.world.drive(h.car,[[IN_X,ROAD_Z],GATE_PT]); h.state='gate'; xrefresh(); } }
+async function xRequest(){
+  const v=head(); if(!v||v.state!=='gate') return;
+  xlog('ENTER_REQUEST',`reg=${v.reg} vehicle=${v.type} time=${fmt(X.clock)}`);
+  const r=X.model.enter(v.reg,v.type,X.clock);
+  if(r.ok){
+    v.state='assigned'; v.slot=r.slot; v.ticket=r.ticket;
+    X.world.setSlot(r.slot,'reserved'); X.world.showBeam(r.slot); X.world.gate('in',true);
+    X.world.float(`Ticket ${r.ticket.id} → Slot ${r.slot}`,-14.6,4.4,5.4,{bg:'#9A6200',w:5,font:46,life:4});
+    X.world.toast(`Slot ${r.slot} assigned to ${v.reg}`,'good');
+    xlog('SLOT_ASSIGNED',`reg=${v.reg} slot=${r.slot} ticket=${r.ticket.id}`); xrefresh();
+  } else {
+    xlog('REJECTED',`reg=${v.reg} reason=${r.reason}`);
+    X.world.toast(r.reason==='FULL'?`No free slot. ${v.reg} has to leave.`:`${v.reg} is already inside.`,'bad');
+    X._signFlash=true; X.world.drawSign(0,5,true); X.world.float('FULL',IN_X,3.6,GATE_Z+2,{bg:'#B91C1C',life:2.5});
+    await sleep(1100/X.world.speed); X._signFlash=false; xrefresh();
+    X.queue.shift(); v.state='leaving'; await X.world.turnAway(v.car); X.vehicles.delete(v.reg); xrefresh();
+    await advanceQueue();
+  }
+}
+async function xPark(){
+  const v=head(); if(!v||v.state!=='assigned') return;
+  X.queue.shift(); v.state='parking'; xrefresh();
+  const move=(async()=>{ await X.world.drive(v.car,X.world.pathToSlot(v.slot)); })();
+  setTimeout(()=>X.world.gate('in',false),1600/X.world.speed);
+  await sleep(900/X.world.speed);
+  await Promise.all([move,advanceQueue()]);
+  v.state='parked'; X.world.setSlot(v.slot,'occupied'); X.world.showBeam(null);
+  xlog('PARKED',`reg=${v.reg} slot=${v.slot} occupied=true`); xlog('STATUS',statusDetails()); xrefresh();
+}
+function statusDetails(){ const m=X.model; return `available=${m.available()} occupied=${m.occupied()} slots=`+m.slots.map(s=>`${s.n}:${s.reg||'-'}:${s.occ?'OCC':'FREE'}`).join(','); }
+async function xExit(reg){
+  const v=X.vehicles.get(reg); if(!v||v.state!=='parked'||X.exitReg) return;
+  X.exitReg=reg; v.state='exiting'; X.world.setSlot(v.slot,'leaving'); $('#receipt').innerHTML='';
+  xlog('EXIT_REQUEST',`reg=${reg} time=${fmt(X.clock)}`); xrefresh();
+  await X.world.leaveSlot(v.car); v.state='atexit'; X.world.toast(`${reg} is at the exit barrier. Calculate the charges.`);
+}
+function xCalc(){
+  const v=X.vehicles.get(X.exitReg); if(!v||v.state!=='atexit') return;
+  const q=X.model.quote(v.reg,X.clock); X.quote={...q,time:X.clock};
+  const t=q.ticket;
+  $('#receipt').innerHTML=`<div class="receipt">Ticket ${t.id} · ${v.reg} · Slot ${t.slot}<br>In ${fmt(t.entry)} → Out ${fmt(X.clock)} = ${q.minutes} min<br>${q.hours} started hour${q.hours>1?'s':''} × ${rupee(RATE[t.type])} = <b>${rupee(q.fee)}</b></div>`;
+  const p=v.car.group.position; X.world.float(`${rupee(q.fee)} · ${q.hours} h`,p.x,3.6,p.z,{bg:'#0A7A64',life:5});
+  xlog('FEE',`reg=${v.reg} minutes=${q.minutes} hours=${q.hours} fee=${q.fee}`); xrefresh();
+}
+async function xRelease(){
+  const v=X.vehicles.get(X.exitReg); if(!v||!X.quote) return;
+  const r=X.model.exit(v.reg,X.quote.time); X.world.setSlot(r.slot,'free');
+  xlog('SLOT_RELEASED',`reg=${v.reg} slot=${r.slot}`); xlog('STATUS',statusDetails());
+  X.world.toast(`Slot ${r.slot} is free again. Paid ${rupee(r.fee)}.`,'good');
+  X.quote=null; X.exitReg=null; v.state='leaving'; xrefresh();
+  await X.world.exitToRoad(v.car); X.vehicles.delete(v.reg);
+}
+function quickPark(reg,type){
+  const r=X.model.enter(reg,type,X.clock); const car=X.world.addCar(reg,type,CAR_COLORS[X.color++%CAR_COLORS.length]);
+  X.world.place(car,SLOT_X[r.slot-1],SLOT_Z,Math.PI/2); X.world.setSlot(r.slot,'occupied');
+  X.vehicles.set(reg,{reg,type,car,state:'parked',slot:r.slot,ticket:r.ticket});
+  xlog('ENTER_REQUEST',`reg=${reg} vehicle=${type} time=${fmt(X.clock)}`); xlog('SLOT_ASSIGNED',`reg=${reg} slot=${r.slot} ticket=${r.ticket.id}`); xlog('PARKED',`reg=${reg} slot=${r.slot} occupied=true`);
+  X.clock+=5;
+}
+const pickType=i=>i%3===1?'BIKE':'CAR';
+async function enterFully(reg,type){ await xBring(reg,type); await xRequest(); if(head()&&head().reg===reg) await xPark(); }
+const SCEN={
+  async two(){ resetExp(); X.world.speed=1.6; const a=randomReg(), b=randomReg();
+    await xBring(a,'CAR'); await xBring(b,'BIKE'); await xRequest(); await xPark(); X.clock+=5; await xRequest(); await xPark();
+    X.world.toast('Two requests, two different slots.','good'); },
+  async fill(){ resetExp(); X.world.speed=2.4; for(let i=0;i<5;i++){ await enterFully(randomReg(),pickType(i)); X.clock+=5; } X.world.toast('Every slot is occupied.','good'); },
+  async full(){ if(X.model.available()>0||X.queue.length||X.exitReg){ resetExp(); for(let i=0;i<5;i++) quickPark(randomReg(),pickType(i)); xrefresh(); }
+    X.world.speed=1.6; await xBring(randomReg(),'CAR'); await xRequest(); },
+  async exit(){ if(X.queue.length||X.exitReg||!X.model.occupied()){ resetExp(); for(let i=0;i<3;i++) quickPark(randomReg(),pickType(i)); }
+    X.clock+=90; xrefresh(); X.world.speed=1.5;
+    const v=[...X.vehicles.values()].filter(x=>x.state==='parked').sort((a,b)=>a.slot-b.slot)[0];
+    await xExit(v.reg); xCalc(); await sleep(1500); await xRelease(); },
+  async reenter(){ resetExp(); for(let i=0;i<5;i++) quickPark(randomReg(),pickType(i)); xrefresh(); X.world.speed=1.6;
+    const late=randomReg(); await xBring(late,'CAR'); await xRequest();
+    X.clock+=60; xrefresh(); const v=[...X.vehicles.values()].find(x=>x.slot===2);
+    await xExit(v.reg); xCalc(); await sleep(1200); await xRelease(); X.clock+=5;
+    await xBring(late,'CAR'); await xRequest(); await xPark(); X.world.toast(`${late} got Slot 2, the slot that was just released.`,'good'); },
+};
+function initExp(){
+  X.world=new World($('#exp3d'),{toast:$('#expToast')}); $('#regIn').value=randomReg(); resetExp();
+  $$('#typeSeg button').forEach(b=>b.onclick=()=>{ X.type=b.dataset.t; $$('#typeSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false')); });
+  $('#bRand').onclick=()=>{$('#regIn').value=randomReg();};
+  $('#bBring').onclick=()=>act(()=>xBring($('#regIn').value,X.type));
+  $('#regIn').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#bBring').click(); });
+  $('#bRequest').onclick=()=>act(xRequest); $('#bPark').onclick=()=>act(xPark);
+  $('#bExit').onclick=()=>act(()=>xExit($('#exitSel').value)); $('#bCalc').onclick=()=>xCalc(); $('#bRelease').onclick=()=>act(xRelease);
+  $$('[data-adv]').forEach(b=>b.onclick=()=>{ X.clock+=+b.dataset.adv; xrefresh(); });
+  $$('[data-scen]').forEach(b=>b.onclick=()=>act(SCEN[b.dataset.scen]));
+  $('#bReset').onclick=()=>act(async()=>resetExp());
+  $$('[data-cam]').forEach(b=>b.onclick=()=>X.world.view(b.dataset.cam));
+}
+
+// ===================== INVESTIGATE =====================
+const CLASSES={
+  Main:{c:'pink',d:'Reads commands, creates the objects, prints results.'},
+  ParkingService:{c:'purple',d:'Lets vehicles in and out. Issues tickets.'},
+  ParkingReport:{c:'blue',d:'Status board, summary, @EVENT lines.'},
+  ParkingLot:{c:'teal',d:'Holds the numbered slots.'},
+  ParkingTicket:{c:'amber',d:'Entry, exit, duration and fee.'},
+  ParkingSlot:{c:'teal',d:'One slot: number, occupied?, vehicle.'},
+  Vehicle:{c:'green',d:'Registration, type, hourly rate.'},
+};
+const ROWS=[['Main'],['ParkingService','ParkingReport'],['ParkingLot','ParkingTicket'],['ParkingSlot','Vehicle']];
+const LINKS=[['Main','ParkingService'],['Main','ParkingReport'],['ParkingService','ParkingLot'],['ParkingService','ParkingTicket'],['ParkingReport','ParkingLot'],['ParkingReport','ParkingService'],['ParkingLot','ParkingSlot'],['ParkingSlot','Vehicle'],['ParkingTicket','Vehicle']];
+let diaBuilt=false, curFile='Main';
+function buildDiagram(){
+  if(diaBuilt){ drawLinks(); return; } diaBuilt=true;
+  const dia=$('#dia'); dia.innerHTML='<svg id="diaSvg" aria-hidden="true"></svg>'+ROWS.map(r=>`<div class="dia-row">${r.map(n=>{const k=CLASSES[n];return `<button class="dia-node" data-cls="${n}" style="--c:var(--${k.c});--cl:var(--${k.c}-l);--cd:var(--${k.c}-d)"><div class="nh">${n}</div><div class="nb">${k.d}</div></button>`;}).join('')}</div>`).join('');
+  $$('.dia-node').forEach(b=>b.onclick=()=>openFile(b.dataset.cls));
+  let d=200; ROWS.forEach((r,i)=>{ r.forEach((n,j)=>{ const el=dia.querySelector(`[data-cls="${n}"]`); setTimeout(()=>el.classList.add('visible'),d+j*160); }); d+=350; });
+  setTimeout(drawLinks,50); setTimeout(drawLinks,1800);
+  new ResizeObserver(drawLinks).observe(dia);
+}
+function drawLinks(){
+  const dia=$('#dia'), svg=$('#diaSvg'); if(!svg) return; const R=dia.getBoundingClientRect();
+  const c=n=>{ const r=dia.querySelector(`[data-cls="${n}"]`).getBoundingClientRect(); return {x:r.left-R.left+r.width/2, t:r.top-R.top, b:r.bottom-R.top, cy:r.top-R.top+r.height/2, l:r.left-R.left, r:r.right-R.left}; };
+  svg.innerHTML='<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#8B5CF6"/></marker></defs>'+LINKS.map(([a,b])=>{ const A=c(a),B=c(b);
+    if(Math.abs(A.cy-B.cy)<10){ const x1=A.r<B.l?A.r:A.l, x2=A.r<B.l?B.l:B.r; return `<line x1="${x1}" y1="${A.cy}" x2="${x2}" y2="${B.cy}" stroke="#8B5CF6" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#ah)"/>`; }
+    return `<path d="M${A.x},${A.b} C${A.x},${A.b+18} ${B.x},${B.t-18} ${B.x},${B.t}" fill="none" stroke="#8B5CF6" stroke-width="1.6" marker-end="url(#ah)" opacity=".75"/>`; }).join('');
+}
+// syntax highlighting
+const KW=new Set('public private protected class void new if else for while return static import this break continue try catch int final extends implements null'.split(' '));
+const BOOL=new Set(['true','false','boolean']);
+function hlLine(line,st){
+  let out='', i=0;
+  if(st.block){ const e=line.indexOf('*/'); if(e<0) return `<span class="cm">${esc(line)}</span>`; out+=`<span class="cm">${esc(line.slice(0,e+2))}</span>`; i=e+2; st.block=false; }
+  const re=/(\/\/.*$)|(\/\*)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])')|\b([A-Za-z_]\w*)\b|\b(\d+)\b/g; re.lastIndex=i; let last=i, m;
+  while((m=re.exec(line))){ out+=esc(line.slice(last,m.index));
+    if(m[1]) out+=`<span class="cm">${esc(m[1])}</span>`;
+    else if(m[2]){ const e=line.indexOf('*/',m.index+2); if(e<0){ out+=`<span class="cm">${esc(line.slice(m.index))}</span>`; st.block=true; return out; } out+=`<span class="cm">${esc(line.slice(m.index,e+2))}</span>`; re.lastIndex=e+2; last=e+2; continue; }
+    else if(m[3]) out+=`<span class="cs">${esc(m[3])}</span>`;
+    else if(m[4]){ const w=m[4]; out+= BOOL.has(w)?`<span class="cb">${w}</span>`: KW.has(w)?`<span class="ck">${w}</span>`: /^[A-Z]/.test(w)?`<span class="ct">${w}</span>`: w; }
+    else if(m[5]) out+=`<span class="cn">${m[5]}</span>`;
+    last=re.lastIndex; }
+  return out+esc(line.slice(last));
+}
+function renderTabs(){ $('#fileTabs').innerHTML=Object.keys(JAVA).map(n=>`<button aria-pressed="${n===curFile}" data-f="${n}">${n}.java</button>`).join(''); $$('#fileTabs button').forEach(b=>b.onclick=()=>openFile(b.dataset.f)); }
+function openFile(name,find){
+  curFile=name; renderTabs(); $$('.dia-node').forEach(n=>n.classList.toggle('sel',n.dataset.cls===name));
+  const st={block:false}; const lines=JAVA[name].replace(/\s+$/,'').split('\n'); let hl=-1;
+  if(find) hl=lines.findIndex(l=>l.includes(find));
+  const cv=$('#codeView'); cv.innerHTML=lines.map((l,i)=>`<span class="l${i===hl?' hl':''}"><span class="no">${i+1}</span>${hlLine(l,st)||' '}</span>`).join('');
+  if(hl>=0){ const el=cv.children[hl]; cv.scrollTop=Math.max(0,el.offsetTop-cv.clientHeight/3); } else cv.scrollTop=0;
+}
+const TRACES={
+  park:[['Main','new Vehicle(','Main reads an ENTER command and builds a Vehicle from it.'],['Vehicle','public Vehicle(','The Vehicle stores its registration number and type.'],['ParkingService','public ParkingTicket parkVehicle','Main hands the vehicle and the time to ParkingService.parkVehicle().'],['ParkingService','private ParkingSlot findAvailableSlot','The service asks for a slot that nobody is using.'],['ParkingLot','getSlots()','To search, it needs the list of slots from ParkingLot.'],['ParkingSlot','public void assignVehicle','The chosen slot is told which vehicle is now inside it.'],['ParkingTicket','public ParkingTicket(','A ticket records the vehicle, its slot number and the entry time.'],['ParkingReport','public void printStatus','Main asks the report to print the board — it reads the slots to do so.']],
+  exit:[['Main','service.exitVehicle','Main reads an EXIT command and calls the service.'],['ParkingService','public ParkingTicket exitVehicle','The service handles the exit request.'],['ParkingService','private ParkingTicket findActiveTicket','It finds the open ticket for this registration number.'],['ParkingLot','public ParkingSlot getSlot','The ticket knows a slot number; ParkingLot turns that number into a slot object.'],['ParkingTicket','public void close','The ticket is closed at the exit time and the fee is worked out.'],['ParkingTicket','public int getChargeableHours','The fee depends on how many hours are charged.'],['ParkingSlot','public void release','The slot that was looked up is emptied.'],['ParkingReport','public int getAvailableSlots','The board shows how many slots are now available.']],
+  status:[['Main','report.printStatus()','After every command Main prints the status board.'],['ParkingReport','public void printStatus','printStatus() walks through every slot.'],['ParkingSlot','public boolean isOccupied','For each slot it asks: are you occupied, and who is inside?'],['ParkingReport','public int getOccupiedSlots','Occupied slots are counted.'],['ParkingReport','public int getAvailableSlots','Available slots are worked out.'],['ParkingService','public int getTicketCount','Some of that information comes from the service.'],['ParkingReport','public static void event','Finally one STATUS line is printed for the replay.']],
+};
+let trace=null;
+function startTrace(k){ trace={k,i:-1}; $('#traceNext').disabled=false; nextTrace(); }
+function nextTrace(){ if(!trace) return; trace.i++; const steps=TRACES[trace.k];
+  $$('.dia-node').forEach(n=>n.classList.remove('trace'));
+  if(trace.i>=steps.length){ $('#traceBox').innerHTML='<b>Trace finished.</b> Which of these calls changes data, and which only reads it?'; $('#traceNext').disabled=true; trace=null; return; }
+  const [cls,find,text]=steps[trace.i]; const n=$(`.dia-node[data-cls="${cls}"]`); if(n) n.classList.add('trace');
+  openFile(cls,find); $('#traceBox').innerHTML=`<b>${trace.i+1}/${steps.length} · ${cls}</b> — ${esc(text)}`; }
+
+// Debugging assistant: hints point to where and what to study. They never contain corrected code.
+const LEVELS=['What’s unexpected','Where to look','Concept to investigate','What to inspect'];
+const SYMPTOMS=[
+  {id:'same',t:'Two vehicles receive the same parking slot',scen:'01-two-vehicles.txt',kw:['same slot','both','same','two vehicles','twice','one slot','slot 1 again','second vehicle'],
+   h:['The second vehicle was given a slot that already has a vehicle in it. Something that should change the moment a vehicle is allocated didn’t change. Look at the PARKED line: what does <span class="mono">occupied=</span> say?',
+      'Investigate <b>ParkingSlot</b> (where a slot’s state lives) and how <b>ParkingService</b> uses it.',
+      'The difference between a field that belongs to the object and a variable that only exists inside a method. Does the assignment reach the object, or disappear when the method ends?',
+      'Inspect <span class="mono">assignVehicle()</span> in ParkingSlot and every line that is meant to write to the <span class="mono">occupied</span> field.']},
+  {id:'full',t:'The lot is full but another vehicle still gets a slot (a parked vehicle disappears)',scen:'02-lot-full.txt',kw:['full','sixth','6th','disappear','vanish','overwrit','replaced','gone','lost','no free'],
+   h:['With every slot taken the lot should refuse the newcomer. Instead it hands out a slot that is in use, and the vehicle that was there vanishes from the board.',
+      'Investigate <b>ParkingService</b> — the part that searches for a free slot, and the part that reacts when there isn’t one.',
+      'What a search method should return when it finds nothing, and how the caller can recognise “nothing found”.',
+      'Inspect <span class="mono">findAvailableSlot()</span>: what value does the local variable <span class="mono">freeSlot</span> hold before the loop, and if the loop never finds a free slot? Then look at the check in <span class="mono">parkVehicle()</span> that is supposed to catch a full lot — can it ever be true?']},
+  {id:'exit',t:'An exit frees the wrong slot, or fails with SLOT_NOT_FOUND',scen:'03-exit-release.txt',kw:['exit','release','wrong slot','not found','slot_not_found','leave','left','neighbour','neighbor','other car'],
+   h:['The ticket remembers the right slot number, yet a different slot is emptied — and for the last slot the program can’t find it at all.',
+      'Investigate <b>ParkingLot</b> — how a slot is found from its number.',
+      'People number slots starting at 1. Where does an <span class="mono">ArrayList</span> start counting? This family of mistakes is called “off by one”.',
+      'Inspect <span class="mono">getSlot(int slotNumber)</span> in ParkingLot: both the range check and the position passed to <span class="mono">get()</span>.']},
+  {id:'fee',t:'The parking charge is lower than the rule says',scen:'04-charges.txt',kw:['fee','charge','cost','price','rupee','rs','money','hour','duration','paid','cheap','low','revenue','total'],
+   h:['Some stays are charged correctly (30 minutes, exactly 60 minutes) and others are too cheap: 90 minutes should be two started hours.',
+      'Investigate <b>ParkingTicket</b> — where the duration becomes a number of hours.',
+      'What Java does with the remainder when you divide one <span class="mono">int</span> by another, and what “every <i>started</i> hour” means mathematically.',
+      'Inspect <span class="mono">getChargeableHours()</span>: follow the variable <span class="mono">hours</span> and ask what happens to the leftover minutes.']},
+  {id:'count',t:'The Available count is wrong or negative',scen:'05-availability.txt',kw:['available','count','negative','-1','minus','free count','sign','board number','number of free','occupied count'],
+   h:['After vehicles leave, Available doesn’t go back up, and it can drop below zero. Available + Occupied no longer adds up to 5.',
+      'Investigate <b>ParkingReport</b>, and the information it asks <b>ParkingService</b> for.',
+      'History versus current state: counting everything that has ever happened is not the same as counting what is true right now.',
+      'Inspect <span class="mono">getAvailableSlots()</span> in ParkingReport, and what <span class="mono">getTicketCount()</span> in ParkingService actually counts.']},
+];
+const HINT={sel:null, levels:{}};
+function renderSymptoms(){
+  $('#symptoms').innerHTML=SYMPTOMS.map(s=>`<button class="sym" data-s="${s.id}" aria-pressed="${HINT.sel===s.id}">${(HINT.levels[s.id]||0)>=4?'<span class="tick" title="All hints read">✓</span>':''}${esc(s.t)}</button>`).join('')+`<button class="sym" data-s="other" aria-pressed="${HINT.sel==='other'}">Something else</button>`;
+  $$('.sym').forEach(b=>b.onclick=()=>{ HINT.sel=b.dataset.s; renderSymptoms(); renderLadder(); });
+}
+function renderLadder(){
+  const L=$('#ladder');
+  if(!HINT.sel){ L.innerHTML=''; return; }
+  if(HINT.sel==='other'){ L.innerHTML=`<div class="reveal-box" style="background:var(--purple-l);border-color:var(--purple);color:var(--purple-d)">Write the gap as one sentence: “I expected ___, but the program printed ___.” Then find the first <span class="mono">@EVENT</span> line where expected and actual part ways — the Demonstrate replay marks it in red. The class that printed that line is rarely the one that caused it: ask which object holds the wrong value, and which method last changed it.</div>`; return; }
+  const s=SYMPTOMS.find(x=>x.id===HINT.sel), n=HINT.levels[s.id]||0;
+  L.innerHTML=`<div class="sub" style="margin:0">Scenario that shows it: <span class="mono">scenarios/${s.scen}</span></div>`+LEVELS.map((lv,i)=>`<div class="rung"><div class="rung-h"><span class="lv">Level ${i+1}</span><span class="what">${lv}</span>${i<n?'':i===n?`<button class="btn sm purple" data-lv="${i}">Show hint ${i+1}</button>`:'<span class="sub" style="margin:0">locked</span>'}</div>${i<n?`<div class="rung-b">${s.h[i]}</div>`:''}</div>`).join('')+(n>=4?'<div class="reveal-box">That’s every clue for this problem. The fix is yours to write — then prove it in Demonstrate.</div>':'');
+  $$('[data-lv]').forEach(b=>b.onclick=()=>{ HINT.levels[s.id]=n+1; renderLadder(); renderSymptoms(); });
+}
+function matchObservation(){
+  const t=$('#obs').value.toLowerCase(); if(!t.trim()){ $('#matchOut').innerHTML='Describe what you saw first.'; return; }
+  let best=null,score=0; SYMPTOMS.forEach(s=>{ const sc=s.kw.reduce((a,k)=>a+(t.includes(k)?k.length:0),0); if(sc>score){score=sc;best=s;} });
+  if(best){ HINT.sel=best.id; $('#matchOut').innerHTML=`Closest match: <b>${esc(best.t)}</b>. Start with level 1.`; }
+  else { HINT.sel='other'; $('#matchOut').innerHTML='No clear match. Here’s how to narrow it down — or pick the closest problem below.'; }
+  renderSymptoms(); renderLadder();
+}
+function cloneCmd(){
+  const u=$('#repoUrl').value.trim(); const ok=/^(https?:\/\/\S+|git@\S+:\S+)$/.test(u);
+  try{ localStorage.setItem('sp-repo',u); }catch(e){}
+  $('#remoteBox').innerHTML= ok?'Using the clone URL you pasted.':'Remote URL: <b>pending</b>. Your instructor publishes the repository and shares the clone URL. Paste it below to generate your commands.';
+  const url=ok?esc(u):'&lt;clone URL from your instructor&gt;';
+  const txt=`$ git clone ${ok?u:'<clone URL from your instructor>'}\n$ cd smart-parking-java\n$ javac -d out src/*.java\n$ java -cp out Main scenarios/full-day.txt`;
+  $('#cloneCmd').innerHTML=`<button class="copy" id="copyClone">Copy</button><span class="p">$</span> git clone ${url}\n<span class="p">$</span> cd smart-parking-java\n<span class="p">$</span> javac -d out src/*.java\n<span class="p">$</span> java -cp out Main scenarios/full-day.txt`;
+  $('#copyClone').onclick=()=>{ navigator.clipboard&&navigator.clipboard.writeText(txt.replace(/^\$ /gm,'')).then(()=>{$('#copyClone').textContent='Copied';setTimeout(()=>{const c=$('#copyClone'); if(c) c.textContent='Copy';},1500);}).catch(()=>{}); };
+}
+function initInv(){
+  try{ const u=localStorage.getItem('sp-repo'); if(u) $('#repoUrl').value=u; }catch(e){}
+  $('#repoUrl').addEventListener('input',cloneCmd); cloneCmd();
+  renderTabs(); openFile('Main');
+  $$('[data-trace]').forEach(b=>b.onclick=()=>startTrace(b.dataset.trace)); $('#traceNext').onclick=nextTrace;
+  $('#bMatch').onclick=matchObservation; renderSymptoms();
+}
+
+// ===================== DEMONSTRATE =====================
+const R={world:null,result:null,step:-1,busy:false,playing:false,inside:new Map(),n:0};
+const AREAS=['Allocation','Entry & exit','Availability','Charges'];
+function runVerify(text){
+  const msg=$('#parseMsg');
+  if(!/@EVENT /.test(text)){ msg.innerHTML='<div class="bad-box">No <span class="mono">@EVENT</span> lines found. Paste the full console output of <span class="mono">java -cp out Main scenarios/full-day.txt</span>.</div>'; return; }
+  const res=verify(text); if(!res.cases.length){ msg.innerHTML='<div class="bad-box">Events were found, but no ENTER or EXIT operations. Run a scenario file.</div>'; return; }
+  R.result=res; R.playing=false;
+  msg.innerHTML=`Read <b>${res.events.length}</b> events from <b>${res.cases.length}</b> operations${res.run&&res.run.scenario?` (scenario <span class="mono">${esc(res.run.scenario)}</span>)`:''}.`;
+  renderResults(); replayReset(); ['#rPlay','#rNext','#rRestart'].forEach(s=>$(s).disabled=false);
+  renderStep(-1);
+}
+function renderResults(){
+  const res=R.result, cases=res.cases, pass=cases.filter(c=>c.pass).length;
+  $('#resultsCard').hidden=false;
+  $('#score').innerHTML=`${pass} / ${cases.length} <span style="font-size:14px;font-weight:600;color:var(--ink3)">test cases pass</span>`;
+  $('#areas').innerHTML=AREAS.map(a=>{ const ch=cases.flatMap(c=>c.checks.filter(k=>k.area===a)); if(!ch.length) return ''; const ok=ch.filter(k=>k.pass).length; return `<div class="area ${ok===ch.length?'ok':'bad'}">${a}: ${ok}/${ch.length} checks</div>`; }).join('');
+  $('#tcBody').innerHTML=cases.map((c,i)=>`<tr class="tc-row" data-i="${i}"><td class="mono">${c.id}</td><td>${esc(c.title)}</td>${AREAS.map(a=>{const ch=c.checks.filter(k=>k.area===a); return `<td>${ch.length?(ch.every(k=>k.pass)?'<span class="pill ok">✓</span>':'<span class="pill bad">✗</span>'):'<span class="sub">–</span>'}</td>`;}).join('')}<td>${c.pass?'<span class="pill ok">Pass</span>':'<span class="pill bad">Fail</span>'}</td></tr>`).join('');
+  $$('.tc-row').forEach(r=>r.onclick=()=>jumpTo(+r.dataset.i));
+  $('#timeline').innerHTML=cases.map((c,i)=>`<button data-i="${i}" class="${c.pass?'ok':'bad'}" title="${c.id}: ${esc(c.title)}">${i+1}</button>`).join('');
+  $$('#timeline button').forEach(b=>b.onclick=()=>jumpTo(+b.dataset.i));
+  const first=cases.find(c=>!c.pass);
+  $('#verdict').innerHTML= first?`<div class="bad-box"><b>${cases.length-pass} test case${cases.length-pass>1?'s':''} fail.</b> The first failure is <b>${first.id}</b> — ${esc(first.title)}. Start there: later failures may only be consequences of it. Click it to replay that moment.</div>`
+    :`<div class="reveal-box"><b>Yes — every test case matches the reference.</b> Your Java program allocates, releases, counts and charges exactly like the 3D parking lot. Commit your fixes and answer the reflection questions below.</div>`;
+  renderReflection(!first && cases.length>=10);
+}
+function replayReset(){ R.world.clearCars(); R.world.resetSlots(); R.world.gate('in',false); R.world.gate('out',false); R.inside.clear(); R.step=-1; R.n++;
+  $('#rStep').textContent='–'; $('#rFree').textContent=R.result?R.result.slotsN:5; $('#rOcc').textContent=0; R.world.drawSign(R.result?R.result.slotsN:5,R.result?R.result.slotsN:5); markCurrent(); }
+function markCurrent(){ $$('.tc-row').forEach(r=>r.classList.toggle('cur',+r.dataset.i===R.step)); $$('#timeline button').forEach(b=>b.classList.toggle('cur',+b.dataset.i===R.step)); }
+function renderStep(i){
+  if(i<0||!R.result){ $('#stepTitle').textContent='Current step'; $('#stepSub').textContent=R.result?'Press Play, or click a test case to jump to it.':'Load an output to begin.'; $('#stepChecks').innerHTML=''; $('#stepEvents').innerHTML=''; return; }
+  const c=R.result.cases[i]; $('#stepTitle').textContent=`${c.id} · ${c.pass?'Pass':'Fail'}`; $('#stepSub').textContent=c.title;
+  $('#stepChecks').innerHTML=c.checks.map(k=>`<div class="check ${k.pass?'ok':'bad'}"><div class="w">${k.pass?'✓':'✗'} ${esc(k.area)} · ${esc(k.what)}</div><div class="ea"><span>Expected</span><span>${esc(k.exp)}</span><span>Actual</span><span>${esc(k.act)}</span></div></div>`).join('');
+  $('#stepEvents').innerHTML=c.cmd.events.map(e=>`<span class="ln">${e.line}</span> ${fmtEvHtml(e.raw)}`).join('<br>');
+}
+async function applyCase(k,instant){
+  const W=R.world, c=R.result.cases[k], o={instant}, gen=R.n, ev=t=>c.cmd.events.find(e=>e.type===t);
+  W.showExpected(null);
+  if(c.kind==='ENTER'){
+    const reg=c.cmd.req.reg, type=c.cmd.req.vehicle||'CAR', asg=ev('SLOT_ASSIGNED'), rej=ev('REJECTED');
+    const car=W.addCar(reg,type,CAR_COLORS[k%CAR_COLORS.length],reg+'@'+k); W.place(car,-34,ROAD_Z,0);
+    await W.drive(car,[[IN_X,ROAD_Z],GATE_PT],o); if(gen!==R.n) return;
+    const es=c.expected.slot;
+    if(es && es!==c.actual.slot) W.showExpected(es,`Expected: slot ${es}`);
+    else if(!es && asg) W.showExpected(null,'Expected: refused (lot full)');
+    if(asg){ const n=+asg.slot; W.gate('in',true); if(!instant) W.float(`${asg.ticket} → Slot ${n}`,-14.6,4.4,5.4,{bg:'#9A6200',w:5,font:46,life:3});
+      await W.drive(car,W.pathToSlot(n),o); if(gen!==R.n) return; W.gate('in',false); car.slot=n;
+      const old=R.inside.get(reg); if(old&&old!==car){ old.dupe=true; } R.inside.set(reg,car);
+    } else { if(!instant) W.toast(`${reg} refused: ${rej?rej.reason:'no result'}`, es?'bad':''); await W.turnAway(car,o); }
+  } else if(c.kind==='EXIT'){
+    const reg=c.cmd.req.reg, car=R.inside.get(reg), fee=ev('FEE'), fail=ev('EXIT_FAILED');
+    if(c.expected.slot && c.expected.slot!==c.actual.slot) W.showExpected(c.expected.slot,`Expected: slot ${c.expected.slot} freed`);
+    if(car && fee && !instant){ const chargeOk=c.checks.filter(x=>x.area==='Charges').every(x=>x.pass); const p=car.group.position; W.float(`${rupee(fee.fee)} · ${fee.hours} h`,p.x,3.8,p.z,{bg:chargeOk?'#0A7A64':'#B91C1C',life:3.5}); await sleep(900/W.speed); }
+    if(fail && car){ W.setTag(car,`Exit failed: ${fail.reason}`,'#B91C1C'); if(!instant) W.toast(`${reg} could not leave: ${fail.reason}`,'bad'); }
+  }
+  await reconcile(c,instant,gen);
+}
+async function reconcile(c,instant,gen){
+  const W=R.world, st=c.actualStatus, o={instant}; if(!st||!st.slotList||gen!==R.n) return;
+  const jobs=[]; const exitingReg=c.kind==='EXIT'?c.cmd.req.reg:null, released=c.cmd.events.some(e=>e.type==='SLOT_RELEASED');
+  for(const [reg,car] of [...R.inside.entries()]){
+    const entry=st.slotList.find(s=>s.reg===reg);
+    if(!entry){
+      R.inside.delete(reg); const legit=reg===exitingReg && released;
+      if(!legit){ W.setTag(car,`${reg} lost from board`,'#B91C1C'); if(!instant) W.toast(`${reg} vanished from the slot board`,'bad'); }
+      jobs.push((async()=>{ if(!instant) await sleep(legit?0:500/W.speed); await W.leaveSlot(car,o); await W.exitToRoad(car,o); })());
+    } else if(entry.n!==car.slot){
+      const n=entry.n; car.slot=n; jobs.push((async()=>{ const p=car.group.position; await W.drive(car,[[p.x,AISLE_Z]],{reverse:true,instant}); await W.drive(car,[[SLOT_X[n-1],AISLE_Z],[SLOT_X[n-1],SLOT_Z]],o); })());
+    } else if(reg===exitingReg && released){ W.setTag(car,`${reg} still parked`,'#B91C1C'); if(!instant) W.toast(`A slot was released, but ${reg} is still on the board`,'bad'); }
+  }
+  st.slotList.forEach(s=>{ if(s.n>=1&&s.n<=5) W.setSlot(s.n, s.reg?(s.occ?'occupied':'striped'):(s.occ?'odd':'free')); });
+  W.drawSign(+st.available,R.result.slotsN); $('#rFree').textContent=st.available; $('#rFree').style.color=+st.available<0?'var(--coral-d)':''; $('#rOcc').textContent=st.occupied;
+  await Promise.all(jobs);
+}
+async function stepNext(){
+  if(R.busy||!R.result||R.step>=R.result.cases.length-1) return false;
+  R.busy=true; R.step++; markCurrent(); renderStep(R.step); $('#rStep').textContent=`${R.step+1}/${R.result.cases.length}`;
+  try{ await applyCase(R.step,false); } finally { R.busy=false; }
+  return true;
+}
+async function play(){
+  if(R.playing){ R.playing=false; $('#rPlay').textContent='▶ Play replay'; return; }
+  R.playing=true; $('#rPlay').textContent='❚❚ Pause';
+  if(R.step>=R.result.cases.length-1) replayReset();
+  while(R.playing){ const more=await stepNext(); if(!more) break; await sleep(700/R.world.speed); }
+  R.playing=false; $('#rPlay').textContent='▶ Play replay';
+}
+async function jumpTo(k){
+  R.playing=false; $('#rPlay').textContent='▶ Play replay';
+  while(R.busy){ R.n++; R.world.gen++; await sleep(30); }
+  replayReset(); for(let i=0;i<k;i++) await applyCase(i,true);
+  R.step=k-1; await stepNext();
+}
+const REFLECT=[
+  ['A single wrong value early in the day made several later tests fail. How did you find the first real failure?','Read the replay from the first red step, not the most dramatic one. Data that went wrong at one step stays wrong for the rest of the run, so later failures are often consequences.'],
+  ['Why is the status board a risky place to start debugging?','The board only reports. It faithfully shows what the objects contain — if a slot or a count looks wrong there, the mistake happened earlier, in whichever method last changed that object.'],
+  ['Some charges were right and others weren’t. What does that tell you about choosing test data?','Bugs hide behind values that happen to work. Pick boundaries on purpose: the first and last slot, a full lot, a stay of exactly 60 minutes and of 61.'],
+  ['Which of your five fixes changed the most lines? Which changed the fewest?','Usually each fix is tiny. Logic bugs are rarely big — what’s big is the understanding you need to find the one line that misunderstands its job.'],
+];
+function renderReflection(unlocked){
+  const el=$('#reflectQs');
+  if(!unlocked){ el.innerHTML='<p style="color:#94A3B8;margin:0 0 6px">Reflection questions unlock when a full-day replay passes every test case.</p>'; return; }
+  el.innerHTML=REFLECT.map((q,i)=>`<div class="rq"><div class="q">${i+1}. ${esc(q[0])}</div><div id="ra${i}"><button data-r="${i}">Reveal a thought</button></div></div>`).join('');
+  $$('[data-r]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.r; $('#ra'+i).innerHTML=`<div class="a">${esc(REFLECT[i][1])}</div>`; });
+}
+function initDemo(){
+  R.world=new World($('#demo3d'),{toast:$('#demoToast')}); R.world.speed=2; replayReset(); renderReflection(false);
+  $('#bVerify').onclick=()=>runVerify($('#pasteIn').value);
+  $('#bSample').onclick=()=>{ $('#pasteIn').value=STARTER_RUN; runVerify(STARTER_RUN); };
+  $('#fileIn').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ $('#pasteIn').value=rd.result; runVerify(rd.result); }; rd.readAsText(f); };
+  $('#rPlay').onclick=play; $('#rNext').onclick=()=>{ R.playing=false; stepNext(); }; $('#rRestart').onclick=()=>jumpTo(0);
+  $('#rSpeed').onchange=e=>{ R.world.speed=+e.target.value; };
+  $$('[data-cam2]').forEach(b=>b.onclick=()=>R.world.view(b.dataset.cam2));
+}
+
+// ===================== INIT =====================
+function init(){
+  if(typeof THREE==='undefined'){ document.querySelectorAll('.stage3d').forEach(s=>s.innerHTML='<div class="empty" style="padding:40px">The 3D engine could not load. Check your connection and reload.</div>'); return; }
+  $$('.tab').forEach(t=>t.onclick=()=>go(t.dataset.view));
+  initExp(); initInv(); initDemo();
+  window.addEventListener('hashchange',fromHash); fromHash();
+  requestAnimationFrame(frame);
+}
+init();
+
+</script>
+</body>
+</html>
