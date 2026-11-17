@@ -4,7 +4,7 @@ import logo from '../assets/logo.svg';
 import zohoLogo from '../assets/zoho-logo.svg';
 import LoginIllustration from '../components/login/LoginIllustration';
 import { useAuth } from '../auth/AuthContext';
-import { authEnabled, renderZohoSignIn, safeNext } from '../auth/catalyst';
+import { authEnabled, renderZohoSignIn, safeNext, signInRequired } from '../auth/catalyst';
 
 const SIGNIN_ID = 'zoho-signin';
 
@@ -33,7 +33,8 @@ export default function LoginPage() {
     renderZohoSignIn(SIGNIN_ID, next).catch(() => setRenderFailed(true));
   }, [status, next]);
 
-  if (status === 'in') return <Navigate to={next} replace />;
+  // With sign-in switched off there is nothing to do here.
+  if (status === 'in' || !signInRequired) return <Navigate to={next} replace />;
 
   return (
     <div className="login-page">

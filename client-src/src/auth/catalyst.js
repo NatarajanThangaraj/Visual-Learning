@@ -13,7 +13,7 @@ const SDK_URL = 'https://static.zohocdn.com/catalyst/sdk/js/4.6.2/catalystWebSDK
 const BASE = import.meta.env.BASE_URL;
 
 /* Off switch. While false, no page asks anyone to sign in, the sidebar shows
-   no user, and /login's button just opens the courses. */
+   no user, and /login goes straight to the courses. */
 export const signInRequired = false;
 
 export const authEnabled = signInRequired && !import.meta.env.DEV;
