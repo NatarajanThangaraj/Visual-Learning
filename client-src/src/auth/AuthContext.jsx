@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { getCurrentUser, signOut } from './catalyst';
+import { getCurrentUser, signInRequired, signOut } from './catalyst';
 
 /* Who is signed in, asked once when the app starts. Signing in leaves the app
    for Zoho and comes back with a full page load, so there is nothing to
@@ -37,6 +37,7 @@ export function RequireAuth() {
   const { status } = useAuth();
   const { pathname, search } = useLocation();
 
+  if (!signInRequired) return <Outlet />;
   if (status === 'checking') return <div className="auth-checking" aria-busy="true" />;
   if (status !== 'in') {
     const next = encodeURIComponent(pathname + search);

@@ -12,7 +12,11 @@
 const SDK_URL = 'https://static.zohocdn.com/catalyst/sdk/js/4.6.2/catalystWebSDK.js';
 const BASE = import.meta.env.BASE_URL;
 
-export const authEnabled = !import.meta.env.DEV;
+/* Off switch. While false, no page asks anyone to sign in, the sidebar shows
+   no user, and /login's button just opens the courses. */
+export const signInRequired = false;
+
+export const authEnabled = signInRequired && !import.meta.env.DEV;
 
 const DEV_USER = { first_name: 'Local', last_name: 'Developer', email_id: 'dev@localhost' };
 
@@ -40,7 +44,7 @@ function loadCatalyst() {
 /* The signed-in user, or null. Rejects only when Catalyst can't be reached,
    so a network failure is not mistaken for being signed out. */
 export async function getCurrentUser() {
-  if (!authEnabled) return DEV_USER;
+  if (!authEnabled) return signInRequired ? DEV_USER : null;
   const catalyst = await loadCatalyst();
   try {
     const res = await catalyst.auth.isUserAuthenticated();
